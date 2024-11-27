@@ -103,9 +103,9 @@ const Booking = () => {
               } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
               onClick={() => setPage("meetingBooking")}
             >
-              Facility Bookings
+              Amenities Bookings
             </h2>
-            <h2
+            {/* <h2
               className={`p-1 ${
                 page === "seatBooking" &&
                 "bg-white text-blue-500 shadow-custom-all-sides"
@@ -113,7 +113,7 @@ const Booking = () => {
               onClick={() => setPage("seatBooking")}
             >
               Seat Bookings
-            </h2>
+            </h2> */}
           </div>
         </div>
         {page === "meetingBooking" && (

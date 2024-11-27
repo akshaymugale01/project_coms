@@ -38,7 +38,7 @@ import AddBusiness from "./pages/SubPages/AddBusiness.jsx";
 import BusinessSetup from "./pages/SubPages/BusinessSetup.jsx";
 import Materials from "./pages/Materials.jsx";
 import Booking from "./pages/Booking.jsx";
-import FacilityBooking from "./pages/SubPages/FacilityBooking.jsx";
+import AmenitiesBooking from "./pages/SubPages/FacilityBooking.jsx";
 import BookingDetails from "./pages/SubPages/details/BookingDetails.jsx";
 import SetupFacility from "./pages/SubPages/SetupFacility.jsx";
 import Communication from "./pages/Communication.jsx";
@@ -1138,7 +1138,7 @@ function App() {
           <Route path="/bookings" element={<Booking />} />
           <Route
             path="/bookings/new-facility-booking"
-            element={<FacilityBooking />}
+            element={<AmenitiesBooking />}
           />
           <Route
             path="/bookings/booking-details/:id"

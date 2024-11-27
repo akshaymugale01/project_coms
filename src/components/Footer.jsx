@@ -36,10 +36,7 @@ const themeColor = useSelector((state)=> state.theme.color)
   return (
     <footer className="hideIt fixed bottom-0 w-screen z-10">
       <div style={{background: themeColor}}>
-        <p className="text-center text-white">
-          Copyright © 2023 Digielves Tech Wizards Private Limited. All rights
-          reserved
-        </p>
+        
       </div>
     </footer>
   );

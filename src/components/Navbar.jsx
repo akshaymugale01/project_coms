@@ -272,7 +272,7 @@ const Navbar = () => {
               )} */}
 
               <>
-                {feat.includes("project_task") && (
+                {/* {feat.includes("project_task") && (
                   <NavLink
                     to={"/project-management"}
                     className={({ isActive }) =>
@@ -301,8 +301,8 @@ const Navbar = () => {
                       Project management
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("project_task") && (
+                )} */}
+                {/* {feat.includes("project_task") && (
                   <NavLink
                     to={"/Task-management"}
                     className={({ isActive }) =>
@@ -329,8 +329,8 @@ const Navbar = () => {
                       Task management
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("calendar") && (
+                )} */}
+                {/* {feat.includes("calendar") && (
                   <NavLink
                     to={"/calendar"}
                     className={({ isActive }) =>
@@ -359,7 +359,7 @@ const Navbar = () => {
                       Calendar
                     </h2>
                   </NavLink>
-                )}
+                )} */}
                 {feat.includes("tickets") && (
                   <NavLink
                     to={"/tickets"}
@@ -390,7 +390,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("skill_grow") && (
+                {/* {feat.includes("skill_grow") && (
                   <NavLink
                     to={"/admin/skill-grow"}
                     className={({ isActive }) =>
@@ -419,8 +419,8 @@ const Navbar = () => {
                       Skill Grow
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("face_recognition") && (
+                )} */}
+                {/* {feat.includes("face_recognition") && (
                   <NavLink
                     to={"/attendance"}
                     className={({ isActive }) =>
@@ -450,7 +450,7 @@ const Navbar = () => {
                       Attendance
                     </h2>
                   </NavLink>
-                )}
+                )} */}
                 {feat.includes("communication") && (
                   <NavLink
                     to={"/communication/events"}
@@ -481,7 +481,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("meeting") && (
+                {/* {feat.includes("meeting") && (
                   <NavLink
                     to={"/meetings"}
                     className={({ isActive }) =>
@@ -511,7 +511,7 @@ const Navbar = () => {
                       Meeting
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
                 {feat.includes("space") && (
                   <NavLink
@@ -533,18 +533,18 @@ const Navbar = () => {
                         !open && "opacity-0 translate-x-28 overflow-hidden"
                       }`}
                     >
-                      WorkSpace Bookings
+                      Amenities
                     </h2>
                     <h2
                       className={`${
                         open && "hidden"
                       } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
-                      Workspace Bookings
+                      Amenities
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("business_cards") && (
+                {/* {feat.includes("business_cards") && (
                   <NavLink
                     to={"/admin/business-card"}
                     className={({ isActive }) =>
@@ -573,8 +573,8 @@ const Navbar = () => {
                       Business Card
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("incidents") && (
+                )} */}
+                {/* {feat.includes("incidents") && (
                   <NavLink
                     to={"/admin/incidents"}
                     className={({ isActive }) =>
@@ -604,9 +604,9 @@ const Navbar = () => {
                       Incidents
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("bookings") && (
+                {/* {feat.includes("bookings") && (
                   <NavLink
                     to={"/admin/booking-request"}
                     className={({ isActive }) =>
@@ -635,8 +635,8 @@ const Navbar = () => {
                       Booking & Request
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("doctors") && (
+                )} */}
+                {/* {feat.includes("doctors") && (
                   <NavLink
                     to={"/doctor-appointments"}
                     className={({ isActive }) =>
@@ -666,8 +666,8 @@ const Navbar = () => {
                       Doctor Appointment
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("insurances") && (
+                )} */}
+                {/* {feat.includes("insurances") && (
                   <NavLink
                     to={"/insurance"}
                     className={({ isActive }) =>
@@ -696,7 +696,7 @@ const Navbar = () => {
                       Insurance
                     </h2>
                   </NavLink>
-                )}
+                )} */}
                 {feat.includes("permits") && (
                   <NavLink
                     to={"/documents"}
@@ -730,7 +730,7 @@ const Navbar = () => {
                   </NavLink>
                 )}
 
-                {feat.includes("hrms") && (
+                {/* {feat.includes("hrms") && (
                   <NavLink
                     to={"/admin/hrms/dashboard"}
                     // to={"/admin/hrms/employee-onboarding"}
@@ -760,7 +760,7 @@ const Navbar = () => {
                       HRMS
                     </h2>
                   </NavLink>
-                )}
+                )} */}
                 {feat.includes("gatepass") && (
                   <NavLink
                     to={"/admin/passes"}
@@ -820,7 +820,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("birthday") && (
+                {/* {feat.includes("birthday") && (
                   <NavLink
                     to={"/birthday"}
                     className={({ isActive }) =>
@@ -850,8 +850,8 @@ const Navbar = () => {
                       Birthday
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("permits") && (
+                )} */}
+                {/* {feat.includes("permits") && (
                   <NavLink
                     to={"/admin/permit"}
                     className={({ isActive }) =>
@@ -881,8 +881,8 @@ const Navbar = () => {
                       Permit
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("audits") && (
+                )} */}
+                {/* {feat.includes("audits") && (
                   <NavLink
                     to={"/admin/audit"}
                     className={({ isActive }) =>
@@ -912,9 +912,9 @@ const Navbar = () => {
                       Audit
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("assets") && (
+                {/* {feat.includes("assets") && (
                   <NavLink
                     to={"/assets"}
                     className={({ isActive }) =>
@@ -941,9 +941,9 @@ const Navbar = () => {
                       Asset
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("soft_services") && (
+                {/* {feat.includes("soft_services") && (
                   <NavLink
                     to={"/services"}
                     className={({ isActive }) =>
@@ -972,7 +972,7 @@ const Navbar = () => {
                       Soft Services
                     </h2>
                   </NavLink>
-                )}
+                )} */}
                 {feat.includes("fnb") && (
                   <NavLink
                     to={"/admin/fb"}
@@ -1004,7 +1004,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("mailroom") && (
+                {/* {feat.includes("mailroom") && (
                   <NavLink
                     to={"/mail-room"}
                     className={({ isActive }) =>
@@ -1033,8 +1033,8 @@ const Navbar = () => {
                       Mail Room
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("field_sense") && (
+                )} */}
+                {/* {feat.includes("field_sense") && (
                   <NavLink
                     to={"/admin/field-sense-meeting"}
                     className={({ isActive }) =>
@@ -1063,8 +1063,8 @@ const Navbar = () => {
                       Field Sense
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("transport") && (
+                )} */}
+                {/* {feat.includes("transport") && (
                   <NavLink
                     to={"/admin/transportation"}
                     className={({ isActive }) =>
@@ -1092,8 +1092,8 @@ const Navbar = () => {
                       Transportation
                     </h2>
                   </NavLink>
-                )}
-                {feat.includes("integration") && (
+                )} */}
+                {/* {feat.includes("integration") && (
                   <NavLink
                     to={"/integration"}
                     className={({ isActive }) =>
@@ -1125,9 +1125,9 @@ const Navbar = () => {
                       Integration
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("purchase_order") && (
+                {/* {feat.includes("purchase_order") && (
                   <NavLink
                     to={"/admin/purchase"}
                     className={({ isActive }) =>
@@ -1155,9 +1155,9 @@ const Navbar = () => {
                       Purchase
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("work_order") && (
+                {/* {feat.includes("work_order") && (
                   <NavLink
                     to={"/admin/service-pr"}
                     className={({ isActive }) =>
@@ -1185,9 +1185,9 @@ const Navbar = () => {
                       Service PR/WO
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("vendors") && (
+                {/* {feat.includes("vendors") && (
                   <NavLink
                     to={"/suppliers"}
                     className={({ isActive }) =>
@@ -1217,9 +1217,9 @@ const Navbar = () => {
                       Suppliers
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("bills") && (
+                {/* {feat.includes("bills") && (
                   <NavLink
                     to={"/admin/bill-pay"}
                     className={({ isActive }) =>
@@ -1246,9 +1246,9 @@ const Navbar = () => {
                       Bill Pay
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("personal_finance") && (
+                {/* {feat.includes("personal_finance") && (
                   <NavLink
                     to={"/admin/advance-salary-request"}
                     className={({ isActive }) =>
@@ -1277,9 +1277,9 @@ const Navbar = () => {
                       Advance Salary
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("bills") && (
+                {/* {feat.includes("bills") && (
                   <NavLink
                     to={"/admin/other-bills"}
                     className={({ isActive }) =>
@@ -1309,9 +1309,9 @@ const Navbar = () => {
                       Other Bills
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("personal_finance") && (
+                {/* {feat.includes("personal_finance") && (
                   <NavLink
                     to={"/personal-finance"}
                     className={({ isActive }) =>
@@ -1341,9 +1341,9 @@ const Navbar = () => {
                       Personal Financial
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
-                {feat.includes("fitness") && (
+                {/* {feat.includes("fitness") && (
                   <NavLink
                     to={"/admin/fitness"}
                     className={({ isActive }) =>
@@ -1370,7 +1370,7 @@ const Navbar = () => {
                       Fitness
                     </h2>
                   </NavLink>
-                )}
+                )} */}
 
                 {feat.includes("parking") && (
                   <NavLink
@@ -1826,7 +1826,7 @@ const Navbar = () => {
                   </h2>
                 </NavLink>
               )}
-              {feat.includes("bookings") && (
+              {/* {feat.includes("bookings") && (
                 <NavLink
                   to={"/employee/booking-request"}
                   className={({ isActive }) =>
@@ -1855,7 +1855,7 @@ const Navbar = () => {
                     Booking & Request
                   </h2>
                 </NavLink>
-              )}
+              )} */}
               {feat.includes("doctors") && (
                 <NavLink
                   to={"/doctor-appointments"}
