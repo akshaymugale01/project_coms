@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+	/* font-family: "Poppins", sans-serif; */
+	margin: 0;
+	padding: 0;
+	/* min-width: 100vw; */
+	/* min-height: 100vh; */
+	height: 100%;
+	/* position: relative; */
+	/* overflow-y: hidden; */
+}
+
+body::before {
+	content: "";
+	/* position: absolute; */
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+  /* background-image: url("/wave.png");
+	
+	background-repeat: no-repeat;
+	background-position: center; */
+	background-size: cover;
+	filter: brightness(0.7);
+	z-index: -1;
+}
+::-webkit-scrollbar {
+	width: 8px;
+	height: 6px;
+}
+::-webkit-scrollbar * {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-color);
+	border-radius: 5px;
+}
+
+
+
+/*  */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent; 
+    /* background-color: #4a5568;  */
+    /* border-radius: 4px;  */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    /* background-color: #2d3748; */
+    background-color: transparent;
+  }
+
+  .jersey-15-regular {
+    font-family: "Jersey 15", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* CSS */
+@media screen and (min-width: 640px) {
+  /* Adjust layout for small screens */
+  .form-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  /* Adjust layout for medium screens */
+  .form-container {
+    max-width: 720px;
+  }
+}
+
+/* CSS */
+@media screen and (max-width: 768px) {
+  .hide-on-small-screen {
+    display: none;
+  }
+}
+
+
+@media screen and (min-width: 1024px) {
+  /* Adjust layout for large screens */
+  .form-container {
+    max-width: 960px;
+  }
+}
+
+  

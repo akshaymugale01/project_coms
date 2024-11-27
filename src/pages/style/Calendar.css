@@ -1,0 +1,116 @@
+.fc-header-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fc-header-toolbar .fc-left {
+  order: 1;
+}
+
+.fc-header-toolbar .fc-center {
+  order: 2;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.fc-header-toolbar .fc-right {
+  order: 3;
+}
+
+/* Style the calendar container */
+.fc {
+  font-family: Arial, sans-serif;
+}
+
+/* Style the header toolbar */
+.fc-header-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* background-color: #f0f0f0; */
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Style the calendar title */
+.fc-toolbar-title {
+  /* font-size: 1.5em; */
+  font-weight: 700;
+  color: #000000;
+}
+
+/* Style the navigation buttons */
+.fc .fc-button {
+  background: var(--calendar-Header);
+  color: #fff;
+  border-radius: 4px;
+  padding: 5px 10px;
+  /* font-size: 1em; */
+}
+
+/* .fc .fc-button:hover {
+  background-color: #0056b3;
+  border-color: #004085;
+} */
+
+/* Style the custom dropdown button */
+.fc .fc-customDropdown-button {
+  background: var(--calendar-Header);
+  /* border-color: #28a745; */
+  color: #fff;
+}
+
+.fc .fc-customDropdown-button:hover {
+  background: var(--calendar-Header);
+  border-color: #1e7e34;
+}
+
+/* Style the calendar cells */
+.fc-daygrid-day {
+  border: 1px solid #ddd;
+}
+
+.fc-daygrid-day-top {
+  text-align: right;
+  padding: 5px;
+  font-weight: bold;
+  color: #666;
+}
+
+/* Style the events */
+.fc-event {
+  background: var(--calendar-Header);
+  /* border-color: #007bff; */
+  color: #fff;
+  padding: 5px;
+  /* border-radius: 3px; */
+  /* font-size: 0.9em; */
+  cursor: pointer;
+}
+
+/* Style the event titles */
+/* .fc-event-title {
+  font-weight: bold;
+} */
+
+/* Style the event time */
+/* .fc-event-time {
+  font-style: italic;
+} */
+
+/* Style the day labels */
+.fc-col-header-cell {
+  background: var(--calendar-Header);
+  color: #fff;
+  padding: 10px;
+  font-weight: bold;
+}
+
+/* Style the day numbers */
+.fc-daygrid-day-number {
+  /* color: #007bff; */
+  font-weight: bold;
+  display: flex;
+}
