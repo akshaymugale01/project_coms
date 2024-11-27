@@ -17,7 +17,7 @@ function MyTickets() {
   const [ticketStatusCounts, setTicketStatusCounts] = useState({});
   const allTicketTypes = ["Complaint", "Request", "Suggestion"];
   const [complaints, setComplaints] = useState([]);
-const themeColor = useSelector((state)=> state.theme.color)
+const themeColor = "rgb(17, 24, 39)"
   const getTimeAgo = (timestamp) => {
     const createdTime = moment(timestamp);
     const now = moment();
@@ -90,7 +90,7 @@ const themeColor = useSelector((state)=> state.theme.color)
   const customStyle = {
     headRow: {
       style: {
-        background: themeColor,
+        background: "rgb(17, 24, 39)",
         color: "white",
 
         fontSize: "10px",

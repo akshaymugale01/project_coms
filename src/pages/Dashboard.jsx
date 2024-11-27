@@ -123,13 +123,13 @@ const Dashboard = () => {
       <Navbar />
       <div className=" w-full flex lg:mx-3 flex-col overflow-hidden">
         <header
-          style={{ background: themeColor }}
+          style={{ background: "rgb(17, 24, 39)" }}
           className="w-full h-10 rounded-md  my-1 flex justify-between items-center"
         >
           <div></div>
           <nav>
             <h1 className="text-white text-center text-xl ml-5">
-              Vibe Connect
+             {/* Dashboard Name */}
             </h1>
           </nav>
 

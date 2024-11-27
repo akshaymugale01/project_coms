@@ -144,7 +144,8 @@ const Navbar = () => {
     <section className="flex gap-6 sticky top-0 left-0 bottom-0 h-screen z-20">
       <div
         style={{
-          background: themeColor,
+          // background: themeColor,
+          background: "rgb(17, 24, 39)",
         }}
         className={`p-[8px] max-h-screen ${
           open ? "w-full md:w-60" : "w-20"
