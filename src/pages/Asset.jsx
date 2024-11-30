@@ -87,7 +87,7 @@ const Asset = () => {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
-  document.title = `Assets - Vibe Connect`;
+  document.title = `Assets - My Citi Life`;
   const column = [
     {
       name: "Action",

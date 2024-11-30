@@ -10,7 +10,7 @@ import { BsEye } from "react-icons/bs";
 import Modal from "react-modal";
 import { MdClose } from "react-icons/md";
 const Insurance = () => {
-  document.title = "Insurance - vibe connect";
+  document.title = "Insurance - My Citi Life";
   const [page, setPage] = useState("Current Policies");
   const [isLoadingPolicy, setIsLoadingPolicy] = useState(true);
   const [isPolicyDetailOpen, setIsPolicyDetailOpen] = useState(false);

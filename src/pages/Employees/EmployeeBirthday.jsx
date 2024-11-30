@@ -9,7 +9,7 @@ import AddBirthdayModal from "../../containers/modals/AddBirthdayModal";
 const EmployeeBirthday = () => {
     const [birthdayModal, setBirthdayModal] = useState(false)
     const [addBirthday, setAddBirthday] = useState(false)
-  document.title = `Birthday - Vibe Connect`;
+  document.title = `Birthday - My Citi Life`;
 
   return (
     <section className="flex">

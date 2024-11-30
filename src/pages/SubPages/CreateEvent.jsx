@@ -171,7 +171,7 @@ const CreateEvent = () => {
         <div className="flex justify-center">
           <div className=" my-5 mb-10 border w-full max-w-[70rem] border-gray-400 p-2 rounded-lg ">
             <h2
-              style={{ background: themeColor }}
+              style={{ background: "rgb(17, 24, 39)" }}
               className="text-center text-xl font-medium p-2  rounded-md text-white"
             >
               Create Event

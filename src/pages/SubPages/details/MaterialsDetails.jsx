@@ -72,7 +72,7 @@ const MaterialDetails = () => {
           </div>
           <div className="grid grid-cols-2 ">
             <p className="font-semibold text-sm">Created By : </p>
-            <p className="">Vibe Connect</p>
+            <p className="">My Citi Life</p>
           </div>
           <div className="grid grid-cols-2 ">
             <p className="font-semibold text-sm">Attachments : </p>

@@ -99,7 +99,7 @@ const LOIPOTable = () => {
     },
   ];
 
-  document.title = `Purchase - Vibe Connect`;
+  document.title = `Purchase - My Citi Life`;
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);

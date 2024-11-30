@@ -694,6 +694,8 @@ import SetupSeat from "./pages/Setup/SetupSeat.jsx";
 import UserRoles from "./pages/AdminHrms/UserRoles.jsx";
 import OrganizationChart from "./pages/AdminHrms/OrganizationTree/OrganizationChart.jsx";
 import CTCGeneralSettingEdit from "./pages/AdminHrms/CTCGeneralSettingEdit.jsx";
+import AdditionalServices from "./pages/AdditionalServices/AdditionalSrvices.jsx";
+import AdditionalSetup from "./pages/AdditionalServices/AdditionalSetup.jsx";
 // new admin hrms
 
 function App() {
@@ -1079,6 +1081,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyTickets />{" "}
+              </ProtectedRoute>
+            }
+          />
+          {/* Additional Services */}
+          {/* <Route path="/additional-services" element={<AdditionalServices />} /> */}
+          <Route
+            path="/additional-services"
+            element={
+              <ProtectedRoute>
+                <AdditionalServices />{" "}
               </ProtectedRoute>
             }
           />

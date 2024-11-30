@@ -75,7 +75,7 @@ function User() {
     getAllowedFeatures();
   }, []);
 
-  document.title = `Profile - Vibe Connect`;
+  document.title = `Profile - My Citi Life`;
   return (
     <div className="flex">
       <div>

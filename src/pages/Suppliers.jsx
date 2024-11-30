@@ -196,7 +196,7 @@ const Suppliers = () => {
     setSelectedRows(state.selectedRows);
   };
 
-  document.title = `Supplier - Vibe Connect`;
+  document.title = `Supplier - My Citi Life`;
 
   return (
     <section className="flex  ">

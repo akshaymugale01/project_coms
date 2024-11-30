@@ -199,7 +199,7 @@ const themeColor = "rgb(17, 24, 39)"
     return date.toLocaleString(); // Adjust the format as needed
   };
 
-  document.title = `My Ticktes - Vibe Connect`;
+  document.title = `My Ticktes - My Citi Life`;
 
   return (
     <section className="flex">

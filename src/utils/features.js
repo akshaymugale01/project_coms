@@ -15,6 +15,7 @@ export const features = [
   "field_sense",
   "fnb",
   "incidents",
+  "additional_services",
   "mailroom",
   "contacts",
   "business_cards",

@@ -606,7 +606,7 @@ const FixedAllowance = () => {
                 <ul style={listItemStyle}>
                   <li>
                     You can add and manage third party users and invite them to
-                    join login to the Vibe Connect software. For e.g., External
+                    join login to the My Citi Life software. For e.g., External
                     auditor, external consultants, etc.{" "}
                   </li>
                 </ul>

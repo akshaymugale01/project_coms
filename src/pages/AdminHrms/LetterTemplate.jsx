@@ -110,7 +110,7 @@ const LetterTemplate = () => {
               <ul style={listItemStyle}>
                 <li>
                   The letters can be created based on dynamic fields available
-                  in Vibe Connect.{" "}
+                  in My Citi Life.{" "}
                 </li>
               </ul>
             </li>

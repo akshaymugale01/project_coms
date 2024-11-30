@@ -77,7 +77,7 @@ const NPS = () => {
                   <li>
                     Further You need map require setting in employee salary Tax
                     and Statutory settings at the time of entering CTC details
-                    for applicable employee. COPYRIGHT © 2024 Vibe Connect{" "}
+                    for applicable employee. COPYRIGHT © 2024 My Citi Life{" "}
                   </li>
                 </ul>
               </li>

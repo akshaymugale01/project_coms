@@ -137,7 +137,7 @@ const PayslipDetails3 = () => {
           </div>
           <div className="text-right">
             <h1 className="text-center text-xl font-semibold">Payslip for June - 2024</h1>
-            {/* <p>Vibe Connect</p> */}
+            {/* <p>My Citi Life</p> */}
             {/* <p>244/1952 Motilalnagar no.1, New Link Road</p> */}
             {/* <p>Near Vibgyor school, Goregaon West</p> */}
             {/* <p>Mumbai </p> */}

@@ -234,7 +234,7 @@ const navigate = useNavigate()
       }
     } catch (error) {}
   };
-  document.title= `Project Management - Vibe Connect`
+  document.title= `Project Management - My Citi Life`
   return (
     <section
       className="flex"

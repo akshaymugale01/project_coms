@@ -129,7 +129,7 @@ const Loans = () => {
                     i.e. Interest on 1st of April of relevant financial year SBI
                     Interest for the specific category (House loan, Education
                     loan, Personal Loan etc), this can be found on SBI official
-                    website. COPYRIGHT © 2024 Vibe Connect{" "}
+                    website. COPYRIGHT © 2024 My Citi Life{" "}
                   </li>
                 </ul>
               </li>

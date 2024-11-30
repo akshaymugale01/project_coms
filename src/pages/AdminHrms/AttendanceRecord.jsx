@@ -82,7 +82,7 @@ const splitTime = (time) => {
   return [time];
 };
 const AttendanceRecords = () => {
-  const [uploadFormat, setUploadFormat] = useState("Vibe Connect");
+  const [uploadFormat, setUploadFormat] = useState("My Citi Life");
   const [selectedYear, setSelectedYear] = useState("");
   const themeColor = useSelector((state) => state.theme.color);
 
@@ -407,14 +407,14 @@ const AttendanceRecords = () => {
                 onChange={(e) => setUploadFormat(e.target.value)}
                 className="border border-gray-400 p-2 rounded-md mt-1"
               >
-                <option value="Vibe Connect">
-                  Vibe Connect General Format
+                <option value="My Citi Life">
+                My Citi Life General Format
                 </option>
                 <option value="ESSL">ESSL Basic Report Format</option>
               </select>
             </div>
 
-            {uploadFormat === "Vibe Connect" && (
+            {uploadFormat === "My Citi Life" && (
               <>
                 <div className="mb-4">
                   <label className="block text-gray-700">

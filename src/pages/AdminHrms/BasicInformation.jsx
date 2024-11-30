@@ -377,7 +377,7 @@ const BasicInformation = () => {
               <span>12</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-medium">Part Of Vibe Connect Since::</span>
+              <span className="font-medium">Part Of My Citi Life Since::</span>
               <span>23/20/2023</span>
             </div>
           </div>

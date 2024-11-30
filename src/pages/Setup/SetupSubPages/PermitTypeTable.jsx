@@ -64,7 +64,7 @@ const PermitTypeTable = () => {
       },
     },
   };
-  document.title = `Permit - Vibe Connect`;
+  document.title = `Permit - My Citi Life`;
   return (
     <section className="flex ">
       {/* <Navbar /> */}

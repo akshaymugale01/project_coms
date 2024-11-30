@@ -72,7 +72,7 @@ const Attendance = () => {
  
 
   
-  document.title = `Attendance - Vibe Connect`;
+  document.title = `Attendance - My Citi Life`;
   const themeColor = useSelector((state)=> state.theme.color)
 
   const exportAllToExcel = async () => {

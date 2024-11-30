@@ -54,7 +54,7 @@ const EmailIdMapping = () => {
   const data = [
     {
       Name: "person 1",
-      Location: "Vibe Connect Support",
+      Location: "My Citi Life Support",
       City: "Verified",
       Label: "support@vibeconnect.in",
 

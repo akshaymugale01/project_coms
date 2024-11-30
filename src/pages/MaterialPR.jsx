@@ -98,7 +98,7 @@ const MaterialPR = () => {
     { name: "Active/Inactive", selector: (row) => <Switch />, sortable: true },
   ];
 
-  document.title = `Permit - Vibe Connect`;
+  document.title = `Permit - My Citi Life`;
   return (
     <section className="flex ">
       <Navbar />

@@ -318,7 +318,7 @@ const ManageAdmin = () => {
                 <ul style={listItemStyle}>
                   <li>
                     You can add and manage third party users and invite them to
-                    join login to the Vibe Connect HRMS software. For e.g.,
+                    join login to the My Citi Life HRMS software. For e.g.,
                     External auditor, external consultants, etc.{" "}
                   </li>
                 </ul>

@@ -90,7 +90,7 @@ const EmployeeMaterials = () => {
       items: "2",
       description: "Demo",
       v_number:"MH1234545",
-      createby:"Vibe Connect",
+      createby:"My Citi Life",
       createon:"10/08/2019, 6:37 PM",
       attachments:""
     },
@@ -101,7 +101,7 @@ const EmployeeMaterials = () => {
       items: "2",
       description: "Demo",
       v_number:"MH1234545",
-      createby:"Vibe Connect",
+      createby:"My Citi Life",
       createon:"10/08/2019, 6:37 PM",
       attachments:""
     },
@@ -112,7 +112,7 @@ const EmployeeMaterials = () => {
         items: "2",
         description: "Demo",
         v_number:"MH1234545",
-        createby:"Vibe Connect",
+        createby:"My Citi Life",
         createon:"10/08/2019, 6:37 PM",
         attachments:""
     },

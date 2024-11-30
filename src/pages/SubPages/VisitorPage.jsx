@@ -423,7 +423,7 @@ const VisitorPage = () => {
       sortable: true,
     },
   ];
-  document.title = `Passes - Vibe Connect`;
+  document.title = `Passes - My Citi Life`;
 
   return (
     <div className="visitors-page">

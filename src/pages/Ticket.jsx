@@ -184,7 +184,7 @@ const Ticket = () => {
   const customStyle = {
     headRow: {
       style: {
-        background: themeColor,
+        background: "rgb(17, 24, 39)",
         color: "white",
         fontSize: "10px",
       },
@@ -400,7 +400,7 @@ const Ticket = () => {
     link.click();
   };
 
-  document.title = `Tickets - Vibe Connect`;
+  document.title = `Tickets - My Citi Life`;
   const getRandomColor = () => {
     const letters = "0123456789ABCDEF";
     let color = "#";

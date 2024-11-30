@@ -146,7 +146,7 @@ const Login = () => {
     >
       <div className=" rounded-md  ">
         <h1 className="text-3xl text-white  p-2 px-10 font-semibold jersey-15-regular ">
-          VIBE CONNECT
+        My Citi Life
         </h1>
       </div>
       <div className=" flex justify-center  h-[90vh] items-center">
@@ -205,21 +205,21 @@ const Login = () => {
                   Login
                 </button>
               )}
-              <p
+              {/* <p
                 onClick={() => setPage("sso")}
                 className="w-20 my-2 border-black border-2 p-1 cursor-pointer text-center rounded-md text-xl font-medium hover:bg-gray-300 "
               >
                 {page === "sso" ? "Submit" : "SSO"}
-              </p>
+              </p> */}
             </div>
-            {page === "sso" && (
+            {/* {page === "sso" && (
               <p
                 className="text-center cursor-pointer hover:text-blue-400"
                 onClick={() => setPage("login")}
               >
                 Login
               </p>
-            )}
+            )} */}
           </form>
         </div>
       </div>

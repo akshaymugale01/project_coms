@@ -112,7 +112,7 @@ const LOIPOProceed = () => {
       <div className="text-center border-b pb-4 mb-4">
         <h1 className="text-xl font-bold mt-4">LETTER OF INDENT</h1>
         <div className="flex justify-between">
-          <p className="text-xl font-bold">Vibe Connect</p>
+          <p className="text-xl font-bold">My Citi Life</p>
           <button className="bg-orange-400 px-2 py-1 rounded-md text-white text-sm">
             Pending
           </button>

@@ -73,7 +73,7 @@ const ServicePR = () => {
     },
   ];
 
-  document.title = `Service PR - Vibe Connect`;
+  document.title = `Service PR - My Citi Life`;
 
   return (
     <section className="flex ">

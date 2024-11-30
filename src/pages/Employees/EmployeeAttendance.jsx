@@ -81,7 +81,7 @@ const userId = getItemInLocalStorage("UserId")
       },
     },
   };
-  document.title = `Attendance - Vibe Connect`;
+  document.title = `Attendance - My Citi Life`;
   return (
     <section className="flex ">
       <Navbar />

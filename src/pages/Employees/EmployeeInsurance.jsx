@@ -5,7 +5,7 @@ import { FaFile } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const EmployeeInsurance = () => {
-    document.title = "Insurance - vibe connect"
+    document.title = "Insurance - My Citi Life"
   return (
     <section className="flex">
       <Navbar />

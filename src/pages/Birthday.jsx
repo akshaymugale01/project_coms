@@ -17,7 +17,7 @@ const Birthday = () => {
   const [birthdayModal, setBirthdayModal] = useState(false);
   const [addBirthday, setAddBirthday] = useState(false);
   const [birthdayList, setBirthdayList] = useState([]);
-  document.title = `Birthday - Vibe Connect`;
+  document.title = `Birthday - My Citi Life`;
   const themeColor = useSelector((state) => state.theme.color);
   const [isLoadingBirthdayList, setIsLoadingBirthdayList] = useState(true);
   useEffect(() => {
