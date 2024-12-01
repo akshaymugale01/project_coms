@@ -122,6 +122,7 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
       console.log(resp);
       toast.success("Sub Category Added Successfully");
       setCAtAdded(true);
+      handleToggleCategoryPage1();
       setFormData({
         ...formData,
         category:"",
@@ -152,7 +153,7 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
   };
   return (
     <div className=" ">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-2">
           <select
             type="text"
@@ -177,26 +178,70 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
           placeholder="Enter Sub Category and press Enter"
           className="border p-2 rounded-md"
         />
-        <div className="flex  gap-2">
-          <button
-            style={{ background: themeColor }}
-            type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-md"
-            onClick={handleAddSubCat}
-          >
-            Submit
-          </button>
-          <button
-            // style={{ background: themeColor }}
-            onClick={handleToggleCategoryPage1}
-            className="  px-4 py-2 bg-red-500 text-white rounded-md"
-          >
-            Cancel
-          </button>
-        </div>
+        <div className="grid grid-cols-3 gap-2">
+        <input
+          type="number"
+          value={inputValue}
+          placeholder="2BHK Price"
+          className="border p-1 rounded-md"
+        />
+        <input
+          type="number"
+          value={inputValue}
+          placeholder="3BHK Price"
+          className="border p-1 rounded-md"
+        />
+        <input
+          type="number"
+          value={inputValue}
+          placeholder="4BHK Price"
+          className="border p-1 rounded-md"
+        />
+        <input
+          type="number"
+          value={inputValue}
+          placeholder="Flat RK Price"
+          className="border p-1 rounded-md"
+        />
+        <input
+          type="number"
+          value={inputValue}
+          placeholder="Flat 1Rk Price"
+          className="border p-1 rounded-md"
+        />
+        <input
+          type="number"
+          value={inputValue}
+          placeholder="2BHK Price"
+          className="border p-1 rounded-md"
+        />
+       </div>
+       <input
+          type="text"
+          value={inputValue}
+          placeholder="Enter Description"
+          className="border p-1 rounded-md"
+        />
+      </div>
+      <div className="flex item-center justify-center py-3 gap-2">
+        <button
+         style={{ background: themeColor }}
+         type="submit"
+         className="px-4 py-2 bg-blue-500 text-white rounded-md"
+         onClick={handleAddSubCat}
+       >
+         Submit
+       </button>
+       <button
+         onClick={handleToggleCategoryPage1}
+         className="px-4 py-2 bg-red-500 text-white rounded-md"
+       >
+         Cancel
+       </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 border border-gray-300 p-1 my-2 rounded-md">
+
+      {/* <div className="flex flex-wrap gap-2 border border-gray-300 p-1 my-2 rounded-md"> */}
         {formData.subCategory.map((subCat, index) => (
           <div
             key={index}
@@ -219,7 +264,7 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
             </button>
           </div>
         ))}
-      </div>
+      {/* </div> */}
 
       {isModalOpen1 && (
         <div className="fixed inset-0 flex items-center justify-center z-50">

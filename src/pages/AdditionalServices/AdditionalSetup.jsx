@@ -162,28 +162,29 @@ const [showEditModal, setShowEditModal] = useState(false)
       ),
     },
   ];
-  const columns2 = [
-    {
-      name: "Sr.No",
-      selector: (row) => row.No,
-      sortable: true,
-    },
-    {
-      name: "Rule",
-      selector: (row) => row.Complaint_Mode,
-      sortable: true,
-    },
-    {
-      name: "Action",
-      cell: (row) => (
-        <div className="flex items-center gap-4">
-          <Link>
-            <FaTrash size={15} />
-          </Link>
-        </div>
-      ),
-    },
-  ];
+
+  // const columns2 = [
+  //   {
+  //     name: "Sr.No",
+  //     selector: (row) => row.No,
+  //     sortable: true,
+  //   },
+  //   {
+  //     name: "Rule",
+  //     selector: (row) => row.Complaint_Mode,
+  //     sortable: true,
+  //   },
+  //   {
+  //     name: "Action",
+  //     cell: (row) => (
+  //       <div className="flex items-center gap-4">
+  //         <Link>
+  //           <FaTrash size={15} />
+  //         </Link>
+  //       </div>
+  //     ),
+  //   },
+  // ];
 
   const subCatColumns = [
     {
@@ -198,6 +199,32 @@ const [showEditModal, setShowEditModal] = useState(false)
     },
     {
       name: "Sub Category Type",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+
+    {
+      name: "2BHK (Inr)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "3BHK (INR)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "4BHK (INR)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Flat RK (INR)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Flat 1RK (INR)",
       selector: (row) => row.name,
       sortable: true,
     },
@@ -235,9 +262,9 @@ const [showEditModal, setShowEditModal] = useState(false)
           <button onClick={()=>openSubCatEditModal(row.id)}>
             <BiEdit size={15} />
           </button>
-          {/* <button>
+           <button>
             <FaTrash size={15} />
-          </button> */}
+          </button> 
         </div>
       ),
     },
@@ -448,9 +475,11 @@ const [showEditModal, setShowEditModal] = useState(false)
               </button>
             </div>
             {showSubCategoryPage && (
+              
               <TicketSubCategory
                 setCAtAdded={setCatAdded}
               />
+              
             )}
             <Table
               responsive
@@ -490,9 +519,10 @@ const [showEditModal, setShowEditModal] = useState(false)
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="block mb-2">Sub Category</label>
+                  <label className="block mb-2">Enter Sub Category</label>
                   <input className="border p-2 w-full"></input>
                 </div>
+                
 
                 <form className="">
                   {Object.keys(options).map((section) => (
@@ -702,343 +732,7 @@ const [showEditModal, setShowEditModal] = useState(false)
             </div> */}
           </div>
         )}
-        {page === "Operational Days" && (
-          <div class=" w-full  my-2">
-            {/* <button
-              onClick={openModal}
-              className="border-2 font-semibold mt-5 ml-10 hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-              style={{ background: themeColor }}
-            >
-              Import
-            </button> */}
-            <table className="w-full">
-              <thead style={{background: themeColor}} className="text-white">
-                <tr>
-                  <th class="px-4 py-2"></th>
-                  <th class="px-4 py-2">Operational Days</th>
-                  <th class="px-4 py-2">Start Time</th>
-                  <th class="px-4 py-2">End Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="border px-4 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                  <td class="border px-4 py-2 text-center">Monday</td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="13:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="19:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-      
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                </tr>
-                <tr>
-                  <td class="border px-4 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                  <td class="border px-4 py-2 text-center">Tuesday</td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="13:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="16:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                </tr>
-                <tr>
-                  <td class="border px-4 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                  <td class="border px-4 py-2 text-center">Wednesday</td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="15:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="16:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                </tr>
-                <tr>
-                  <td class="border px-4 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                  <td class="border px-4 py-2 text-center">Thursday</td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="14:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="06:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                </tr>
-                <tr>
-                  <td class="border px-4 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                  <td class="border px-4 py-2 text-center">Friday</td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="09:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="13:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                </tr>
-                <tr>
-                  <td class="border px-4 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                  <td class="border px-4 py-2 text-center">Saturday</td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="08:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="13:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-            */}
-                </tr>
-                <tr>
-                  <td class="border px-4 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                  <td class="border px-4 py-2 text-center">Sunday</td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="12:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  <td class="border px-4 py-2 text-center">
-                    <input
-                      type="time"
-                      value="13:45"
-                      className="border border-gray-400 p-1 w-40 rounded-md"
-                    />
-                  </td>
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td> */}
-                  {/* <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="checkbox"/></td>
-              <td class="border px-4 py-2 text-center"><input type="time" className="border border-gray-400 p-2 rounded-md"/></td>
-            */}
-                </tr>
-              </tbody>
-            </table>
-            <div className="flex justify-center my-2 mb-5">
-            <button
-              className=" font-semibold  hover:bg-black hover:text-white transition-all border-black p-2 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-              style={{ background: themeColor }}
-              >
-              Submit
-            </button>
-              </div>
-            {showModal && (
-              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-5 rounded-lg w-2/3">
-                  {/* <h1>Clone Data</h1> */}
-                  <h2 className="text-xl text-center font-semibold mb-4">
-                    Bulk Upload
-                  </h2>
-                  <FileInputBox />
-                  <div className="flex justify-center gap-2 mt-2">
-                    <button
-                      className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                      style={{ background: themeColor }}
-                    >
-                      Download Sample format
-                    </button>
 
-                    <button
-                      className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                      style={{ background: themeColor }}
-                    >
-                      Import
-                    </button>
-                    <button
-                      onClick={closeModal}
-                      className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                      style={{ background: themeColor }}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {page === "Complaint Mode" && (
-          <div className="mt-5">
-            <div className="flex gap-5 mb-5">
-              <input
-                type="text"
-                placeholder="Enter complaint mode"
-                className="border p-2 rounded-md border-black"
-              />
-              <button
-                className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                style={{ background: themeColor }}
-              >
-                Add
-              </button>
-            </div>
-            <div className="mr-4">
-              <Table
-                responsive
-                //   selectableRows
-                columns={columns1}
-                data={data1}
-                isPagination={true}
-              />
-            </div>
-          </div>
-        )}
-        {page === "Aging Rule" && (
-          <div className="mt-7">
-            <div className="flex gap-6 mb-5">
-              <select
-                name=""
-                id=""
-                className="border p-2 rounded-md border-black w-48"
-              >
-                <option value="">Select Rule Type</option>
-                <option value="">Months</option>
-                <option value="">Days</option>
-                <option value="">Hours</option>
-              </select>
-              <select
-                name="rule"
-                id="rule"
-                className="border p-2 rounded-md border-black w-48"
-                onChange={handleSelectChange}
-                value={selectedRule}
-              >
-                <option value="">Select Rule Unit</option>
-                <option value="between">Between</option>
-                <option value="equal">Equal</option>
-                <option value="lessThan">Less than</option>
-                <option value="greaterThan">Greater than</option>
-                <option value="lessThanEqual">Less than Equal</option>
-                <option value="greaterThanEqual">Greater than Equal</option>
-              </select>
-
-              <div className="">
-                {selectedRule === "between" ? (
-                  <>
-                    <input
-                      type="text"
-                      className="border p-2 rounded-md border-black mr-2"
-                      placeholder="From"
-                    />
-                    <input
-                      type="text"
-                      className="border p-2 rounded-md border-black"
-                      placeholder="To"
-                    />
-                  </>
-                ) : selectedRule ? (
-                  <input
-                    type="text"
-                    className="border p-2 rounded-md border-black"
-                    placeholder="Value"
-                  />
-                ) : null}
-              </div>
-              <button
-                className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                style={{ background: themeColor }}
-              >
-                Add
-              </button>
-            </div>
-            <div className="mr-4">
-              <Table
-                responsive
-                //   selectableRows
-                columns={columns2}
-                data={data2}
-                isPagination={true}
-              />
-            </div>
-          </div>
-        )}
        {showEditModal && <EditStatusModal onClose={()=> setShowEditModal(false)} id={id} setStatusAdded={setStatusAdded}  />}
       </div>
     </div>
