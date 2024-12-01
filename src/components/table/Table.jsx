@@ -72,7 +72,7 @@ const Table = ({
   const customStyle = {
     headRow: {
       style: {
-        background: themeColor,
+        background: "rgb(17, 24, 39)",
         color: "white",
         fontSize: "10px",
       },

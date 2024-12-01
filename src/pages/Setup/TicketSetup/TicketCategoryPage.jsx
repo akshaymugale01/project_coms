@@ -25,7 +25,7 @@ const TicketCategoryPage = ({ handleToggleCategoryPage, setCatAdded }) => {
   const handleCheckboxChange = () => {
     // setIsChecked(!isChecked);
   };
-
+  
   const [faqs, setFaqs] = useState([{ question: "", answer: "" }]);
   const themeColor = useSelector((state) => state.theme.color);
   const [isModalOpen, setIsModalOpen] = useState(false);

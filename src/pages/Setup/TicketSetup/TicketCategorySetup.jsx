@@ -351,7 +351,7 @@ const [subCatId, setSubCatId] = useState(null)
   };
   return (
     <div className=" w-full my-2 flex  overflow-hidden flex-col">
-      <div className="flex w-full">
+      {/* <div className="flex w-full">
         <div className=" flex gap-2 p-2 pb-0 border-b-2 border-gray-200 w-full">
           <h2
             className={`p-1 ${
@@ -372,7 +372,7 @@ const [subCatId, setSubCatId] = useState(null)
             Sub Category
           </h2>
         </div>
-      </div>
+      </div> */}
 
       <div>
         {page === "Category" && (
