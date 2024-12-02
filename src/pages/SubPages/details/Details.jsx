@@ -131,7 +131,7 @@ const TicketDetails = () => {
     { name: "Name", selector: (row) => row.item_name, sortable: true },
     { name: "Rate", selector: (row) => row.rate, sortable: true },
   ];
-  const domainPrefix = "https://admin.vibecopilot.ai";
+  const domainPrefix = "https://app.myciti.life";
 
   console.log(ticketinfo);
   const themeColor = useSelector((state) => state.theme.color);

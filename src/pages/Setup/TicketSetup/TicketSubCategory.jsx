@@ -89,6 +89,8 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
   const [formData, setFormData] = useState({
     category: "",
     subCategory: [],
+    twobhk: "",
+    threebhk: "",
   });
   useEffect(() => {
     const fetchCategory = async () => {
@@ -126,7 +128,9 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
       setFormData({
         ...formData,
         category:"",
-        subCategory:[]
+        subCategory:[],
+        twobhk: "",
+        threebhk: "",
       })
     } catch (error) {
       console.log(error);
@@ -181,13 +185,15 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
         <div className="grid grid-cols-3 gap-2">
         <input
           type="number"
-          value={inputValue}
+          value={formData.twobhk}
+          onChange={handleChange}
           placeholder="2BHK Price"
           className="border p-1 rounded-md"
         />
         <input
           type="number"
-          value={inputValue}
+          value={formData.threebhk}
+          onChange={handleChange}
           placeholder="3BHK Price"
           className="border p-1 rounded-md"
         />
