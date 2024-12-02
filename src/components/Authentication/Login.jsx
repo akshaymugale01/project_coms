@@ -58,7 +58,7 @@ const Login = () => {
       // vibe login
       // if (selectedSiteId === 10) {
       if (featNames.includes("project_task")) {
-        console.log("running copilot login");
+        console.log("running myciti.life login");
 
         const vibeResponse = await vibeLogin({
           email: formData.email,

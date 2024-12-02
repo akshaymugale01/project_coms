@@ -2,7 +2,7 @@ import axios from "axios";
 import { getItemInLocalStorage } from "../utils/localStorage";
 
 const vibeAuth= axios.create({
-  baseURL: "https://vibecopilot.ai",
+  baseURL: "https://app.myciti.life",
 });
 
 vibeAuth.interceptors.request.use(

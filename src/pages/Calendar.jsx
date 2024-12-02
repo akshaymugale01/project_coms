@@ -1246,9 +1246,10 @@ const Calender = () => {
   const exchangeCodeForAccessToken = async (code) => {
     console.log(code);
     try {
-     
-      const redirectUri = "https://app.vibecopilot.ai/calendar";
+      
+      const redirectUri = "https://app.myciti.life/calendar";
       const apiUrl = `https://vibecopilot.ai/api/get-outlook-token/?code=${code}&redirect_uri=${redirectUri}`;
+      // const apiUrl = `https://app.myciti.life/api/get-outlook-token/?code=${code}&redirect_uri=${redirectUri}`;
 
       const response = await fetch(apiUrl);
 
@@ -1317,7 +1318,7 @@ const Calender = () => {
     const params = {
       client_id:
         "339274559462-6r06f0d9aqubhnhqmvrkjaqs8nikiidd.apps.googleusercontent.com",
-      redirect_uri: "https://app.vibecopilot.ai/calendar",
+      redirect_uri: "https://app.myciti.life/calendar",
       
       response_type: "token",
       

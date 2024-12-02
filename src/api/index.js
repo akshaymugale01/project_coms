@@ -3,12 +3,12 @@ import { getItemInLocalStorage } from "../utils/localStorage";
 import axiosInstance from "./axiosInstance";
 import HrmsAuth from "./HrmsAuth";
 import vibeAuth from "./vibeAuth";
-export const API_URL = "https://vibecopilot.ai";
-export const vibeMedia = "https://vibecopilot.ai/api/media/";
-export const hrmsDomain = "https://api.hrms.vibecopilot.ai/";
+export const API_URL = "https://app.myciti.life";
+export const vibeMedia = "https://app.myciti.life/api/media/";
+export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
 const token = getItemInLocalStorage("TOKEN");
-export const domainPrefix = "https://admin.vibecopilot.ai";
+export const domainPrefix = "https://app.myciti.life";
 // export const domainPrefix = "http://13.215.74.38";
 export const login = async (data) => axiosInstance.post("/login.json", data);
 
