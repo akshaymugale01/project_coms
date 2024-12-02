@@ -3,7 +3,7 @@ import { getItemInLocalStorage } from "../utils/localStorage";
 
 const axiosInstance = axios.create({
   // baseURL: "http://13.215.74.38",
-   baseURL: "http://app.myciti.life",
+   baseURL: "https://app.myciti.life",
 
 });
 
