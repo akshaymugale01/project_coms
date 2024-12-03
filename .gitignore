@@ -24,7 +24,7 @@ dist-ssr
 *.sw?
 
 //Api Instance: 
-src/api/axiosInstance.js
+# src/api/axiosInstance.js
 
 *axiosInstance.js
 
