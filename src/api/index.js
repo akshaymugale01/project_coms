@@ -871,6 +871,38 @@ export const postFlightTicketRequest = async (data) =>
       token: token,
     },
   });
+
+// Amenities API
+export const postAmenitiesBooking = async (data) =>
+  axiosInstance.post(`/amenity_bookings.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getAmenitiesBooking = async (data) =>
+  axiosInstance.get(`/amenity_bookings.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+
+  // Facitility Setup
+  export const getFacitilitySetup = async (data) =>
+    axiosInstance.get(`/amenities.json.json`, data, {
+      params: {
+        token: token,
+      },
+    });
+    
+  export const postFacitilitySetup = async (data) =>
+    axiosInstance.post(`/amenities.json.json`, data, {
+      params: {
+        token: token,
+      },
+    });  
+
 // ppm details/
 
 export const getPPMDetails = async (assetId, activityId) =>

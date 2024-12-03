@@ -19,8 +19,52 @@ const SetupFacility = () => {
   };
   const themeColor = useSelector((state) => state.theme.color);
   const [formData, setFormData] = useState({
-    type: "bookable",
+    amenity: {
+      site_id: "",
+      fac_type: "",
+      fac_name: "",
+      member_charges: "",
+      book_before: "",
+      disclaimer: "",
+      cancellation_policy: "",
+      cutoff_min: "",
+      return_percentage: "",
+      create_by: "",
+      active: true,
+      member_price_adult: "",
+      member_price_child: "",
+      guest_price_adult: "",
+      guest_price_child: "",
+      min_people: "",
+      max_people: "",
+      cancel_before: "",
+      terms: "",
+      advance_min: "",
+      deposit: "",
+      description: "",
+      max_slots: "",
+    },
+    slots: [
+      {
+        start_hr: "",
+        end_hr: "",
+        start_min: "",
+        end_min: "",
+      },
+    ],
   });
+  
+
+  const handleAmenityChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      amenity: {
+        ...prev.amenity,
+        [field]: value,
+      },
+    }));
+  };
+  
   const [slots, setSlots] = useState([
     {
       id: 1,
@@ -121,7 +165,7 @@ const SetupFacility = () => {
       <Navbar />
       <div className="w-full p-4 mb-5">
         <h1
-          style={{ background: themeColor }}
+          style={{ background: 'rgb(17, 24, 39)' }}
           className="bg-black text-white font-semibold rounded-md text-center p-2"
         >
           Setup New Facility
@@ -153,8 +197,10 @@ const SetupFacility = () => {
               </label>
               <input
                 type="text"
-                name=""
+                name="fac_name"
                 id=""
+                value={formData.amenity.fac_name}
+                onChange={(e) => handleAmenityChange("fac_name", e.target.value)}
                 className="border border-gray-400 rounded-md p-2"
                 placeholder="Facility name"
               />
@@ -173,7 +219,7 @@ const SetupFacility = () => {
                 <option value="no">No</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1">
+            {/* <div className="flex flex-col gap-1">
               <label htmlFor="" className="font-medium">
                 Shareable
               </label>
@@ -186,8 +232,8 @@ const SetupFacility = () => {
                 <option value="">Yes</option>
                 <option value="">No</option>
               </select>
-            </div>
-            <div className="flex flex-col gap-1">
+            </div> */}
+            {/* <div className="flex flex-col gap-1">
               <label htmlFor="" className="font-medium">
                 Link to billing
               </label>
@@ -200,10 +246,10 @@ const SetupFacility = () => {
                 <option value="">Yes</option>
                 <option value="">No</option>
               </select>
-            </div>
+            </div> */}
           </div>
           <div>
-            <div className="my-2">
+            {/* <div className="my-2">
               <label htmlFor="subFacility" className="flex items-center gap-2">
                 Sub Facility
                 <input
@@ -217,7 +263,7 @@ const SetupFacility = () => {
                   className="h-4 w-4"
                 />
               </label>
-            </div>
+            </div> */}
             {subFacilityAvailable && (
               <>
                 <div className="grid grid-cols-3 gap-x-5">
@@ -292,7 +338,7 @@ const SetupFacility = () => {
               <p className="text-center font-medium">Member Type</p>
               <p className="text-center font-medium">Adult</p>
               <p className="text-center font-medium"> Child</p>
-              <p className="text-center font-medium">Configure Payment</p>
+              {/* <p className="text-center font-medium">Configure Payment</p> */}
             </div>
             <div className="grid grid-cols-4 items-center border-b">
               <div className="flex justify-center my-2">
@@ -328,7 +374,7 @@ const SetupFacility = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-center my-2">
+              {/* <div className="flex justify-center my-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col">
                     <label htmlFor="" className="flex items-center gap-2">
@@ -347,9 +393,9 @@ const SetupFacility = () => {
                     </label>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
-            <div className="grid grid-cols-4 items-center border-b ">
+            {/* <div className="grid grid-cols-4 items-center border-b ">
               <div className="flex justify-center my-2">
                 <label htmlFor="" className="flex items-center gap-2">
                   <input type="checkbox" name="" id="" />
@@ -384,7 +430,7 @@ const SetupFacility = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-center my-2">
+              {/* <div className="flex justify-center my-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col">
                     <label htmlFor="" className="flex items-center gap-2">
@@ -403,8 +449,8 @@ const SetupFacility = () => {
                     </label>
                   </div>
                 </div>
-              </div>
-            </div>
+              </div> 
+            </div> */}
             <div className="grid grid-cols-4 items-center border-b">
               <div className="flex justify-center my-2">
                 <label htmlFor="" className="flex items-center gap-2">
@@ -440,7 +486,7 @@ const SetupFacility = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-center my-2">
+              {/* <div className="flex justify-center my-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col">
                     <label htmlFor="" className="flex items-center gap-2">
@@ -459,9 +505,9 @@ const SetupFacility = () => {
                     </label>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
-            <div className="grid grid-cols-4 items-center border-b ">
+            {/* <div className="grid grid-cols-4 items-center border-b ">
               <div className="flex justify-center my-2">
                 <label htmlFor="" className="flex items-center gap-2">
                   <input type="checkbox" name="" id="" />
@@ -496,7 +542,7 @@ const SetupFacility = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-center my-2">
+              {/* <div className="flex justify-center my-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col">
                     <label htmlFor="" className="flex items-center gap-2">
@@ -515,8 +561,8 @@ const SetupFacility = () => {
                     </label>
                   </div>
                 </div>
-              </div>
-            </div>
+              </div> 
+            </div> */}
             <div className="grid grid-cols-3 gap-4">
               <div className="my-2 flex flex-col gap-2">
                 <label htmlFor="" className="font-medium">
@@ -555,12 +601,12 @@ const SetupFacility = () => {
                 />
               </div>
             </div>
-            <div className="my-2 flex items-center gap-2">
+            {/* <div className="my-2 flex items-center gap-2">
               <label htmlFor="" className="font-medium">
                 Consecutive slots Allowed
               </label>
               <Switch />
-            </div>
+            </div> */}
           </div>
         </div>
         <div className="bg-blue-50 border-y">
@@ -723,7 +769,7 @@ const SetupFacility = () => {
                 </button>
               </div>
             ))}
-            <div className="flex">
+            {/* <div className="flex">
               <button
                 onClick={handleAddRule}
                 disabled={rules.length === 4}
@@ -735,7 +781,7 @@ const SetupFacility = () => {
               >
                 Add Rule
               </button>
-            </div>
+            </div> */}
             {/* </div> */}
           </div>
         </div>
@@ -771,7 +817,7 @@ const SetupFacility = () => {
           {slots.map((slot) => (
             <div
               key={slot.id}
-              className="grid grid-cols-8 gap-2 bg-white my-2 rounded-lg "
+              className="grid grid-cols-3 gap-2 bg-white my-2 rounded-lg "
             >
               <div className="flex flex-col">
                 <label htmlFor="" className="font-medium">
@@ -787,7 +833,7 @@ const SetupFacility = () => {
                   className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                 />
               </div>
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label htmlFor="" className="font-medium">
                   Break Time{" "}
                   <span className="text-sm font-medium text-gray-400">
@@ -803,8 +849,8 @@ const SetupFacility = () => {
                   }
                   className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                 />
-              </div>
-              <div className="flex-col flex">
+              </div> */}
+              {/* <div className="flex-col flex">
                 <label htmlFor="" className="font-medium">
                   Break Time{" "}
                   <span className="text-sm font-medium text-gray-400">
@@ -820,8 +866,8 @@ const SetupFacility = () => {
                   }
                   className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                 />
-              </div>
-              <div className="flex flex-col">
+              </div> */}
+              <div className="flex flex-col mx-3">
                 <label htmlFor="" className="font-medium">
                   End Time{" "}
                 </label>
@@ -835,7 +881,7 @@ const SetupFacility = () => {
                   className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                 />
               </div>
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <label htmlFor="" className="font-medium">
                   Concurrent Slots
                 </label>
@@ -852,8 +898,8 @@ const SetupFacility = () => {
                   }
                   className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                 />
-              </div>
-              <div className="flex flex-col">
+              </div> */}
+              {/* <div className="flex flex-col">
                 <label htmlFor="" className="font-medium">
                   Slots by
                 </label>
@@ -866,8 +912,8 @@ const SetupFacility = () => {
                   }
                   className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                 />
-              </div>
-              <div className="flex flex-col">
+              </div> */}
+              {/* <div className="flex flex-col">
                 <label htmlFor="" className="font-medium">
                   Wrap Time
                 </label>
@@ -880,8 +926,8 @@ const SetupFacility = () => {
                   }
                   className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                 />
-              </div>
-              <div className="flex items-end justify-end">
+              </div> */}
+              <div className="flex item-end justify-end">
                 <button
                   type="button"
                   onClick={() => handleRemoveSlot(slot.id)}
@@ -913,7 +959,7 @@ const SetupFacility = () => {
             name=""
             id=""
             rows="3"
-            className="border border-gray-400 rounded-md"
+            className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
           />
         </div>
         <div className="flex flex-col my-4">
@@ -924,146 +970,11 @@ const SetupFacility = () => {
             name=""
             id=""
             rows="3"
-            className="border border-gray-400 rounded-md"
+            className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
           />
         </div>
-        <div>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="text-left font-medium text-sm text-gray-500 py-2">
-                  Rules Description
-                </th>
-                <th className="text-center font-medium text-sm text-gray-500 py-2">
-                  Time
-                </th>
-
-                <th className="text-right font-medium text-sm text-gray-500 py-2">
-                  Deduction (%)
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Row 1 */}
-              <tr className="border-t">
-                <td className="text-sm py-2">
-                  If user cancels the booking selected hours/days prior to
-                  schedule, the given percentage of amount will be deducted
-                </td>
-
-                <td className="text-center py-2">
-                  <input
-                    type="time"
-                    value={timeValues.time1}
-                    onChange={(e) => handleTimeChange(e, "time1")}
-                    className=" border rounded-md p-2 w-full"
-                  />
-                </td>
-                <td className="flex items-center justify-end gap-2 py-2">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className=" px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-500">%</span>
-                </td>
-              </tr>
-
-              {/* Row 2 */}
-              <tr className="border-t">
-                <td className="text-sm py-2">
-                  If user cancels the booking selected hours/days prior to
-                  schedule, the given percentage of amount will be deducted
-                </td>
-
-                <td className="text-center py-2">
-                  <input
-                    type="time"
-                    value={timeValues.time2}
-                    onChange={(e) => handleTimeChange(e, "time2")}
-                    className=" border rounded-md p-2 w-full"
-                  />
-                </td>
-                <td className="flex items-center justify-end gap-2 py-2">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className=" px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-500">%</span>
-                </td>
-              </tr>
-
-              <tr className="border-t">
-                <td className="text-sm py-2">
-                  If user cancels the booking selected hours/days prior to
-                  schedule, the given percentage of amount will be deducted
-                </td>
-
-                <td className="text-center py-2">
-                  <input
-                    type="time"
-                    value={timeValues.time3}
-                    onChange={(e) => handleTimeChange(e, "time3")}
-                    className=" border rounded-md p-2 w-full"
-                  />
-                </td>
-                <td className="flex items-center justify-end gap-2 py-2">
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className=" px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-500">%</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div>
-          <h2 className="font-medium border-b border-black">Block Days</h2>
-          <div className="flex items-center gap-2">
-            <DatePicker
-              selectsRange={true}
-              // startDate={startDate}
-              // endDate={endDate}
-              // onChange={(update) => {
-              //   setStartDate(update[0]);
-              //   setEndDate(update[1]);
-              //   setFilteredPPMData(filterByDateRange(ppmData));
-              // }}
-              isClearable={true}
-              placeholderText="Select date"
-              className="p-1 border-gray-300 rounded-md w-64  my-2 outline-none border"
-            />
-
-            <select
-              name=""
-              id=""
-              value={blockData.blockBy}
-              onChange={(e) =>
-                setBlockData({ ...blockData, blockBy: e.target.value })
-              }
-              className="p-1 border-gray-300 rounded-md w-64  my-2 outline-none border"
-            >
-              <option value="entire day">Entire day</option>
-              <option value="selected slots">Selected Slots</option>
-            </select>
-
-            <textarea
-              placeholder="Block reason"
-              name=""
-              id=""
-              rows={1}
-              className="p-2 border-gray-300 rounded-md w-96  my-2 outline-none border"
-            ></textarea>
-          </div>
-          {blockData.blockBy === "selected slots" && (
-            <div className="bg-blue-50 rounded-md p-2">
-              <h2 className="font-medium border-b">Select slots</h2>
-            </div>
-          )}
-        </div>
+        
+        
         <div className="flex justify-center my-2">
           <button
             style={{ background: themeColor }}

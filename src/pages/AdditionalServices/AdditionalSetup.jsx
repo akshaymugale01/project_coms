@@ -15,6 +15,7 @@ import { getItemInLocalStorage } from "../../utils/localStorage";
 import TicketCategorySetup from "../Setup/TicketSetup/TicketCategorySetup";
 import TicketSubCategory from "../Setup/TicketSetup/TicketSubCategory";
 import EditStatusModal from "../Setup/TicketSetup/EditStatusModal";
+import AdditionalSubCategory from "./AdditionalSubCategory";
 
 const AdditionalSetup = () => {
   const [selectedRule, setSelectedRule] = useState("");
@@ -476,7 +477,7 @@ const [showEditModal, setShowEditModal] = useState(false)
             </div>
             {showSubCategoryPage && (
               
-              <TicketSubCategory
+              <AdditionalSubCategory
                 setCAtAdded={setCatAdded}
               />
               
