@@ -6,7 +6,7 @@ const axiosInstance = axios.create({
 
    baseURL: "https://app.myciti.life"
 });
-
+ 
 
 axiosInstance.interceptors.request.use(
   (authenticate) => {
