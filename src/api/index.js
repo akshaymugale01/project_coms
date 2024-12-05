@@ -881,7 +881,7 @@ export const postAmenitiesBooking = async (data) =>
   });
 
 export const getAmenitiesBooking = async (data) =>
-  axiosInstance.get(`/amenity_bookings.json`, data, {
+  axiosInstance.get(`/amenity_bookings.json`,  {
     params: {
       token: token,
     },
@@ -890,14 +890,14 @@ export const getAmenitiesBooking = async (data) =>
 
   // Facitility Setup
   export const getFacitilitySetup = async (data) =>
-    axiosInstance.get(`/amenities.json.json`, data, {
+    axiosInstance.get(`/amenities.json`, {
       params: {
         token: token,
       },
     });
     
   export const postFacitilitySetup = async (data) =>
-    axiosInstance.post(`/amenities.json.json`, data, {
+    axiosInstance.post(`/amenities.json`, data, {
       params: {
         token: token,
       },

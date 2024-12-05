@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TextFields from "../../containers/Inputs/TextFields";
 import FileInput from "../../Buttons/FileInput";
 import TimeHourPicker from "../../containers/TimeHourPicker";
@@ -10,7 +10,9 @@ import { FaCheck, FaTrash } from "react-icons/fa";
 import { BiPlusCircle } from "react-icons/bi";
 import { Switch } from "../../Buttons";
 import DatePicker from "react-datepicker";
+
 import "react-datepicker/dist/react-datepicker.css";
+import { getFacitilitySetup, postFacitilitySetup } from "../../api";
 const SetupFacility = () => {
   const [allowMultipleSlots, setAllowMultipleSlots] = useState("no");
 
@@ -54,7 +56,43 @@ const SetupFacility = () => {
     ],
   });
   
+  console.log("DATA",formData)
+  
+  // const fecthFacitySetup = async() => {
+  //   try {
+  //    const fetchAPI = await getFacitilitySetup()
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  // }
 
+  // useEffect(() => {
+  //   fecthFacitySetup();
+  // },[]) // [] for 
+
+  const postAmenitiesSetup = async () => {
+    const postData = new FormData();
+  
+    // Append amenity fields
+    Object.entries(formData.amenity).forEach(([key, value]) => {
+      postData.append(`amenity[${key}]`, value);
+    });
+  
+    // Append slot fields as an array
+    formData.slots.forEach((slot, index) => {
+      Object.entries(slot).forEach(([key, value]) => {
+        postData.append(`slots[][${key}]`, value);
+      });
+    });    
+  
+    try {
+      const response = await postFacitilitySetup(postData);
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
   const handleAmenityChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -78,26 +116,30 @@ const SetupFacility = () => {
     },
   ]);
 
+  console.log("slots",slots)
+
   const handleAddSlot = () => {
-    setSlots([
-      ...slots,
-      {
-        id: slots.length + 1,
-        startTime: "",
-        breakTimeStart: "",
-        breakTimeEnd: "",
-        endTime: "",
-        concurrentSlots: "",
-        slotBy: "",
-        wrapTime: "",
-      },
-    ]);
+    setFormData((prevState) => ({
+      ...prevState,
+      slots: [
+        ...prevState.slots,
+        {
+          start_hr: "",      // Hour for start time
+          start_min: "",     // Minute for start time
+          end_hr: "",        // Hour for end time
+          end_min: "",       // Minute for end time
+        },
+      ],
+    }));
   };
-
-  const handleRemoveSlot = (id) => {
-    setSlots(slots.filter((slot) => slot.id !== id));
+  
+  const handleRemoveSlot = (index) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      slots: prevState.slots.filter((_, i) => i !== index),
+    }));
   };
-
+  
   const handleInputChange = (id, field, value) => {
     setSlots(
       slots.map((slot) => (slot.id === id ? { ...slot, [field]: value } : slot))
@@ -160,6 +202,29 @@ const SetupFacility = () => {
     blockBy: "",
   });
 
+  const handelRadioChange = (e) => {
+    setFormData({
+      ...formData, amenity: {
+        ...formData.amenity, fac_type: e.target.value,
+      },
+    });
+  };
+
+  const handleSlotTimeChange = (index, timeType, timeValue) => {
+    const [hours, minutes] = timeValue.split(":");
+  
+    setFormData(prevState => {
+      const updatedSlots = [...prevState.slots];
+      updatedSlots[index] = {
+        ...updatedSlots[index],
+        [`${timeType}_hr`]: hours,
+        [`${timeType}_min`]: minutes,
+      };
+      return { ...prevState, slots: updatedSlots };
+    });
+  };
+  
+
   return (
     <section className="flex">
       <Navbar />
@@ -173,13 +238,21 @@ const SetupFacility = () => {
 
         <div className="flex  gap-4 my-4">
           <div className="flex gap-2 items-center">
-            <input type="radio" name="type" id="bookable" />
+            <input type="radio" name="type" id="bookable"
+            value="bookable"
+            checked={formData.amenity.fac_type === "bookable"}
+            onChange={handelRadioChange}
+            />
             <label htmlFor="bookable" className="text-lg">
               Bookable
             </label>
           </div>
           <div className="flex gap-2 items-center">
-            <input type="radio" name="type" id="request" />
+            <input type="radio" name="type" id="request" 
+            value="request"
+            onChange={handelRadioChange}
+            checked={formData.amenity.fac_type === "request"}
+            />
             <label htmlFor="request" className="text-lg">
               Request
             </label>
@@ -206,19 +279,30 @@ const SetupFacility = () => {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor="" className="font-medium">
-                Active
-              </label>
-              <select
-                name=""
-                id=""
-                className="border rounded-md border-gray-400 p-2 "
-              >
-                <option value="">Select</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
+  <label htmlFor="active" className="font-medium">
+    Active
+  </label>
+  <select
+    name="active"
+    id="active"
+    className="border rounded-md border-gray-400 p-2"
+    value={formData.amenity.active ? "yes" : "no"}
+    onChange={(e) =>
+      setFormData((prevData) => ({
+        ...prevData,
+        amenity: {
+          ...prevData.amenity,
+          active: e.target.value === "yes",
+        },
+      }))
+    }
+  >
+    <option value="">Select</option>
+    <option value="yes">Yes</option>
+    <option value="no">No</option>
+  </select>
+</div>
+
             {/* <div className="flex flex-col gap-1">
               <label htmlFor="" className="font-medium">
                 Shareable
@@ -810,146 +894,64 @@ const SetupFacility = () => {
           />
         </div>
         <div className="my-4">
-          <h2 className="border-b border-black text-lg mb-1 font-medium">
-            Configure Slot
-          </h2>
+  <h2 className="border-b border-black text-lg mb-1 font-medium">
+    Configure Slot
+  </h2>
 
-          {slots.map((slot) => (
-            <div
-              key={slot.id}
-              className="grid grid-cols-3 gap-2 bg-white my-2 rounded-lg "
-            >
-              <div className="flex flex-col">
-                <label htmlFor="" className="font-medium">
-                  Start time
-                </label>
-                <input
-                  type="time"
-                  placeholder="Start Time"
-                  value={slot.startTime}
-                  onChange={(e) =>
-                    handleInputChange(slot.id, "startTime", e.target.value)
-                  }
-                  className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
-                />
-              </div>
-              {/* <div className="flex flex-col">
-                <label htmlFor="" className="font-medium">
-                  Break Time{" "}
-                  <span className="text-sm font-medium text-gray-400">
-                    (start)
-                  </span>
-                </label>
-                <input
-                  type="time"
-                  placeholder="Break Start"
-                  value={slot.breakTimeStart}
-                  onChange={(e) =>
-                    handleInputChange(slot.id, "breakTimeStart", e.target.value)
-                  }
-                  className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
-                />
-              </div> */}
-              {/* <div className="flex-col flex">
-                <label htmlFor="" className="font-medium">
-                  Break Time{" "}
-                  <span className="text-sm font-medium text-gray-400">
-                    (end)
-                  </span>
-                </label>
-                <input
-                  type="time"
-                  placeholder="Break End"
-                  value={slot.breakTimeEnd}
-                  onChange={(e) =>
-                    handleInputChange(slot.id, "breakTimeEnd", e.target.value)
-                  }
-                  className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
-                />
-              </div> */}
-              <div className="flex flex-col mx-3">
-                <label htmlFor="" className="font-medium">
-                  End Time{" "}
-                </label>
-                <input
-                  type="time"
-                  placeholder="End Time"
-                  value={slot.endTime}
-                  onChange={(e) =>
-                    handleInputChange(slot.id, "endTime", e.target.value)
-                  }
-                  className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
-                />
-              </div>
-              {/* <div className="flex flex-col">
-                <label htmlFor="" className="font-medium">
-                  Concurrent Slots
-                </label>
-                <input
-                  type="number"
-                  placeholder="Concurrent Slots"
-                  value={slot.concurrentSlots}
-                  onChange={(e) =>
-                    handleInputChange(
-                      slot.id,
-                      "concurrentSlots",
-                      e.target.value
-                    )
-                  }
-                  className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
-                />
-              </div> */}
-              {/* <div className="flex flex-col">
-                <label htmlFor="" className="font-medium">
-                  Slots by
-                </label>
-                <input
-                  type="text"
-                  placeholder="Slot by"
-                  value={slot.slotBy}
-                  onChange={(e) =>
-                    handleInputChange(slot.id, "slotBy", e.target.value)
-                  }
-                  className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
-                />
-              </div> */}
-              {/* <div className="flex flex-col">
-                <label htmlFor="" className="font-medium">
-                  Wrap Time
-                </label>
-                <input
-                  type="text"
-                  placeholder="Wrap Time"
-                  value={slot.wrapTime}
-                  onChange={(e) =>
-                    handleInputChange(slot.id, "wrapTime", e.target.value)
-                  }
-                  className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
-                />
-              </div> */}
-              <div className="flex item-end justify-end">
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSlot(slot.id)}
-                  className="text-red-600 hover:text-red-800 p-2"
-                >
-                  <FaTrash size={20} />
-                </button>
-              </div>
-            </div>
-          ))}
+  {formData.slots.map((slot, index) => (
+    <div key={index} className="grid grid-cols-3 gap-2 bg-white my-2 rounded-lg">
+      <div className="flex flex-col">
+        <label htmlFor="" className="font-medium">
+          Start time
+        </label>
+        <input
+          type="time"
+          placeholder="Start Time"
+          value={`${slot.start_hr}:${slot.start_min}`}
+          onChange={(e) =>
+            handleSlotTimeChange(index, "start", e.target.value)
+          }
+          className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
+        />
+      </div>
+      <div className="flex flex-col mx-3">
+        <label htmlFor="" className="font-medium">
+          End Time
+        </label>
+        <input
+          type="time"
+          placeholder="End Time"
+          value={`${slot.end_hr}:${slot.end_min}`}
+          onChange={(e) =>
+            handleSlotTimeChange(index, "end", e.target.value)
+          }
+          className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
+        />
+      </div>
+      <div className="flex item-end justify-end">
+        <button
+          type="button"
+          onClick={() => handleRemoveSlot(index)}
+          className="text-red-600 hover:text-red-800 p-2"
+        >
+          <FaTrash size={20} />
+        </button>
+      </div>
+    </div>
+  ))}
 
-          <div className="flex ">
-            <button
-              type="button"
-              onClick={handleAddSlot}
-              className="flex items-center px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            >
-              <BiPlusCircle className="h-5 w-5 mr-2" />
-              Add Slot
-            </button>
-          </div>
-        </div>
+  <div className="flex">
+    <button
+      type="button"
+      onClick={handleAddSlot}
+      className="flex items-center px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+    >
+      <BiPlusCircle className="h-5 w-5 mr-2" />
+      Add Slot
+    </button>
+  </div>
+</div>
+
         <div></div>
         <div className="flex flex-col">
           <label htmlFor="" className="font-medium">
@@ -979,6 +981,7 @@ const SetupFacility = () => {
           <button
             style={{ background: themeColor }}
             className=" text-white p-2 px-4 font-semibold rounded-md flex items-center gap-2"
+          onClick={postAmenitiesSetup}
           >
             <FaCheck /> Submit
           </button>

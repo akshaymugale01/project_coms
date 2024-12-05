@@ -23,11 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
-//Api Instance: 
-# src/api/axiosInstance.js
-
-# *axiosInstance.js
-
 # src/api/index.js
 src/api/vibeAuth.js
 src/api/HrmsAuth.js
+
+//Api Instance: 
+src/api/axiosInstance.js
+*axiosInstance.js
+
