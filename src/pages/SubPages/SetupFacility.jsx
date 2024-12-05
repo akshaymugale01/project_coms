@@ -140,10 +140,16 @@ const SetupFacility = () => {
     }));
   };
   
-  const handleInputChange = (id, field, value) => {
-    setSlots(
-      slots.map((slot) => (slot.id === id ? { ...slot, [field]: value } : slot))
-    );
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+  
+    setFormData((prevState) => ({
+      ...prevState,
+      amenity: {
+        ...prevState.amenity,
+        [name]: value,
+      },
+    }));
   };
 
   const [timeValues, setTimeValues] = useState({
@@ -179,7 +185,7 @@ const SetupFacility = () => {
   };
   const [subFacilityAvailable, setSubFacilityAvailable] = useState(false);
 
-  const [rules, setRules] = useState([{ selectedOption: "", timesPerDay: "" }]);
+  /*const [rules, setRules] = useState([{ selectedOption: "", timesPerDay: "" }]);
   const options = ["Flat", "User", "Tenant", "Owner"];
   const handleAddRule = () => {
     if (rules.length < 5) {
@@ -196,6 +202,28 @@ const SetupFacility = () => {
   const handleRemoveRule = (index) => {
     const updatedRules = rules.filter((_, i) => i !== index);
     setRules(updatedRules);
+  };*/
+ //new 
+  const [rules, setRules] = useState([
+    { timesPerDay: "", selectedOption: "" },
+  ]);
+
+  const options = ["Members", "Guests", "Staff", "Others"];
+
+  const handleOptionChange = (index, field, value) => {
+    const updatedRules = [...rules];
+    updatedRules[index][field] = value;
+    setRules(updatedRules);
+  };
+
+  const handleRemoveRule = (index) => {
+    setRules(rules.filter((_, i) => i !== index));
+  };
+
+  const handleAddRule = () => {
+    if (rules.length < 4) {
+      setRules([...rules, { timesPerDay: "", selectedOption: "" }]);
+    }
   };
 
   const [blockData, setBlockData] = useState({
@@ -223,6 +251,43 @@ const SetupFacility = () => {
       return { ...prevState, slots: updatedSlots };
     });
   };
+
+  const handleDescriptionChange = (event) => {
+    const { value } = event.target;
+    setFormData({
+      ...formData,
+      amenity: {
+        ...formData.amenity,
+        description: value, // Update description in the state
+      },
+    });
+  };
+  
+  //handle tearms
+  const handleTermsChange = (event) => {
+    const { value } = event.target;
+    setFormData({
+      ...formData,
+      amenity: {
+        ...formData.amenity,
+        terms: value, // Update terms in the state
+      },
+    });
+  };
+
+  // Handle cancellation policy change
+  const handleCancellationPolicyChange = (event) => {
+    const { value } = event.target;
+    setFormData({
+      ...formData,
+      amenity: {
+        ...formData.amenity,
+        cancellation_policy: value, // Update cancellation policy in the state
+      },
+    });
+  };
+
+  
   
 
   return (
@@ -648,43 +713,57 @@ const SetupFacility = () => {
               </div> 
             </div> */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="my-2 flex flex-col gap-2">
-                <label htmlFor="" className="font-medium">
-                  Minimum person allowed
-                </label>
-                <input
-                  type="number"
-                  name=""
-                  id=""
-                  className="border rounded-md p-2"
-                  placeholder="Minimum person allowed"
-                />
-              </div>
-              <div className="my-2 flex flex-col gap-2">
-                <label htmlFor="" className="font-medium">
-                  Maximum person allowed
-                </label>
-                <input
-                  type="number"
-                  name=""
-                  id=""
-                  className="border rounded-md p-2"
-                  placeholder="Maximum person allowed"
-                />
-              </div>
-              <div className="my-2 flex flex-col gap-2">
-                <label htmlFor="" className="font-medium">
-                  GST
-                </label>
-                <input
-                  type="number"
-                  name=""
-                  id=""
-                  className="border rounded-md p-2"
-                  placeholder="GST(%)"
-                />
-              </div>
-            </div>
+    <div className="my-2 flex flex-col gap-2">
+      <label htmlFor="min_people" className="font-medium">
+        Minimum person allowed
+      </label>
+      <input
+        type="number"
+        name="min_people"
+        id="min_people"
+        className="border rounded-md p-2"
+        placeholder="Minimum person allowed"
+        value={formData.amenity.min_people}
+        onChange={handleInputChange}
+      />
+    </div>
+    <div className="my-2 flex flex-col gap-2">
+      <label htmlFor="max_people" className="font-medium">
+        Maximum person allowed
+      </label>
+      <input
+        type="number"
+        name="max_people"
+        id="max_people"
+        className="border rounded-md p-2"
+        placeholder="Maximum person allowed"
+        value={formData.amenity.max_people}
+        onChange={handleInputChange}
+      />
+    </div>
+    <div className="my-2 flex flex-col gap-2">
+      <label htmlFor="gst" className="font-medium">
+        GST
+      </label>
+      <input
+        type="number"
+        name="gst"
+        id="gst"
+        className="border rounded-md p-2"
+        placeholder="GST(%)"
+        value={formData.amenity.gst || ""} // Add GST to the state if necessary
+        onChange={(e) =>
+          setFormData((prevState) => ({
+            ...prevState,
+            amenity: {
+              ...prevState.amenity,
+              gst: e.target.value, // Add GST handler
+            },
+          }))
+        }
+      />
+    </div>
+  </div>
             {/* <div className="my-2 flex items-center gap-2">
               <label htmlFor="" className="font-medium">
                 Consecutive slots Allowed
@@ -694,205 +773,226 @@ const SetupFacility = () => {
           </div>
         </div>
         <div className="bg-blue-50 border-y">
-          <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
-            <div className="flex justify-center my-2">
-              <label htmlFor="" className="flex items-center gap-2">
-                Booking allowed before
-              </label>
-            </div>
-            <div className="flex justify-center my-2 w-full">
+  {/* Booking Allowed Before */}
+  <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
+    <div className="flex justify-center my-2">
+      <label htmlFor="book_before_days" className="flex items-center gap-2">
+        Booking allowed before
+      </label>
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="book_before_days"
+        value={formData.amenity.book_before_days || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Day"
+      />
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="book_before_hours"
+        value={formData.amenity.book_before_hours || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Hour"
+      />
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="book_before_mins"
+        value={formData.amenity.book_before_mins || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Mins"
+      />
+    </div>
+  </div>
+
+  {/* Advance Booking */}
+  <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
+    <div className="flex justify-center my-2">
+      <label htmlFor="advance_days" className="flex items-center gap-2">
+        Advance Booking
+      </label>
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="advance_days"
+        value={formData.amenity.advance_days || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Day"
+      />
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="advance_hours"
+        value={formData.amenity.advance_hours || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Hour"
+      />
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="advance_mins"
+        value={formData.amenity.advance_mins || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Mins"
+      />
+    </div>
+  </div>
+
+  {/* Can Cancel Before Schedule */}
+  <div className="grid grid-cols-4 items-center px-4 gap-2">
+    <div className="flex justify-center my-2">
+      <label htmlFor="cancel_before_days" className="flex items-center gap-2">
+        Can Cancel Before Schedule
+      </label>
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="cancel_before_days"
+        value={formData.amenity.cancel_before_days || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Day"
+      />
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="cancel_before_hours"
+        value={formData.amenity.cancel_before_hours || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Hour"
+      />
+    </div>
+    <div className="flex justify-center my-2 w-full">
+      <input
+        type="text"
+        name="cancel_before_mins"
+        value={formData.amenity.cancel_before_mins || ""}
+        onChange={handleInputChange}
+        className="border border-gray-400 rounded-md p-2 outline-none w-full"
+        placeholder="Mins"
+      />
+    </div>
+  </div>
+</div>
+
+<div className="w-full mt-2">
+      <h2 className="font-medium border-b border-black w-full text-lg">
+        Booking Rule
+      </h2>
+      <div className="grid gap-2 border-gray-400 py-2">
+        {rules.map((rule, index) => (
+          <div key={index} className="mb-2 grid grid-cols-12 items-center">
+            <label className="flex gap-2 items-center col-span-5">
+              <input type="checkbox" className="h-4 w-4" />
+              Facility can be booked
               <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                placeholder="Day"
+                type="number"
+                min="1"
+                value={rule.timesPerDay}
+                onChange={(e) =>
+                  handleOptionChange(index, "timesPerDay", e.target.value)
+                }
+                className="border border-gray-400 rounded-md w-full p-1 outline-none max-w-14"
+                placeholder="Enter times"
               />
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                placeholder="Hour"
-              />
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md w-full p-2 outline-none"
-                placeholder="Mins"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
-            <div className="flex justify-center my-2">
-              <label htmlFor="" className="flex items-center gap-2">
-                Advance Booking
-              </label>
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                placeholder="Day"
-              />
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                placeholder="Hour"
-              />
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md w-full p-2 outline-none"
-                placeholder="Mins"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center  px-4 gap-2">
-            <div className="flex justify-center my-2">
-              <label htmlFor="" className="flex items-center gap-2">
-                Can Cancel Before Schedule
-              </label>
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                placeholder="Day"
-              />
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                placeholder="Hour"
-              />
-            </div>
-            <div className="flex justify-center my-2 w-full">
-              <input
-                type="text"
-                name=""
-                id=""
-                className="border border-gray-400 rounded-md w-full p-2 outline-none"
-                placeholder="Mins"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="w-full mt-2">
-          <h2
-            htmlFor=""
-            className="font-medium border-b border-black w-full text-lg"
-          >
-            Booking Rule
-          </h2>
-          <div className=" grid  gap-2 border-gray-400 py-2">
-            {rules.map((rule, index) => (
-              <div key={index} className="mb-2 grid grid-cols-12">
-                <label className="flex gap-2 items-center col-span-5">
-                  <input type="checkbox" className="h-4 w-4" />
-                  Facility can be booked
-                  <input
-                    type="text"
-                    value={rule.timesPerDay}
-                    onChange={(e) =>
-                      handleOptionChange(index, "timesPerDay", e.target.value)
-                    }
-                    className="border border-gray-400 rounded-md w-full p-1 outline-none max-w-14"
-                    placeholder="Enter times"
-                  />
-                  times per day by
-                  <select
-                    value={rule.selectedOption}
-                    onChange={(e) =>
-                      handleOptionChange(
-                        index,
-                        "selectedOption",
-                        e.target.value
-                      )
-                    }
-                    className="border border-gray-400 rounded-md w-full p-1 outline-none max-w-28"
-                  >
-                    <option value="">Select</option>
-                    {options.map((option) => (
-                      <option
-                        key={option}
-                        value={option}
-                        disabled={rules.some(
-                          (r) => r.selectedOption === option
-                        )}
-                      >
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  onClick={() => handleRemoveRule(index)}
-                  className="ml-4 bg-red-500 text-white px-2 py-1 rounded-md w-fit"
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            ))}
-            {/* <div className="flex">
-              <button
-                onClick={handleAddRule}
-                disabled={rules.length === 4}
-                className={`${
-                  rules.length === 4
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-500"
-                } mt-2  text-white px-4 py-2 rounded-md`}
+              times per day by
+              <select
+                value={rule.selectedOption}
+                onChange={(e) =>
+                  handleOptionChange(index, "selectedOption", e.target.value)
+                }
+                className="border border-gray-400 rounded-md w-full p-1 outline-none max-w-28"
               >
-                Add Rule
-              </button>
-            </div> */}
-            {/* </div> */}
+                <option value="">Select</option>
+                {options.map((option) => (
+                  <option
+                    key={option}
+                    value={option}
+                    disabled={rules.some((r) => r.selectedOption === option)}
+                  >
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              onClick={() => handleRemoveRule(index)}
+              className="ml-4 bg-red-500 text-white px-2 py-1 rounded-md w-fit hover:bg-red-600"
+            >
+              <FaTrash />
+            </button>
           </div>
+        ))}
+
+        <div className="flex">
+          <button
+            onClick={handleAddRule}
+            disabled={rules.length === 4}
+            className={`${
+              rules.length === 4
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            } mt-2 text-white px-4 py-2 rounded-md`}
+          >
+            Add Rule
+          </button>
         </div>
-        <div className="my-4">
+        {rules.length === 4 && (
+          <p className="text-red-500 text-sm mt-2">
+            You cannot add more than 4 rules.
+          </p>
+        )}
+      </div>
+    </div>
+      
+    <div className="my-4">
           <h2 className="border-b border-black text-lg mb-1 font-medium">
             Cover Images
           </h2>
           <FileInputBox fileType="image/*" />
         </div>
+       
         <div className="my-4">
           <h2 className="border-b border-black text-lg mb-1 font-medium">
             Attachments
           </h2>
           <FileInputBox />
         </div>
-        <div className="flex flex-col">
-          <label htmlFor="" className="font-medium">
-            Description
-          </label>
-          <textarea
-            name=""
-            id=""
-            cols="80"
-            rows="3"
-            className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
-          />
-        </div>
+
+       <div>
+      <div className="flex flex-col">
+        <label htmlFor="description" className="font-medium">
+          Description
+        </label>
+        <textarea
+          id="description"
+          cols="80"
+          rows="3"
+          className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
+          value={formData.amenity.description} // Bind value to state
+          onChange={handleDescriptionChange} // Handle change
+          placeholder="Enter a description..."
+        />
+      </div>
+    </div>
+
+       
         <div className="my-4">
   <h2 className="border-b border-black text-lg mb-1 font-medium">
     Configure Slot
@@ -950,31 +1050,41 @@ const SetupFacility = () => {
       Add Slot
     </button>
   </div>
-</div>
+        </div>
 
         <div></div>
-        <div className="flex flex-col">
-          <label htmlFor="" className="font-medium">
-            Terms & Conditions
-          </label>
-          <textarea
-            name=""
-            id=""
-            rows="3"
-            className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
-          />
-        </div>
-        <div className="flex flex-col my-4">
-          <label htmlFor="" className="font-medium">
-            Cancellation Policy
-          </label>
-          <textarea
-            name=""
-            id=""
-            rows="3"
-            className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
-          />
-        </div>
+
+        <div>
+      <div className="flex flex-col">
+        <label htmlFor="terms" className="font-medium">
+          Terms & Conditions
+        </label>
+        <textarea
+          id="terms"
+          rows="3"
+          className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
+          value={formData.amenity.terms} // Bind value to state
+          onChange={handleTermsChange} // Handle change
+          placeholder="Enter terms and conditions..."
+        />
+      </div>
+    </div>
+
+    <div>
+      <div className="flex flex-col my-4">
+        <label htmlFor="cancellation_policy" className="font-medium">
+          Cancellation Policy
+        </label>
+        <textarea
+          id="cancellation_policy"
+          rows="3"
+          className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
+          value={formData.amenity.cancellation_policy} // Bind value to state
+          onChange={handleCancellationPolicyChange} // Handle change
+          placeholder="Enter cancellation policy..."
+        />
+      </div>
+    </div>
         
         
         <div className="flex justify-center my-2">

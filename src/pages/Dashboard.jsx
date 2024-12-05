@@ -174,7 +174,7 @@ const Dashboard = () => {
         {feat.includes("soft_services") && (
           <div className="w-full flex mx-3 flex-col p-2  ">
             <h2 className="border-b-2 border-black font-medium mb-10">
-              Soft Services
+              Soft Services-part1
             </h2>
             <SoftServiceHighCharts />
           </div>
