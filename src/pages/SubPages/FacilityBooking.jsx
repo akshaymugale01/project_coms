@@ -3,17 +3,19 @@ import Collapsible from "react-collapsible";
 import CustomTrigger from "../../containers/CustomTrigger";
 import SeatTimeSlot, { initialSelectedTimes } from "./SeatTimeSlot";
 import Select from "react-select";
-import { getAssignedTo } from "../../api";
+import { getFacitilitySetup, getLogin, getSiteData, postAmenitiesBooking } from "../../api";
 import { useSelector } from "react-redux";
 import Navbar from "../../components/Navbar";
 import { FaCheck } from "react-icons/fa";
+import { getItemInLocalStorage } from "../../utils/localStorage";
 const FacilityBooking = () => {
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");
   const formattedDate = `${year}-${month}-${day}`;
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState([]);
+  const [slots, setSlots] = useState([]);
   const [behalf, setBehalf] = useState("self");
   const [isOpen, setIsOpen] = useState(false);
   const [isTermOpen, setIsTermOpen] = useState(false);
@@ -22,14 +24,89 @@ const FacilityBooking = () => {
   const [time, setTime] = useState("");
   const [users, setUsers] = useState([]);
   const [date, setDate] = useState(formattedDate);
+  const [siteData, setSiteData] = useState([]);
   const [facility, setFacility] = useState("");
+  const [facilities, setFacilities] = useState([]);
   const [paymentMode, setPaymentMode] = useState("post");
-  const [formData, setFormData] = useState({
-    building_id: "",
-    floor_id: "",
-    seat_date: formattedDate,
-    user_id: "",
-  });
+  const siteId = getItemInLocalStorage("SITEID");
+  const [selectedUser, setSelectedUser] = useState(""); // Holds the selected UserId
+  const [userOptions, setUserOptions] = useState([]);
+  const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
+    const [formData, setFormData] = useState({
+      amenity_id: "",
+      amenity_slot_id: "",
+      user_id: "" ,
+      booking_date: "",
+      site_id: siteId ,
+      amount: "",
+      member_adult: "",
+      member_child: "",
+      guest_adult: "",
+      guest_child: "",
+    });
+  console.log("Data", formData);
+
+  const fetchFacilities = async () => {
+    try {
+      const response = await getFacitilitySetup();
+      console.log("res", response);
+      
+      if (response?.data) {
+        setFacilities(response.data);
+      } else {
+        console.log("No Amenities Found");
+      }
+    } catch (error) {
+      console.log("Error Fetching facilities", error);
+    }
+  };
+
+  const fetchSlotsForFacility = async (facilityId) => {
+    try {
+      const response = await getFacitilitySetup(); // Fetch facilities
+      if (response?.data) {
+        // Find the selected facility by ID
+        const selectedFacility = response.data.find(
+          (facility) => facility.id === parseInt(facilityId)
+        );
+  
+        if (selectedFacility?.amenity_slots) {
+          setSlots(selectedFacility.amenity_slots); // Update slots state with amenity_slots
+        } else {
+          console.log("No Slots Found for this Facility");
+          setSlots([]); // Reset slots if none are found
+        }
+      } else {
+        console.log("No Facilities Found");
+      }
+    } catch (error) {
+      console.log("Error Fetching Slots", error);
+    }
+  };
+  
+
+  const handleSlotChange = (e) => {
+    const selectedSlotId = e.target.value;
+    setSelectedSlot(selectedSlotId); // Update selected slot state
+    setFormData((prevData) => ({
+      ...prevData,
+      amenity_slot_id: selectedSlotId, // Update formData with selected slot
+    }));
+  };
+  
+  
+
+  const handleDateChange = (e) => {
+    const selectedDate = e.target.value;
+    setDate(selectedDate); // Update local date state
+    setFormData((prevData) => ({
+      ...prevData,
+      booking_date: selectedDate, // Update booking_date in formData state
+    }));
+  };
+
+
   const handleButtonClick = (selectedTime) => {
     setSelectedTimes((prevState) => {
       const newState = {
@@ -50,24 +127,72 @@ const FacilityBooking = () => {
     });
   };
 
-  useEffect(() => {
-    const fetchAssignedTo = async () => {
-      try {
-        const response = await getAssignedTo();
-        const transformedUsers = response.data.map((user) => ({
-          value: user.id,
-          label: `${user.firstname} ${user.lastname}`,
-        }));
-        setUsers(transformedUsers);
-        // setUsers(response.data);
-        console.log(response);
-      } catch (error) {
-        console.error("Error fetching assigned users:", error);
+  const postBookFacility = async () => {
+    const postData = new FormData();
+    // formData.append("facility_id", facility);
+
+    // // Append amenity fields
+    // Object.entries(formData.amenity).forEach(([key, value]) => {
+    //   postData.append(`amenity[${key}]`, value);
+    // });
+  
+    // // Append slots as an array
+    // formData.slots.forEach((slot) => {
+    //   Object.entries(slot).forEach(([key, value]) => {
+    //     postData.append(`slots[][${key}]`, value);
+    //   });
+    // });
+  
+    try {
+      const response = await postAmenitiesBooking(postData);
+      console.log(response);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  
+
+  useEffect (() => {
+    fetchFacilities();
+      // Fetch user data from localStorage
+      const userFirst = getItemInLocalStorage("Name");
+      const userLast = getItemInLocalStorage("LASTNAME");
+      const userID = getItemInLocalStorage("UserId");
+  
+      // If user data exists, add it to options
+      if (userFirst && userLast && userID) {
+        setUserOptions([
+          {
+            label: `${userFirst} ${userLast}`, // Full name
+            value: userID, // UserId
+          },
+        ]);
       }
-    };
-    fetchAssignedTo();
-    console.log(users);
-  }, []);
+  },[]);
+
+  const handleFacilityChange = (e) => {
+    const selectedFacilityId = e.target.value;
+    setSelectedSlot(""); // Reset selected slot
+    if (selectedFacilityId) {
+      fetchSlotsForFacility(selectedFacilityId); // Fetch slots for the selected facility
+    }
+    setFacility(selectedFacilityId); // Update local facility state
+    setFormData((prevData) => ({
+      ...prevData,
+      amenity_id: selectedFacilityId, // Update amenity_id in formData state
+    }));
+  };
+  
+
+  const handleSelectChange = (e) => {
+    const selectedUserId = e.target.value;
+    setFormData((prevData) => ({
+      ...prevData,
+      user_id: selectedUserId, // Update user_id in the formData state
+    }));
+  };
+
   const themeColor = useSelector((state) => state.theme.color);
   return (
     <section className="flex">
@@ -81,129 +206,70 @@ const FacilityBooking = () => {
             >
               Book Facility
             </h2>
-            {/* <div className="md:grid flex flex-col grid-cols-4 items-center">
-              <p className="font-semibold">For :</p>
-              <div className="flex gap-5">
-                <p
-                  className={`border-2 p-1 px-6 border-black font-medium rounded-full cursor-pointer ${
-                    behalf === "self" && "bg-black text-white"
-                  }`}
-                  onClick={() => setBehalf("self")}
-                >
-                  Self
-                </p>
-                <p
-                  className={`border-2 p-1 px-6 border-black font-medium rounded-full cursor-pointer ${
-                    behalf === "others" && "bg-black text-white"
-                  }`}
-                  onClick={() => setBehalf("others")}
-                >
-                  Others
-                </p>
-              </div>
-            </div> */}
-            {/* <div>
-              {behalf === "others" && (
-                <>
-                  <label htmlFor="" className="font-medium">
-                    Select User
-                  </label>
-                  <Select
-                    options={users}
-                    placeholder="Select User"
-                    value={formData.on_behalf}
-                    onChange={(selectedOption) =>
-                      setFormData({ ...formData, on_behalf: selectedOption })
-                    }
-                    className="w-full my-2"
-                  />
-                </>
-              )}
-            </div> */}
             <div className="grid grid-cols-4 gap-2">
+            <div className="flex flex-col gap-1">
+  <p className="font-semibold">Facility :</p>
+  <select
+    className="border p-2 px-4 border-gray-500 rounded-md"
+    value={facility}
+    onChange={handleFacilityChange}
+  >
+    <option value="">Select Facility</option>
+    {facilities.map((facilityItem) => (
+      <option key={facilityItem.id} value={facilityItem.id}>
+        {facilityItem.fac_name}
+      </option>
+    ))}
+  </select>
+</div>
+
+
               <div className="flex flex-col gap-1">
-                <p className="font-semibold">Facility :</p>
-                <select
-                  className="border p-2 px-4 border-gray-500 rounded-md "
-                  value={facility}
-                  onChange={(e) => setFacility(e.target.value)}
-                >
-                  <option value="">Select Facility</option>
-                  <option value="user1">Conference Room</option>
-                  <option value="User2">Cabin</option>
-                </select>
-              </div>
-              {/* <div className="flex flex-col gap-1">
-                <p className="font-semibold">Building :</p>
-                <select
-                  className="border p-2 px-4 border-gray-500 rounded-md"
-                  value={facility}
-                  onChange={(e) => setFacility(e.target.value)}
-                >
-                  <option value="">Select Building</option> */}
-                  {/* <option value="user1">Conference Room</option>
-                  <option value="User2">Cabin</option> */}
-                {/* </select>
-              </div> */}
-              {/* <div className="flex flex-col gap-1">
-                <p className="font-semibold">Floor :</p>
-                <select
-                  className="border p-2 px-4 border-gray-500 rounded-md"
-                  value={facility}
-                  onChange={(e) => setFacility(e.target.value)}
-                >
-                  <option value="">Select Floor</option>
-                </select>
-              </div> */}
-              {/* <div className="flex flex-col gap-1">
-                <p className="font-semibold"> Unit :</p>
-                <select
-                  className="border p-2 px-4 border-gray-500 rounded-md"
-                  value={facility}
-                  onChange={(e) => setFacility(e.target.value)}
-                >
-                  <option value="">Select unit</option>
-                  {/* <option value="user1">Conference Room</option>
-                  <option value="User2">Cabin</option> 
-                </select>
-              </div> */}
-              <div className="flex flex-col gap-1">
-                <p className="font-semibold">User :</p>
-                <select
-                  className="border p-2 px-4 border-gray-500 rounded-md"
-                  value={facility}
-                  onChange={(e) => setFacility(e.target.value)}
-                >
-                  <option value="">Select user</option>
-                  {/* <option value="user1">Conference Room</option>
-                  <option value="User2">Cabin</option> */}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="" className="font-semibold">
-                  Select Date :
-                </label>
-                <input
-                  type="date"
-                  name=""
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  id=""
-                  className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
-                />
-              </div>
+      <p className="font-semibold">User :</p>
+      <select
+        className="border p-2 px-4 border-gray-500 rounded-md"
+        value={formData.user_id} // Bind the value to formData.user_id
+        onChange={handleSelectChange} // Update user_id on change
+      >
+        <option value="">Select User</option>
+        {userOptions.map((user, index) => (
+          <option key={index} value={user.value}>
+            {user.label}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div className="flex flex-col gap-1">
+      <label htmlFor="bookingDate" className="font-semibold">
+        Select Date:
+      </label>
+      <input
+        type="date"
+        id="bookingDate"
+        name="bookingDate"
+        value={date}
+        onChange={handleDateChange}
+        className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
+      />
+    </div>
             </div>
-            {facility !== "" && (
-              <div className="my-5">
-                <h2 className="border-b text-xl border-black font-semibold">
-                  Select Slot
-                </h2>
-                <SeatTimeSlot
-                  handleButtonClick={handleButtonClick}
-                  selectedTimes={selectedTimes}
-                />
-              </div>
-            )}
+            {facility !== "" && slots.length > 0 && (
+  <div className="grid grid-cols-4 gap-1 mt-5">
+    <p className="font-semibold">Select Slot :</p>
+    <select
+      className="border p-2 px-4 border-gray-500 rounded-md"
+      value={selectedSlot}
+      onChange={handleSlotChange}
+    >
+      <option value="">Select Slot</option>
+      {slots.map((slot) => (
+        <option key={slot.id} value={slot.id}>
+          {slot.start_hr}:{slot.start_min} - {slot.end_hr}:{slot.end_min}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
             <div className="my-2">
               <h2 className="border-b text-xl border-black font-semibold">
                 Payment Mode
@@ -254,10 +320,14 @@ const FacilityBooking = () => {
               />
             </div>
             <div className="flex justify-center">
-              <button className="p-2 px-4 flex items-center gap-2 bg-green-400 text-white rounded-md font-medium transition-all duration-300">
-                <FaCheck /> Submit
-              </button>
-            </div>
+  <button
+    onClick={postBookFacility} // Trigger the handleSubmit function on click
+    className="p-2 px-4 flex items-center gap-2 bg-green-400 text-white rounded-md font-medium transition-all duration-300"
+  >
+    <FaCheck /> Submit
+  </button>
+</div>
+
             <Collapsible
               readOnly
               trigger={

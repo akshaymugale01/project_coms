@@ -13,16 +13,22 @@ import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 import { getFacitilitySetup, postFacitilitySetup } from "../../api";
+import { getItemInLocalStorage } from "../../utils/localStorage";
 const SetupFacility = () => {
   const [allowMultipleSlots, setAllowMultipleSlots] = useState("no");
+  const [coverImage, setCoverImage] = useState(null);
+const [attachment, setAttachment] = useState(null);
 
   const handleSelectChange = (e) => {
     setAllowMultipleSlots(e.target.value);
   };
   const themeColor = useSelector((state) => state.theme.color);
+  const sitID = getItemInLocalStorage('SITEID');
   const [formData, setFormData] = useState({
+    cover_image: null, // or initial path/URL if editing
+  attachment: null,
     amenity: {
-      site_id: "",
+      site_id: sitID,
       fac_type: "",
       fac_name: "",
       member_charges: "",
@@ -45,7 +51,11 @@ const SetupFacility = () => {
       deposit: "",
       description: "",
       max_slots: "",
+      member: null,
+      guest: null
     },
+    cover_image: [],
+    attachment: [],
     slots: [
       {
         start_hr: "",
@@ -55,6 +65,7 @@ const SetupFacility = () => {
       },
     ],
   });
+  
   
   console.log("DATA",formData)
   
@@ -73,26 +84,70 @@ const SetupFacility = () => {
   const postAmenitiesSetup = async () => {
     const postData = new FormData();
   
+    // Append files
+    if (formData.cover_image) {
+      postData.append("cover_image", formData.cover_image);
+    }
+    
+    if (formData.attachment) {
+      postData.append("attachment", formData.attachment);
+    }
+
+
+  
     // Append amenity fields
     Object.entries(formData.amenity).forEach(([key, value]) => {
       postData.append(`amenity[${key}]`, value);
     });
   
-    // Append slot fields as an array
-    formData.slots.forEach((slot, index) => {
+    // Append slots as an array
+    formData.slots.forEach((slot) => {
       Object.entries(slot).forEach(([key, value]) => {
         postData.append(`slots[][${key}]`, value);
       });
-    });    
+    });
   
     try {
       const response = await postFacitilitySetup(postData);
       console.log(response);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
+
+  const handleCheckboxChange = (type) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      amenity: {
+        ...prevState.amenity,
+        [type]: prevState.amenity[type] === null ? true : null, // Toggle between true and null
+      },
+    }));
+  };
+
+  const handlePriceChange = (field, value) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      amenity: {
+        ...prevState.amenity,
+        [field]: value,
+      },
+    }));
+  };
   
+   
+
+  const handleFileChange = (event, key) => {
+    const file = event.target.files[0];
+    console.log(`Selected file for ${key}:`, file); // Debugging line
+    if (file) {
+      setFormData((prevState) => ({
+        ...prevState,
+        [key]: file,
+      }));
+    }
+  };
+
   const handleAmenityChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -103,20 +158,6 @@ const SetupFacility = () => {
     }));
   };
   
-  const [slots, setSlots] = useState([
-    {
-      id: 1,
-      startTime: "",
-      breakTimeStart: "",
-      breakTimeEnd: "",
-      endTime: "",
-      concurrentSlots: "",
-      slotBy: "",
-      wrapTime: "",
-    },
-  ]);
-
-  console.log("slots",slots)
 
   const handleAddSlot = () => {
     setFormData((prevState) => ({
@@ -487,232 +528,85 @@ const SetupFacility = () => {
               <p className="text-center font-medium">Member Type</p>
               <p className="text-center font-medium">Adult</p>
               <p className="text-center font-medium"> Child</p>
-              {/* <p className="text-center font-medium">Configure Payment</p> */}
             </div>
-            <div className="grid grid-cols-4 items-center border-b">
-              <div className="flex justify-center my-2">
-                <label htmlFor="">
-                  <input type="checkbox" name="" id="" /> Member
-                </label>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              {/* <div className="flex justify-center my-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Postpaid
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Prepaid
-                    </label>
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2 ">
-                      <input type="checkbox" name="" id="" /> Pay on facility
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Complimentary
-                    </label>
-                  </div>
-                </div>
-              </div> */}
-            </div>
-            {/* <div className="grid grid-cols-4 items-center border-b ">
-              <div className="flex justify-center my-2">
-                <label htmlFor="" className="flex items-center gap-2">
-                  <input type="checkbox" name="" id="" />
-                  Non-Member
-                </label>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              {/* <div className="flex justify-center my-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Postpaid
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Prepaid
-                    </label>
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2 ">
-                      <input type="checkbox" name="" id="" /> Pay on facility
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Complimentary
-                    </label>
-                  </div>
-                </div>
-              </div> 
-            </div> */}
-            <div className="grid grid-cols-4 items-center border-b">
-              <div className="flex justify-center my-2">
-                <label htmlFor="" className="flex items-center gap-2">
-                  <input type="checkbox" name="" id="" />
-                  Guest
-                </label>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              {/* <div className="flex justify-center my-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Postpaid
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Prepaid
-                    </label>
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2 ">
-                      <input type="checkbox" name="" id="" /> Pay on facility
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Complimentary
-                    </label>
-                  </div>
-                </div>
-              </div> */}
-            </div>
-            {/* <div className="grid grid-cols-4 items-center border-b ">
-              <div className="flex justify-center my-2">
-                <label htmlFor="" className="flex items-center gap-2">
-                  <input type="checkbox" name="" id="" />
-                  Tenant
-                </label>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-center my-2">
-                <div className="flex items-center">
-                  <div className="rounded-l-md border p-2 border-gray-400">
-                    <input type="checkbox" name="" id="" />
-                  </div>
-                  <input
-                    type="text"
-                    name=""
-                    id=""
-                    className="border border-gray-400 rounded-r-md p-2 outline-none"
-                    placeholder="₹100"
-                  />
-                </div>
-              </div>
-              {/* <div className="flex justify-center my-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Postpaid
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Prepaid
-                    </label>
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="" className="flex items-center gap-2 ">
-                      <input type="checkbox" name="" id="" /> Pay on facility
-                    </label>
-                    <label htmlFor="" className="flex items-center gap-2">
-                      <input type="checkbox" name="" id="" /> Complimentary
-                    </label>
-                  </div>
-                </div>
-              </div> 
-            </div> */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Member Section */}
+<div className="grid grid-cols-4 items-center border-b">
+  <div className="flex justify-center my-2">
+    <label className="flex items-center gap-2">
+      <input
+        type="checkbox"
+        checked={formData.amenity.member === true}
+        onChange={() => handleCheckboxChange("member")}
+      />
+      Member
+    </label>
+  </div>
+  <div className="flex justify-center my-2">
+    <input
+      type="text"
+      disabled={!formData.amenity.member}
+      value={formData.amenity.member_price_adult || ""}
+      onChange={(e) =>
+        handlePriceChange("member_price_adult", e.target.value)
+      }
+      className="border border-gray-400 rounded p-2 outline-none"
+      placeholder="₹100"
+    />
+  </div>
+  <div className="flex justify-center my-2">
+    <input
+      type="text"
+      disabled={!formData.amenity.member}
+      value={formData.amenity.member_price_child || ""}
+      onChange={(e) =>
+        handlePriceChange("member_price_child", e.target.value)
+      }
+      className="border border-gray-400 rounded p-2 outline-none"
+      placeholder="₹100"
+    />
+  </div>
+</div>
+            
+            {/* Guest Section */}
+<div className="grid grid-cols-4 items-center border-b">
+  <div className="flex justify-center my-2">
+    <label className="flex items-center gap-2">
+      <input
+        type="checkbox"
+        checked={formData.amenity.guest === true}
+        onChange={() => handleCheckboxChange("guest")}
+      />
+      Guest
+    </label>
+  </div>
+  <div className="flex justify-center my-2">
+    <input
+      type="text"
+      disabled={!formData.amenity.guest}
+      value={formData.amenity.guest_price_adult || ""}
+      onChange={(e) =>
+        handlePriceChange("guest_price_adult", e.target.value)
+      }
+      className="border border-gray-400 rounded p-2 outline-none"
+      placeholder="₹100"
+    />
+  </div>
+  <div className="flex justify-center my-2">
+    <input
+      type="text"
+      disabled={!formData.amenity.guest}
+      value={formData.amenity.guest_price_child || ""}
+      onChange={(e) =>
+        handlePriceChange("guest_price_child", e.target.value)
+      }
+      className="border border-gray-400 rounded p-2 outline-none"
+      placeholder="₹100"
+    />
+  </div>
+</div>
+
+
+  <div className="grid grid-cols-3 gap-4">
     <div className="my-2 flex flex-col gap-2">
       <label htmlFor="min_people" className="font-medium">
         Minimum person allowed
@@ -844,7 +738,7 @@ const SetupFacility = () => {
       <input
         type="text"
         name="advance_mins"
-        value={formData.amenity.advance_mins || ""}
+        value={formData.amenity.advance_min || ""}
         onChange={handleInputChange}
         className="border border-gray-400 rounded-md p-2 outline-none w-full"
         placeholder="Mins"
@@ -863,7 +757,7 @@ const SetupFacility = () => {
       <input
         type="text"
         name="cancel_before_days"
-        value={formData.amenity.cancel_before_days || ""}
+        value={formData.amenity.cancel_before || ""}
         onChange={handleInputChange}
         className="border border-gray-400 rounded-md p-2 outline-none w-full"
         placeholder="Day"
@@ -962,19 +856,25 @@ const SetupFacility = () => {
       </div>
     </div>
       
-    <div className="my-4">
+        <div className="my-4">
           <h2 className="border-b border-black text-lg mb-1 font-medium">
             Cover Images
           </h2>
-          <FileInputBox fileType="image/*" />
+          <input
+   type="file"
+   accept="image/*"
+   onChange={(e) => handleFileChange(e, "cover_image")}
+/>
         </div>
        
         <div className="my-4">
           <h2 className="border-b border-black text-lg mb-1 font-medium">
             Attachments
           </h2>
-          <FileInputBox />
+          <input type="file"
+  onChange={(e) => handleFileChange(e, "attachment")} />
         </div>
+        
 
        <div>
       <div className="flex flex-col">

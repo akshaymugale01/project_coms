@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { BiExport } from "react-icons/bi";
 import { ImEye } from "react-icons/im";
@@ -11,9 +11,25 @@ import { useSelector } from "react-redux";
 import { BsEye } from "react-icons/bs";
 import SeatBooking from "./SeatBooking";
 import SetupSeatBooking from "./SetupSeatBooking";
+import { getFacitilitySetup } from "../../api";
 
 const SetupBookingFacility = () => {
   const [searchText, setSearchText] = useState("");
+  const [bookingFacility, SetBookingFacility] = useState([]);
+   useEffect(() => {
+    const fetchFacilityBooking = async ()=> {
+      try {
+        const response = await getFacitilitySetup();
+        console.log("Response", response);
+        SetBookingFacility(response.data)
+      } catch (error) {
+        console.log(error)
+      }
+
+    }
+    fetchFacilityBooking();
+  },[]);
+
 
   const setupColumn = [
     {
@@ -28,10 +44,10 @@ const SetupBookingFacility = () => {
     { name: "ID", selector: (row) => row.id, sortable: true },
     {
       name: "Name",
-      selector: (row) => row.facility,
+      selector: (row) => row.fac_name,
       sortable: true,
     },
-    { name: "Type", selector: (row) => row.type, sortable: true },
+    { name: "Type", selector: (row) => row.fac_type, sortable: true },
     { name: "Department", selector: (row) => row.department, sortable: true },
     {
       name: "Book By",
@@ -40,17 +56,17 @@ const SetupBookingFacility = () => {
     },
     {
       name: "Book Before",
-      selector: (row) => row.bookBefore,
+      selector: (row) => `${row.book_before_days || "0"} Days ${row.book_before_hours || "0"} Hr`,
       sortable: true,
     },
     {
       name: "Advance Booking",
-      selector: (row) => row.advBooking,
+      selector: (row) => `${row.advance_days || "0"} Days ${row.advance_hours || "0"} Hr`,
       sortable: true,
     },
     {
       name: "Created On",
-      selector: (row) => row.createdOn,
+      selector: (row) => row.created_at,
       sortable: true,
     },
     // {
@@ -163,7 +179,9 @@ const SetupBookingFacility = () => {
             </div>
             <Table
               columns={setupColumn}
-              data={filteredData}
+              data={bookingFacility}
+              // data={filteredData}
+
               // customStyles={customStyle}
             />
           </>
