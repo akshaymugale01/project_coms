@@ -54,8 +54,6 @@ const [attachment, setAttachment] = useState(null);
       member: null,
       guest: null
     },
-    cover_image: [],
-    attachment: [],
     slots: [
       {
         start_hr: "",

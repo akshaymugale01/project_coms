@@ -129,28 +129,39 @@ const FacilityBooking = () => {
 
   const postBookFacility = async () => {
     const postData = new FormData();
-    // formData.append("facility_id", facility);
-
-    // // Append amenity fields
-    // Object.entries(formData.amenity).forEach(([key, value]) => {
-    //   postData.append(`amenity[${key}]`, value);
-    // });
-  
-    // // Append slots as an array
-    // formData.slots.forEach((slot) => {
-    //   Object.entries(slot).forEach(([key, value]) => {
-    //     postData.append(`slots[][${key}]`, value);
-    //   });
-    // });
   
     try {
+      // Append all necessary fields dynamically
+      postData.append("amenity_booking[amenity_id]", formData.amenity_id || "");
+      postData.append("amenity_booking[amenity_slot_id]", formData.amenity_slot_id || "");
+      postData.append("amenity_booking[amount]", formData.amount || "");
+      postData.append("amenity_booking[booking_date]", formData.booking_date || "");
+      postData.append("amenity_booking[guest_adult]", formData.guest_adult || "");
+      postData.append("amenity_booking[guest_child]", formData.guest_child || "");
+      postData.append("amenity_booking[member_adult]", formData.member_adult || "");
+      postData.append("amenity_booking[member_child]", formData.member_child || "");
+      postData.append("amenity_booking[site_id]", formData.site_id || "");
+      postData.append("amenity_booking[user_id]", formData.user_id || "");
+  
+      // Debugging: Log the entire FormData
+      for (const [key, value] of postData.entries()) {
+        console.log(`${key}: ${value}`);
+      }
+  
+      // API call
       const response = await postAmenitiesBooking(postData);
-      console.log(response);
+  
+      // Handle the response
+      console.log("Booking response:", response);
+  
+      alert("Booking successful!");
     } catch (error) {
-      console.error(error);
+      // Handle errors
+      console.error("Error in booking:", error);
+      alert("Error in booking. Please try again.");
     }
   };
-
+  
   
 
   useEffect (() => {
@@ -172,17 +183,20 @@ const FacilityBooking = () => {
   },[]);
 
   const handleFacilityChange = (e) => {
-    const selectedFacilityId = e.target.value;
+    const selectedFacilityId = e.target.value; // Get the selected facility ID from the dropdown
     setSelectedSlot(""); // Reset selected slot
+  
     if (selectedFacilityId) {
       fetchSlotsForFacility(selectedFacilityId); // Fetch slots for the selected facility
     }
+  
     setFacility(selectedFacilityId); // Update local facility state
     setFormData((prevData) => ({
       ...prevData,
       amenity_id: selectedFacilityId, // Update amenity_id in formData state
     }));
   };
+  
   
 
   const handleSelectChange = (e) => {
@@ -222,6 +236,7 @@ const FacilityBooking = () => {
     ))}
   </select>
 </div>
+
 
 
               <div className="flex flex-col gap-1">
