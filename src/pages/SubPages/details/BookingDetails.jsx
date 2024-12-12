@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Table from "../../../components/table/Table"; // Update path as needed
-import { getFacitilitySetup } from "../../../api"; // Import API call
+import { getAmenitiesBooking, getAmenitiesIdBooking, getFacitilitySetup } from "../../../api"; // Import API call
+import { useParams } from "react-router-dom";
 
 const BookingDetails = () => {
   const themeColor = useSelector((state) => state.theme.color);
-  const [bookingDetails, setBookingDetails] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState([]);
   const [loading, setLoading] = useState(true);
-
+const {id} = useParams();
+console.log(id);
   useEffect(() => {
     const fetchBookingDetails = async () => {
       try {
-        const response = await getFacitilitySetup(); // Adjust API call as needed
+        const response = await getAmenitiesIdBooking(id); // Adjust API call as needed
         console.log(response)
         setBookingDetails(response.data); // Assume `response.data` contains the booking details
         setLoading(false);
@@ -41,7 +43,7 @@ const BookingDetails = () => {
   }
 
   const {
-    id,
+    // id,
     status,
     scheduled_date,
     slot,

@@ -887,6 +887,13 @@ export const getAmenitiesBooking = async (data) =>
     },
   });
 
+  export const getAmenitiesIdBooking = async (id) =>
+    axiosInstance.get(`/amenity_bookings/${id}.json`,  {
+      params: {
+        token: token,
+      },
+    });
+
 
   // Facitility Setup
   export const getFacitilitySetup = async (data) =>

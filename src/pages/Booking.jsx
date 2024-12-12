@@ -9,7 +9,7 @@ import SeatBooking from "./SubPages/SeatBooking";
 import Table from "../components/table/Table";
 import { useSelector } from "react-redux";
 import { BsEye } from "react-icons/bs";
-import { getAmenitiesBooking } from "../api";
+import { getAmenitiesBooking, getFacitilitySetup } from "../api";
 
 const Booking = () => {
   const [searchText, setSearchText] = useState("");
@@ -18,34 +18,68 @@ const Booking = () => {
   const [bookings, setBookings] = useState([]); // State to hold booking data
   const [loading, setLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
+  const [bookingFacility, setBookingFacility] = useState([]);
   const themeColor = useSelector((state) => state.theme.color);
 
   useEffect(() => {
-    const fetchBookings = async ()=> {
+    const fetchData = async () => {
       try {
-        const response = await getAmenitiesBooking();
-        console.log("Response", response);
-        setBookings(response.data)
+        setLoading(true);
+
+        // Fetch Facility Setup
+        const facilityResponse = await getFacitilitySetup();
+        console.log("Facility Setup Response:", facilityResponse.data.fac_name);
+        setBookingFacility(facilityResponse.data);
+
+        // Fetch Bookings
+        const bookingsResponse = await getAmenitiesBooking();
+        console.log("Bookings Response:", bookingsResponse);
+        setBookings(bookingsResponse.data);
+
+        setLoading(false);
       } catch (error) {
-        console.log(error)
+        console.error("Error fetching data:", error);
+        setError("Failed to fetch data. Please try again.");
+        setLoading(false);
       }
-    }
+    };
+
+    fetchData();
+  }, []);
+
+  const combinedData = bookings.map((booking) => {
+    const facility = bookingFacility.find((fac) => fac.id === booking.amenity_id);
     
-    fetchBookings();
-  },[]);
-
-
-  // Handle search
+    // Find the relevant slot from amenity slots
+    const amenitySlots = facility?.amenity_slots || [];
+    const slot = amenitySlots.find((s) => s.id === booking.amenity_slot_id);
+    
+    // Format the slot time if found
+    const slotTime = slot ? `${slot.start_hr}:${slot.start_min} - ${slot.end_hr}:${slot.end_min}` : "N/A";
+    
+    return {
+      ...booking,
+      fac_name: facility?.fac_name || "N/A",
+      fac_type: facility?.fac_type || "N/A",
+      description: facility?.description || "N/A",
+      terms: facility?.terms || "N/A",
+      slot_time: slotTime, // Add formatted slot time
+    };
+  });
+  
+  console.log("Combined Data:", combinedData);
+  
+  // Handle Search
   const handleSearch = (event) => {
     const searchValue = event.target.value;
     setSearchText(searchValue);
-    const filteredResults = bookings.filter((item) =>
-      item.facility.toLowerCase().includes(searchValue.toLowerCase())
+
+    const filteredResults = combinedData.filter((item) =>
+      item.fac_name.toLowerCase().includes(searchValue.toLowerCase())
     );
     setBookings(filteredResults);
   };
-
-  // Columns for the DataTable
+  // Columns for DataTable
   const columns = [
     {
       name: "Action",
@@ -54,38 +88,60 @@ const Booking = () => {
           <BsEye />
         </Link>
       ),
-      sortable: true,
+      sortable: false,
     },
     { name: "ID", selector: (row) => row.id, sortable: true },
     {
-      name: "Facility",
+      name: "Facility ID",
+      selector: (row) => row.amenity_id,
+      sortable: true,
+    },
+    {
+      name: "Facility Name",
       selector: (row) => row.fac_name,
       sortable: true,
     },
-    { name: "Booked By", selector: (row) => row.user_id, sortable: true },
-    { name: "Booked On", selector: (row) => row.bookedOn, sortable: true },
     {
       name: "Facility Type",
       selector: (row) => row.fac_type,
       sortable: true,
     },
     {
+      name: "Description",
+      selector: (row) => row.description,
+      sortable: true,
+    },
+    {
+      name: "Terms",
+      selector: (row) => row.terms,
+      sortable: true,
+    },
+    {
+      name: "Booked By",
+      selector: (row) => row.user_id,
+      sortable: true,
+    },
+    {
+      name: "Booked On",
+      selector: (row) => row.booking_date,
+      sortable: true,
+    },
+    {
       name: "Scheduled On",
-      selector: (row) => row.scheduledOn,
+      selector: (row) => row.scheduledOn || "NA",
       sortable: true,
     },
     {
       name: "Scheduled Time",
-      selector: (row) => row.scheduledTime,
+      selector: (row) => row.slot_time || "N/A",
       sortable: true,
     },
     {
       name: "Booking Status",
-      selector: (row) => row.bookingStatus,
+      selector: (row) => row.bookingStatus || "N/A",
       sortable: true,
     },
   ];
-
   return (
     <section className="flex">
       <Navbar />
@@ -134,13 +190,13 @@ const Booking = () => {
               </div>
             </div>
 
-            {/* Display table or loading/error message */}
+            
             {loading ? (
               <p>Loading bookings...</p>
             ) : error ? (
               <p className="text-red-500">{error}</p>
             ) : (
-              <Table columns={columns} data={bookings} />
+              <Table columns={columns} data={combinedData} />
             )}
             {modal && <ExportBookingModal onclose={() => showModal(false)} />}
           </div>

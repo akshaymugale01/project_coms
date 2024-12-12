@@ -56,12 +56,12 @@ const SetupBookingFacility = () => {
     },
     {
       name: "Book Before",
-      selector: (row) => `${row.book_before_days || "0"} Days ${row.book_before_hours || "0"} Hr`,
+      selector: (row) => `${row?.book_before_days ||"NA"} Days ${row?.book_before_hours || "NA" } Hr`,
       sortable: true,
     },
     {
       name: "Advance Booking",
-      selector: (row) => `${row.advance_days || "0"} Days ${row.advance_hours || "0"} Hr`,
+      selector: (row) => `${row.advance_days} Days ${row.advance_hours} Hr`,
       sortable: true,
     },
     {
