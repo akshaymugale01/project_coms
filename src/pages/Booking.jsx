@@ -101,11 +101,11 @@ const Booking = () => {
       sortable: false,
     },
     { name: "ID", selector: (row) => row.id, sortable: true },
-    {
-      name: "Facility ID",
-      selector: (row) => row.amenity_id,
-      sortable: true,
-    },
+    // {
+    //   name: "Facility ID",
+    //   selector: (row) => row.amenity_id,
+    //   sortable: true,
+    // },
     {
       name: "Facility Name",
       selector: (row) => row.fac_name,
@@ -127,12 +127,22 @@ const Booking = () => {
     },
     {
       name: "Booked On",
-      selector: (row) => row.booking_date,
+      selector: (row) => {
+        const date = new Date(row.booking_date);
+    const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+    const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${dd}/${mm}/${yy}`;
+      },
       sortable: true,
     },
     {
       name: "Scheduled On",
-      selector: (row) => row.scheduledOn || "NA",
+      selector: (row) => {const date = new Date(row.booking_date);
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${dd}/${mm}/${yy}`;},
       sortable: true,
     },
     {

@@ -56,7 +56,11 @@ const SetupBookingFacility = () => {
     { name: "Department", selector: (row) => row.department, sortable: true },
     {
       name: "Book By",
-      selector: (row) => row.bookBy,
+      selector: (row) => {
+        const userName = localStorage.getItem("Name")?.replace(/"/g, ""); // Remove double quotes
+        const lastName = localStorage.getItem("LASTNAME")?.replace(/"/g, ""); // Remove double quotes
+        return `${userName || "Unknown"} ${lastName || ""}`.trim();
+      },
       sortable: true,
     },
     {
@@ -71,7 +75,13 @@ const SetupBookingFacility = () => {
     },
     {
       name: "Created On",
-      selector: (row) => row.created_at,
+      selector: (row) => {
+        const date = new Date(row.created_at);
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${dd}/${mm}/${yy}`;
+      },
       sortable: true,
     },
     // {
