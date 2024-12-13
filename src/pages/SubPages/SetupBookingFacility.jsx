@@ -16,19 +16,24 @@ import { getFacitilitySetup } from "../../api";
 const SetupBookingFacility = () => {
   const [searchText, setSearchText] = useState("");
   const [bookingFacility, SetBookingFacility] = useState([]);
-   useEffect(() => {
-    const fetchFacilityBooking = async ()=> {
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
+  useEffect(() => {
+    const fetchFacilityBooking = async () => {
       try {
         const response = await getFacitilitySetup();
         console.log("Response", response);
-        SetBookingFacility(response.data)
+        SetBookingFacility(response.data); // Correct function name
+        setLoading(false); // Stop loading when data is fetched
       } catch (error) {
-        console.log(error)
+        console.error("Error fetching facilities", error);
+        setError("Failed to fetch booking facilities. Please try again."); // Set error message
+        setLoading(false); // Stop loading on error
       }
+    };
 
-    }
     fetchFacilityBooking();
-  },[]);
+  }, []);
 
 
   const setupColumn = [
@@ -56,12 +61,12 @@ const SetupBookingFacility = () => {
     },
     {
       name: "Book Before",
-      selector: (row) => `${row?.book_before_days ||"NA"} Days ${row?.book_before_hours || "NA" } Hr`,
+      selector: (row) => `${row?.book_before}`,
       sortable: true,
     },
     {
       name: "Advance Booking",
-      selector: (row) => `${row.advance_days} Days ${row.advance_hours} Hr`,
+      selector: (row) => `${row.advance_booking}`,
       sortable: true,
     },
     {
@@ -177,14 +182,26 @@ const SetupBookingFacility = () => {
                 </button>
               </div>
             </div>
-            <Table
+            {/* <Table
               columns={setupColumn}
               data={bookingFacility}
               // data={filteredData}
 
               // customStyles={customStyle}
-            />
+            /> */}
+            <div className="flex items-center justify-center min-h-screen">
+              {loading ? (
+                <p className="text-center">Loading bookings...</p>
+              ) : error ? (
+                <p className="text-center text-red-500">{error}</p>
+              ) : (
+                <div className="w-full">
+                  <Table columns={setupColumn} data={bookingFacility} />
+                </div>
+              )}
+            </div>
           </>
+          
         )}
 
         {page === "seatBooking" && (

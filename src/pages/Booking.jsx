@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import { IoAddCircleOutline } from "react-icons/io5";
 import Navbar from "../components/Navbar";
-import { BiExport } from "react-icons/bi";
+import { BiEdit, BiExport } from "react-icons/bi";
 import ExportBookingModal from "../containers/modals/ExportBookingsModal";
 import { Link } from "react-router-dom";
 import SeatBooking from "./SubPages/SeatBooking";
@@ -21,6 +21,9 @@ const Booking = () => {
   const [bookingFacility, setBookingFacility] = useState([]);
   const themeColor = useSelector((state) => state.theme.color);
 
+  const userName = useState("Name");
+  const LastName = useState("LASTNAME");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -28,7 +31,7 @@ const Booking = () => {
 
         // Fetch Facility Setup
         const facilityResponse = await getFacitilitySetup();
-        console.log("Facility Setup Response:", facilityResponse.data.fac_name);
+        console.log("Facility Setup Response:", facilityResponse);
         setBookingFacility(facilityResponse.data);
 
         // Fetch Bookings
@@ -49,14 +52,14 @@ const Booking = () => {
 
   const combinedData = bookings.map((booking) => {
     const facility = bookingFacility.find((fac) => fac.id === booking.amenity_id);
-    
+
     // Find the relevant slot from amenity slots
     const amenitySlots = facility?.amenity_slots || [];
     const slot = amenitySlots.find((s) => s.id === booking.amenity_slot_id);
-    
+
     // Format the slot time if found
     const slotTime = slot ? `${slot.start_hr}:${slot.start_min} - ${slot.end_hr}:${slot.end_min}` : "N/A";
-    
+
     return {
       ...booking,
       fac_name: facility?.fac_name || "N/A",
@@ -66,27 +69,34 @@ const Booking = () => {
       slot_time: slotTime, // Add formatted slot time
     };
   });
-  
-  console.log("Combined Data:", combinedData);
-  
+
+  // Sort combinedData by ID in descending order
+  const sortedData = combinedData.sort((a, b) => b.id - a.id);
+
   // Handle Search
   const handleSearch = (event) => {
     const searchValue = event.target.value;
     setSearchText(searchValue);
 
-    const filteredResults = combinedData.filter((item) =>
+    const filteredResults = sortedData.filter((item) =>
       item.fac_name.toLowerCase().includes(searchValue.toLowerCase())
     );
     setBookings(filteredResults);
   };
+
   // Columns for DataTable
   const columns = [
     {
       name: "Action",
       cell: (row) => (
+        <div className="flex item-center gap-2">
         <Link to={`/bookings/booking-details/${row.id}`}>
           <BsEye />
         </Link>
+        <Link to={`bookings/edit_bookings/${row.id}`}>
+        <BiEdit size={15} />
+      </Link>
+      </div>
       ),
       sortable: false,
     },
@@ -107,18 +117,12 @@ const Booking = () => {
       sortable: true,
     },
     {
-      name: "Description",
-      selector: (row) => row.description,
-      sortable: true,
-    },
-    {
-      name: "Terms",
-      selector: (row) => row.terms,
-      sortable: true,
-    },
-    {
       name: "Booked By",
-      selector: (row) => row.user_id,
+      selector: (row) => {
+        const userName = localStorage.getItem("Name")?.replace(/"/g, ""); // Remove double quotes
+        const lastName = localStorage.getItem("LASTNAME")?.replace(/"/g, ""); // Remove double quotes
+        return `${userName || "Unknown"} ${lastName || ""}`.trim();
+      },
       sortable: true,
     },
     {
@@ -137,11 +141,22 @@ const Booking = () => {
       sortable: true,
     },
     {
+      name: "Description",
+      selector: (row) => row.description,
+      sortable: true,
+    },
+    {
+      name: "Terms",
+      selector: (row) => row.terms,
+      sortable: true,
+    },
+    {
       name: "Booking Status",
       selector: (row) => row.bookingStatus || "N/A",
       sortable: true,
     },
   ];
+
   return (
     <section className="flex">
       <Navbar />
@@ -149,10 +164,9 @@ const Booking = () => {
         <div className="flex justify-center">
           <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200">
             <h2
-              className={`p-1 ${
-                page === "meetingBooking" &&
+              className={`p-1 ${page === "meetingBooking" &&
                 "bg-white text-blue-500 shadow-custom-all-sides"
-              } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
+                } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
               onClick={() => setPage("meetingBooking")}
             >
               Amenities Bookings
@@ -190,14 +204,17 @@ const Booking = () => {
               </div>
             </div>
 
-            
-            {loading ? (
-              <p>Loading bookings...</p>
-            ) : error ? (
-              <p className="text-red-500">{error}</p>
-            ) : (
-              <Table columns={columns} data={combinedData} />
-            )}
+            <div className="flex items-center justify-center min-h-screen">
+              {loading ? (
+                <p className="text-center">Loading bookings...</p>
+              ) : error ? (
+                <p className="text-center text-red-500">{error}</p>
+              ) : (
+                <div className="w-full">
+                  <Table columns={columns} data={sortedData} />
+                </div>
+              )}
+            </div>
             {modal && <ExportBookingModal onclose={() => showModal(false)} />}
           </div>
         )}
