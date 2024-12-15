@@ -29,6 +29,7 @@ export const features = [
   "transport",
   "parking",
   "personal_finance",
+  "cam_bill",
   "calendar",
   "project_task",
   "bill pay",

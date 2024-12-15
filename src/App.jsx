@@ -696,6 +696,9 @@ import OrganizationChart from "./pages/AdminHrms/OrganizationTree/OrganizationCh
 import CTCGeneralSettingEdit from "./pages/AdminHrms/CTCGeneralSettingEdit.jsx";
 import AdditionalServices from "./pages/AdditionalServices/AdditionalSrvices.jsx";
 import AdditionalSetup from "./pages/AdditionalServices/AdditionalSetup.jsx";
+import CAMBilling from "./pages/Setup/CAMBilling.jsx";
+import AddCAMBilling from "./pages/SubPages/AddCAMBilling.jsx";
+import CAMBillingDetails from "./pages/SubPages/details/CAMBillingDetails.jsx";
 // new admin hrms
 
 function App() {
@@ -3466,6 +3469,33 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
+
+          {/* Cam Billings */}
+          <Route
+            path="/admin/cam-billing"
+            element={
+              <ProtectedAdminRoutes>
+                <CAMBilling />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/add-cam-billing"
+            element={
+              <ProtectedAdminRoutes>
+                <AddCAMBilling />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/cam-billing-details/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <CAMBillingDetails />
+              </ProtectedAdminRoutes>
+            }
+          />
+
           {/* Invoice Approvals */}
           <Route
             path="/admin/invoice-approval-setup"
