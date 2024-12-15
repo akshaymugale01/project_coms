@@ -680,7 +680,7 @@ function AssetDashboard() {
             selectedTitles.includes(card.title) && (
               <div
                 key={card.title}
-                className="bg-white shadow-custom-all-sides border py-2 px-5 rounded-md flex flex-col text-gray-500 text-sm font-medium h-32"
+                className="bg-gray-700 shadow-custom-all-sides border py-2 px-5 rounded-md flex flex-col text-white text-sm font-medium h-32"
               >
                 <div className="flex justify-between items-center">
                   <h2 className="font-medium text-xl text-center">

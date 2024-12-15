@@ -335,16 +335,16 @@ const TicketHighCharts = () => {
   };
   return (
     <div>
-      <div className="grid md:grid-cols-2 mr-2  gap-2">
+      <div className="bg-white grid md:grid-cols-2 mr-2  gap-2">
         <div className=" shadow-custom-all-sides rounded-md">
-        <div className="flex justify-end p-3">
+          <div className="flex justify-end p-3">
           <button
             className="rounded-md bg-gray-200 py-1 px-5"
             onClick={handleTicketStatusDownload}
           >
             <FaDownload />
           </button>
-        </div>
+          </div>
           {statusData ? (
             <HighchartsReact
               highcharts={Highcharts}

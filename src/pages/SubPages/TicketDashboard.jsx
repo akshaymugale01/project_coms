@@ -84,21 +84,21 @@ const TicketDashboard = () => {
   return (
     <div>
       <div className="flex items-center gap-6 overflow-auto p-2 ">
-        <div className="bg-white min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-gray-500 text-sm w-fit font-medium">
+        <div className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
           <div className="flex gap-2">
             <span>Tickets Created{" "}</span>
             <button onClick={handleTicketStatusDownload}>
               <FaDownload />
             </button>
           </div>
-          <span className="font-medium text-base text-black">
+          <span className="font-medium text-base text-white">
             {totalTickets}
           </span>{" "}
         </div>
         {Object.entries(statusData).map(([key, value]) => (
           <div
             key={key}
-            className="bg-white min-w-44 shadow-custom-all-sides p-4 font-medium rounded-md flex flex-col items-center text-gray-500 text-sm w-fit"
+            className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium"
           >
             <div className="flex gap-2">
               <span>{key} </span>
@@ -106,7 +106,7 @@ const TicketDashboard = () => {
                 <FaDownload />
               </button>
             </div>
-            <span className="font-medium text-base text-black">{value}</span>
+            <span className="font-medium text-base text-white">{value}</span>
           </div>
         ))}
       </div>
