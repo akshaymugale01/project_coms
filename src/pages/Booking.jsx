@@ -128,7 +128,7 @@ const Booking = () => {
     {
       name: "Booked On",
       selector: (row) => {
-        const date = new Date(row.booking_date);
+        const date = new Date(row.created_at);
     const yy = date.getFullYear().toString(); // Get last 2 digits of the year
     const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
     const dd = String(date.getDate()).padStart(2, '0');
@@ -214,7 +214,7 @@ const Booking = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex min-h-screen">
               {loading ? (
                 <p className="text-center">Loading bookings...</p>
               ) : error ? (

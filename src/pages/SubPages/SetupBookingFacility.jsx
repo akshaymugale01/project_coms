@@ -53,7 +53,7 @@ const SetupBookingFacility = () => {
       sortable: true,
     },
     { name: "Type", selector: (row) => row.fac_type, sortable: true },
-    { name: "Department", selector: (row) => row.department, sortable: true },
+    // { name: "Department", selector: (row) => row.department, sortable: true },
     {
       name: "Book By",
       selector: (row) => {
@@ -199,9 +199,9 @@ const SetupBookingFacility = () => {
 
               // customStyles={customStyle}
             /> */}
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex  min-h-screen">
               {loading ? (
-                <p className="text-center">Loading bookings...</p>
+                <p className="flex text-center">Loading bookings...</p>
               ) : error ? (
                 <p className="text-center text-red-500">{error}</p>
               ) : (

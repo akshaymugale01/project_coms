@@ -41,3 +41,5 @@ export const features = [
 "Setup",
 
 ];
+
+console.log(features);

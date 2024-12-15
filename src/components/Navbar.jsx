@@ -4,7 +4,7 @@ import { useNavigate, NavLink, Link } from "react-router-dom";
 import { menus } from "../utils/menus";
 import { PiFiles, PiSignOutBold } from "react-icons/pi";
 import { getItemInLocalStorage } from "../utils/localStorage";
-import { FaMoneyBillTrendUp } from "react-icons/fa6";
+import { FaMoneyBill1Wave, FaMoneyBillTrendUp } from "react-icons/fa6";
 import image from "/profile.png";
 import {
   BsBroadcast,
@@ -131,6 +131,8 @@ const Navbar = () => {
       setFeat(storedFeatures.map((feature) => feature.feature_name));
     }
   };
+
+  console.log("feat",feat);
 
   const firstName = getItemInLocalStorage("Name");
   const lastName = getItemInLocalStorage("LASTNAME");
@@ -1438,7 +1440,7 @@ const Navbar = () => {
 
 
                 {/* {feat.includes("cam_bill") && ( */}
-                {feat.includes("parking") && (
+                {feat.includes("cam_bill") && (
                   <NavLink
                     to={"/admin/cam-billing"}
                     className={({ isActive }) =>
@@ -1450,7 +1452,7 @@ const Navbar = () => {
                     }
                   >
                     <div>
-                      {React.createElement(LuParkingSquare, { size: "20" })}
+                      {React.createElement(FaMoneyBill1Wave, { size: "20" })}
                     </div>
 
                     <h2

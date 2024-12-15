@@ -86,6 +86,7 @@ const BookingDetails = () => {
   // Facility Data
   const {
     fac_name,
+    created_at,
     fac_type,
     description,
     gst_no: facilityGstNo,
@@ -105,6 +106,15 @@ const BookingDetails = () => {
   const slotTime = selectedSlot
     ? `${selectedSlot.start_hr}:${selectedSlot.start_min} - ${selectedSlot.end_hr}:${selectedSlot.end_min}`
     : "N/A";
+
+    let created = () => {
+      const date = new Date(created_at);
+    const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+    const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${dd}/${mm}/${yy}`;
+    }
+    
 
 
   return (
@@ -149,7 +159,7 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Booked On:</p>
-            <p>{booking_date}</p>
+            <p>{created()}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Booked By:</p>
