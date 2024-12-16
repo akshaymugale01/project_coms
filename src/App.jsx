@@ -699,6 +699,7 @@ import AdditionalSetup from "./pages/AdditionalServices/AdditionalSetup.jsx";
 import CAMBilling from "./pages/Setup/CAMBilling.jsx";
 import AddCAMBilling from "./pages/SubPages/AddCAMBilling.jsx";
 import CAMBillingDetails from "./pages/SubPages/details/CAMBillingDetails.jsx";
+import BillingSetup from "./pages/Setup/BillingSetup/BillingSetup.jsx";
 // new admin hrms
 
 function App() {
@@ -3466,6 +3467,15 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <EditOccupantUserSetup />
+              </ProtectedAdminRoutes>
+            }
+          />
+
+        <Route
+            path="/admin/billing-setup"
+            element={
+              <ProtectedAdminRoutes>
+                <BillingSetup />
               </ProtectedAdminRoutes>
             }
           />

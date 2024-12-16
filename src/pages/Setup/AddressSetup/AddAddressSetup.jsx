@@ -50,7 +50,7 @@ navigate("/admin/addresses-setup")
       </div>
       <div className="w-full flex  flex-col overflow-hidden">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(17, 24, 39)" }}
           className="text-center text-xl font-bold my-5 p-2 bg-black rounded-full text-white mx-10"
         >
           Add Address Setup

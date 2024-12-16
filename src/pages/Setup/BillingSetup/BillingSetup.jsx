@@ -122,7 +122,7 @@ function BillingSetup() {
       <Navbar />
       <div className="w-full flex mx-3 flex-col overflow-hidden">
       <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(17, 24, 39)" }}
           className="text-center text-xl font-bold p-2 rounded-md text-white my-2"
         >
           Billing Setup

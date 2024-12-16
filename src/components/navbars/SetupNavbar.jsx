@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from '../../utils/localStorage';
-import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes } from 'react-icons/fa';
-import { FaF, FaFaceAngry, FaMasksTheater, FaTimeline } from 'react-icons/fa6';
+import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill } from 'react-icons/fa';
+import { FaBilibili, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaTimeline } from 'react-icons/fa6';
 
 const SetupNavbar = () => {
   const themeColor = useSelector((state) => state.theme.color);
@@ -53,16 +53,20 @@ const SetupNavbar = () => {
 
           {feat.includes("space") && (
             <Link to="/setup/facility" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
-            <FaTimeline />Facility
+              <FaTimeline />Facility
             </Link>
           )}
-
+          {feat.includes("space") && (
+            <Link to="/admin/addresses-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+              <FaRegAddressBook />Address
+            </Link>
+          )}
           {feat.includes("communication") && (
             <Link
               to="/admin/communication-access-control"
               className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2"
             >
-              <FaSpeakap/> Communication Setup Control
+              <FaSpeakap /> Communication Setup Control
             </Link>
           )}
 
@@ -73,18 +77,24 @@ const SetupNavbar = () => {
           )}
           {feat.includes("gatepass") && (
             <Link to="/setup/visitor-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
-             <FaVials/> Visitor
+              <FaVials /> Visitor
             </Link>
           )}
           {feat.includes("assets") && (
             <Link to="/setup/meter-category-type" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
-             <FaTachometerAlt/> Meter Category Type
+              <FaTachometerAlt /> Meter Category Type
             </Link>
           )}
 
           {feat.includes("bills") && (
             <Link to="/admin/invoice-approval-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaFileInvoice /> Invoice Approval
+            </Link>
+          )}
+
+          {feat.includes("cam_bill") && (
+            <Link to="/admin/billing-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+              <FaMoneyBill1Wave /> Billing
             </Link>
           )}
 

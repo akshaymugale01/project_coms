@@ -126,7 +126,7 @@ function CAMBilling() {
           <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
             <Link
               to={`/admin/add-cam-billing`}
-              style={{ background: themeColor }}
+              style={{ background: "rgb(17, 24, 39)" }}
               className="px-4 py-2  font-medium text-white rounded-md flex gap-2 items-center justify-center"
             >
               <IoAddCircleOutline />
@@ -134,7 +134,7 @@ function CAMBilling() {
             </Link>
             <button
               className="font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(17, 24, 39)" }}
               onClick={() => setImportModal(true)}
             >
               <FaUpload />
@@ -142,14 +142,14 @@ function CAMBilling() {
             </button>
             <button
               className="font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(17, 24, 39)" }}
             >
               <FaDownload />
               Export
             </button>
             <button
               className=" font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(17, 24, 39)" }}
               onClick={() => setFilter(!filter)}
             >
               <BiFilterAlt />

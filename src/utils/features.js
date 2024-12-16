@@ -31,6 +31,7 @@ export const features = [
   "personal_finance",
   "cam_bill",
   "calendar",
+  "address",
   "project_task",
   "bill pay",
 "advance saetup",
