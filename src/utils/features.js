@@ -31,10 +31,11 @@ export const features = [
   "personal_finance",
   "cam_bill",
   "calendar",
+  "document_pro",
   "address",
   "project_task",
   "bill pay",
-"advance saetup",
+"advance setup",
 "birthday",
 "task",
 "copilot",
@@ -43,4 +44,4 @@ export const features = [
 
 ];
 
-console.log(features);
+// console.log(features);

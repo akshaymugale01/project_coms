@@ -3,7 +3,7 @@ import FileInput from "../../Buttons/FileInput";
 import { useSelector } from "react-redux";
 import ReactDatePicker from "react-datepicker";
 import Select from "react-select";
-import { getAssignedTo, postBroadCast } from "../../api";
+import { getAssignedTo, getBroadCast, getGroups, postBroadCast, postGroups } from "../../api";
 import FileInputBox from "../../containers/Inputs/FileInputBox";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
@@ -12,6 +12,8 @@ import Navbar from "../../components/Navbar";
 import { FaCheck } from "react-icons/fa";
 const CreateBroadcast = () => {
   const [share, setShare] = useState("all");
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const themeColor = useSelector((state) => state.theme.color);
   const siteId = getItemInLocalStorage("SITEID");
   const [users, setUsers] = useState([]);
@@ -24,6 +26,7 @@ const CreateBroadcast = () => {
     notice_image: [],
     shared: "",
     group_id: "",
+    group_name: "",
     important: "",
   });
   console.log(formData);
@@ -46,13 +49,53 @@ const CreateBroadcast = () => {
           label: `${user.firstname} ${user.lastname}`,
         }));
         setUsers(transformedUsers);
-        console.log(response);
       } catch (error) {
         console.error("Error fetching assigned users:", error);
       }
     };
+
+    // Fetch groups when 'share' is set to 'groups'
+    if (share === "groups") {
+      fetchGroups();
+    }
+
     fetchUsers();
-  }, []);
+  }, [share]);
+
+
+  const fetchGroups = async () => {
+    try {
+      const response = await getGroups(); // Assuming your API to get groups
+      setGroups(response.data || []); // Adjust based on actual API response structure
+      console.log("group", response);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+    }
+  };
+
+  const handleGroupChange = (event) => {
+    const selectedGroupId = event.target.value;
+    setSelectedGroup(selectedGroupId);
+    // Update formData with the selected group_id
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      group_id: selectedGroupId, // Set the selected group_id
+      group_name: groups.find((group) => group.id === selectedGroupId)?.group_name || "", // Optionally, set the group_name if needed
+    }));
+  };
+
+  const handleShareChange = (shareType) => {
+    setShare(shareType); // Update the share state
+
+    // Update formData based on the selected share type
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      shared: shareType === "all" ? "all" : "", // Set "all" for shared if "all" is selected
+      group_id: shareType === "groups" ? prevFormData.group_id : "", // Clear group_id unless "groups" is selected
+      user_ids: shareType === "individual" ? prevFormData.user_ids : "", // Clear user_ids unless "individual" is selected
+    }));
+  };
+
 
   const navigate = useNavigate();
 
@@ -72,29 +115,38 @@ const CreateBroadcast = () => {
       toast.loading("Creating Broadcast Please Wait!");
       const formDataSend = new FormData();
 
-      formDataSend.append("notice[site_id", formData.site_id);
+      // Common fields
+      formDataSend.append("notice[site_id]", formData.site_id);
       formDataSend.append("notice[notice_title]", formData.notice_title);
-      formDataSend.append(
-        "notice[notice_discription]",
-        formData.notice_discription
-      );
+      formDataSend.append("notice[notice_discription]", formData.notice_discription);
       formDataSend.append("notice[expiry_date]", formData.expiry_date);
-      formDataSend.append("notice[shared]", formData.expiry_date);
-      formDataSend.append("notice[user_ids]", formData.user_ids);
+      if (share === "all") {
+        formDataSend.append("notice[shared]", "all");
+      } else if (share === "individual") {
+        formDataSend.append("notice[shared]", "individual");
+        formDataSend.append("notice[user_ids]", formData.user_ids); 
+      } else if (share === "groups") {
+        formDataSend.append("notice[shared]", "groups");
+        formDataSend.append("notice[group_id]", formData.group_id);
+        formDataSend.append("notice[group_name]", formData.group_name);
+      }
+
+      // Attach files
       formData.notice_image.forEach((file) => {
         formDataSend.append("attachfiles[]", file);
       });
-      const response = await postBroadCast(formDataSend);
+
+      const response = await getBroadCast(formDataSend);
       toast.success("Broadcast Created Successfully");
       navigate("/communication/broadcast");
       console.log("Response:", response.data);
       toast.dismiss();
     } catch (error) {
-      console.log(error);
-
+      console.error("Error creating broadcast:", error);
       toast.dismiss();
     }
   };
+
   const handleFileChange = (files, fieldName) => {
     setFormData({
       ...formData,
@@ -185,59 +237,61 @@ const CreateBroadcast = () => {
                   Share With
                 </h2>
                 <div className="flex flex-col items-center justify-center">
-                  <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
+                  <div className="flex flex-row gap-2 w-full font-semibold p-2">
                     <h2
-                      className={`p-1 ${
-                        share === "all" && "bg-black text-white"
-                      } rounded-full px-6 cursor-pointer border-2 border-black`}
-                      onClick={() => setShare("all")}
+                      className={`p-1 ${share === "all" && "bg-black text-white"} rounded-full px-6 cursor-pointer border-2 border-black`}
+                      onClick={() => handleShareChange("all")}
                     >
                       All
                     </h2>
                     <h2
-                      className={`p-1 ${
-                        share === "individual" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
-                      onClick={() => setShare("individual")}
+                      className={`p-1 ${share === "individual" && "bg-black text-white"} rounded-full px-4 cursor-pointer border-2 border-black`}
+                      onClick={() => handleShareChange("individual")}
                     >
                       Individuals
                     </h2>
                     <h2
-                      className={`p-1 ${
-                        share === "groups" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
-                      onClick={() => setShare("groups")}
+                      className={`p-1 ${share === "groups" && "bg-black text-white"} rounded-full px-4 cursor-pointer border-2 border-black`}
+                      onClick={() => handleShareChange("groups")}
                     >
                       Groups
                     </h2>
                   </div>
+
                   <div className="my-2 flex w-full">
                     {share === "individual" && (
-                      // <Select
-                      //   options={users}
-                      //   placeholder="Select User"
-                      //   value={formData.user_ids}
-
-                      //   onChange={(selectedOption) =>
-                      //     setFormData({ ...formData, user_ids: selectedOption })
-                      //   }
-                      //   isMulti
-                      //   className="w-full"
-                      // />
                       <Select
                         options={users}
                         placeholder="Select User"
-                        value={users.filter((user) =>
-                          formData.user_ids.includes(user.value)
-                        )}
+                        value={users.filter((user) => formData.user_ids.includes(user.value))}
                         onChange={handleSelectChange}
                         isMulti
                         className="w-full"
                       />
                     )}
-                    {share === "groups" && <p>list of groups</p>}
+                    {share === "groups" && (
+                      <div className="group-dropdown">
+                        <label htmlFor="group-select" className="block mb-2 font-medium">
+                          Select a Group:
+                        </label>
+                        <select
+                          id="group-select"
+                          className="border border-gray-300 rounded px-4 py-2"
+                          value={selectedGroup}
+                          onChange={handleGroupChange}
+                        >
+                          <option value="">-- Select a Group --</option>
+                          {groups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.group_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
+
                 <div className="my-5">
                   <h2 className="border-b text-center text-xl border-black mb-6 font-bold">
                     Attachments

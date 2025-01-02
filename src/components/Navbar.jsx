@@ -92,6 +92,9 @@ const Navbar = () => {
   useEffect(() => {
     const userType = getItemInLocalStorage("USERTYPE");
     setUser(userType);
+
+    console.log("feat",feat);
+    
     getAllowedFeatures();
   }, []);
 
@@ -132,7 +135,7 @@ const Navbar = () => {
     }
   };
 
-  console.log("feat",feat);
+  
 
   const firstName = getItemInLocalStorage("Name");
   const lastName = getItemInLocalStorage("LASTNAME");
@@ -763,7 +766,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )} */}
-                {feat.includes("permits") && (
+                {feat.includes("document_pro") && (
                   <NavLink
                     to={"/documents"}
                     className={({ isActive }) =>
@@ -2016,7 +2019,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-              {feat.includes("permits") && (
+              {feat.includes("document_pro") && (
                 <NavLink
                   to={"/documents"}
                   className={({ isActive }) =>

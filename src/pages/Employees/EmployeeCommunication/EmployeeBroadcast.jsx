@@ -103,7 +103,7 @@ const EmployeeBroadcast = () => {
               className="bg-black  rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-5"
             >
               <IoAddCircleOutline size={20} />
-              Add Broadcast/Notice
+              Add Broadcast
             </Link>
           )}
         </div>

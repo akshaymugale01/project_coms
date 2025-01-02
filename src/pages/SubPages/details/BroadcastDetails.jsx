@@ -3,9 +3,12 @@ import { domainPrefix, getBroadcastDetails } from "../../../api";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { FaRegFileAlt } from "react-icons/fa";
+import { getItemInLocalStorage } from "../../../utils/localStorage";
 
 const BroadcastDetails = () => {
   const [broadcastDetails, setBroadcastDetails] = useState([]);
+  const userFisrt = getItemInLocalStorage("name");
+  const userLast = getItemInLocalStorage("LASTNAME");
   const { id } = useParams();
   useEffect(() => {
     const fetchBroadcastDetails = async () => {
@@ -53,21 +56,34 @@ const BroadcastDetails = () => {
             </h1>
           </div>
           <div className="flex flex-col bg-gray-100 p-2 rounded-md">
-            <p className="font-medium ">Description:</p>
-            <p className=" p-2">{broadcastDetails.notice_discription}</p>
+            <p className="font-medium ">Description: {broadcastDetails.notice_discription}</p>
+            <p className=""></p>
           </div>
-          
+
           <div className="grid  md:grid-cols-3 gap-4 my-4">
             <div className="grid grid-cols-2">
-              <p className="font-medium ">Created By :</p>
-              <p className=" p-2"></p>
+              <p className="font-medium ">Created By : </p>
+              <p className="">{userFisrt}{userLast}</p>
             </div>
-            <div className="grid grid-cols-2">
+            {/* <div className="grid grid-cols-2">
               <p className="font-medium ">Status Type:</p>
               <p className=""></p>
-            </div>
+            </div> */}
             <div className="grid grid-cols-2">
-              <p className="font-medium ">Share With:</p>
+              <p className="font-medium">
+              Share With:{" "}
+              </p>
+              <p>
+                {broadcastDetails.shared === "all"
+                  ? "All"
+                  : broadcastDetails.group_id
+                    ? `Group: ${broadcastDetails.group_name || "Unknown"}`
+                    : broadcastDetails.users && broadcastDetails.users.length > 0
+                      ? "Individual"
+                      : "Unknown"}
+              </p>
+
+
               <p className=""></p>
             </div>
             <div className="grid grid-cols-2">
@@ -81,37 +97,46 @@ const BroadcastDetails = () => {
             <div className="grid grid-cols-2">
               <p className="font-medium ">Important:</p>
               <p className="">
-               
+                {broadcastDetails.important ? 'Yes' : 'No'}
               </p>
             </div>
           </div>
           <div className="my-2 ">
             <p className="font-bold border-b-2 border-black my-2">Attachments</p>
             {broadcastDetails.notice_image && broadcastDetails.notice_image.length > 0 && (
-            <div className="rounded-md ">
-           {isImage(domainPrefix +broadcastDetails.notice_image[0].document) ? (
-              <img
-                src={domainPrefix + broadcastDetails.notice_image[0].document}
-                alt="event image"
-                className="rounded-md max-h-52"
-                onClick={() => window.open(domainPrefix + broadcastDetails.notice_image[0].document, "_blank")}
-                />
-              ): ( <a
-                href={domainPrefix + broadcastDetails.notice_image[0].document}
-                target="_blank"
-                rel="noopener noreferrer"
-                className=" hover:text-blue-400 transition-all duration-300  text-center flex flex-col items-center"
-              >
-                <FaRegFileAlt size={50} />
-                {getFileName(broadcastDetails.notice_image[0].document)}
-              </a>)}
+              <div className="rounded-md ">
+                {isImage(domainPrefix + broadcastDetails.notice_image[0].document) ? (
+                  <img
+                    src={domainPrefix + broadcastDetails.notice_image[0].document}
+                    alt="event image"
+                    className="rounded-md max-h-52"
+                    onClick={() => window.open(domainPrefix + broadcastDetails.notice_image[0].document, "_blank")}
+                  />
+                ) : (<a
+                  href={domainPrefix + broadcastDetails.notice_image[0].document}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className=" hover:text-blue-400 transition-all duration-300  text-center flex flex-col items-center"
+                >
+                  <FaRegFileAlt size={50} />
+                  {getFileName(broadcastDetails.notice_image[0].document)}
+                </a>)}
               </div>
             )}
           </div>
           <div className="my-5">
             <p className="font-bold">Shared Members List</p>
             <p className="border-dashed border border-gray-400 p-2">
-              
+              {broadcastDetails.users && broadcastDetails.users.length > 0 ? (
+                broadcastDetails.users.map((user) => (
+                  <div key={user.id} className="user-item">
+                    <p className="font-medium">Name: {user.name}</p>
+                    <p>User ID: {user.user_id}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No users to display</p>
+              )}
             </p>
           </div>
         </div>

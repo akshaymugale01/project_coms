@@ -772,7 +772,7 @@ const SetupFacility = () => {
           </div>
         </div>
 
-        <div className="w-full mt-2">
+        {/* <div className="w-full mt-2">
           <h2 className="font-medium border-b border-black w-full text-lg">
             Booking Rule
           </h2>
@@ -839,7 +839,7 @@ const SetupFacility = () => {
               </p>
             )}
           </div>
-        </div>
+        </div> */}
 
         <div className="my-4">
           <h2 className="border-b border-black text-lg mb-1 font-medium">

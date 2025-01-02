@@ -5,7 +5,7 @@ import FileInputBox from "../../containers/Inputs/FileInputBox";
 import { useSelector } from "react-redux";
 import Navbar from "../../components/Navbar";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { postEvents, getAssignedTo } from "../../api";
+import { postEvents, getAssignedTo, getGroups } from "../../api";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -16,21 +16,27 @@ import { FaCheck } from "react-icons/fa";
 
 const CreateEvent = () => {
   const siteId = getItemInLocalStorage("SITEID");
+  const userID = getItemInLocalStorage("UserId");
   const [share, setShare] = useState("all");
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [users, setUsers] = useState([]);
   const [selectedOption, setSelectedOption] = useState([]);
   const [formData, setFormData] = useState({
     site_id: siteId,
+    created_by: userID,
     event_name: "",
     venue: "",
     description: "",
     start_date_time: "",
     end_date_time: "",
     user_ids: "",
-    event_image: [],
+    group_id: null,
+    group_name: "",
+    event_images: [],
     shared: "",
     email_enabled: false,
-    rsvp_enabled:false,
+    rsvp_enabled: false,
     important: false
   });
   console.log(formData);
@@ -65,8 +71,32 @@ const CreateEvent = () => {
         console.error("Error fetching assigned users:", error);
       }
     };
+
+    if (share === "groups") {
+      fetchGroups();
+    }
+
     fetchUsers();
-  }, []);
+  }, [share]);
+
+
+  const fetchGroups = async () => {
+    try {
+      const response = await getGroups(); // Assuming your API to get groups
+      setGroups(response.data || []); // Adjust based on actual API response structure
+      console.log("group", response);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+    }
+  };
+
+  const handleGroupChange = (event) => {
+    const groupId = parseInt(event.target.value, 10) || 0; // Default to 0 if value is invalid
+    setSelectedGroup(event.target.value);
+    setFormData({ ...formData, group_id: groupId });
+  };
+
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -99,6 +129,16 @@ const CreateEvent = () => {
       formDataSend.append("event[email_enabled]", formData.email_enabled);
       formDataSend.append("event[rsvp_enabled]", formData.rsvp_enabled);
       formDataSend.append("event[important]", formData.important);
+      if (share === "all") {
+        formDataSend.append("event[shared]", "all");
+      } else if (share === "individual") {
+        formDataSend.append("event[shared]", "individual");
+        formDataSend.append("event[user_ids]", formData.user_ids);
+      } else if (share === "groups") {
+        formDataSend.append("event[shared]", "groups");
+        formDataSend.append("event[group_id]", formData.group_id);
+        formDataSend.append("event[group_name]", formData.group_name);
+      }
       // formDataSend.append("event[important]", formData.important);
 
 
@@ -106,10 +146,11 @@ const CreateEvent = () => {
       //   formDataSend.append("event[user_ids]", user_id);
       // });
 
-      formData.event_image.forEach((file) => {
-        formDataSend.append("attachfiles[]", file);
-      });
-
+      if (formData.event_images && formData.event_images.length > 0) {
+        formData.event_images.forEach((file, index) => {
+          formDataSend.append(`event[event_images][]`, file);
+        });
+      }
       const response = await postEvents(formDataSend);
       toast.success("Event Created Successfully");
       console.log("Response:", response.data);
@@ -131,10 +172,15 @@ const CreateEvent = () => {
   };
 
   const handleFileAttachment = (event) => {
-    const selectedFiles = event.target.files;
-    const newAttachments = Array.from(selectedFiles);
-    setFormData({ ...formData, event_image: newAttachments });
+    if (event.target.files) {
+      // Convert the FileList to an array
+      const newAttachments = Array.from(event.target.files);
+      
+      // Update state
+      setFormData({ ...formData, event_images: newAttachments });
+    }
   };
+  
 
   const filterTime = (time) => {
     const selectedDate = new Date(time);
@@ -158,9 +204,10 @@ const CreateEvent = () => {
   const handleFileChange = (files, fieldName) => {
     setFormData({
       ...formData,
-      [fieldName]: files,
+      [fieldName]: Array.isArray(files) ? files : [files], // Ensure it's always an array
     });
   };
+
 
   return (
     <section className="flex">
@@ -253,26 +300,26 @@ const CreateEvent = () => {
 
             <div className="flex gap-4 my-5">
               <div className="flex gap-2 items-center">
-                <input type="checkbox" name="" id="imp" checked={formData.important === true} onChange={()=> setFormData({...formData, important: !formData.important})} />
+                <input type="checkbox" name="" id="imp" checked={formData.important === true} onChange={() => setFormData({ ...formData, important: !formData.important })} />
                 <label htmlFor="imp" className="font-semibold">
                   Important
                 </label>
               </div>
               <div className="flex gap-2 items-center">
-                <input type="checkbox" name="" id="email" checked={formData.email_enabled === true} onChange={()=> setFormData({...formData, email_enabled: !formData.email_enabled})} />
+                <input type="checkbox" name="" id="email" checked={formData.email_enabled === true} onChange={() => setFormData({ ...formData, email_enabled: !formData.email_enabled })} />
                 <label htmlFor="email" className="font-semibold">
                   Send Email
                 </label>
               </div>
             </div>
-           
+
             {/* <input
               ref={fileInputRef}
               type="file"
               multiple
               onChange={handleFileAttachment}
             /> */}
-           
+
             <div className="">
               <h2 className="border-b t border-black my-5 text-lg font-semibold">
                 Share With
@@ -280,25 +327,22 @@ const CreateEvent = () => {
               <div className="flex flex-col items-center justify-center">
                 <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                   <h2
-                    className={`p-1 ${
-                      share === "all" && "bg-black text-white"
-                    } rounded-full px-6 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "all" && "bg-black text-white"
+                      } rounded-full px-6 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("all")}
                   >
                     All
                   </h2>
                   <h2
-                    className={`p-1 ${
-                      share === "individual" && "bg-black text-white"
-                    } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "individual" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("individual")}
                   >
                     Individuals
                   </h2>
                   <h2
-                    className={`p-1 ${
-                      share === "groups" && "bg-black text-white"
-                    } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "groups" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("groups")}
                   >
                     Groups
@@ -318,7 +362,26 @@ const CreateEvent = () => {
                       className="w-full"
                     />
                   )}
-                  {share === "groups" && <p>list of groups</p>}
+                  {share === "groups" && (
+                    <div className="group-dropdown">
+                      <label htmlFor="group-select" className="block mb-2 font-medium">
+                        Select a Group:
+                      </label>
+                      <select
+                        id="group-select"
+                        className="border border-gray-300 rounded px-4 py-2"
+                        value={selectedGroup}
+                        onChange={handleGroupChange}
+                      >
+                        <option value="">-- Select a Group --</option>
+                        {groups.map((group) => (
+                          <option key={group.id} value={group.id}>
+                            {group.group_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -328,37 +391,38 @@ const CreateEvent = () => {
               </h2>
               <div className="flex gap-4 mt-2">
                 <div className="flex gap-2 ">
-                  <input type="radio" name="RSVP" id="yes" checked={formData.rsvp_enabled === true} onChange={()=> setFormData({...formData, rsvp_enabled: true})} />
+                  <input type="radio" name="RSVP" id="yes" checked={formData.rsvp_enabled === true} onChange={() => setFormData({ ...formData, rsvp_enabled: true })} />
                   <label htmlFor="yes" className="text-lg">
                     Yes
                   </label>
                 </div>
                 <div className="flex gap-2">
-                  <input type="radio" name="RSVP" id="no" checked={formData.rsvp_enabled === false} onChange={()=> setFormData({...formData, rsvp_enabled: false})} />
+                  <input type="radio" name="RSVP" id="no" checked={formData.rsvp_enabled === false} onChange={() => setFormData({ ...formData, rsvp_enabled: false })} />
                   <label htmlFor="no" className="text-lg">
                     No
                   </label>
                 </div>
               </div>
             </div>
-            <div>
 
-            <h2 className="border-b text-xl border-black my-5 font-semibold">
-              Upload Attachments
-            </h2>
-            <FileInputBox
-              fieldName={"event_image"}
-              handleChange={(files) => handleFileChange(files, "event_image")}
-              fileType="image/*"
+            <div>
+              <h2 className="border-b text-xl border-black my-5 font-semibold">
+                Upload Attachments
+              </h2>
+              <FileInputBox
+                fieldName={"event_images"}
+                handleChange={handleFileAttachment} // Ensuring it calls the correct handler
+                fileType="image/*"
               />
-              </div>
+            </div>
+
             <div className="flex justify-center mt-10 my-5">
               <button
-              style={{background: themeColor}}
+                style={{ background: themeColor }}
                 className="bg-black text-white p-2 rounded-md hover:bg-white  flex items-center gap-2 px-4"
                 onClick={handleCreateEvent}
               >
-              <FaCheck/>  Submit
+                <FaCheck />  Submit
               </button>
             </div>
           </div>

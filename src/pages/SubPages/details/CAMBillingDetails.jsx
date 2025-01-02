@@ -354,7 +354,7 @@ function CAMBillingDetails() {
       <div className="hidden md:block">
         <Navbar />
       </div>
-      <div className="w-full flex  flex-col overflow-hidden">
+      <div className="w-full flex flex-col overflow-hidden">
         <h2
           style={{ background: themeColor }}
           className="text-center text-xl font-bold my-5 p-2 bg-black rounded-full text-white mx-10"

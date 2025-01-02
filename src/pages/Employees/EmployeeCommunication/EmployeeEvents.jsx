@@ -12,6 +12,7 @@ import Navbar from "../../../components/Navbar";
 
 const EmployeeEvents = () => {
   const [searchText, setSearchText] = useState("");
+  
   const [filter, setFilter] = useState(false);
   const [user, setUser] = useState("");
   const [events, setEvents] = useState([]);
@@ -33,6 +34,8 @@ const EmployeeEvents = () => {
     return date.toLocaleString();
   };
 
+  const userName = getItemInLocalStorage("name");
+
   const column = [
     {
       name: "Action",
@@ -49,7 +52,7 @@ const EmployeeEvents = () => {
       selector: (row) => row.venue,
       sortable: true,
     },
-    { name: "Created By", selector: (row) => row.bookedBy, sortable: true },
+    { name: "Created By", selector: (row) => row.userName, sortable: true },
     { name: "Description", selector: (row) => row.discription, sortable: true },
     {
       name: "Start Date",

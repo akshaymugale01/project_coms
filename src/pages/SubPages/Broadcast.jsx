@@ -111,7 +111,7 @@ const Broadcast = () => {
               className="  rounded-md flex font-semibold items-center gap-2 text-white p-2 col-span-2"
             >
               <IoAddCircleOutline size={20} />
-              Add Broadcast/Notice
+              Add Broadcast
             </Link>
           )}
         </div>

@@ -6,6 +6,7 @@ import Navbar from "../../components/Navbar";
 
 import DocumentPro from "./DocumentPro";
 import DocumentCommon from "./DocumentCommon";
+import SharedwithMe from "./SharedwithMe";
 
 const DocumentMain = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -37,6 +38,15 @@ const DocumentMain = () => {
             >
               Common
             </h2>
+            <h2
+              className={`p-1 ${
+                page === "share" &&
+                "bg-white text-blue-500 shadow-custom-all-sides"
+              } rounded-full px-4 cursor-pointer transition-all duration-300 ease-linear`}
+              onClick={() => setPage("share")}
+            >
+              Shared with me
+            </h2>
           </div>
         </div>
         {page === "Personal" && <>
@@ -44,6 +54,7 @@ const DocumentMain = () => {
 
          </>}
          {page === "Common" && <DocumentCommon/>}
+         {page === "share" && <SharedwithMe/>}
       </div>
     </section>
   );
