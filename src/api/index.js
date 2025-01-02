@@ -881,34 +881,44 @@ export const postAmenitiesBooking = async (data) =>
   });
 
 export const getAmenitiesBooking = async (data) =>
-  axiosInstance.get(`/amenity_bookings.json`,  {
+  axiosInstance.get(`/amenity_bookings.json`, {
     params: {
       token: token,
     },
   });
 
-  export const getAmenitiesIdBooking = async (id) =>
-    axiosInstance.get(`/amenity_bookings/${id}.json`,  {
-      params: {
-        token: token,
-      },
-    });
+export const getAmenitiesIdBooking = async (id) =>
+  axiosInstance.get(`/amenity_bookings/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
 
 
-  // Facitility Setup
-  export const getFacitilitySetup = async (data) =>
-    axiosInstance.get(`/amenities.json`, {
-      params: {
-        token: token,
-      },
-    });
-    
-  export const postFacitilitySetup = async (data) =>
-    axiosInstance.post(`/amenities.json`, data, {
-      params: {
-        token: token,
-      },
-    });  
+// Facitility Setup
+export const getFacitilitySetup = async (data) =>
+  axiosInstance.get(`/amenities.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
+ export const getFacilitySlots = async (data) => 
+  axiosInstance.get(`/slots/available.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
+
+export const postFacitilitySetup = async (data) =>
+  axiosInstance.post(`/amenities.json`, data, {
+    params: {
+      token: token,
+    },
+  });
 
 // ppm details/
 
@@ -1284,6 +1294,13 @@ export const postGroups = async (data) =>
     },
   });
 
+  export const getGroups = async (id) =>
+    axiosInstance.get("/groups.json", {
+      params: {
+        token: token,
+      },
+    }); 
+
 //broadcast
 export const getBroadCast = async () =>
   axiosInstance.get("/notices.json", {
@@ -1508,7 +1525,81 @@ export const getServicesPPMDetails = async (id) =>
     },
   });
 
-//
+//documents
+export const getFolderDocumentCommon = async () =>
+  axiosInstance.get(`/folders/get_folders.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const deleteShareFile = async (id) =>
+  axiosInstance.delete(`/share_withs/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const getFolderDocumentPersonal = async () =>
+  axiosInstance.get(`/folders/get_personal_folders.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const getSharedwith = async () =>
+  axiosInstance.get(`/folders/get_share_with.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const getSubFolderDocumentCommon = async (id) =>
+  axiosInstance.get(`/folders/get_folders.json?parent_id=${id}`, {
+    params: {
+      token: token,
+    },
+  });
+export const postSharePersonal = async (data) =>
+  axiosInstance.post("/share_withs.json", data, {
+    params: {
+      token: token,
+    },
+  });
+export const deleteFolderPersonal = async (id) =>
+  axiosInstance.delete(`/destroy_folder/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const deleteFilePersonal = async (id) =>
+  axiosInstance.delete(`/folder_documents/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const deleteShareFolder = async (id) =>
+  axiosInstance.delete(`/share_withs/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const postFolderDocumentCommon = async (data) =>
+  axiosInstance.post("/folders/create_common_folder.json", data, {
+    params: {
+      token: token,
+    },
+  });
+export const postFolderDocumentPersonal = async (data) =>
+  axiosInstance.post("/folders/share_personal_documents.json", data, {
+    params: {
+      token: token,
+    },
+  });
+export const postFileDocumentCommon = async (data) =>
+  axiosInstance.post("/folder_documents/create_common_document.json", data, {
+    params: {
+      token: token,
+    },
+  });
+
+
 export const getServicesRoutineList = async (page, perpage) =>
   axiosInstance.get(
     `/activities.json?q[soft_service_id_null]=0&per_page=${perpage}&page=${page}`,
@@ -4801,7 +4892,7 @@ export const getHRMSEmployeeID = async (vibeID) => {
   try {
     const response = await HrmsAuth.get(
       `/vibe-id/employee/?vibe_id=${vibeID}`,
-      
+
       {
         headers: {
           "Content-Type": "multipart/form-data/",
