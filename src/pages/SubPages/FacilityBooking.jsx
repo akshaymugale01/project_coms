@@ -126,6 +126,8 @@ const FacilityBooking = () => {
     }
   };
 
+
+  //fetch terms ,cancel, gst, member price
   const fetchTermsPolicy = async (facilityId) => {
 
     try {
@@ -145,13 +147,15 @@ const FacilityBooking = () => {
           tenant_price_child: selectedFacility.tenant_price_child || 0,
         };
         // console.log("Selected Facility:", selectedFacility); 
-        setFormData({
-          ...formData,
+
+        //Update formData without resetting value
+        setFormData((prevFormData) => ({
+          ...prevFormData,
           gst_no: selectedFacility.gst_no,
-          prices: newPrices, 
-        });
+          prices: newPrices,
+        }));
         // console.log("new p", newPrices);
-  
+
         setPrices((prevPrices) => {
           if (JSON.stringify(prevPrices) !== JSON.stringify(newPrices)) {
             // console.log("Price set for selected facility", selectedFacility);
@@ -159,9 +163,6 @@ const FacilityBooking = () => {
           }
           return prevPrices;
         });
-
-
-
         if (selectedFacility) {
           setTerms(selectedFacility.terms || "No terms available.");
           setCancellationPolicy(
@@ -184,6 +185,31 @@ const FacilityBooking = () => {
     }
   };
 
+  const handleInputChange = (field, value) => {
+    const updatedFormData = { ...formData, [field]: parseInt(value) };
+    const memberTotal =
+      (updatedFormData.member_adult * prices.member_price_adult) +
+      (updatedFormData.member_child * prices.member_price_child);
+    const guestTotal =
+      (updatedFormData.guest_adult * prices.guest_price_adult) +
+      (updatedFormData.guest_child * prices.guest_price_child);
+    const tenantTotal =
+      (updatedFormData.tenant_adult * prices.tenant_price_adult) +
+      (updatedFormData.tenant_child * prices.tenant_price_child);
+    const totalBeforeTax = memberTotal + guestTotal + tenantTotal;
+    // Assuming `tax_no` comes from the fetched data (e.g., tax rate is 12%)
+    const taxAmount = calculateGST(totalBeforeTax, formData.gst_no || 0); // If no tax, use 0
+    console.log("tax amm", taxAmount);
+    const finalAmount = totalBeforeTax + taxAmount;
+    // Update formData and the total amount
+    setFormData({
+      ...updatedFormData,
+      amount: finalAmount,
+      tax: taxAmount, // Store the calculated tax in formData for reference
+    });
+  };
+
+
 
   const handleSlotChange = (e) => {
     const selectedSlotId = e.target.value;
@@ -205,36 +231,25 @@ const FacilityBooking = () => {
     }));
   };
 
+  // const handleButtonClick = (selectedTime) => {
+  //   setSelectedTimes((prevState) => {
+  //     const newState = {
+  //       ...prevState,
+  //       [selectedTime]: !prevState[selectedTime],
+  //     };
 
-  const handleButtonClick = (selectedTime) => {
-    setSelectedTimes((prevState) => {
-      const newState = {
-        ...prevState,
-        [selectedTime]: !prevState[selectedTime],
-      };
+  //     // Determine if any time slot is selected
+  //     const anyTimeSelected = Object.values(newState).some(
+  //       (isSelected) => isSelected
+  //     );
 
-      // Determine if any time slot is selected
-      const anyTimeSelected = Object.values(newState).some(
-        (isSelected) => isSelected
-      );
+  //     // Update the state for timeSelected and time
+  //     setTimeSelected(anyTimeSelected);
+  //     setTime(anyTimeSelected ? selectedTime : "");
 
-      // Update the state for timeSelected and time
-      setTimeSelected(anyTimeSelected);
-      setTime(anyTimeSelected ? selectedTime : "");
-
-      return newState;
-    });
-  };
-
-  // const handleUserSelectChange = (selectedOptions) => {
-  //   const selectedIds = selectedOptions
-  //     ? selectedOptions.map((option) => option.value)
-  //     : [];
-  //   const userIdsString = selectedIds.join(",");
-
-  //   setFormData({ ...formData, user_id: userIdsString });
+  //     return newState;
+  //   });
   // };
-
 
 
   const postBookFacility = async () => {
@@ -270,7 +285,7 @@ const FacilityBooking = () => {
       // Handle the response
       console.log("Booking response:", response);
 
-      alert("Booking successful!");
+      toast.success("Booking successful!");
       navigate('/bookings');
     } catch (error) {
       // Handle errors
@@ -296,72 +311,15 @@ const FacilityBooking = () => {
   const handleFacilityChange = (e) => {
     const selectedFacilityId = e.target.value; // Get the selected facility ID from the dropdown
     setSelectedSlot(""); // Reset selected slot
-    if (selectedFacilityId) {
-      fetchSlotsForFacility(selectedFacilityId);
-      fetchTermsPolicy(selectedFacilityId);
-    }
-    const selectedFacility = facilities.find((facility) => facility.id === selectedFacilityId); // Find the facility by ID
-    setFacility(selectedFacility);
-
+    fetchSlotsForFacility(selectedFacilityId);
+    fetchTermsPolicy(selectedFacilityId);
+    const selectedAFacility = facilities.find((facility) => facility.id === selectedFacilityId); // Find the facility by ID
+    setFacility(selectedAFacility);
     setFormData((prevData) => ({
       ...prevData,
       amenity_id: selectedFacilityId, // Update amenity_id in formData state
     }));
-  };
-
-
-  // const calculateTotal = (type) => {
-  //   const adultCount = formData[`${type}_adult`];
-  //   const childCount = formData[`${type}_child`];
-  //   const adultPrice = prices[`${type}_price_adult`];
-  //   const childPrice = prices[`${type}_price_child`];
-  //   return adultCount * adultPrice + childCount * childPrice;
-  // }
-
-
-  // Handle form data updates and calculate total
-  const handleInputChange = (field, value) => {
-    const updatedFormData = { ...formData, [field]: parseInt(value) };
-
-    const memberTotal =
-      (updatedFormData.member_adult * prices.member_price_adult) +
-      (updatedFormData.member_child * prices.member_price_child);
-
-    const guestTotal =
-      (updatedFormData.guest_adult * prices.guest_price_adult) +
-      (updatedFormData.guest_child * prices.guest_price_child);
-
-    const tenantTotal =
-      (updatedFormData.tenant_adult * prices.tenant_price_adult) +
-      (updatedFormData.tenant_child * prices.tenant_price_child);
-
-    const totalBeforeTax = memberTotal + guestTotal + tenantTotal;
-
-    // Assuming `tax_no` comes from the fetched data (e.g., tax rate is 12%)
-    const taxAmount = calculateGST(totalBeforeTax, facilities.gst_no || 0); // If no tax, use 0
-
-    console.log("tax amm", taxAmount);
-
-    const finalAmount = totalBeforeTax + taxAmount;
-
-    // Update formData and the total amount
-    setFormData({
-      ...updatedFormData,
-      amount: finalAmount,
-      tax: taxAmount, // Store the calculated tax in formData for reference
-    });
-  };
-
-
-
-
-
-  // let abc = calculateTotal("member") + calculateTotal("guest") + calculateTotal("tenant") || 0;  
-
-
-
-
-
+  };  
 
   const handleSelectChange = (e) => {
     const selectedUserId = e.target.value;
@@ -370,8 +328,6 @@ const FacilityBooking = () => {
       user_id: selectedUserId, // Update user_id in the formData state
     }));
   };
-
-
 
   const themeColor = useSelector((state) => state.theme.color);
   return (

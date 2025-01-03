@@ -162,7 +162,7 @@ const Booking = () => {
     },
     {
       name: "Booking Status",
-      selector: (row) => row.bookingStatus || "N/A",
+      selector: (row) => row.status || "N/A",
       sortable: true,
     },
   ];
