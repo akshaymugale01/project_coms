@@ -1,41 +1,103 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Table from "../../../components/table/Table"; // Update path as needed
-import { getAmenitiesBooking, getAmenitiesIdBooking, getFacitilitySetup } from "../../../api"; // Import API call
+import { getAmenitiesBooking, getAmenitiesIdBooking, getAssignedTo, getFacitilitySetup, getSetupUsers, getSiteData } from "../../../api"; // Import API call
 import { useParams } from "react-router-dom";
 
 const BookingDetails = () => {
   const themeColor = useSelector((state) => state.theme.color);
+
   const { id } = useParams();
+  const [userName, setUserName] = useState("");
+  const [userOptions, setUserOptions] = useState([]);
   const [bookingDetails, setBookingDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [facilityDetails, setFacilityDetails] = useState(null); // To hold the fetched facility data
+  const [facilityDetails, setFacilityDetails] = useState(null);
+
+    // Extract booking data and facility details
+    const {
+      status,
+      booking_date,
+      slot,
+      booked_on,
+      booked_by,
+      user_id,
+      member_adult,
+      member_child,
+      guest_adult,
+      guest_child,
+      payable_amount,
+      transaction_id,
+      payment_status,
+      payment_mode,
+      amount_paid,
+      amount,
+      members,
+      amenity_id,
+    } = bookingDetails || {};
+  
+    // Facility Dat
+    const {
+      fac_name,
+      created_at,
+      fac_type,
+      description,
+      gst_no: facilityGstNo,
+      terms,
+      amenity_slots,
+      guest_price_adult,
+      guest_price_child,
+      member_price_adult,
+      member_price_child,
+    } = facilityDetails || {};
+  
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getAssignedTo(); // Replace with your API call
+      const transformedUsers = response.data.map((user) => ({
+        value: user.id,
+        label: `${user.firstname || ""} ${user.lastname || ""}`.trim(),
+      }));
+      setUserOptions(transformedUsers);
+      console.log("Fetched Users:", transformedUsers);
+      console.log("Fetched Users:", user_id);
+      // console.log("prov", userId);
+
+      // Find the user by ID and set the name
+      const user = transformedUsers.find((u) => u.value === user_id);
+      setUserName(user.label); // Full name (label
+      
+    } catch (error) {
+      console.error("Error fetching assigned users:", error);
+      setUserName("Error fetching user");
+    }
+  };
 
   useEffect(() => {
     const fetchBookingAndFacilityDetails = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        // Fetch the booking details using the provided ID
         const bookingResponse = await getAmenitiesIdBooking(id);
         const bookingData = bookingResponse.data;
         setBookingDetails(bookingData);
 
-        // Extract amenity_id from the booking data
+        bookingDetails;
+
         const amenityId = bookingData.amenity_id;
         console.log("amenityId", amenityId);
 
-        // Fetch facility details using the amenity_id
         const facilityResponse = await getFacitilitySetup(amenityId);
         const facilityData = facilityResponse.data;
-
-        const filteredFacilityData = facilityData.find(facility => facility.id === amenityId);
+        const filteredFacilityData = facilityData.find(
+          (facility) => facility.id === amenityId
+        );
         setFacilityDetails(filteredFacilityData);
-        console.log("Amenities Booking Data:", bookingData);
-        console.log("Setup Facility Data for amenity_id:", amenityId, filteredFacilityData);
 
+        console.log("Booking Data:", bookingData);
+        console.log("Facility Data for amenity_id:", amenityId, filteredFacilityData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching booking or facility details:", error);
@@ -44,11 +106,12 @@ const BookingDetails = () => {
       }
     };
 
-    // Trigger the data fetching when the component is mounted or when the `id` changes
+    fetchUsers();
+
     if (id) {
       fetchBookingAndFacilityDetails();
     }
-  }, [id]);
+  }, [user_id]);
 
   if (loading) {
     return (
@@ -66,38 +129,6 @@ const BookingDetails = () => {
     );
   }
 
-  // Extract booking data and facility details
-  const {
-    status,
-    booking_date,
-    slot,
-    booked_on,
-    booked_by,
-    gst_no,
-    payable_amount,
-    transaction_id,
-    payment_status,
-    payment_method,
-    amount_paid,
-    members,
-    amenity_id,
-  } = bookingDetails;
-
-  // Facility Data
-  const {
-    fac_name,
-    created_at,
-    fac_type,
-    description,
-    gst_no: facilityGstNo,
-    terms,
-    amenity_slots,
-    guest_price_adult,
-    guest_price_child,
-    member_price_adult,
-    member_price_child,
-  } = facilityDetails || {};
-
   // Find the relevant slot time based on the slot ID in the booking
   const amenitySlotId = bookingDetails?.amenity_slot_id;
   const selectedSlot = facilityDetails?.amenity_slots?.find(
@@ -107,14 +138,13 @@ const BookingDetails = () => {
     ? `${selectedSlot.start_hr}:${selectedSlot.start_min} - ${selectedSlot.end_hr}:${selectedSlot.end_min}`
     : "N/A";
 
-    let created = () => {
-      const date = new Date(created_at);
+  let created = () => {
+    const date = new Date(created_at);
     const yy = date.getFullYear().toString(); // Get last 2 digits of the year
     const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
     const dd = String(date.getDate()).padStart(2, '0');
     return `${dd}/${mm}/${yy}`;
-    }
-    
+  }
 
 
   return (
@@ -129,8 +159,8 @@ const BookingDetails = () => {
         <div className="flex justify-between items-center w-full">
           <h1 className="w-full font-medium text-lg">{fac_name}</h1>
           <div className="flex justify-end gap-2 w-full">
-            <p className="text-end bg-red-900 rounded-md text-white p-2">Capture Payment</p>
-            <p className="text-end bg-yellow-500 rounded-md text-white p-2">Request Payment</p>
+            <p className="text-end bg-yellow-500 rounded-md text-white p-2">Capture Payment</p>
+            <p className="text-end bg-red-500  rounded-md text-white p-2">Cancel</p>
           </div>
         </div>
         <div className="grid grid-cols-4 w-full gap-5 my-2 bg-blue-50 border rounded-xl p-2">
@@ -163,7 +193,7 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Booked By:</p>
-            <p>{booked_by}</p>
+            <p>{userName}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">GST:</p>
@@ -171,11 +201,11 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payable Amount:</p>
-            <p>₹ {payable_amount}</p>
+            <p>₹ {amount}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Transaction ID:</p>
-            <p>{transaction_id  }</p>
+            <p>{transaction_id}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payment Status:</p>
@@ -190,7 +220,7 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payment Method:</p>
-            <p>{payment_method}</p>
+            <p>{payment_mode === "post" ? "Postpaid" : payment_mode === "pre" ? "Prepaid" : "Unknown Payment Mode"}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Amount Paid:</p>
@@ -199,30 +229,42 @@ const BookingDetails = () => {
         </div>
 
         {/* Facility Details */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {/* Member Section */}
           <div>
-            <h2 className="border-b font-medium mb-2">Member</h2>
+            <h2 className="border-b font-medium mb-2">Member:</h2>
             <div className="grid grid-cols-2 gap-2 items-center">
-              <p className="font-medium">Adult</p>
-              <p>₹{member_price_adult}</p>
+              <p className="font-medium">Adult:</p>
+              <p>{member_adult}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 items-center">
-              <p className="font-medium">Child</p>
-              <p>₹{member_price_child}</p>
+              <p className="font-medium">Child:</p>
+              <p>{member_child}</p>
             </div>
           </div>
 
           {/* Guest Section */}
           <div>
-            <h2 className="border-b font-medium mb-2">Guest</h2>
+            <h2 className="border-b font-medium mb-2">Guest:</h2>
             <div className="grid grid-cols-2 gap-2 items-center">
-              <p className="font-medium">Adult</p>
-              <p>₹{guest_price_adult}</p>
+              <p className="font-medium">Adult:</p>
+              <p>{guest_adult}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 items-center">
-              <p className="font-medium">Child</p>
-              <p>₹{guest_price_child}</p>
+              <p className="font-medium">Child:</p>
+              <p>{guest_child}</p>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="border-b font-medium mb-2">Tenant:</h2>
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <p className="font-medium">Adult:</p>
+              <p>{member_adult}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <p className="font-medium">Child:</p>
+              <p>{member_child}</p>
             </div>
           </div>
         </div>

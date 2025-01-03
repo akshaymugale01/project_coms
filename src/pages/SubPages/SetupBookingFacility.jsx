@@ -40,7 +40,7 @@ const SetupBookingFacility = () => {
     {
       name: "Action",
       cell: (row) => (
-        <Link to={`/bookings/booking-details/${row.id}`}>
+        <Link to={`/setup/facility/${row.id}`}>
           <BsEye />
         </Link>
       ),

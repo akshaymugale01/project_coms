@@ -93,7 +93,7 @@ const Navbar = () => {
     const userType = getItemInLocalStorage("USERTYPE");
     setUser(userType);
 
-    console.log("feat",feat);
+    // console.log("feattures",feat);
     
     getAllowedFeatures();
   }, []);

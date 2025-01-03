@@ -19,7 +19,7 @@ import { FaBuilding } from "react-icons/fa";
 import AssetDashboard from "./SubPages/AssetDashboard";
 const Dashboard = () => {
   const themeColor = useSelector((state) => state.theme.color);
-  const vibeUserId = getItemInLocalStorage("VIBEUSERID");
+  const vibeUserId = getItemInLocalStorage("UserId");
   const [feat, setFeat] = useState("");
   const [site, setSite] = useState(false);
   const [siteData, setSiteData] = useState([]);

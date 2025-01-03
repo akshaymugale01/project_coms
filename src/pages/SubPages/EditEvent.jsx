@@ -28,12 +28,16 @@ const EditEvent = () => {
     site_id: siteId,
     event_name: "",
     venue: "",
+    important: false,
+    email_enabled: false,
+    rsvp_enabled: false,
     description: "",
     start_date_time: "",
     end_date_time: "",
     user_ids: "",
     event_image: [],
   });
+
   console.log(formData);
   const fileInputRef = useRef(null);
   const themeColor = useSelector((state) => state.theme.color);
@@ -53,6 +57,7 @@ const EditEvent = () => {
   };
 
   const { id } = useParams();
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -62,27 +67,31 @@ const EditEvent = () => {
           label: `${user.firstname} ${user.lastname}`,
         }));
         setUsers(transformedUsers);
-        console.log(response);
+        // console.log(response);
       } catch (error) {
         console.error("Error fetching assigned users:", error);
       }
     };
+
     const fetchEvent = async () => {
       try {
         const res = await getEventsDetails(id);
         const response = res.data;
         setFormData({
           ...formData,
-          event_name: response.event_name,
-          description: response.discription,
+          event_name: response.event_name || '',
+          description: response.discription || '',
           end_date_time: response.end_date_time
             ? new Date(response.end_date_time)
             : null,
           start_date_time: response.start_date_time
             ? new Date(response.start_date_time)
             : null,
-          event_image: response.event_image,
-          venue: response.venue,
+          event_image: response.event_image || null,
+          venue: response.venue || "",
+          important: response.important || false,
+          email_enabled: response.email_enabled || false,
+          rsvp_enabled: response.rsvp_enabled || false,
         });
       } catch (error) {
         console.log(error);
@@ -149,8 +158,10 @@ const EditEvent = () => {
 
   const handleFileAttachment = (event) => {
     const selectedFiles = event.target.files;
-    const newAttachments = Array.from(selectedFiles);
-    setFormData({ ...formData, event_image: newAttachments });
+    setFormData((prevData) => ({
+      ...prevData,
+      event_image: [...prevData.event_image, ...selectedFiles],
+    }));
   };
 
   const filterTime = (time) => {
@@ -171,6 +182,26 @@ const EditEvent = () => {
       return false; // Past date
     }
   };
+
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    // const inputValue = type === 'checkbox' ? checked : type === 'radio' ? checked : value; 
+
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleInputRsVpChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      rsvp_enabled: value,
+    }));
+  };
+
 
   const handleFileChange = (files, fieldName) => {
     setFormData({
@@ -270,13 +301,23 @@ const EditEvent = () => {
 
             <div className="flex gap-4 my-5">
               <div className="flex gap-2 items-center">
-                <input type="checkbox" name="" id="imp" />
+                <input type="checkbox"
+                  name="important"
+                  checked={formData.important}
+                  onChange={handleInputChange}
+                  id="imp" />
                 <label htmlFor="imp" className="font-semibold">
                   Important
                 </label>
               </div>
               <div className="flex gap-2 items-center">
-                <input type="checkbox" name="" id="email" />
+                <input
+                  type="checkbox"
+                  name="email_enabled"
+                  id="email"
+                  checked={formData.email_enabled}
+                  onChange={handleInputChange}
+                />
                 <label htmlFor="email" className="font-semibold">
                   Send Email
                 </label>
@@ -297,25 +338,22 @@ const EditEvent = () => {
               <div className="flex flex-col items-center justify-center">
                 <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                   <h2
-                    className={`p-1 ${
-                      share === "all" && "bg-black text-white"
-                    } rounded-full px-6 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "all" && "bg-black text-white"
+                      } rounded-full px-6 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("all")}
                   >
                     All
                   </h2>
                   <h2
-                    className={`p-1 ${
-                      share === "individual" && "bg-black text-white"
-                    } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "individual" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("individual")}
                   >
                     Individuals
                   </h2>
                   <h2
-                    className={`p-1 ${
-                      share === "groups" && "bg-black text-white"
-                    } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "groups" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("groups")}
                   >
                     Groups
@@ -344,19 +382,32 @@ const EditEvent = () => {
                 RSVP
               </h2>
               <div className="flex gap-4 mt-2">
-                <div className="flex gap-2 ">
-                  <input type="radio" name="RSVP" id="yes" />
+                <div className="flex gap-2">
+                  <input
+                    type="radio"
+                    checked={formData.rsvp_enabled === true}
+                    onChange={() => handleInputRsVpChange(true)} // Set true for "Yes"
+                    name="rsvp_enabled"
+                    id="yes"
+                  />
                   <label htmlFor="yes" className="text-lg">
                     Yes
                   </label>
                 </div>
                 <div className="flex gap-2">
-                  <input type="radio" name="RSVP" id="no" />
+                  <input
+                    type="radio"
+                    checked={formData.rsvp_enabled === false}
+                    onChange={() => handleInputRsVpChange(false)} // Set false for "No"
+                    name="rsvp_enabled"
+                    id="no"
+                  />
                   <label htmlFor="no" className="text-lg">
                     No
                   </label>
                 </div>
               </div>
+
             </div>
             <div>
               <h2 className="border-b text-xl border-black my-5 font-semibold">
