@@ -95,7 +95,7 @@ const Broadcast = () => {
       <Navbar />
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <Communication />
-        <div className="grid grid-cols-12 my-2 gap-2">
+        <div className="grid grid-cols-11 my-2 gap-2">
           {/* <div className="flex justify-between items-center sm:flex-row flex-col my-2"> */}
           <input
             type="text"
@@ -108,10 +108,10 @@ const Broadcast = () => {
             <Link
               to={"/communication/broadcast/create-broadcast"}
               style={{ background: themeColor }}
-              className="  rounded-md flex font-semibold items-center gap-2 text-white p-2 col-span-2"
+              className="  rounded-md flex font-semibold items-center gap-2 text-white p-2"
             >
               <IoAddCircleOutline size={20} />
-              Add Broadcast
+              Add
             </Link>
           )}
         </div>

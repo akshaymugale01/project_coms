@@ -93,9 +93,9 @@ const Booking = () => {
         <Link to={`/bookings/booking-details/${row.id}`}>
           <BsEye />
         </Link>
-        <Link to={`bookings/edit_bookings/${row.id}`}>
+        {/* <Link to={`bookings/edit_bookings/${row.id}`}>
         <BiEdit size={15} />
-      </Link>
+      </Link> */}
       </div>
       ),
       sortable: false,
