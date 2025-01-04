@@ -3,251 +3,238 @@ import Navbar from "../../../components/Navbar";
 import { useSelector } from "react-redux";
 import Select from "react-select";
 import toast from "react-hot-toast";
-import { getAllUnits, getSites, getUnits, postSetupUsers } from "../../../api";
+import { getAllUnits, getSites, postSetupUsers } from "../../../api";
 import { useNavigate } from "react-router-dom";
+import { getItemInLocalStorage } from "../../../utils/localStorage";
+import { RiDeleteBin5Line } from "react-icons/ri";
 
 const AddUser = () => {
   const themeColor = useSelector((state) => state.theme.color);
+  const siteId = getItemInLocalStorage("SITEID");
+
   const [sites, setSites] = useState([]);
   const [units, setUnits] = useState([]);
-  const [selectedOption, setSelectedOption] = useState([]);
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
     password: "",
-    userType: "",
-    unitId: "",
     mobile: "",
-    site_ids: [],
+    userType: "",
+    site_ids: [siteId],
+    user_sites: [
+      {
+        unit_id: "",
+        site_id: siteId,
+        ownership: "",
+        ownership_type: "",
+        is_approved: true,
+        lives_here: "",
+      },
+    ],
   });
-  console.log(formData);
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  console.log("formData", formData);
+
+  const navigate = useNavigate();
+
+  const handleAddSite = () => {
+    setFormData((prev) => ({
+      ...prev,
+      user_sites: [
+        ...prev.user_sites,
+        {
+          unit_id: "",
+          site_id: siteId,
+          ownership: "",
+          ownership_type: "",
+          is_approved: false,
+          lives_here: "",
+        },
+      ],
+    }));
   };
-  const handleChangeSelectSite = (selectedOption) => {
-    setSelectedOption(selectedOption);
-    const selectedSiteIds = selectedOption.map((option) => option.value);
-    setFormData({ ...formData, site_ids: selectedSiteIds });
+
+  const handleSiteChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updatedSites = [...prev.user_sites];
+      updatedSites[index][field] = value;
+      return { ...prev, user_sites: updatedSites };
+    });
+  };
+
+  const handleRemoveSite = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      user_sites: prev.user_sites.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   useEffect(() => {
-    const fetchSites = async () => {
+    const fetchData = async () => {
       try {
-        const sitesResp = await getSites();
-        const transformedSites = sitesResp.data.map((site) => ({
-          value: site.id,
-          label: site.name,
-        }));
-        setSites(transformedSites);
+        const [sitesResp, unitsResp] = await Promise.all([getSites(), getAllUnits()]);
+        setSites(
+          sitesResp.data.map((site) => ({
+            value: site.id,
+            label: site.name,
+          }))
+        );
+        setUnits(unitsResp.data);
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching data:", error);
       }
     };
-    const fetchUnits = async () => {
-      try {
-        const unitResp = await getAllUnits();
-        setUnits(unitResp.data);
-        console.log(unitResp);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchUnits();
-    fetchSites();
-  }, []);
-  const navigate = useNavigate();
-  const handleAddUser = async () => {
-    if (
-      formData.firstName === "" ||
-      formData.lastName === "" ||
-      formData.email === "" ||
-      formData.password === "" ||
-      formData.userType === ""
-    ) {
-      return toast.error("All fields are required !");
-    }
 
-    const postData = new FormData();
-    postData.append("user[firstname]", formData.firstName);
-    postData.append("user[lastname]", formData.lastName);
-    postData.append("user[email]", formData.email);
-    postData.append("user[mobile]", formData.mobile);
-    postData.append("user[password]", formData.password);
-    postData.append("user[user_type]", formData.userType);
-    postData.append("user[unit_id]", formData.unitId);
-    formData.site_ids.forEach((siteId) => {
-      postData.append("site_ids[]", siteId);
-    });
+    fetchData();
+  }, []);
+
+  const handleAddUser = async () => {
+    if (!formData.firstname || !formData.lastname || !formData.email || !formData.password) {
+      return toast.error("All fields are required!");
+    }
+    const postData = {
+      user: {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        mobile: formData.mobile,
+        password: formData.password,
+        email: formData.email,
+        user_sites: formData.user_sites.map((site) => ({
+          unit_id: site.unit_id,
+          site_id: site.site_id,
+          ownership: site.ownership,
+          ownership_type: site.ownership_type,
+          is_approved: site.is_approved,
+          lives_here: site.lives_here,
+        })),
+      },
+    };
+
     try {
-      const resp = await postSetupUsers(postData);
-      toast.success("User created successfully");
-      console.log(resp);
+      await postSetupUsers(postData);
+
+      console.log("created details", postData);
+      toast.success("User created successfully!");
       navigate("/setup/users-setup");
     } catch (error) {
-      console.log(error);
+      console.error("Error creating user:", error);
+      toast.error("Failed to create user.");
     }
   };
+
   return (
     <section className="flex">
       <Navbar />
       <div className="w-full flex mx-3 flex-col gap-4 overflow-hidden my-5">
         <h2
-          style={{ background: themeColor }}
-          className="text-center text-xl font-bold p-2  rounded-full text-white"
+          style={{ background: `rgb(17, 24, 39)` }}
+          className="text-center text-xl font-bold p-2 rounded-full text-white"
         >
           Add New User
         </h2>
-        <div className="md:mx-20 my-5 md:mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg ">
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1 ">
-              <label htmlFor="" className="font-semibold">
-                First Name :
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="Enter First Name"
-                className="border p-2 px-4 border-gray-300  rounded-md placeholder:text-sm"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1 ">
-              <label htmlFor="" className="font-semibold">
-                Last Name :
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Enter Last Name"
-                className="border p-2 px-4 border-gray-300  rounded-md placeholder:text-sm"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label htmlFor="" className="font-semibold">
-                Email :
-              </label>
-              <input
-                type="text"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter email"
-                className="border p-2 px-4 border-gray-300  rounded-md placeholder:text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="" className="font-semibold">
-                Mobile No. :
-              </label>
-              <input
-                type="text"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleChange}
-                placeholder="Enter mobile no."
-                className="border p-2 px-4 border-gray-300  rounded-md placeholder:text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="" className="font-semibold">
-                Password :
-              </label>
-              <input
-                type="text"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter password"
-                className="border p-2 px-4 border-gray-300  rounded-md placeholder:text-sm"
-              />
-            </div>
-            <div className="flex gap-1 flex-col">
-              <label htmlFor="" className="font-semibold">
-                User Type :
-              </label>
-              <select
-                name="userType"
-                value={formData.userType}
-                id=""
-                onChange={handleChange}
-                className="border p-2 px-4 border-gray-300  rounded-md placeholder:text-sm"
-              >
-                <option value="">Select User Type</option>
-                <option value="pms_admin">Admin</option>
-                <option value="pms_technician">Technician</option>
-                <option value="pms_occupant_admin">Unit Owner</option>
-                <option value="pms_occupant">Unit Resident</option>
-                <option value="face_scanner">Face Scanner</option>
-                <option value="Tm">Approving Authority</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="" className="font-semibold">
-                Select Unit :
-              </label>
-              <select
-                name="unitId"
-                value={formData.unitId}
-                id=""
-                onChange={handleChange}
-                className="border p-2 px-4 border-gray-300  rounded-md placeholder:text-sm"
-              >
-                <option value="">Select Unit</option>
-                {units.map((unit) => (
-                  <option value={unit.id} key={unit.id}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-1 flex-col">
-              <label htmlFor="" className="font-semibold">
-                Associated Sites :
-              </label>
-              <Select
-                isMulti
-                onChange={handleChangeSelectSite}
-                options={sites}
-                noOptionsMessage={() => "Sites not available..."}
-                maxMenuHeight={90}
-                styles={{
-                  placeholder: (baseStyles, state) => ({
-                    ...baseStyles,
-                    color: "black",
-                  }),
-                  clearIndicator: (baseStyles) => ({
-                    ...baseStyles,
-                    color: "red",
-                  }),
-                  dropdownIndicator: (baseStyles) => ({
-                    ...baseStyles,
-                    color: "black",
-                  }),
-                  control: (baseStyles) => ({
-                    ...baseStyles,
-                    borderColor: "darkblue",
-                  }),
-                  multiValueRemove: (baseStyles, state) => ({
-                    ...baseStyles,
-                    color: state.isFocused ? "red" : "gray",
-                    backgroundColor: state.isFocused ? "black" : "lightgreen",
-                  }),
-                }}
-                menuPosition={"fixed"}
-              />
-            </div>
+        <div className="md:mx-20 my-5 md:mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg">
+          {/* User Details */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {["First Name", "Last Name", "Email", "Mobile", "Password"].map((field, idx) => (
+              <div key={idx} className="flex flex-col gap-1">
+                <label className="font-semibold">{field}:</label>
+                <input
+                  type="text"
+                  name={field.toLowerCase().replace(" ", "")}
+                  value={formData[field.toLowerCase().replace(" ", "")]}
+                  onChange={handleChange}
+                  placeholder={`Enter ${field}`}
+                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
+                />
+              </div>
+            ))}
           </div>
 
-          <div className="md:flex grid md:grid-cols-2 gap-2 my-5 justify-center">
+          {/* Associated Units */}
+          {formData.user_sites.map((site, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-2 gap-4 my-3 border p-5 w-full rounded-md"
+            >
+              {[
+                { field: "unit_id", label: "Associated Unit" },
+                { field: "ownership", label: "Ownership" },
+                { field: "ownership_type", label: "Ownership Type" },
+                { field: "lives_here", label: "Lives Here" },
+              ].map(({ field, label }, idx) => (
+                <div key={idx} className="flex flex-col gap-1">
+                  <label className="font-semibold">{label}:</label>
+                  <select
+                    value={site[field]}
+                    onChange={(e) => handleSiteChange(index, field, e.target.value)}
+                    className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
+                  >
+                    <option value="">{`Select ${label}`}</option>
+                    {field === "unit_id"
+                      ? units.map((unit) => (
+                        <option key={unit.id} value={unit.id}>
+                          {unit.building_name}-{unit.floor_name}-{unit.name}
+                        </option>
+                      ))
+                      : field === "ownership"
+                        ? ["owner", "tenant"].map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                          </option>
+                        ))
+                        : field === "ownership_type"
+                          ? ["primary", "secondary"].map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                            </option>
+                          ))
+                          : field === "lives_here"
+                            ? [
+                              { label: "Yes", value: true },
+                              { label: "No", value: false },
+                            ].map((opt) => (
+                              <option key={opt.label} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))
+                            : null}
+                  </select>
+                </div>
+              ))}
+
+              <div className="col-span-2 flex justify-end mt-2">
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSite(index)}
+                    className="px-3 py-2 bg-red-500 text-white rounded-md"
+                  >
+                    <RiDeleteBin5Line />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={handleAddSite}
+            className="px-3 py-2 bg-blue-500 text-white rounded-md"
+          >
+            Add Another Unit
+          </button>
+
+          {/* Submit Button */}
+          <div className="flex justify-center my-5">
             <button
               onClick={handleAddUser}
-              className="bg-black text-white p-1 px-4 rounded-md font-medium"
+              className="bg-black text-white p-2 px-4 rounded-md font-medium"
             >
               Create User
             </button>
