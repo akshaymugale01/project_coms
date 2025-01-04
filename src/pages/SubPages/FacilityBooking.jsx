@@ -3,7 +3,7 @@ import Collapsible from "react-collapsible";
 import CustomTrigger from "../../containers/CustomTrigger";
 import SeatTimeSlot, { initialSelectedTimes } from "./SeatTimeSlot";
 import Select from "react-select";
-import { getAssignedTo, getFacitilitySetup, getLogin, getSiteData, postAmenitiesBooking } from "../../api";
+import { getAssignedTo, getFacitilitySetup, getLogin, getSetupUsers, getSiteData, postAmenitiesBooking } from "../../api";
 import { useSelector } from "react-redux";
 import Navbar from "../../components/Navbar";
 import { FaCheck } from "react-icons/fa";
@@ -296,7 +296,8 @@ const FacilityBooking = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await getAssignedTo(); // Replace with your API call
+      const response = await getSetupUsers();
+      // console.log("Users al:", response);
       const transformedUsers = response.data.map((user) => ({
         value: user.id,
         label: `${user.firstname} ${user.lastname}`,
@@ -388,6 +389,7 @@ const FacilityBooking = () => {
                   ))}
                 </select>
               </div>
+              
               <div className="flex flex-col gap-1">
                 <label htmlFor="bookingDate" className="font-semibold">
                   Select Date:
@@ -402,8 +404,9 @@ const FacilityBooking = () => {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-4 gap-2 mt-2">
             {facility !== "" && slots.length > 0 && (
-              <div className="grid grid-cols-4 gap-1 mt-5">
+              <div className="flex flex-col gap-1">
                 <p className="font-semibold">Select Slot :</p>
                 <select
                   className="border p-2 px-4 border-gray-500 rounded-md"
@@ -419,6 +422,7 @@ const FacilityBooking = () => {
                 </select>
               </div>
             )}
+            </div>
             <div className="my-2">
               <h2 className="border-b text-xl border-black font-semibold">
                 Payment Mode
