@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Table from "../../../components/table/Table"; // Update path as needed
-import { getAmenitiesBooking, getAmenitiesIdBooking, getAssignedTo, getFacitilitySetup, getSetupUsers, getSiteData } from "../../../api"; // Import API call
+import { getAmenitiesBooking, getAmenitiesIdBooking, getAssignedTo, getFacitilitySetup, getSetupUsers, getSiteData, postPaymentBookings } from "../../../api"; // Import API call
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const BookingDetails = () => {
   const themeColor = useSelector((state) => state.theme.color);
@@ -16,54 +17,97 @@ const BookingDetails = () => {
   const [facilityDetails, setFacilityDetails] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+
+    // Extract booking data and facility details
+    const {
+      status,
+      booking_date,
+      slot,
+      booked_on,
+      booked_by,
+      user_id,
+      member_adult,
+      member_child,
+      guest_adult,
+      guest_child,
+      payable_amount,
+      transaction_id,
+      payment_status,
+      payment_mode,
+      amount_paid,
+      amount,
+      members,
+      amenity_id,
+    } = bookingDetails || {};
+  
+    // Facility Dat
+    const {
+      fac_name,
+      created_at,
+      fac_type,
+      description,
+      gst_no: facilityGstNo,
+      terms,
+      amenity_slots,
+      guest_price_adult,
+      guest_price_child,
+      member_price_adult,
+      member_price_child,
+    } = facilityDetails || {};
+  
   const [formData, setFormData] = useState({
-    resource_id: "",
-    resource_type: "CamBill",
+    resource_id: id,
+    resource_type: "AminityBooking",
     total_amount: "",
     paid_amount: "",
     user_id: "",
     payment_method: "",
     transaction_id: "",
-    payment_date: "",
+    payment_date: new Date().toISOString().split("T")[0],
   });
 
+  console.log("formData", formData);
 
-  // Extract booking data and facility details
-  const {
-    status,
-    booking_date,
-    slot,
-    booked_on,
-    booked_by,
-    user_id,
-    member_adult,
-    member_child,
-    guest_adult,
-    guest_child,
-    payable_amount,
-    transaction_id,
-    payment_status,
-    payment_mode,
-    amount_paid,
-    amount,
-    members,
-    amenity_id,
-  } = bookingDetails || {};
 
-  // Facility Dat
-  const {
-    fac_name,
-    created_at,
-    fac_type,
-    description,
-    gst_no: facilityGstNo,
-    terms,
-    amenity_slots,
-    guest_price_adult,
-    guest_price_child,
-    member_price_adult,
-    member_price_child,
-  } = facilityDetails || {};
+
+  const postPaymentBooking = async () => {
+    const postData = new FormData();
+
+    if (!formData.resource_id || !formData.transaction_id) {
+      toast.error("Transaction id must be there!")
+      return;
+    }
+
+    try {
+      // Append all necessary fields dynamically
+      postData.append("payment[resource_id]", formData.resource_id || "");
+      postData.append("payment[resource_type]", formData.resource_type || "");
+      postData.append("payment[total_amount]", amount || "");
+      postData.append("payment[paid_amount]", formData.paid_amount || "");
+      postData.append("payment[user_id]", user_id || "");
+      postData.append("payment[payment_method]", payment_mode || "");
+      postData.append("payment[transaction_id]", formData.transaction_id || "");
+      postData.append("payment[payment_date]", formData.payment_date || "");
+
+      // Debugging: Log the entire FormData
+      for (const [key, value] of postData.entries()) {
+        console.log(`${key}: ${value}`);
+      }
+
+      // API call
+      const response = await postPaymentBookings(postData);
+
+      // Handle the response
+      console.log("Booking response:", response);
+
+      toast.success("Booking successful!");
+      navigate('/bookings');
+    } catch (error) {
+      // Handle errors
+      console.error("Error in booking:", error);
+      alert("Error in booking. Please try again.");
+    }
+  };
 
 
   const handleInputChange = (e) => {
@@ -105,7 +149,8 @@ const BookingDetails = () => {
         bookingDetails;
 
         const amenityId = bookingData.amenity_id;
-        console.log("amenityId", amenityId);
+        const bookingAmount = bookingData.amount
+        console.log("amenityId", amenityId, bookingAmount);
 
         const facilityResponse = await getFacitilitySetup(amenityId);
         const facilityData = facilityResponse.data;
@@ -199,6 +244,7 @@ const BookingDetails = () => {
                   <div className="flex flex-col gap-4">
                     <input
                       type="text"
+                      disabled
                       name="resource_id"
                       placeholder="Resource ID"
                       value={formData.resource_id}
@@ -209,7 +255,7 @@ const BookingDetails = () => {
                       type="text"
                       name="total_amount"
                       placeholder="Total Amount"
-                      value={formData.total_amount}
+                      value={amount}
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
                     />
@@ -224,8 +270,9 @@ const BookingDetails = () => {
                     <input
                       type="text"
                       name="user_id"
+                      disabled
                       placeholder="User ID"
-                      value={formData.user_id}
+                      value={user_id}
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
                     />
@@ -233,7 +280,7 @@ const BookingDetails = () => {
                       type="text"
                       name="payment_method"
                       placeholder="Payment Method"
-                      value={formData.payment_method}
+                      value={payment_mode === "pre" ? "Prepaid" : "post" ? "Postpaid" : ""}
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
                     />
@@ -256,7 +303,7 @@ const BookingDetails = () => {
                     <div className="flex justify-end gap-2">
                       <button
                         className="bg-blue-500 text-white p-2 rounded-md"
-                      // onClick={handleSubmit}
+                      onClick={postPaymentBooking}
                       >
                         Submit
                       </button>
