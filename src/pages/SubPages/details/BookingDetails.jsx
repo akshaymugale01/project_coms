@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Table from "../../../components/table/Table"; // Update path as needed
-import { getAmenitiesBooking, getAmenitiesIdBooking, getAssignedTo, getFacitilitySetup, getSetupUsers, getSiteData, postPaymentBookings } from "../../../api"; // Import API call
+import { getAmenitiesBooking, getAmenitiesIdBooking, getAssignedTo, getFacitilitySetup, getPaymentBookings, getSetupUsers, getSiteData, postPaymentBookings } from "../../../api"; // Import API call
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -18,63 +18,67 @@ const BookingDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
-    // Extract booking data and facility details
-    const {
-      status,
-      booking_date,
-      slot,
-      booked_on,
-      booked_by,
-      user_id,
-      member_adult,
-      member_child,
-      guest_adult,
-      guest_child,
-      payable_amount,
-      transaction_id,
-      payment_status,
-      payment_mode,
-      amount_paid,
-      amount,
-      members,
-      amenity_id,
-    } = bookingDetails || {};
-  
-    // Facility Dat
-    const {
-      fac_name,
-      created_at,
-      fac_type,
-      description,
-      gst_no: facilityGstNo,
-      terms,
-      amenity_slots,
-      guest_price_adult,
-      guest_price_child,
-      member_price_adult,
-      member_price_child,
-    } = facilityDetails || {};
-  
+  // Extract booking data and facility details
+  const {
+    status,
+    booking_date,
+    slot,
+    booked_on,
+    booked_by,
+    user_id,
+    member_adult,
+    member_child,
+    guest_adult,
+    guest_child,
+    payable_amount,
+    transaction_id,
+    payment_status,
+    payment_mode,
+    amount_paid,
+    amount,
+    members,
+    amenity_id,
+  } = bookingDetails || {};
+
+  // Facility Dat
+  const {
+    fac_name,
+    created_at,
+    fac_type,
+    description,
+    gst_no: facilityGstNo,
+    terms,
+    amenity_slots,
+    guest_price_adult,
+    guest_price_child,
+    member_price_adult,
+    member_price_child,
+  } = facilityDetails || {};
+
   const [formData, setFormData] = useState({
     resource_id: id,
-    resource_type: "AminityBooking",
+    resource_type: "AmenityBooking",
     total_amount: "",
     paid_amount: "",
     user_id: "",
     payment_method: "",
     transaction_id: "",
-    payment_date: new Date().toISOString().split("T")[0],
+    paymen_date: new Date().toISOString().split("T")[0],
+    notes: "",
   });
 
-  console.log("formData", formData);
 
+  const bookID = id;
+
+  console.log("formData", formData);
+  console.log("date", formData.paymen_date)
 
 
   const postPaymentBooking = async () => {
     const postData = new FormData();
 
-    if (!formData.resource_id || !formData.transaction_id) {
-      toast.error("Transaction id must be there!")
+    if (!formData.paymen_date) {
+      toast.error("Date must be there!")
       return;
     }
 
@@ -85,9 +89,12 @@ const BookingDetails = () => {
       postData.append("payment[total_amount]", amount || "");
       postData.append("payment[paid_amount]", formData.paid_amount || "");
       postData.append("payment[user_id]", user_id || "");
-      postData.append("payment[payment_method]", payment_mode || "");
+      postData.append("payment[payment_method]", formData.payment_method || "");
       postData.append("payment[transaction_id]", formData.transaction_id || "");
-      postData.append("payment[payment_date]", formData.payment_date || "");
+
+      postData.append("payment[paymen_date]", formData.paymen_date || "");
+      postData.append("payment[notes]", formData.notes || "");
+
 
       // Debugging: Log the entire FormData
       for (const [key, value] of postData.entries()) {
@@ -98,7 +105,7 @@ const BookingDetails = () => {
       const response = await postPaymentBookings(postData);
 
       // Handle the response
-      console.log("Booking response:", response);
+      console.log("Payment response:", response);
 
       toast.success("Booking successful!");
       navigate('/bookings');
@@ -114,6 +121,13 @@ const BookingDetails = () => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
+
+  const handlePaymentChange = (value) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      payment_method: value
+    }));
+  }
 
   const fetchUsers = async () => {
     try {
@@ -136,6 +150,39 @@ const BookingDetails = () => {
       setUserName("Error fetching user");
     }
   };
+
+
+  const fetchPaymentDetails = async (id) => {
+    try {
+      const response = await getPaymentBookings();
+      console.log("Id fetch", id)
+      const filteredData = response.data.filter(record => record.resource_id === parseInt(bookID));
+
+      if (filteredData.length > 0) {
+        // Use the first matching record (or modify if you need another approach)
+        const payment = filteredData[0];
+
+        // Set the form data state to the first payment record details
+        setFormData({
+          payment_method: payment.payment_method || 'N/A',
+          total_amount: payment.total_amount || 'N/A',
+          paid_amount: payment.paid_amount || 'N/A',
+          payment_date: payment.paymen_date || 'N/A', // Check if date is null or format it properly
+          transaction_id: payment.transaction_id || 'N/A',
+          notes: payment.notes || 'No notes provided',
+          resource_id: payment.resource_id || 'N/A',
+          resource_type: payment.resource_type || 'N/A',
+        });
+        console.log("filetr data", filteredData);
+      } else {
+        console.log("No payment details found for this resource_id");
+      }
+    } catch (error) {
+      console.error("Error fetching payment details:", error);
+    }
+  };
+
+
 
   useEffect(() => {
     const fetchBookingAndFacilityDetails = async () => {
@@ -169,6 +216,7 @@ const BookingDetails = () => {
       }
     };
 
+    fetchPaymentDetails(id);
     fetchUsers();
 
     if (id) {
@@ -242,7 +290,7 @@ const BookingDetails = () => {
                 <div className="bg-white p-6 rounded-md w-96">
                   <h2 className="text-xl font-bold mb-4">Capture Payment</h2>
                   <div className="flex flex-col gap-4">
-                    <input
+                    {/* <input
                       type="text"
                       disabled
                       name="resource_id"
@@ -250,24 +298,33 @@ const BookingDetails = () => {
                       value={formData.resource_id}
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
-                    />
-                    <input
-                      type="text"
-                      name="total_amount"
-                      placeholder="Total Amount"
-                      value={amount}
-                      onChange={handleInputChange}
-                      className="border p-2 rounded-md w-full"
-                    />
-                    <input
-                      type="text"
-                      name="paid_amount"
-                      placeholder="Paid Amount"
-                      value={formData.paid_amount}
-                      onChange={handleInputChange}
-                      className="border p-2 rounded-md w-full"
-                    />
-                    <input
+                    /> */}
+                    <label>
+                      Total Amount
+
+                      <input
+                        type="text"
+                        name="total_amount"
+                        placeholder="Total Amount"
+                        value={amount}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded-md w-full"
+                      />
+                    </label>
+
+                    <label>
+                      Paid Amount
+                      <input
+                        type="text"
+                        name="paid_amount"
+                        placeholder="Paid Amount"
+                        value={formData.paid_amount}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded-md w-full"
+                      />
+                    </label>
+
+                    {/* <input
                       type="text"
                       name="user_id"
                       disabled
@@ -275,35 +332,63 @@ const BookingDetails = () => {
                       value={user_id}
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
-                    />
-                    <input
+                    /> */}
+
+
+                    {/* <input
                       type="text"
                       name="payment_method"
                       placeholder="Payment Method"
                       value={payment_mode === "pre" ? "Prepaid" : "post" ? "Postpaid" : ""}
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
-                    />
-                    <input
-                      type="text"
-                      name="transaction_id"
-                      placeholder="Transaction ID"
-                      value={formData.transaction_id}
-                      onChange={handleInputChange}
-                      className="border p-2 rounded-md w-full"
-                    />
-                    <input
-                      type="date"
-                      name="payment_date"
-                      placeholder="Payment Date"
-                      value={formData.payment_date}
-                      onChange={handleInputChange}
-                      className="border p-2 rounded-md w-full"
-                    />
+                    /> */}
+                    <label>Payment Method
+                      <select className="border p-2 rounde w-full"
+                        value={formData.payment_method}
+                        onChange={(e) => handlePaymentChange(e.target.value)}
+                      >
+                        <option value="">Select Payment Method</option>
+                        <option value="CHEQUE">Cheque</option>
+                        <option value="UPI">UPI</option>
+                        <option value="NEFT">NEFT</option>
+                        <option value="CASH">Cash</option>
+                      </select>
+                    </label>
+                    <label> Transaction ID
+                      <input
+                        type="text"
+                        name="transaction_id"
+                        placeholder="Transaction ID"
+                        value={formData.transaction_id}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded-md w-full"
+                      />
+                    </label>
+                    <label> Date
+                      <input
+                        type="date"
+                        name="paymen_date"
+                        placeholder="Payment Date"
+                        value={formData.paymen_date}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded-md w-full"
+                      />
+                    </label>
+                    <label>Remarks
+                      <input
+                        type="textarea"
+                        name="notes"
+                        placeholder="notes"
+                        value={formData.notes}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded-md w-full"
+                      />
+                    </label>
                     <div className="flex justify-end gap-2">
                       <button
                         className="bg-blue-500 text-white p-2 rounded-md"
-                      onClick={postPaymentBooking}
+                        onClick={postPaymentBooking}
                       >
                         Submit
                       </button>
@@ -425,6 +510,129 @@ const BookingDetails = () => {
             </div>
           </div>
         </div>
+
+
+
+
+        {/* <div className="grid grid-cols-4 w-full gap-5 my-2 bg-blue-50 border rounded-xl p-2">
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Payment Method:</p>
+            <p>{formData.payment_method}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Status:</p>
+            <p
+              className={`${status === "Confirmed"
+                ? "bg-green-400"
+                : "bg-yellow-500"
+                } text-white p-1 rounded-md text-center`}
+            >
+              {status}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Scheduled Date:</p>
+            <p>{booking_date}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Selected Slot:</p>
+            <p>{slotTime}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Booked On:</p>
+            <p>{created()}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Booked By:</p>
+            <p>{userName}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">GST:</p>
+            <p>{facilityGstNo} %</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Payable Amount:</p>
+            <p>₹ {amount}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Transaction ID:</p>
+            <p>{transaction_id}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Payment Status:</p>
+            <p
+              className={`${payment_status === "Pending"
+                ? "bg-yellow-500"
+                : "bg-green-400"
+                } text-white text-center p-1 rounded-md`}
+            >
+              {payment_status}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Payment Method:</p>
+            <p>{payment_mode === "post" ? "Postpaid" : payment_mode === "pre" ? "Prepaid" : "Unknown Payment Mode"}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Amount Paid:</p>
+            <p>₹ {amount_paid}</p>
+          </div>
+        </div> */}
+
+
+        <div className="border-b border-black mt-4">
+          <h2 className="text-lg w-full font-medium">Payment Details:</h2>
+        </div> 
+
+
+        <div className=" mt-2 p-6 bg-white rounded-lg shadow-lg">
+          {/* <h2 className="text-2xl font-semibold text-gray-800 mb-6">Payment Details</h2> */}
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Payment Method</label>
+              <p className="">{formData.payment_method}</p>
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Total Amount</label>
+              <p className="">{formData.total_amount}</p>
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Paid Amount</label>
+              <p className="">{formData.paid_amount}</p>
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Payment Date</label>
+              <p className="">{formData.paymen_date}</p>
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Transaction ID</label>
+              <p className="">{formData.transaction_id}</p>
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Notes</label>
+              <p className="">{formData.notes}</p>
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Resource ID</label>
+              <p className="">{formData.resource_id}</p>
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <label className="font-medium text-gray-600">Resource Type</label>
+              <p className="">{formData.resource_type}</p>
+            </div>
+          </div>
+        </div>
+
+
+
         <div className="mt-4">
           <p className="border font-medium mb-2"  >Description: {description}</p>
           <p className="border font-medium mb-2"  >Terms: {terms}</p>

@@ -43,6 +43,8 @@ const SetupFacility = () => {
       member_price_child: "",
       guest_price_adult: "",
       guest_price_child: "",
+      tenant_price_child:"",
+      tenant_price_adult: "",
       min_people: "",
       max_people: "",
       cancel_before: "",
@@ -53,7 +55,8 @@ const SetupFacility = () => {
       description: "",
       max_slots: "",
       member: null,
-      guest: null
+      guest: null,
+      tenant: null,
     },
     covers: [],
     attachments: [],
@@ -275,7 +278,7 @@ const SetupFacility = () => {
     { timesPerDay: "", selectedOption: "" },
   ]);
 
-  const options = ["Members", "Guests", "Staff", "Others"];
+  const options = ["Members", "Guests","Tenant", "Staff", "Others"];
 
   const handleOptionChange = (index, field, value) => {
     const updatedRules = [...rules];
@@ -577,6 +580,44 @@ const SetupFacility = () => {
                   value={formData.amenity.guest_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("guest_price_child", e.target.value)
+                  }
+                  className="border border-gray-400 rounded p-2 outline-none"
+                  placeholder="₹100"
+                />
+              </div>
+            </div>
+
+            {/* Tenant Section */}
+            <div className="grid grid-cols-4 items-center border-b">
+              <div className="flex justify-center my-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.amenity.tenant === true}
+                    onChange={() => handleCheckboxChange("tenant")}
+                  />
+                  Tenant
+                </label>
+              </div>
+              <div className="flex justify-center my-2">
+                <input
+                  type="text"
+                  disabled={!formData.amenity.tenant}
+                  value={formData.amenity.tenant_price_adult || ""}
+                  onChange={(e) =>
+                    handlePriceChange("tenant_price_adult", e.target.value)
+                  }
+                  className="border border-gray-400 rounded p-2 outline-none"
+                  placeholder="₹100"
+                />
+              </div>
+              <div className="flex justify-center my-2">
+                <input
+                  type="text"
+                  disabled={!formData.amenity.tenant}
+                  value={formData.amenity.tenant_price_child || ""}
+                  onChange={(e) =>
+                    handlePriceChange("tenant_price_child", e.target.value)
                   }
                   className="border border-gray-400 rounded p-2 outline-none"
                   placeholder="₹100"

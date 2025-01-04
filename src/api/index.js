@@ -903,6 +903,15 @@ export const postPaymentBookings = async (data) =>
   });
 
 
+export const getPaymentBookings = async (resourceId) =>
+  axiosInstance.get(`/payments.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
+
 
 // Facitility Setup
 export const getFacitilitySetup = async (data) =>
