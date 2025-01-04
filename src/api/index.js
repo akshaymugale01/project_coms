@@ -894,6 +894,15 @@ export const getAmenitiesIdBooking = async (id) =>
     },
   });
 
+// Payment(Transaction) Api
+export const postPaymentBookings = async (data) =>
+  axiosInstance.post(`/payments.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+
 
 // Facitility Setup
 export const getFacitilitySetup = async (data) =>
@@ -904,7 +913,7 @@ export const getFacitilitySetup = async (data) =>
   });
 
 
- export const getFacilitySlots = async (data) => 
+export const getFacilitySlots = async (data) =>
   axiosInstance.get(`/slots/available.json`, {
     params: {
       token: token,
@@ -1294,12 +1303,12 @@ export const postGroups = async (data) =>
     },
   });
 
-  export const getGroups = async (id) =>
-    axiosInstance.get("/groups.json", {
-      params: {
-        token: token,
-      },
-    }); 
+export const getGroups = async (id) =>
+  axiosInstance.get("/groups.json", {
+    params: {
+      token: token,
+    },
+  });
 
 //broadcast
 export const getBroadCast = async () =>
@@ -2434,6 +2443,7 @@ export const postVibeBackground = async (data) => {
     throw error;
   }
 };
+
 export const getVibeBackground = async (userId) => {
   try {
     const response = await vibeAuth.get(
@@ -2447,7 +2457,7 @@ export const getVibeBackground = async (userId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error creating calendar events:", error);
+    // console.error("Error creating calendar events:", error);
     throw error;
   }
 };
