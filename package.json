@@ -75,6 +75,7 @@
     "redux-persist": "^6.0.0",
     "styled-components": "^6.1.8",
     "tailwind-merge": "^2.3.0",
+    "typewriter-effect": "^2.21.0",
     "uuid": "^9.0.1",
     "vcard-creator": "^0.7.1",
     "vcards-js": "^2.10.0",

@@ -23,6 +23,7 @@ const Broadcast = () => {
     setUser(userType);
     const fetchBroadCast = async () => {
       const broadcastResp = await getBroadCast();
+      console.log("BroadCAst",broadcastResp)
       const sortedBroadcast = broadcastResp.data.sort((a, b) => {
         return new Date(b.created_at) - new Date(a.created_at);
       });

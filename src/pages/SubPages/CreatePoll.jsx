@@ -5,11 +5,15 @@ import { FaCheck, FaTrash } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { getAssignedTo, postPolls } from "../../api";
+import { getAssignedTo, getGroups, postPolls } from "../../api";
 import { MdClose } from "react-icons/md";
 
 function CreatePolls() {
   const themeColor = useSelector((state) => state.theme.color);
+  const [share, setShare] = useState("all");
+  const [users, setUsers] = useState([]);
+  const [groups, setGroups] = useState([]);
+    const [selectedGroup, setSelectedGroup] = useState("");
   const [pollInput, setPollInput] = useState("");
   const [assignedTo, setAssignedTo] = useState([]);
   const [selectedUserOption, setSelectedUserOption] = useState([]);
@@ -49,6 +53,26 @@ function CreatePolls() {
   };
 
   useEffect(() => {
+    const fetchUsers = async () => {
+          try {
+            const response = await getAssignedTo();
+            const transformedUsers = response.data.map((user) => ({
+              value: user.id,
+              label: `${user.firstname} ${user.lastname}`,
+            }));
+            setUsers(transformedUsers);
+            console.log(response);
+          } catch (error) {
+            console.error("Error fetching assigned users:", error);
+          }
+        };
+    
+        if (share === "groups") {
+          fetchGroups();
+        }
+    
+        fetchUsers();
+
     const fetchAssignedTo = async () => {
       const assignedToList = await getAssignedTo();
       const user = assignedToList.data.map((u) => ({
@@ -58,7 +82,24 @@ function CreatePolls() {
       setAssignedTo(user);
     };
     fetchAssignedTo();
-  }, []);
+  }, [share]);
+
+    const fetchGroups = async () => {
+      try {
+        const response = await getGroups(); // Assuming your API to get groups
+        setGroups(response.data || []); // Adjust based on actual API response structure
+        console.log("group", response);
+      } catch (error) {
+        console.error("Error fetching groups:", error);
+      }
+    };
+  
+    const handleGroupChange = (event) => {
+      const groupId = parseInt(event.target.value, 10) || 0; // Default to 0 if value is invalid
+      setSelectedGroup(event.target.value);
+      setFormData({ ...formData, group_id: groupId });
+    };
+  
 
   const handleRemovePolls = (index) => {
     const newPollsOption = [...pollsOption];
@@ -71,14 +112,32 @@ function CreatePolls() {
     description: "",
     start_date: "",
     end_date: "",
+    start_time: "",
+    end_time: "",
     visibility: "",
+    user_ids:[],
+    group_id:"",
+    shared: "",
+    group_name:"",
     target_groups: [], // Array to store selected target groups
     poll_options_attributes: {}, // Object to store poll options
   });
 
+  console.log("FormData", formData);
+
   const handleFormChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const handleSelectChange = (selectedOptions) => {
+    const selectedIds = selectedOptions
+      ? selectedOptions.map((option) => option.value)
+      : [];
+    const userIdsString = selectedIds.join(",");
+
+    setFormData({ ...formData, user_ids: userIdsString });
+  };
+
 
   const handleSubmit = async () => {
     const sendData = new FormData();
@@ -86,7 +145,19 @@ function CreatePolls() {
     sendData.append("poll[description]", formData.description);
     sendData.append("poll[start_date]", currentDate);
     sendData.append("poll[end_date]", formData.end_date);
+    sendData.append("poll[start_time]", formData.start_time);
+    sendData.append("poll[end_time]", formData.end_time);
     sendData.append("poll[visibility]", formData.visibility);
+    if (share === "all") {
+      sendData.append("poll[shared]", "all");
+    } else if (share === "individual") {
+      sendData.append("poll[shared]", "individual");
+      sendData.append("poll[user_ids]", formData.user_ids);
+    } else if (share === "groups") {
+      sendData.append("poll[shared]", "groups");
+      sendData.append("poll[group_id]", formData.group_id);
+      sendData.append("poll[group_name]", formData.group_name);
+    }
 
     // Append target groups (assumed to be single value for simplicity)
     formData.target_groups.forEach((group) => {
@@ -175,8 +246,20 @@ function CreatePolls() {
               <input
                 type="date"
                 name="start_date"
-                value={currentDate}
-                readOnly
+                value={formData.start_date}
+                onChange={handleFormChange}
+                // readOnly
+                className="border p-2 px-4 border-gray-400 rounded-md"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="font-semibold my-2">Start Time</label>
+              <input
+                type="time"
+                name="start_time"
+                value={formData.start_time}
+                onChange={handleFormChange}
                 className="border p-2 px-4 border-gray-400 rounded-md"
               />
             </div>
@@ -191,7 +274,85 @@ function CreatePolls() {
                 className="border p-2 px-4 border-gray-400 rounded-md"
               />
             </div>
+            <div className="flex flex-col">
+              <label className="font-semibold my-2">End Time</label>
+              <input
+                type="time"
+                name="end_time"
+                value={formData.end_time}
+                onChange={handleFormChange}
+                className="border p-2 px-4 border-gray-400 rounded-md"
+              />
+            </div>
           </div>
+
+          {/* Share Option */}
+          <div className="">
+              <h2 className="border-b t border-black my-5 text-lg font-semibold">
+                Share With
+              </h2>
+              <div className="flex flex-col items-center justify-center">
+                <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
+                  <h2
+                    className={`p-1 ${share === "all" && "bg-black text-white"
+                      } rounded-full px-6 cursor-pointer border-2 border-black`}
+                    onClick={() => setShare("all")}
+                  >
+                    All
+                  </h2>
+                  <h2
+                    className={`p-1 ${share === "individual" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    onClick={() => setShare("individual")}
+                  >
+                    Individuals
+                  </h2>
+                  <h2
+                    className={`p-1 ${share === "groups" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    onClick={() => setShare("groups")}
+                  >
+                    Groups
+                  </h2>
+                </div>
+                <div className="my-5 flex w-full">
+                  {share === "individual" && (
+                    <Select
+                      options={users}
+                      closeMenuOnSelect={false}
+                      placeholder="Select User"
+                      value={users.filter((user) =>
+                        formData.user_ids.includes(user.value)
+                      )}
+                      onChange={handleSelectChange}
+                      isMulti
+                      className="w-full"
+                    />
+                  )}
+                  {share === "groups" && (
+                    <div className="group-dropdown">
+                      <label htmlFor="group-select" className="block mb-2 font-medium">
+                        Select a Group:
+                      </label>
+                      <select
+                        id="group-select"
+                        className="border border-gray-300 rounded px-4 py-2"
+                        value={selectedGroup}
+                        onChange={handleGroupChange}
+                      >
+                        <option value="">-- Select a Group --</option>
+                        {groups.map((group) => (
+                          <option key={group.id} value={group.id}>
+                            {group.group_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
           <div className="flex flex-col">
             <label className="font-semibold my-2">Target Groups/Roles</label>
             <Select
@@ -215,11 +376,11 @@ function CreatePolls() {
               className="border p-2 px-4 border-gray-400 rounded-md"
             />
           </div>
-         {pollsOption.length !== 0 && <div className="flex items-center gap-2 flex-wrap border rounded-md p-2 my-2">
+          {pollsOption.length !== 0 && <div className="flex items-center gap-2 flex-wrap border rounded-md p-2 my-2">
             {pollsOption.map((option, index) => (
               <div key={index} className="flex">
                 <div className="flex xl:flex-row flex-col gap-3 items-center bg-blue-400 p-1 rounded-md">
-                {/* <label className=" text-white">Option - {index + 1}</label> */}
+                  {/* <label className=" text-white">Option - {index + 1}</label> */}
                   {/* <input
                     type="text"
                     value={option.pollOption}

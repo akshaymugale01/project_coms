@@ -136,7 +136,7 @@ const CreateBroadcast = () => {
         formDataSend.append("attachfiles[]", file);
       });
 
-      const response = await getBroadCast(formDataSend);
+      const response = await postBroadCast(formDataSend);
       toast.success("Broadcast Created Successfully");
       navigate("/communication/broadcast");
       console.log("Response:", response.data);

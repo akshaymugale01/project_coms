@@ -4,6 +4,7 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import wave from "/wave.png";
 import { login, vibeLogin } from "../../api";
+import Typewriter from 'typewriter-effect';
 import { setItemInLocalStorage } from "../../utils/localStorage";
 
 const Login = () => {
@@ -133,6 +134,11 @@ const Login = () => {
     showPassword(!password);
   };
 
+  new Typewriter('#typewriter', {
+    strings: ['Hello', 'World'],
+    autoStart: true,
+  });
+
   return (
     <div
       className="h-screen relative"
@@ -146,7 +152,15 @@ const Login = () => {
     >
       <div className=" rounded-md  ">
         <h1 className="text-3xl text-white  p-2 px-10 font-semibold jersey-15-regular ">
-        My Citi Life
+        {/* My Citi Life */}
+        <Typewriter
+          options={{
+            strings: ['My Citi Life', `Welcome to 'My Citi' World`, 'Live Fully!'],
+            autoStart: true,
+            loop: true,
+          }}
+        />
+        
         </h1>
       </div>
       <div className=" flex justify-center  h-[90vh] items-center">
