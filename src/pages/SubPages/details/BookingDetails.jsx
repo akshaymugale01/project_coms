@@ -21,7 +21,7 @@ const BookingDetails = () => {
   const [formData, setFormData] = useState({
     resource_id: id,
     resource_type: "AmenityBooking",
-    total_amount: "",
+    // total_amount: "",
     paid_amount: "",
     user_id: "",
     payment_method: "",
@@ -30,6 +30,7 @@ const BookingDetails = () => {
     notes: "",
   });
 
+  // console.log(formData);
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -37,7 +38,7 @@ const BookingDetails = () => {
       const bookingResponse = await getAmenitiesIdBooking(id);
       const bookingData = bookingResponse.data;
 
-      console.log("data", bookingData);
+      // console.log("data", bookingData);
 
       if (bookingData.length === 0) {
         setError("No booking data found.");
@@ -104,12 +105,17 @@ const BookingDetails = () => {
 
     try {
       const postData = new FormData();
+
       Object.keys(formData).forEach((key) => postData.append(`payment[${key}]`, formData[key]));
 
+      postData.append('payment[total_amount]', bookingDetails.amount);
+
       const response = await postPaymentBookings(postData);
+      // console.log(response);
       if (response?.status === 201) {
         toast.success("Booking successful!");
-        navigate(`/bookings/booking-details/${id}`);
+        setShowModal(false);
+        // navigate(`/bookings/booking-details/${id}`);
       } else {
         toast.error("Booking failed. Please try again.");
       }
@@ -173,7 +179,7 @@ const BookingDetails = () => {
       };
 
       // Make the API call to update the booking status
-      const response = await fetch(`https://app.myciti.life/amenity_bookings/${bookingDetails.id}.json`, {
+      const response = await fetch(`http://app.myciti.life/amenity_bookings/${bookingDetails.id}.json`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -184,6 +190,7 @@ const BookingDetails = () => {
       // Check if the update was successful
       if (response.ok) {
         // Redirect to bookings page after successful update
+        toast.success("Status Cancelled!");
         navigate("/bookings");
       } else {
         // Handle error response
@@ -214,7 +221,7 @@ const BookingDetails = () => {
   const slotTime = selectedSlot
     ? `${selectedSlot.start_hr}:${selectedSlot.start_min} - ${selectedSlot.end_hr}:${selectedSlot.end_min}`
     : "N/A";
-  console.log("slot time", slotTime);
+  // console.log("slot time", slotTime);
 
   // console.log("fac anem", bookingDetails.amount);
 
@@ -295,16 +302,17 @@ const BookingDetails = () => {
                     /> */}
                     <label>
                       Total Amount
-
                       <input
                         type="text"
                         name="total_amount"
                         placeholder="Total Amount"
-                        value={amount}
+                        value={formData.total_amount || bookingDetails.amount} // Use formData.total_amount, fallback to bookingDetails.amount
                         onChange={handleInputChange}
                         className="border p-2 rounded-md w-full"
+                        disabled // This will disable the input field
                       />
                     </label>
+
 
                     <label>
                       Paid Amount
@@ -409,10 +417,10 @@ const BookingDetails = () => {
             <p className="font-medium">Status:</p>
             <p
               className={`${bookingDetails.status === "booked"
-                  ? "bg-yellow-500" // yellow for booked
-                  : bookingDetails.status === "cancelled"
-                    ? "bg-red-500" // red for cancelled
-                    : "bg-gray-500" // default color for other statuses
+                ? "bg-yellow-500" // yellow for booked
+                : bookingDetails.status === "cancelled"
+                  ? "bg-red-500" // red for cancelled
+                  : "bg-gray-500" // default color for other statuses
                 } text-white p-1 rounded-md text-center`}
             >
               {bookingDetails.status.charAt(0).toUpperCase() + bookingDetails.status.slice(1)} {/* Capitalize first letter */}
@@ -445,7 +453,7 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Transaction ID:</p>
-            <p>{bookingDetails.payment.transaction_id || "Payment Not Done!"}</p>
+            <p>{bookingDetails.payment?.transaction_id || "Payment Not Done!"}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payment Status:</p>
@@ -464,7 +472,7 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Amount Paid:</p>
-            <p>₹ {bookingDetails.payment.paid_amount || "Payment Not Done!"}</p>
+            <p>₹ {bookingDetails.payment?.paid_amount || "Payment Not Done!"}</p>
           </div>
         </div>
 

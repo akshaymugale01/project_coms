@@ -33,7 +33,7 @@ const FacilityDetails = () => {
   };
 
 
-  const domainPrefix = "http://localhost:3002";
+  const domainPrefix = "http://app.myciti.life";
 
   console.log("facilityData", facilityData);
 
