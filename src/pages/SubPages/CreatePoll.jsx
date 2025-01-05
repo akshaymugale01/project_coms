@@ -115,9 +115,10 @@ function CreatePolls() {
     start_time: "",
     end_time: "",
     visibility: "",
-    user_ids:[],
+    user_ids:"",
     group_id:"",
     shared: "",
+    shared_with:"",
     group_name:"",
     target_groups: [], // Array to store selected target groups
     poll_options_attributes: {}, // Object to store poll options
