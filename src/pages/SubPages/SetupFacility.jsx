@@ -38,7 +38,7 @@ const SetupFacility = () => {
       cutoff_min: "",
       return_percentage: "",
       create_by: "",
-      active: true,
+      active: "",
       member_price_adult: "",
       member_price_child: "",
       guest_price_adult: "",
@@ -419,87 +419,23 @@ const SetupFacility = () => {
                 name="active"
                 id="active"
                 className="border rounded-md border-gray-400 p-2"
-                value={formData.amenity.active ? "yes" : "no"}
+                value={formData.amenity.active ? "true" : "false"}
                 onChange={(e) =>
                   setFormData((prevData) => ({
                     ...prevData,
                     amenity: {
                       ...prevData.amenity,
-                      active: e.target.value === "yes",
+                      active: e.target.value === "true",
                     },
                   }))
                 }
               >
                 <option value="">Select</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
               </select>
             </div>
           </div>
-          {/* <div>
-            {subFacilityAvailable && (
-              <>
-                <div className="grid grid-cols-3 gap-x-5">
-                  {subFacilities.map((subFacility, index) => (
-                    <div className="flex items-end gap-2 mb-4" key={index}>
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor={`name-${index}`}
-                          className="font-medium"
-                        >
-                          Sub Facility name
-                        </label>
-                        <input
-                          type="text"
-                          name={`name-${index}`}
-                          id={`name-${index}`}
-                          className="border p-2 rounded-md"
-                          placeholder="Sub Facility name"
-                          value={subFacility.name}
-                          onChange={(e) =>
-                            handleSubChange(index, "name", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor={`status-${index}`}
-                          className="font-medium"
-                        >
-                          Active
-                        </label>
-                        <select
-                          name={`status-${index}`}
-                          id={`status-${index}`}
-                          className="border p-2 rounded-md w-48"
-                          value={subFacility.status}
-                          onChange={(e) =>
-                            handleSubChange(index, "status", e.target.value)
-                          }
-                        >
-                          <option value="">Select</option>
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveSubFacility(index)}
-                        className="text-red-500 mb-2 "
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={handleAddSubFacility}
-                  className="mt-2 p-2 bg-blue-500 text-white rounded-md"
-                >
-                  Add Sub Facility
-                </button>
-              </>
-            )}
-          </div> */}
         </div>
         <div className="my-4">
           <h2 className="border-b border-black font-medium text-lg">
@@ -678,12 +614,6 @@ const SetupFacility = () => {
                 />
               </div>
             </div>
-            {/* <div className="my-2 flex items-center gap-2">
-              <label htmlFor="" className="font-medium">
-                Consecutive slots Allowed
-              </label>
-              <Switch />
-            </div> */}
           </div>
         </div>
 
@@ -812,75 +742,6 @@ const SetupFacility = () => {
             </div>
           </div>
         </div>
-
-        {/* <div className="w-full mt-2">
-          <h2 className="font-medium border-b border-black w-full text-lg">
-            Booking Rule
-          </h2>
-          <div className="grid gap-2 border-gray-400 py-2">
-            {rules.map((rule, index) => (
-              <div key={index} className="mb-2 grid grid-cols-12 items-center">
-                <label className="flex gap-2 items-center col-span-5">
-                  <input type="checkbox" className="h-4 w-4" />
-                  Facility can be booked
-                  <input
-                    type="number"
-                    min="1"
-                    value={rule.timesPerDay}
-                    onChange={(e) =>
-                      handleOptionChange(index, "timesPerDay", e.target.value)
-                    }
-                    className="border border-gray-400 rounded-md w-full p-1 outline-none max-w-14"
-                    placeholder="Enter times"
-                  />
-                  times per day by
-                  <select
-                    value={rule.selectedOption}
-                    onChange={(e) =>
-                      handleOptionChange(index, "selectedOption", e.target.value)
-                    }
-                    className="border border-gray-400 rounded-md w-full p-1 outline-none max-w-28"
-                  >
-                    <option value="">Select</option>
-                    {options.map((option) => (
-                      <option
-                        key={option}
-                        value={option}
-                        disabled={rules.some((r) => r.selectedOption === option)}
-                      >
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  onClick={() => handleRemoveRule(index)}
-                  className="ml-4 bg-red-500 text-white px-2 py-1 rounded-md w-fit hover:bg-red-600"
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            ))}
-
-            <div className="flex">
-              <button
-                onClick={handleAddRule}
-                disabled={rules.length === 4}
-                className={`${rules.length === 4
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600"
-                  } mt-2 text-white px-4 py-2 rounded-md`}
-              >
-                Add Rule
-              </button>
-            </div>
-            {rules.length === 4 && (
-              <p className="text-red-500 text-sm mt-2">
-                You cannot add more than 4 rules.
-              </p>
-            )}
-          </div>
-        </div> */}
 
         <div className="my-4">
           <h2 className="border-b border-black text-lg mb-1 font-medium">

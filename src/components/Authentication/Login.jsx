@@ -151,11 +151,11 @@ const Login = () => {
       }}
     >
       <div className=" rounded-md  ">
-        <h1 className="text-3xl text-white  p-2 px-10 font-semibold jersey-15-regular ">
+        <h1 className="flex text-3xl text-white  p-2 px-10 font-semibold jersey-15-regular ">
         {/* My Citi Life */}
         <Typewriter
           options={{
-            strings: ['My Citi Life', `Welcome to 'My Citi' World`, 'Live Fully!'],
+            strings: ['My Citi Life', `Welcome to My Citi World`, 'Live Fully!'],
             autoStart: true,
             loop: true,
           }}

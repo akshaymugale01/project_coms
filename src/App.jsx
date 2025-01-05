@@ -700,6 +700,7 @@ import CAMBilling from "./pages/Setup/CAMBilling.jsx";
 import AddCAMBilling from "./pages/SubPages/AddCAMBilling.jsx";
 import CAMBillingDetails from "./pages/SubPages/details/CAMBillingDetails.jsx";
 import BillingSetup from "./pages/Setup/BillingSetup/BillingSetup.jsx";
+import BookingFacilityDetails from "./pages/SubPages/BookingFacilityDetails.jsx";
 // new admin hrms
 
 function App() {
@@ -729,7 +730,7 @@ function App() {
         console.log("Something went wrong");
       }
     } catch (error) {
-      console.error("Error:", error);
+      // console.error("Error:", error);
     }
   };
 
@@ -1169,7 +1170,11 @@ function App() {
             }
           />
           <Route
-            path="/setup/facility/setup-facility"
+            path="/setup/facility-details/:id"
+            element={<BookingFacilityDetails />}
+          />
+          <Route
+            path="/setup/facility/create-facility"
             element={
               <ProtectedAdminRoutes>
                 <SetupFacility />
@@ -3471,7 +3476,7 @@ function App() {
             }
           />
 
-        <Route
+          <Route
             path="/admin/billing-setup"
             element={
               <ProtectedAdminRoutes>
@@ -4974,7 +4979,7 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 {/* <OrganizationTree /> */}
-                <OrganizationChart/>
+                <OrganizationChart />
               </ProtectedAdminRoutes>
             }
           />

@@ -40,7 +40,7 @@ const SetupBookingFacility = () => {
     {
       name: "Action",
       cell: (row) => (
-        <Link to={`/setup/facility/${row.id}`}>
+        <Link to={`/setup/facility-details/${row.id}`}>
           <BsEye />
         </Link>
       ),
@@ -177,7 +177,7 @@ const SetupBookingFacility = () => {
               <div className="flex gap-2 justify-end ">
                 <Link
                   style={{ background: themeColor }}
-                  to={"/setup/facility/setup-facility"}
+                  to={"/setup/facility/create-facility"}
                   className="bg-black w-20 rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
                 >
                   <IoAddCircleOutline size={20} />
