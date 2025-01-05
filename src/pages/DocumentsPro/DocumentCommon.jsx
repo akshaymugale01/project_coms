@@ -543,7 +543,9 @@ const DocumentCommon = () => {
               >
                 {file && file.document_url ? (
                   <a
-                    href={`http://13.215.74.38/${file.document_url}`}
+                    href={`https://app.myciti.life/${file.document_url}`}
+                    // href={`http://localhost:3002${file.document_url}`}
+
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col items-center"
