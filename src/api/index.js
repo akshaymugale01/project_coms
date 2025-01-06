@@ -1121,6 +1121,32 @@ export const getSetupUsers = async () =>
       token: token,
     },
   });
+
+//F and B f&b
+
+export const postFB = async (data) =>
+  axiosInstance.get("/food_and_beverages.json", data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getFB = async () =>
+  axiosInstance.get("/food_and_beverages.json", {
+    params: {
+      token: token,
+    },
+  });
+
+
+export const getCuisinesFBSetup = async () =>
+  axiosInstance.get(`/generic_infos.json?q[info_type_eq]=Cuisins`, {
+    params: {
+      token: token,
+    },
+  });
+
+
 export const getHostList = async (siteId) =>
   axiosInstance.get(`/visitors/fetch_potential_hosts.json?site_id=${siteId}`, {
     params: {

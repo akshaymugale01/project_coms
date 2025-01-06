@@ -12,8 +12,6 @@ export const initialAddAssetFormData = {
     floor_id: "",
     unit_id: "",
     name: "",
-    latitude: "",
-    longitude: "",
     serial_number: "",
     model_number: "",
     purchase_cost: "",
@@ -37,9 +35,9 @@ export const initialAddAssetFormData = {
     vendor_id: "",
     oem_name:"",
     parent_asset_id:"",
-    asset_number: "",
-    equipment_id: "",
-    comprehensive : "",
+  
+    
+  
     invoice: [],
     insurance: [],
     manuals: [],
@@ -54,4 +52,14 @@ export const initialAddAssetFormData = {
     Thursday: { selected: false, start_time: '', end_time: '' },
     Friday: { selected: false, start_time: '', end_time: '' },
     Saturday: { selected: false, start_time: '', end_time: '' },
+  };
+
+  export const restaurantSchedule = {
+    Sunday: { selected: false, start_time: '', end_time: '', break_start_time: "", break_end_time: "",  booking_allowed: false, order_allowed: false, last_booking_order_time: "",},
+    Monday: { selected: false, start_time: '', end_time: '', break_start_time: "", break_end_time: "", booking_allowed: false, order_allowed: false, last_booking_order_time: "",},
+    Tuesday: { selected: false, start_time: '', end_time: '', break_start_time: "",  break_end_time: "", booking_allowed: false, order_allowed: false, last_booking_order_time: "",},
+    Wednesday: { selected: false, start_time: '', end_time: '', break_start_time: "",  break_end_time: "", booking_allowed: false, order_allowed: false, last_booking_order_time: "",},
+    Thursday: { selected: false, start_time: '', end_time: '', break_start_time: "",  break_end_time: "", booking_allowed: false, order_allowed: false, last_booking_order_time: "",},
+    Friday: { selected: false, start_time: '', end_time: '', break_start_time: "",  break_end_time: "", booking_allowed: false, order_allowed: false, last_booking_order_time: "",},
+    Saturday: { selected: false, start_time: '', end_time: '', break_start_time: "",  break_end_time: "", booking_allowed: false, order_allowed: false, last_booking_order_time: "",},
   };

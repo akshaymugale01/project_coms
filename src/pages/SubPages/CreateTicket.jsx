@@ -45,6 +45,7 @@ const CreateTicket = () => {
   const [unitName, setUnitName] = useState([]);
   const [ticketFor, setTicketFor] = useState("Self");
   const [users, setUsers] = useState([]);
+  const [files, setFiles] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [formData, setFormData] = useState({
     category_type_id: "",
@@ -333,13 +334,24 @@ const CreateTicket = () => {
   //   }
   // };
 
-  const handleFileChange = (files, fieldName) => {
+  // const handleFileChange = (files, fieldName) => {
+  //   setFormData((prevFormData) => ({
+  //     ...prevFormData,
+  //     [fieldName]: files, // Ensure it's always an array
+  //   }));
+  //   console.log(fieldName);
+  // };
+
+  const handleFileChange = (fileList, fieldName) => {
+    const newFiles = Array.from(fileList); // Convert FileList to array
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [fieldName]: files, // Ensure it's always an array
+      [fieldName]: [...(prevFormData[fieldName] || []), ...newFiles],
     }));
-    console.log(fieldName);
+    console.log("Updated FormData: ", formData);
   };
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -359,7 +371,7 @@ const CreateTicket = () => {
 
     if ((formData.documents || []).length > 4) {
       return toast.error("You can upload maximum upto 4 images.");
-  } 
+    }
     try {
       toast.loading("Please wait generating ticket!");
       const sendData = new FormData();
@@ -767,11 +779,33 @@ const CreateTicket = () => {
                 <p className="border-b border-black my-1 font-semibold">
                   Attachment
                 </p>
-                <FileInputBox
+                {/* <FileInputBox
                   handleChange={(files) => handleFileChange(files, "documents")}
                   fieldName={"documents"}
                   isMulti={true}
+                /> */}
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e.target.files, "documents")}
+                  multiple={true}
                 />
+
+                <div className="grid grid-cols-3 gap-4 p-2 mt-4">
+                  {formData.documents?.map((file, index) => (
+                    <div key={index} style={{ marginBottom: "10px" }}>
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${index}`}
+                        style={{ width: "150px", height: "auto", objectFit: "cover", marginBottom: "5px" }}
+                      />
+                      <p>{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+
+
+
+
               </div>
 
               {/* Submit and Reset Buttons */}
@@ -1082,10 +1116,10 @@ const CreateTicket = () => {
               {/* </div> */}
 
               {/* File Input */}
-              <FileInput
+              {/* <FileInput
                 handleFileChange={(event) => handleFileChange(event)}
                 multiple
-              />
+              /> */}
               {/* <input
                 type="file"
                 onChange={(event) => handleFileChange(event, "documents")}
