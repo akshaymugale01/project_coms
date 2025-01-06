@@ -3,13 +3,12 @@ import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import Navbar from "../../../components/Navbar";
-import { getAmenitiesIdBooking, getSetupUsers, getFacitilitySetup, getPaymentBookings, postPaymentBookings } from "../../../api"; // Import API call
+import { getAmenitiesIdBooking, getSetupUsers, getFacitilitySetup, getPaymentBookings, postPaymentBookings, updateAmenityBook } from "../../../api"; // Import API call
 
 const BookingDetails = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [userName, setUserName] = useState("");
   const [showConfirmPopup, setShowConfirmPopup] = useState(false); // state to control the modal
   const [userOptions, setUserOptions] = useState([]);
@@ -38,7 +37,7 @@ const BookingDetails = () => {
       const bookingResponse = await getAmenitiesIdBooking(id);
       const bookingData = bookingResponse.data;
 
-      // console.log("data", bookingData);
+      console.log("data", bookingData);
 
       if (bookingData.length === 0) {
         setError("No booking data found.");
@@ -171,25 +170,27 @@ const BookingDetails = () => {
   // const handleConfirmCancel = () => {
   //   navigate("/bookings"); // Navigate to bookings if confirmed
   // };
+
   const handleConfirmCancel = async () => {
+    console.log("id", id);
     try {
       // Prepare the updated data
       const updatedBookingData = {
         status: "cancelled", // Update status to "cancelled"
       };
 
+      // Make sure id is a valid string or number
+      console.log("Booking ID to update:", id); // Log the id to check
+
       // Make the API call to update the booking status
-      const response = await fetch(`http://app.myciti.life/amenity_bookings/${bookingDetails.id}.json`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedBookingData),
-      });
+      const response = await updateAmenityBook(id, updatedBookingData);  // Pass the id and updated data
+      console.log("response", response);
+      
 
       // Check if the update was successful
-      if (response.ok) {
+      if (response?.status === 200) {
         // Redirect to bookings page after successful update
+        
         toast.success("Status Cancelled!");
         navigate("/bookings");
       } else {
@@ -201,6 +202,37 @@ const BookingDetails = () => {
       alert("An error occurred. Please try again.");
     }
   };
+
+  // const handleConfirmCancel = async () => {
+  //   try {
+  //     // Prepare the updated data
+  //     const updatedBookingData = {
+  //       status: "cancelled", // Update status to "cancelled"
+  //     };
+
+  //     // Make the API call to update the booking status
+  //     const response = await fetch(`https://app.myciti.life/amenity_bookings/${bookingDetails.id}.json`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(updatedBookingData),
+  //     });
+
+  //     // Check if the update was successful
+  //     if (response.ok) {
+  //       // Redirect to bookings page after successful update
+  //       toast.success("Status Cancelled!");
+  //       navigate("/bookings");
+  //     } else {
+  //       // Handle error response
+  //       alert("Failed to cancel the booking. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating the booking:", error);
+  //     alert("An error occurred. Please try again.");
+  //   }
+  // };
 
   const handleClosePopup = () => {
     setShowConfirmPopup(false); // Close the popup if canceled
