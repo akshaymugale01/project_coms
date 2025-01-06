@@ -33,7 +33,7 @@ const FacilityDetails = () => {
   };
 
 
-  const domainPrefix = "http://app.myciti.life";
+  const domainPrefix = "https://app.myciti.life";
 
   console.log("facilityData", facilityData);
 

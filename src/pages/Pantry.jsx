@@ -1,6 +1,4 @@
-import React from "react";
-
-import DataTable from "react-data-table-component";
+import React, { useEffect, useState } from "react";
 import { BsEye } from "react-icons/bs";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -8,14 +6,33 @@ import { PiPlusCircle } from "react-icons/pi";
 import { TiTick } from "react-icons/ti";
 import { IoClose } from "react-icons/io5";
 import Table from "../components/table/Table";
+import { getPantry } from "../api";
 
 const Pantry = () => {
+  const [filteredData, setFilteredData] = useState([]);
+  useEffect(() => {
+    const fetchPantry = async () => {
+     try {
+       const invResp = await getPantry();
+       const sortedInvData = invResp.data.sort((a, b) => {
+         
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+       
+       setFilteredData(sortedInvData)
+       console.log(invResp);
+     } catch (error) {
+      console.log(error)
+     }
+    };
+    fetchPantry();
+  }, []);
   const columns = [
     {
       name: "Action",
       cell: (row) => (
         <div className="flex items-center gap-4">
-          <Link to={`/employees/pantry-details/${row.id}`}>
+          <Link to={`/admin/pantry-details/${row.id}`}>
             <BsEye size={15} />
           </Link>
         </div>
@@ -28,9 +45,10 @@ const Pantry = () => {
     },
     {
       name: "Ordered by",
-      selector: (row) => row.employee_name,
+      selector: (row) => `${row.ordered_by_name?.firstname || ""} ${row.ordered_by_name?.lastname || ""}`,
       sortable: true,
     },
+    
     {
       name: "stock",
       selector: (row) => row.stock,
@@ -106,7 +124,7 @@ const Pantry = () => {
         <Table
           responsive
           columns={columns}
-          data={data}
+          data={filteredData}
           // customStyles={customStyle}
           // pagination
           // fixedHeader

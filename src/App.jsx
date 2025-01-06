@@ -701,6 +701,8 @@ import AddCAMBilling from "./pages/SubPages/AddCAMBilling.jsx";
 import CAMBillingDetails from "./pages/SubPages/details/CAMBillingDetails.jsx";
 import BillingSetup from "./pages/Setup/BillingSetup/BillingSetup.jsx";
 import BookingFacilityDetails from "./pages/SubPages/BookingFacilityDetails.jsx";
+import PantryDetails from "./pages/SubPages/details/PantryDetails.jsx";
+import FBRestaurtantDetails from "./pages/SubPages/details/FBSubDetails/FBResturantsDetails.jsx";
 // new admin hrms
 
 function App() {
@@ -3326,6 +3328,23 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <FBEdit />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/restaurant/details/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <FBRestaurtantDetails />
+              </ProtectedAdminRoutes>
+            }
+          />
+
+          <Route
+            path="/admin/pantry-details/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <PantryDetails />
               </ProtectedAdminRoutes>
             }
           />

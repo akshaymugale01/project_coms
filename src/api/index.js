@@ -894,8 +894,8 @@ export const getAmenitiesIdBooking = async (id) =>
     },
   });
 
-export const updateAmenityBook = async (id, data) => 
-   axiosInstance.put(`/amenity_bookings/${id}.json`, data, {
+export const updateAmenityBook = async (id, data) =>
+  axiosInstance.put(`/amenity_bookings/${id}.json`, data, {
     params: {
       token: token,
     },
@@ -1129,10 +1129,10 @@ export const getSetupUsers = async () =>
     },
   });
 
-//F and B f&b
+//Food and Beverages f&b
 
 export const postFB = async (data) =>
-  axiosInstance.get("/food_and_beverages.json", data, {
+  axiosInstance.post("/food_and_beverages.json", data, {
     params: {
       token: token,
     },
@@ -1145,6 +1145,47 @@ export const getFB = async () =>
     },
   });
 
+export const getFBDetails = async (id) =>
+  axiosInstance.get(`/food_and_beverages/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const editFB = async (id, data) =>
+  axiosInstance.put(`/food_and_beverages/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const downloadRestaurtantData = async () =>
+  axiosInstance.get(`/food_and_beverages/export.xlsx`, {
+    params: {
+      token: token,
+    },
+    responseType: "blob",
+  });
+
+// Pantries
+export const postPantry = async (data) =>
+  axiosInstance.post("/pantries.json", data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getPantry = async () =>
+  axiosInstance.get("/pantries.json", {
+    params: {
+      token: token,
+    },
+  });
+export const getPantryDetails = async (id) =>
+  axiosInstance.get(`/pantries/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
 
 export const getCuisinesFBSetup = async () =>
   axiosInstance.get(`/generic_infos.json?q[info_type_eq]=Cuisins`, {
