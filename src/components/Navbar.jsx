@@ -984,43 +984,39 @@ const Navbar = () => {
                   </NavLink>
                 )} */}
 
-                {/* {feat.includes("assets") && (
+                {feat.includes("assets") && (
                   <NavLink
                     to={"/assets"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(BsBuilding, { size: "20" })}</div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Asset
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Asset
                     </h2>
                   </NavLink>
-                )} */}
+                )}
 
-                {/* {feat.includes("soft_services") && (
+                {feat.includes("soft_services") && (
                   <NavLink
                     to={"/services"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1028,21 +1024,19 @@ const Navbar = () => {
                       {React.createElement(LuSettings2, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Soft Services
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Soft Services
                     </h2>
                   </NavLink>
-                )} */}
+                )}
                 {feat.includes("fnb") && (
                   <NavLink
                     to={"/admin/fb"}
@@ -1311,7 +1305,7 @@ const Navbar = () => {
                       } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Bill Pay
-                    </h2>
+                  </h2>
                   </NavLink>
                 )} */}
 
