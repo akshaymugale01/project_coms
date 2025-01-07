@@ -5,6 +5,7 @@ import {
   getAssetGroups,
   getAssetSubGroups,
   getFloors,
+  getGroups,
   getParentAsset,
   getUnits,
   getVendors,
@@ -48,7 +49,10 @@ const AddAsset = () => {
   };
   useEffect(() => {
     const fetchAssetGroups = async () => {
-      const assetGroupResponse = await getAssetGroups();
+      const assetGroupResponse = await getGroups();
+      
+      const data = assetGroupResponse.data
+      console.log("Groups", data);
       setAssetGroup(assetGroupResponse.data);
       // pass grp id in fn
       // fetchParentAsset(assetGroupResponse.data.asset_group_id_eq);
@@ -126,6 +130,8 @@ const AddAsset = () => {
     ) {
       const groupId = Number(e.target.value);
       console.log("groupId:" + groupId);
+      const name = e.target.name
+      console.log("groupNam:" + name);
       await fetchSubGroups(groupId);
       await fetchParentAsset(groupId);
       setFormData({
@@ -424,7 +430,7 @@ const AddAsset = () => {
       </div>
       <div className="md:p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           className="text-center text-xl font-bold p-2 rounded-full text-white"
         >
           Add Asset

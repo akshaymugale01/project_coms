@@ -3,6 +3,7 @@ import { getItemInLocalStorage } from "../utils/localStorage";
 import axiosInstance from "./axiosInstance";
 import HrmsAuth from "./HrmsAuth";
 import vibeAuth from "./vibeAuth";
+import DigestFetch from 'digest-fetch';
 
 /*
 export const API_URL = "https://app.myciti.life";
@@ -1265,6 +1266,16 @@ export const editVehicleParking = async (data, id) =>
     },
   });
 
+
+
+export const postOTPVisitors = async (data) =>
+  axiosInstance.post("/visitors/verify_votp.json", data, {
+    params: {
+      token: token,
+    },
+  });
+
+
 export const postNewVisitor = async (data) =>
   axiosInstance.post("/visitors.json", data, {
     params: {
@@ -1785,6 +1796,91 @@ export const getParkingConfig = async () =>
       token: token,
     },
   });
+
+// Visitors
+const defaultIp = getItemInLocalStorage("DEFAULT");
+const defaultUsername = getItemInLocalStorage("DeviceUsername");
+const defaultPassword = getItemInLocalStorage("DevicePassword");
+
+export const postVisitorInDevice = async (data) => {
+  console.log(defaultIp);
+  // http://localhost:8080/
+  const url = ` http://localhost:8080/${defaultIp}/ISAPI/AccessControl/UserInfo/Record?format=json`;
+  // const url = "http://192.168.1.22/ISAPI/AccessControl/UserInfo/Record?format=json";
+  const username = defaultUsername;
+  const password = defaultPassword;
+
+  const client = new DigestFetch(username, password);
+
+  try {
+    const response = await client.fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `POST request failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+};
+
+export const postVisitorLogFromDevice = async (data) => {
+  console.log(defaultIp);
+  // http://localhost:8080/
+  const url = `http://${defaultIp}/ISAPI/AccessControl/AcsEvent?format=json`;
+  // const url = "http://192.168.1.22/ISAPI/AccessControl/UserInfo/Record?format=json";
+  const username = defaultUsername;
+  const password = defaultPassword;
+  console.log(username);
+  console.log(password);
+
+  const client = new DigestFetch(username, password);
+
+  try {
+    const response = await client.fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `POST request failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+};
+
+export const getExpectedUserVisitor = async () =>
+  axiosInstance.get(`/visitors/user.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const postOTPVerification = async (data) =>
+  axiosInstance.post("/visitors/verify_votp.json", data, {
+    params: {
+      token: token,
+    },
+  });
+
 export const getVisitorApprovals = async () =>
   axiosInstance.get(`/visitors/approval_form.json`, {
     params: {
@@ -3186,6 +3282,24 @@ export const postVisitorOTPApi = async (data) => {
     throw error;
   }
 };
+
+export const postVisitorCheckInCheckOut = async (visitorId, data) =>
+  axiosInstance.post(
+    `/visitors/${visitorId}/visitor_visits/check_visitor.json`,
+    data,
+    {
+      params: {
+        token: token,
+      },
+    }
+  );
+
+export const getVisitorLogs = async (visitorId) =>
+  axiosInstance.get(`/visitor_device_logs/${visitorId}.json`, {
+    params: {
+      token: token,
+    },
+  });
 export const postOutlookAuth = async (data) => {
   try {
     const response = await vibeAuth.post(

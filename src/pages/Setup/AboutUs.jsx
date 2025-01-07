@@ -6,6 +6,7 @@ import { PiPlusCircle } from "react-icons/pi";
 import { domainPrefix, getAboutUs, postAboutUs } from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
+import { FaInstagram } from "react-icons/fa";
 
 const AboutUs = () => {
   const navigate = useNavigate();
@@ -90,7 +91,7 @@ const AboutUs = () => {
 
 
   return (
-    <div>
+    <div className="flex flex-col">
       <div
         style={{
           backgroundImage: aboutUsData.attachments.length > 0
@@ -104,16 +105,16 @@ const AboutUs = () => {
         }}
       >
         <div className="flex w-50 p-4 justify-end">
-        {userID === 574 && (
-          <button
-            onClick={handleOpenModal}
-            style={{ background: "rgb(19 27 32)" }}
-            className="font-semibold duration-300 ease-in-out transition-all p-1 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-          >
-            <PiPlusCircle size={20} />
-            Add About Us
-          </button>
-        )}
+          {userID === 574 && (
+            <button
+              onClick={handleOpenModal}
+              style={{ background: "rgb(19 27 32)" }}
+              className="font-semibold duration-300 ease-in-out transition-all p-1 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
+            >
+              <PiPlusCircle size={20} />
+              Add About Us
+            </button>
+          )}
         </div>
         <header className="text-center py-12 mb-16">
           <h1 className="text-4xl font-bold text-gray-800">MyCiti Life</h1>
@@ -126,6 +127,8 @@ const AboutUs = () => {
             <p className="text-lg text-gray-700 leading-relaxed">{aboutUsData.description}</p>
           </div>
         </section>
+
+
 
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -171,7 +174,77 @@ const AboutUs = () => {
             </div>
           </div>
         )}
+
+
       </div>
+
+
+      <footer className="bg-gray-800 text-white py-2">
+        <div className="flex justify-center gap-4 mb-2">
+          {/* Social Media Icons with Links */}
+          <a
+            href="https://www.instagram.com/yourprofile"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white hover:text-gray-400"
+            aria-label="Instagram"
+          >
+            <BsInstagram size={24} />
+          </a>
+          <a
+            href="https://www.facebook.com/yourprofile"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white hover:text-gray-400"
+            aria-label="Facebook"
+          >
+            <BsFacebook size={24} />
+          </a>
+          <a
+            href="https://twitter.com/yourprofile"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white hover:text-gray-400"
+            aria-label="Twitter"
+          >
+            <BsTwitter size={24} />
+          </a>
+          <a
+            href="https://www.linkedin.com/in/yourprofile"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white hover:text-gray-400"
+            aria-label="LinkedIn"
+          >
+            <BsLinkedin size={24} />
+          </a>
+        </div>
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-sm">
+            &copy; {new Date().getFullYear()} MyCiti Life. All rights reserved.
+          </p>
+          <div className="mt-4 flex justify-center gap-4">
+            <a
+              href="/privacy-policy"
+              className="text-gray-400 hover:text-white transition duration-300"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href="/terms-of-service"
+              className="text-gray-400 hover:text-white transition duration-300"
+            >
+              Terms of Service
+            </a>
+            <a
+              href="/contact-us"
+              className="text-gray-400 hover:text-white transition duration-300"
+            >
+              Contact Us
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

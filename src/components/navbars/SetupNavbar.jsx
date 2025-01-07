@@ -54,7 +54,7 @@ const SetupNavbar = () => {
 
           {feat.includes("space") && (
             <Link to="/setup/facility" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
-              <FaTimeline />Facility
+              <FaTimeline />Amenities
             </Link>
           )}
           {feat.includes("space") && (
@@ -71,11 +71,11 @@ const SetupNavbar = () => {
             </Link>
           )}
 
-          {feat.includes("vendors") && (
+          {/* {feat.includes("vendors") && (
             <Link to="/setup/supplier-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               Supplier
             </Link>
-          )}
+          )} */}
           {feat.includes("gatepass") && (
             <Link to="/setup/visitor-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaVials /> Visitor

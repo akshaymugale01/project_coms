@@ -181,7 +181,7 @@ const AddService = () => {
     <section>
       <div className="m-2">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           className="text-center text-xl font-bold p-2  rounded-full text-white"
         >
           Create Service
