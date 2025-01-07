@@ -24,32 +24,6 @@ const Booking = () => {
   const userName = useState("Name");
   const LastName = useState("LASTNAME");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch Facility Setup
-        const facilityResponse = await getFacitilitySetup();
-        console.log("Facility Setup Response:", facilityResponse);
-        setBookingFacility(facilityResponse.data);
-
-        // Fetch Bookings
-        const bookingsResponse = await getAmenitiesBooking();
-        console.log("Bookings Response:", bookingsResponse);
-        setBookings(bookingsResponse.data);
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to fetch data. Please try again.");
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   const combinedData = bookings.map((booking) => {
     const facility = bookingFacility.find((fac) => fac.id === booking.amenity_id);
 
@@ -90,13 +64,13 @@ const Booking = () => {
       name: "Action",
       cell: (row) => (
         <div className="flex item-center gap-2">
-        <Link to={`/bookings/booking-details/${row.id}`}>
-          <BsEye />
-        </Link>
-        {/* <Link to={`bookings/edit_bookings/${row.id}`}>
+          <Link to={`/bookings/booking-details/${row.id}`}>
+            <BsEye />
+          </Link>
+          {/* <Link to={`bookings/edit_bookings/${row.id}`}>
         <BiEdit size={15} />
       </Link> */}
-      </div>
+        </div>
       ),
       sortable: false,
     },
@@ -129,20 +103,22 @@ const Booking = () => {
       name: "Booked On",
       selector: (row) => {
         const date = new Date(row.created_at);
-    const yy = date.getFullYear().toString(); // Get last 2 digits of the year
-    const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${dd}/${mm}/${yy}`;
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${dd}/${mm}/${yy}`;
       },
       sortable: true,
     },
     {
       name: "Scheduled On",
-      selector: (row) => {const date = new Date(row.booking_date);
+      selector: (row) => {
+        const date = new Date(row.booking_date);
         const yy = date.getFullYear().toString(); // Get last 2 digits of the year
         const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
         const dd = String(date.getDate()).padStart(2, '0');
-        return `${dd}/${mm}/${yy}`;},
+        return `${dd}/${mm}/${yy}`;
+      },
       sortable: true,
     },
     {
@@ -166,6 +142,33 @@ const Booking = () => {
       sortable: true,
     },
   ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch Facility Setup
+        const facilityResponse = await getFacitilitySetup();
+        console.log("Facility Setup Response:", facilityResponse);
+        setBookingFacility(facilityResponse?.data || []);
+
+        // Fetch Bookings
+        const bookingsResponse = await getAmenitiesBooking();
+        console.log("Bookings Response:", bookingsResponse);
+        setBookings(bookingsResponse?.data || []);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(`Failed to fetch data: ${error.message || error}`);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  },[]);
+
 
   return (
     <section className="flex">

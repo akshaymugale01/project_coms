@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
-import DataTable from "react-data-table-component";
+// import DataTable from "react-data-table-component";
 import { BiExport } from "react-icons/bi";
 import { ImEye } from "react-icons/im";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
-import Switch from "../../Buttons/Switch";
+// import Switch from "../../Buttons/Switch";
 import Navbar from "../../components/Navbar";
 import Table from "../../components/table/Table";
 import { useSelector } from "react-redux";
 import { BsEye } from "react-icons/bs";
-import SeatBooking from "./SeatBooking";
+// import SeatBooking from "./SeatBooking";
 import SetupSeatBooking from "./SetupSeatBooking";
 import { getFacitilitySetup } from "../../api";
 
@@ -18,17 +18,19 @@ const SetupBookingFacility = () => {
   const [bookingFacility, SetBookingFacility] = useState([]);
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error state
+
   useEffect(() => {
     const fetchFacilityBooking = async () => {
       try {
         const response = await getFacitilitySetup();
+        SetBookingFacility(response.data);
         console.log("Response", response);
-        SetBookingFacility(response.data); // Correct function name
+         // Correct function name
         setLoading(false); // Stop loading when data is fetched
       } catch (error) {
         console.error("Error fetching facilities", error);
         setError("Failed to fetch booking facilities. Please try again."); // Set error message
-        setLoading(false); // Stop loading on error
+        setLoading(true); // Stop loading on error
       }
     };
 

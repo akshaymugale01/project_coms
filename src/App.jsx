@@ -703,6 +703,7 @@ import BillingSetup from "./pages/Setup/BillingSetup/BillingSetup.jsx";
 import BookingFacilityDetails from "./pages/SubPages/BookingFacilityDetails.jsx";
 import PantryDetails from "./pages/SubPages/details/PantryDetails.jsx";
 import FBRestaurtantDetails from "./pages/SubPages/details/FBSubDetails/FBResturantsDetails.jsx";
+import AboutUs from "./pages/Setup/AboutUs.jsx";
 // new admin hrms
 
 function App() {
@@ -1153,6 +1154,8 @@ function App() {
           />
           {/* materials */}
 
+          {/* About Us */}
+          <Route path="/about_us" element={<AboutUs />} />
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route

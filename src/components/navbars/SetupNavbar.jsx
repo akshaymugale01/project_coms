@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from '../../utils/localStorage';
 import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill } from 'react-icons/fa';
 import { FaBilibili, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaTimeline } from 'react-icons/fa6';
+import { FcAbout } from 'react-icons/fc';
 
 const SetupNavbar = () => {
   const themeColor = useSelector((state) => state.theme.color);
@@ -113,6 +114,12 @@ const SetupNavbar = () => {
           {feat.includes("vendors") && (
             <Link to="/setup/supplier-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaBuilding /> Supplier
+            </Link>
+          )}
+
+          {feat.includes("about_us") && (
+            <Link to="/about_us" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+              <FcAbout /> About Us
             </Link>
           )}
         </ul>

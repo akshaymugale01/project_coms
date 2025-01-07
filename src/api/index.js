@@ -20,6 +20,8 @@ export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
 const token = getItemInLocalStorage("TOKEN");
 export const domainPrefix = "https://app.myciti.life";
+// export const domainPrefix = "http://localhost:3002";
+
 // export const domainPrefix = "http://13.215.74.38";
 export const login = async (data) => axiosInstance.post("/login.json", data);
 
@@ -880,6 +882,21 @@ export const postAmenitiesBooking = async (data) =>
     },
   });
 
+export const postAboutUs = async (data) =>
+  axiosInstance.post(`/abouts.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getAboutUs = async () =>
+  axiosInstance.get(`/abouts.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
 export const getAmenitiesBooking = async () =>
   axiosInstance.get(`/amenity_bookings.json`, {
     params: {
@@ -921,7 +938,7 @@ export const getPaymentBookings = async (resourceId) =>
 
 
 // Facitility Setup
-export const getFacitilitySetup = async (data) =>
+export const getFacitilitySetup = async () =>
   axiosInstance.get(`/amenities.json`, {
     params: {
       token: token,
