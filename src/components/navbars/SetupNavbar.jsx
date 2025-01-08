@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from '../../utils/localStorage';
-import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill } from 'react-icons/fa';
-import { FaBilibili, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaTimeline } from 'react-icons/fa6';
+import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill, FaProjectDiagram, FaWizardsOfTheCoast, FaRProject } from 'react-icons/fa';
+import { FaBilibili, FaDiagramProject, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaTimeline } from 'react-icons/fa6';
 import { FcAbout } from 'react-icons/fc';
 
 const SetupNavbar = () => {
@@ -114,6 +114,12 @@ const SetupNavbar = () => {
           {feat.includes("vendors") && (
             <Link to="/setup/supplier-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaBuilding /> Supplier
+            </Link>
+          )}
+
+          {feat.includes("vendors") && (
+            <Link to="/setup/other_projects" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+              <FaDiagramProject /> Other Projets
             </Link>
           )}
 
