@@ -890,6 +890,23 @@ export const postAboutUs = async (data) =>
     },
   });
 
+
+export const postBanner = async (data) =>
+  axiosInstance.post(`/banners.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getBanner = async () =>
+  axiosInstance.get(`/banners.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
+
 export const getAboutUs = async () =>
   axiosInstance.get(`/abouts.json`, {
     params: {
