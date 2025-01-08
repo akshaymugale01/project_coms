@@ -124,7 +124,7 @@ const SetupNavbar = () => {
           )}
 
           {feat.includes("about_us") && (
-            <Link to="/about_us" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+            <Link to="/setup/about_us" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FcAbout /> About Us
             </Link>
           )}
