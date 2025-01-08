@@ -34,8 +34,10 @@ const BookingDetails = () => {
     setLoading(true);
     try {
       // Fetch booking and facility details
+      // const bookingResponse = await getAmenitiesIdBooking(id);
+
       const bookingResponse = await getAmenitiesIdBooking(id);
-      const bookingData = bookingResponse.data;
+      const bookingData = bookingResponse.data
 
       console.log("data", bookingData);
 
@@ -112,9 +114,9 @@ const BookingDetails = () => {
       const response = await postPaymentBookings(postData);
       // console.log(response);
       if (response?.status === 201) {
-        toast.success("Booking successful!");
+        toast.success("Payment Captured successful!");
         setShowModal(false);
-        // navigate(`/bookings/booking-details/${id}`);
+        navigate(`/bookings`);
       } else {
         toast.error("Booking failed. Please try again.");
       }

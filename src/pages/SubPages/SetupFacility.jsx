@@ -38,7 +38,7 @@ const SetupFacility = () => {
       cutoff_min: "",
       return_percentage: "",
       create_by: "",
-      active: "",
+      active: true,
       member_price_adult: "",
       member_price_child: "",
       guest_price_adult: "",

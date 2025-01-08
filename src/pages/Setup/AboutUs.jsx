@@ -417,7 +417,7 @@ const AboutUs = () => {
 
       toast.success("About Details created successfully!");
       handleCloseModal();
-      navigate("/about_us");
+      navigate("/setup");
     } catch (error) {
       console.error("Error creating details:", error);
       toast.error("Failed to create details.");
@@ -440,7 +440,7 @@ const AboutUs = () => {
       await postBanner(formDataToSend);
       toast.success("Banner created successfully!");
       handleBannerCloseModal();
-      navigate("/about_us");
+      navigate("/setup");
     } catch (error) {
       console.error("Error creating details:", error);
       toast.error("Failed to create details.");
@@ -482,7 +482,7 @@ const AboutUs = () => {
 
     fetchAboutUs();
     fetchBanner();
-  }, []);
+  }, [userID, siteID]);
 
 
   // const fadeImages = Array.isArray(bannerData) ? bannerData.map((banner, index) => ({

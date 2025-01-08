@@ -148,15 +148,16 @@ const Booking = () => {
       try {
         setLoading(true);
 
-        // Fetch Facility Setup
-        const facilityResponse = await getFacitilitySetup();
-        console.log("Facility Setup Response:", facilityResponse);
-        setBookingFacility(facilityResponse?.data || []);
-
         // Fetch Bookings
         const bookingsResponse = await getAmenitiesBooking();
         console.log("Bookings Response:", bookingsResponse);
         setBookings(bookingsResponse?.data || []);
+
+
+        // Fetch Facility Setup
+        const facilityResponse = await getFacitilitySetup();
+        console.log("Facility Setup Response:", facilityResponse);
+        setBookingFacility(facilityResponse?.data || []);
 
         setLoading(false);
       } catch (error) {
@@ -167,7 +168,7 @@ const Booking = () => {
     };
 
     fetchData();
-  },[]);
+  }, []);
 
 
   return (

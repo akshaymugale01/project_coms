@@ -888,6 +888,11 @@ export const postAboutUs = async (data) =>
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 
 
@@ -915,19 +920,47 @@ export const getAboutUs = async () =>
   });
 
 
-export const getAmenitiesBooking = async () =>
-  axiosInstance.get(`/amenity_bookings.json`, {
-    params: {
-      token: token,
-    },
-  });
+// Amenities Booking Api Cache 
+// export const getAmenitiesBooking = async () =>
+//   axiosInstance.get(`/amenity_bookings.json`, {
+//     params: {
+//       token: token,
+//     },
+//   });
 
-export const getAmenitiesIdBooking = async (id) =>
-  axiosInstance.get(`/amenity_bookings/${id}.json`, {
+export const getAmenitiesBooking = async () => {
+  return axiosInstance.get(`/amenity_bookings.json`, {
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',  // Disable caching on the client side
+      'Pragma': 'no-cache',  // Older HTTP/1.0 caches
+      'Expires': '0',  // Immediately expires the cached response
+    },
   });
+};
+
+
+export const getAmenitiesIdBooking = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/amenity_bookings/${id}.json`, {
+      params: {
+        token: token,
+      },
+      headers: {
+        'Cache-Control': 'no-cache',  // Disable caching on the client side
+        'Pragma': 'no-cache',  // Older HTTP/1.0 caches
+        'Expires': '0',  // Immediately expires the cached response
+      },
+    });
+
+    return response;  // Ensure the response is returned
+  } catch (error) {
+    console.error("Error fetching amenity booking by ID:", error);
+    throw error;  // Optionally, you can throw an error or handle it as needed
+  }
+};
 
 export const updateAmenityBook = async (id, data) =>
   axiosInstance.put(`/amenity_bookings/${id}.json`, data, {
@@ -956,12 +989,32 @@ export const getPaymentBookings = async (resourceId) =>
 
 
 // Facitility Setup
-export const getFacitilitySetup = async () =>
-  axiosInstance.get(`/amenities.json`, {
-    params: {
-      token: token,
-    },
-  });
+// export const getFacitilitySetup = async () =>
+//   axiosInstance.get(`/amenities.json`, {
+//     params: {
+//       token: token,
+//     },
+//   });
+
+
+export const getFacitilitySetup = async () => {
+  try {
+    const response = await axiosInstance.get(`/amenities.json`, {
+      params: {
+        token: token,
+      },
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching facility setup:", error);
+    throw error;
+  }
+};
 
 
 export const getFacilitySlots = async (data) =>
