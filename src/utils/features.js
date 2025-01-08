@@ -35,6 +35,7 @@ export const features = [
   "address",
   "project_task",
   "bill pay",
+  "other_projects",
   "about_us",
 "advance setup",
 "birthday",

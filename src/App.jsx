@@ -704,6 +704,7 @@ import BookingFacilityDetails from "./pages/SubPages/BookingFacilityDetails.jsx"
 import PantryDetails from "./pages/SubPages/details/PantryDetails.jsx";
 import FBRestaurtantDetails from "./pages/SubPages/details/FBSubDetails/FBResturantsDetails.jsx";
 import AboutUs from "./pages/Setup/AboutUs.jsx";
+import OtherProject from "./pages/Setup/OtherProject.jsx";
 // new admin hrms
 
 function App() {
@@ -1155,7 +1156,8 @@ function App() {
           {/* materials */}
 
           {/* About Us */}
-          <Route path="/about_us" element={<AboutUs />} />
+          <Route path="/setup/about_us" element={<AboutUs />} />
+          <Route path="/setup/other_projects" element={<OtherProject />} />
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route
