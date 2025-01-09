@@ -473,7 +473,7 @@ const AboutUs = () => {
         const data = response.data;
 
         if (data && data.length > 0) {
-          setBannerData(data.slice(-3)); // Show the last three banners
+          setBannerData(data.slice(-4)); // Show the last three banners
         }
       } catch (error) {
         console.error("Error fetching banner data:", error);
@@ -514,6 +514,13 @@ const AboutUs = () => {
           : "/path-to-default-image.jpg", // Fallback image
       caption: "Third Slide",
     },
+    {
+      url:
+        bannerData[3]?.attachments?.[0]?.document
+          ? `${domainPrefix}${bannerData[3].attachments[0].document}`
+          : "/path-to-default-image.jpg", // Fallback image
+      caption: "First Slide",
+    }
   ];
 
   return (

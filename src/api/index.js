@@ -883,8 +883,15 @@ export const postAmenitiesBooking = async (data) =>
     },
   });
 
-export const postAboutUs = async (data) =>
-  axiosInstance.post(`/abouts.json`, data, {
+export const postOtherProject = async (data) =>
+  axiosInstance.post(`/other_projects.json`, data, {
+    params: {
+      token: token,
+    }
+  });
+
+export const getOtherProject = async () =>
+  axiosInstance.get(`/other_projects.json`, {
     params: {
       token: token,
     },
@@ -892,6 +899,15 @@ export const postAboutUs = async (data) =>
       'Cache-Control': 'no-cache',
       'Pragma': 'no-cache',
       'Expires': '0',
+    }
+  });
+
+
+
+export const postAboutUs = async (data) =>
+  axiosInstance.post(`/abouts.json`, data, {
+    params: {
+      token: token,
     }
   });
 
@@ -908,6 +924,11 @@ export const getBanner = async () =>
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 
 
@@ -917,6 +938,11 @@ export const getAboutUs = async () =>
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 
 
@@ -1733,6 +1759,11 @@ export const getFolderDocumentPersonal = async () =>
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const getSharedwith = async () =>
   axiosInstance.get(`/folders/get_share_with.json`, {
