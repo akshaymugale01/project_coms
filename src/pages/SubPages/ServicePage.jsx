@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getSoftServices, softServiceDownloadQrCode} from "../../api";
+import { getSoftServices, softServiceDownloadQrCode } from "../../api";
 import { BiEdit, BiFilterAlt } from "react-icons/bi";
 import { IoAddCircleOutline } from "react-icons/io5";
 import Table from "../../components/table/Table";
@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 const ServicePage = () => {
   const [searchText, setSearchText] = useState("");
   const [filter, setFilter] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
   const [servicess, setServices] = useState([]);
   const dateFormat = (dateString) => {
@@ -54,7 +55,7 @@ const ServicePage = () => {
     },
     {
       name: "Unit",
-      selector: (row) => row?.units.map((unit)=>(
+      selector: (row) => row?.units.map((unit) => (
         <div className="flex gap-2">
           <p key={unit.id}>{unit.name},</p>
         </div>
@@ -89,6 +90,13 @@ const ServicePage = () => {
         console.log(error);
       }
     };
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+
     fetchService();
   }, []);
   const handleSearch = (event) => {
@@ -139,10 +147,10 @@ const ServicePage = () => {
     if (selectedRows.length === 0) {
       return toast.error("Please select at least one data.");
     }
-  
+
     console.log(selectedRows);
     toast.loading("Qr code downloading, please wait!");
-  
+
     try {
       const response = await softServiceDownloadQrCode(selectedRows);
       const blob = new Blob([response.data], { type: "application/pdf" });
@@ -254,7 +262,7 @@ const ServicePage = () => {
           </button> */}
           </div>
         </div>
-        {servicess.length !== 0 ? (
+        {/* {servicess.length !== 0 ? (
           <Table columns={column} data={filteredData} onSelectedRows={handleSelectedRows} selectableRow={true}/>
         ) : (
           <div className="flex justify-center items-center h-full">
@@ -266,6 +274,29 @@ const ServicePage = () => {
               wrapperStyle={{}}
               wrapperClass="dna-wrapper"
             />
+          </div>
+        )} */}
+        {servicess.length !== 0 ? (
+          <Table
+            columns={column}
+            data={filteredData}
+            onSelectedRows={handleSelectedRows}
+            selectableRow={true}
+          />
+        ) : loading ? (
+          <div className="flex justify-center items-center h-full">
+            <DNA
+              visible={true}
+              height="120"
+              width="120"
+              ariaLabel="dna-loading"
+              wrapperStyle={{}}
+              wrapperClass="dna-wrapper"
+            />
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-full">
+            <p className="text-gray-500 text-lg">No Records!</p>
           </div>
         )}
         {/* <DataTable

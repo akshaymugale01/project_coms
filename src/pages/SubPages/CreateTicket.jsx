@@ -462,7 +462,7 @@ const CreateTicket = () => {
       <div className="flex justify-center  overflow-x-auto w-full  sm:w-full">
         <div className="border border-gray-400 rounded-md">
           <h2
-            style={{ background: themeColor }}
+            style={{ background: "rgb(19 27 32)" }}
             className="text-center text-xl font-semibold p-2 bg-black rounded-md text-white m-2"
           >
             Create Ticket

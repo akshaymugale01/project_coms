@@ -169,7 +169,7 @@ const TicketDetails = () => {
         </div>
         <div className="flex flex-col  flex-wrap gap-2">
           <h2
-            style={{ background: themeColor }}
+            style={{ background: "rgb(19 27 32)" }}
             className="text-center  text-white font-semibold mt-5 text-lg p-2 px-4 "
           >
             Additional Info
@@ -237,7 +237,7 @@ const TicketDetails = () => {
           </div>
         )}
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           className="text-center   text-white font-semibold my-5 text-lg p-2 px-4 "
         >
           Attachments
@@ -264,7 +264,7 @@ const TicketDetails = () => {
         </div>
 
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           className="text-center  text-white font-semibold my-5 text-lg p-2 px-4 "
         >
           Logs
@@ -345,7 +345,7 @@ const TicketDetails = () => {
             </div>
           ))}
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           className="text-center  text-white font-semibold my-5 text-lg p-2 px-4 "
         >
           Escalations

@@ -488,7 +488,7 @@ const themeColor = useSelector((state)=> state.theme.color)
 
         <div className="flex flex-col  flex-wrap gap-2">
           <h2
-          style={{background:themeColor}}
+          style={{background:"rgb(19 27 32)"}}
           className="text-center w-screen  text-white font-semibold mt-5 text-lg p-2 px-4 ">
             Additional Info
           </h2>
