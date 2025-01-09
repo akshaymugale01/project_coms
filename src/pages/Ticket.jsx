@@ -355,9 +355,8 @@ const Ticket = () => {
       // Format complaint logs as a single string
       const complaintLogs = ticket.complaint_logs
         .map((log) => {
-          return `Log By: ${log.log_by}, Status: ${
-            log.log_status
-          }, Date: ${dateFormat(log.created_at)}`;
+          return `Log By: ${log.log_by}, Status: ${log.log_status
+            }, Date: ${dateFormat(log.created_at)}`;
         })
         .join(" | ");
 
@@ -515,19 +514,19 @@ const Ticket = () => {
               to={"/tickets/create-ticket"}
               style={{ background: themeColor }}
               className=" font-semibold  text-white duration-300 transition-all  p-2 rounded-md  cursor-pointer text-center flex items-center gap-2 justify-center"
-              // onClick={() => setShowCountry(!showCountry)}
+            // onClick={() => setShowCountry(!showCountry)}
             >
               <PiPlusCircle size={20} />
               Add
             </Link>
-             <button
+            <button
               className=" font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
               style={{ background: themeColor }}
               onClick={() => setFilterModal(!filterModal)}
             >
               <BiFilterAlt />
               Filter
-            </button> 
+            </button>
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setHideColumn(!hideColumn)}

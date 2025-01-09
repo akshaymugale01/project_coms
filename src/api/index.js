@@ -34,6 +34,11 @@ export const getTicketDashboard = async () =>
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 //Assets
 export const getPerPageSiteAsset = async (page, perPage) =>
@@ -395,7 +400,11 @@ export const getAdminComplaints = async () =>
   axiosInstance.get(`/pms/admin/complaints.json`, {
     params: {
       token: token,
-    },
+    }, headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const getCARItems = async (ticketId) =>
   axiosInstance.get(
@@ -416,13 +425,22 @@ export const getAdminPerPageComplaints = async (page, perPage) =>
       per_page: perPage,
       page: page,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 
 export const getComplaintsDetails = async (id) =>
   axiosInstance.get(`pms/complaints/${id}.json`, {
     params: {
       token: token,
-    },
+    }, headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 
 export const fetchSubCategories = async (categoryId) =>
