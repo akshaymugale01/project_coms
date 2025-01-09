@@ -1747,6 +1747,11 @@ export const getFolderDocumentCommon = async () =>
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const deleteShareFile = async (id) =>
   axiosInstance.delete(`/share_withs/${id}.json`, {
@@ -1770,12 +1775,22 @@ export const getSharedwith = async () =>
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const getSubFolderDocumentCommon = async (id) =>
   axiosInstance.get(`/folders/get_folders.json?parent_id=${id}`, {
     params: {
       token: token,
     },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const postSharePersonal = async (data) =>
   axiosInstance.post("/share_withs.json", data, {
