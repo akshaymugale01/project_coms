@@ -74,12 +74,33 @@ const SetupBookingFacility = () => {
     },
     {
       name: "Book Before",
-      selector: (row) => `${row?.book_before}`,
+      selector: (row) => {
+        const bookBefore = row?.book_before?.toString(); // Convert to string to slice the digits
+        if (bookBefore && bookBefore.length >= 6) {
+          const days = bookBefore.slice(0, 2); // First 2 digits for days
+          const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
+          const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
+
+          return `${days}D, ${hours}H, ${minutes}M`;
+        }
+        return 'N/A'; // Fallback if book_before is not available or has less than 6 digits
+      },
       sortable: true,
-    },
+    }
+    ,
     {
       name: "Advance Booking",
-      selector: (row) => `${row.advance_booking}`,
+      selector: (row) => {
+        const AdvBook = row?.advance_booking?.toString();
+        if (AdvBook && AdvBook.length >= 6) {
+          const days = AdvBook.slice(0, 2);
+          const hours = AdvBook.slice(2, 4);
+          const minutes = AdvBook.slice(4, 6);
+
+          return `${days}D, ${hours}H,${minutes}M`
+        }
+        return 'N/A';
+      },
       sortable: true,
     },
     {

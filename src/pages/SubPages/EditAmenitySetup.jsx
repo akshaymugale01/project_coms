@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { domainPrefix, getFacitilitySetup, postFacitilitySetup } from '../../api';
+import { domainPrefix, getFacitilitySetup, postFacitilitySetup, updateFacitilitySetup } from '../../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getItemInLocalStorage } from '../../utils/localStorage';
 import { useSelector } from 'react-redux';
@@ -7,6 +7,7 @@ import { Navbar } from '@material-tailwind/react';
 import { FaCheck, FaTrash } from 'react-icons/fa';
 import { BiPlusCircle } from 'react-icons/bi';
 import { id } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 
 const EditAmenitySetup = () => {
     const { id } = useParams()
@@ -89,8 +90,11 @@ const EditAmenitySetup = () => {
                 ? response.data.find(facility => facility.id === parseInt(id))
                 : response.data;
 
+
+            console.log("facility", facility);
+
             if (facility) {
-                const bookBeforeStr = facility.book_before.toString().padStart(6, "0"); // Ensure it's 6 characters long
+                const bookBeforeStr = facility.book_before?.toString().padStart(6, "0") || "000000"; // Ensure it's 6 characters long
                 const book_before_days = parseInt(bookBeforeStr.slice(0, 2), 10);
                 const book_before_hours = parseInt(bookBeforeStr.slice(2, 4), 10);
                 const book_before_mins = parseInt(bookBeforeStr.slice(4, 6), 10);
@@ -126,14 +130,21 @@ const EditAmenitySetup = () => {
                         member: facility.member || null,
                         guest: facility.guest || null,
                         tenant: facility.tenant || null,
+                        status: facility.status || "",
+                        payment_methods: facility.payment_methods || [],
                     },
                     covers: facility.covers || [],
                     attachments: facility.attachments || [],
                     slots: facility.amenity_slots.map(slot => ({
-                        start_hr: slot.start_hr || "",
-                        end_hr: slot.end_hr || "",
-                        start_min: slot.start_min || "",
-                        end_min: slot.end_min || "",
+                        id: slot.id || null,
+                        amenity_id: slot.amenity_id || null, // Ensure correct key name for amenity_id
+                        start_time: `${slot.start_hr}:${slot.start_min}`, // Correct start_time format
+                        end_time: `${slot.end_hr}:${slot.end_min}`,
+                         
+                            start_hr: slot.start_hr || "", // Time in hour format
+                            end_hr: slot.end_hr || "", // Time in hour format
+                            start_min: slot.start_min || "", // Time in minute format
+                            end_min: slot.end_min || "", // Time in minute format
                     })),
                 });
             } else {
@@ -147,51 +158,58 @@ const EditAmenitySetup = () => {
         }
     };
 
-
     useEffect(() => {
         fetchFacilityBooking();
     }, [id]); // Trigger when ID changes
 
-
-
-    const postAmenitiesSetup = async () => {
+    const updateAmenitiesSetup = async () => {
         const postData = new FormData();
-
-        // Append covers as an array
-        if (formData.covers.length > 0) {
-            formData.covers.forEach((file) => {
-                postData.append("cover_images[]", file); // Use "covers[]" for Rails to recognize it as an array
-            });
-        }
-
-        // Append attachments as an array
-        if (formData.attachments.length > 0) {
-            formData.attachments.forEach((file) => {
-                postData.append("attachments[]", file); // Use "attachments[]" for Rails to recognize it as an array
-            });
-        }
 
         // Append amenity fields
         Object.entries(formData.amenity).forEach(([key, value]) => {
             postData.append(`amenity[${key}]`, value);
         });
 
-        // Append slots as an array
-        formData.slots.forEach((slot) => {
+        // Append slots as an array with the correct structure
+        formData.slots.forEach((slot, index) => {
             Object.entries(slot).forEach(([key, value]) => {
-                postData.append(`slots[][${key}]`, value);
+                postData.append(`amenity[amenity_slots_attributes][${index}][${key}]`, value);
             });
         });
 
+        // Append payment methods as an array
+        if (formData.amenity.payment_methods && formData.amenity.payment_methods.length > 0) {
+            formData.amenity.payment_methods.forEach((method) => {
+                postData.append("amenity[payment_methods][]", method);
+            });
+        }
+
+        // Append additional arrays (covers, attachments) if needed
+        if (formData.covers.length > 0) {
+            formData.covers.forEach((file) => {
+                postData.append("cover_images[]", file);
+            });
+        }
+
+        if (formData.attachments.length > 0) {
+            formData.attachments.forEach((file) => {
+                postData.append("attachments[]", file);
+            });
+        }
+
         try {
-            const response = await postFacitilitySetup(postData);
+            if (!id) {
+                throw new Error("Amenity ID is missing.");
+            }
+
+            const response = await updateFacitilitySetup(postData, id); // Ensure this API call is correct
             console.log(response);
 
-            toast.success("Amenity setup successfully!");
+            toast.success("Updated successfully!");
             navigate("/setup/facility");
         } catch (error) {
             console.error(error);
-            toast.error("Failed to post amenity setup. Please try again.");
+            toast.error("Failed to update amenity setup. Please try again.");
         }
     };
 
@@ -378,6 +396,7 @@ const EditAmenitySetup = () => {
     };
 
     // const handleSlotTimeChange = (index, timeType, timeValue) => {
+
 
     //     const [hours, minutes] = timeValue.split(":");
 
@@ -711,20 +730,29 @@ const EditAmenitySetup = () => {
 
                 <div className="bg-blue-50 border-y">
                     {/* Booking Allowed Before */}
-                    <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
+                    <div className="grid grid-cols-5 items-center border-b px-4 gap-2">
                         <div className="flex justify-center my-2">
                             <label htmlFor="book_before_days" className="flex items-center gap-2">
                                 Booking allowed before
                             </label>
                         </div>
+                        <div> {formData?.amenity?.book_before &&
+                            (() => {
+                                const bookBefore = formData.amenity.book_before.toString(); // Convert to string
+                                const days = bookBefore.slice(0, 2); // First 2 digits for days
+                                const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
+                                const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
+                                return `${days} days, ${hours} hours, ${minutes} minutes`;
+                            })()}
+                        </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="book_before_days"
-                                value={formData.amenity.book_before?.toString().slice(0, 2) || ""}
+                                value={formData.amenity.book_before_days}
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                                disabled
+
                                 placeholder="Day"
                             />
 
@@ -733,10 +761,10 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="book_before_hours"
-                                value={formData.amenity.book_before?.toString().slice(2, 4) || ""}
+                                value={formData.amenity.book_before_hours}
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                                disabled
+
                                 placeholder="Hour"
                             />
                         </div>
@@ -744,35 +772,39 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="book_before_mins"
-                                value={formData.amenity.book_before?.toString().slice(4, 6) || ""}
+                                value={formData.amenity.book_before_min}
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
-                                disabled
-                                placeholder="Mins"
-                            />
 
-                            <input
-                                type="hidden"
-                                name="book_before"
-                                value={formData.amenity.book_before || ""}
+                                placeholder="Mins"
                             />
                         </div>
                     </div>
 
 
                     {/* Advance Booking */}
-                    <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
+                    <div className="grid grid-cols-5 items-center border-b px-4 gap-2">
                         <div className="flex justify-center my-2">
                             <label htmlFor="advance_days" className="flex items-center gap-2">
                                 Advance Booking
                             </label>
                         </div>
+                        <div>
+                            {formData?.amenity?.advance_booking &&
+                                (() => {
+                                    const bookBefore = formData.amenity.advance_booking.toString(); // Convert to string
+                                    const days = bookBefore.slice(0, 2); // First 2 digits for days
+                                    const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
+                                    const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
+                                    return `${days} days, ${hours} hours, ${minutes} minutes`;
+                                })()}
+                        </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="advance_days"
-                                value={formData.amenity.advance_booking?.toString().slice(0, 2) || ""}
-                                disabled
+                                value={formData.amenity.advance_days}
+
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Day"
@@ -782,8 +814,8 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="advance_hours"
-                                value={formData.amenity.advance_booking?.toString().slice(2, 4) || ""}
-                                disabled
+                                value={formData.amenity.advance_hours}
+
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Hour"
@@ -793,8 +825,8 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="advance_mins"
-                                value={formData.amenity.advance_booking?.toString().slice(4, 6) || ""}
-                                disabled
+                                value={formData.amenity.advance_mins}
+
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Mins"
@@ -803,18 +835,28 @@ const EditAmenitySetup = () => {
                     </div>
 
                     {/* Can Cancel Before Schedule */}
-                    <div className="grid grid-cols-4 items-center px-4 gap-2">
+                    <div className="grid grid-cols-5 items-center px-4 gap-2">
                         <div className="flex justify-center my-2">
                             <label htmlFor="cancel_before_days" className="flex items-center gap-2">
                                 Can Cancel Before Schedule
                             </label>
                         </div>
+                        <div>
+                            {formData?.amenity?.cancel_before &&
+                                (() => {
+                                    const bookBefore = formData.amenity.cancel_before.toString(); // Convert to string
+                                    const days = bookBefore.slice(0, 2); // First 2 digits for days
+                                    const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
+                                    const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
+                                    return `${days} days, ${hours} hours, ${minutes} minutes`;
+                                })()}
+                        </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="cancel_before_days"
-                                value={formData.amenity.cancel_before?.toString().slice(0, 2) || ""}
-                                disabled
+                                value={formData.amenity.cancel_before_days}
+
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Day"
@@ -824,8 +866,8 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="cancel_before_hours"
-                                value={formData.amenity.cancel_before?.toString().slice(2, 4) || ""}
-                                disabled
+                                value={formData.amenity.cancel_before_hours}
+
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Hour"
@@ -835,8 +877,8 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="cancel_before_mins"
-                                value={formData.amenity.cancel_before?.toString().slice(4, 6) || ""}
-                                disabled
+                                value={formData.amenity.cancel_before_min}
+
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Mins"
@@ -928,7 +970,7 @@ const EditAmenitySetup = () => {
                                     id={`start-time-${index}`}
                                     type="time"
                                     placeholder="Start Time"
-                                    value={`${slot.start_hr || "00"}:${slot.start_min || "00"}`}
+                                    value={`${String(slot.start_hr || 0).padStart(2, '0')}:${String(slot.start_min || 0).padStart(2, '0')}`}
                                     onChange={(e) => handleSlotTimeChange(index, "start", e.target.value)}
                                     className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                                 />
@@ -941,12 +983,12 @@ const EditAmenitySetup = () => {
                                     id={`end-time-${index}`}
                                     type="time"
                                     placeholder="End Time"
-                                    value={`${slot.end_hr || "00"}:${slot.end_min || "00"}`}
+                                    value={`${String(slot.end_hr || 0).padStart(2, '0')}:${String(slot.end_min || 0).padStart(2, '0')}`}
                                     onChange={(e) => handleSlotTimeChange(index, "end", e.target.value)}
                                     className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
                                 />
                             </div>
-                            <div className="flex item-end justify-end">
+                            <div className="flex items-end justify-end">
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveSlot(index)}
@@ -957,6 +999,7 @@ const EditAmenitySetup = () => {
                             </div>
                         </div>
                     ))}
+
 
                     <div className="flex">
                         <button
@@ -1010,7 +1053,7 @@ const EditAmenitySetup = () => {
                     <button
                         style={{ background: themeColor }}
                         className=" text-white p-2 px-4 font-semibold rounded-md flex items-center gap-2"
-                        onClick={postAmenitiesSetup}
+                        onClick={updateAmenitiesSetup}
                     >
                         <FaCheck /> Submit
                     </button>

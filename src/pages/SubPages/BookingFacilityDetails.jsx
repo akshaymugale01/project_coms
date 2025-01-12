@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 
 const FacilityDetails = () => {
   const { id } = useParams(); // The ID from URL params
-  const [facilityData, setFacilityData] = useState(null); // Facility details state
+  const [facilityData, setFacilityData] = useState(null); // Set initial state as null, to track loading properly
   const [error, setError] = useState(null); // Error state
   const [loading, setLoading] = useState(true); // Loading state
 
@@ -13,17 +13,17 @@ const FacilityDetails = () => {
   const fetchFacilityBooking = async () => {
     try {
       const response = await getFacitilitySetup(id); // API call
-      console.log("Amenitis", response.data); // Check the raw response
+      // console.log("Amenitis", response.data); // Check the raw response
 
       // Filter the specific facility by ID (assuming 'id' is unique in the response)
       const facility = response.data.find(facility => facility.id === parseInt(id));
+      console.log("facility ", facility);
 
       if (facility) {
         setFacilityData(facility); // Set only the matching facility
       } else {
         setError('Facility not found.');
       }
-
       setLoading(false); // Stop loading
     } catch (error) {
       console.error("Error fetching facility details:", error);
@@ -33,9 +33,9 @@ const FacilityDetails = () => {
   };
 
 
-  const domainPrefix = "https://app.myciti.life";
+  console.log("AMENITIes", facilityData);
 
-  console.log("facilityData", facilityData);
+  const domainPrefix = "https://app.myciti.life";
 
   useEffect(() => {
     fetchFacilityBooking();
@@ -55,13 +55,9 @@ const FacilityDetails = () => {
 
   return (
     <section className="flex">
-      {/* Optional Navbar */}
       <Navbar />
       <div className="w-full p-4 mb-5">
-        <h1
-          style={{ background: 'rgb(17, 24, 39)' }}
-          className="bg-black text-white font-semibold rounded-md text-center p-2"
-        >
+        <h1 style={{ background: 'rgb(17, 24, 39)' }} className="bg-black text-white font-semibold rounded-md text-center p-2">
           Facility Details
         </h1>
 
@@ -123,25 +119,26 @@ const FacilityDetails = () => {
                   <div>
                     <p>Start Time:</p>
                     <p>
-                      {slot.start_hr && slot.start_min
+                      {/* {slot.slot_str} */}
+                      {slot.start_hr}:{slot.start_min}
+                      {/* {slot.start_hr && slot.start_min
                         ? `${String(slot.start_hr).padStart(2, '0')}:${String(slot.start_min).padStart(2, '0')}`
-                        : 'N/A'}
+                        : 'N/A'} */}
                     </p>
                   </div>
                   <div>
                     <p>End Time:</p>
                     <p>
-                      {slot.end_hr && slot.end_min
+                      {/* {slot.slot_str} */}
+                      {slot.end_hr}:{slot.end_min}
+                      {/* {slot.end_hr && slot.end_min
                         ? `${String(slot.end_hr).padStart(2, '0')}:${String(slot.end_min).padStart(2, '0')}`
-                        : 'N/A'}
+                        : 'N/A'} */}
                     </p>
                   </div>
-                  {/* <div>
-                    <p>Capacity:</p>
-                    <p>{slot.capacity || 'N/A'}</p>
-                  </div> */}
+                  <h1 className='text-gray-800'> From {slot.slot_str}</h1>
                 </div>
-
+               
               </div>
             ))
           ) : (
@@ -204,8 +201,6 @@ const FacilityDetails = () => {
           </div>
         </div>
 
-
-
         {/* Description */}
         <div className="my-4">
           <h2 className="border-b border-black text-lg font-medium mb-2">
@@ -229,16 +224,6 @@ const FacilityDetails = () => {
           </h2>
           <p>{facilityData.cancellation_policy || 'No policy provided.'}</p>
         </div>
-
-        {/* Action Buttons */}
-        {/* <div className="my-4 flex justify-end gap-4">
-          <button className="bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600">
-            Edit Facility
-          </button>
-          <button className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600">
-            Delete Facility
-          </button>
-        </div> */}
       </div>
     </section>
   );

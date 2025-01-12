@@ -87,44 +87,52 @@ const SetupFacility = () => {
 
   const postAmenitiesSetup = async () => {
     const postData = new FormData();
-  
+
     // Append covers as an array
     if (formData.covers.length > 0) {
-      formData.covers.forEach((file) => {
-        postData.append("cover_images[]", file); // Use "covers[]" for Rails to recognize it as an array
-      });
+        formData.covers.forEach((file) => {
+            postData.append("cover_images[]", file); // Use "cover_images[]" for Rails to recognize it as an array
+        });
     }
-  
+
     // Append attachments as an array
     if (formData.attachments.length > 0) {
-      formData.attachments.forEach((file) => {
-        postData.append("attachments[]", file); // Use "attachments[]" for Rails to recognize it as an array
-      });
+        formData.attachments.forEach((file) => {
+            postData.append("attachments[]", file); // Use "attachments[]" for Rails to recognize it as an array
+        });
     }
-  
+
     // Append amenity fields
     Object.entries(formData.amenity).forEach(([key, value]) => {
-      postData.append(`amenity[${key}]`, value);
+        // Handle arrays like payment_methods separately
+        if (Array.isArray(value)) {
+            value.forEach((item) => {
+                postData.append(`amenity[${key}][]`, item); // For arrays
+            });
+        } else {
+            postData.append(`amenity[${key}]`, value); // For regular fields
+        }
     });
-  
-    // Append slots as an array
-    formData.slots.forEach((slot) => {
-      Object.entries(slot).forEach(([key, value]) => {
-        postData.append(`slots[][${key}]`, value);
-      });
+
+    // Append slots as an array with the correct structure
+    formData.slots.forEach((slot, index) => {
+        Object.entries(slot).forEach(([key, value]) => {
+            postData.append(`amenity[amenity_slots_attributes][${index}][${key}]`, value);
+        });
     });
-  
+
     try {
-      const response = await postFacitilitySetup(postData);
-      console.log(response);
-  
-      toast.success("Amenity setup successfully!");
-      navigate("/setup/facility");
+        const response = await postFacitilitySetup(postData);
+        console.log(response);
+
+        toast.success("Amenity setup successfully!");
+        navigate("/setup/facility");
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to post amenity setup. Please try again.");
+        console.error(error);
+        toast.error("Failed to post amenity setup. Please try again.");
     }
-  };
+};
+
     
   const handleCheckboxChange = (type) => {
     setFormData((prevState) => ({
