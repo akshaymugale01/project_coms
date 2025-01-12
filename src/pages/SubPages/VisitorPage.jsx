@@ -7,9 +7,11 @@ import Navbar from "../../components/Navbar";
 import { useSelector } from "react-redux";
 import Table from "../../components/table/Table";
 import {
+  getAllVisitorLogs,
   getExpectedVisitor,
   getVisitorApprovals,
   getVisitorHistory,
+  postVisitorLogFromDevice,
   visitorApproval,
 } from "../../api";
 import { BsEye } from "react-icons/bs";

@@ -1077,6 +1077,13 @@ export const postFacitilitySetup = async (data) =>
     },
   });
 
+export const updateFacitilitySetup = async (data, id) =>
+  axiosInstance.put(`/amenities/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
 // ppm details/
 
 export const getPPMDetails = async (assetId, activityId) =>
@@ -1357,6 +1364,7 @@ export const deleteVehicleParking = async (id) =>
       token: token,
     },
   });
+
 export const deleteQuestionChecklist = async (id, qid) =>
   axiosInstance.delete(
     `/checklists/${id}/delete_question.json?question_id=${qid}`,
@@ -1397,6 +1405,12 @@ export const postNewVisitor = async (data) =>
     },
   });
 
+export const postProjectLike = async (data) =>
+  axiosInstance.post("/likes/create_other_project_like.json", data, {
+    params: {
+      token: token,
+    },
+  });
 export const getPatrollings = async () =>
   axiosInstance.get("/patrollings.json", {
     params: {
@@ -1530,6 +1544,20 @@ export const postGroups = async (data) =>
 
 export const getGroups = async (id) =>
   axiosInstance.get("/groups.json", {
+    params: {
+      token: token,
+    },
+  });
+
+// Cam Bilings
+export const getCamBillings = async (id) =>
+  axiosInstance.get("/cam_bills.json", {
+    params: {
+      token: token,
+    },
+  });
+export const postCamBillings = async (data) =>
+  axiosInstance.post("/cam_bills.json", data, {
     params: {
       token: token,
     },
@@ -1891,7 +1919,11 @@ export const getExpectedVisitor = async () =>
   axiosInstance.get(`/visitors.json`, {
     params: {
       token: token,
-    },
+    }, headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const getRegisteredVehicle = async () =>
   axiosInstance.get(`/registered_vehicles.json`, {
@@ -2019,7 +2051,11 @@ export const getVisitorApprovals = async () =>
   axiosInstance.get(`/visitors/approval_form.json`, {
     params: {
       token: token,
-    },
+    }, headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const visitorApproval = async (id, data) =>
   axiosInstance.patch(`/visitors/${id}/approve_visitor.json`, data, {
@@ -2031,13 +2067,21 @@ export const getVisitorHistory = async () =>
   axiosInstance.get(`/visitors/approval_history.json`, {
     params: {
       token: token,
-    },
+    }, headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const getVisitorDetails = async (id) =>
   axiosInstance.get(`/visitors/${id}.json`, {
     params: {
       token: token,
-    },
+    }, headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 export const editVisitorDetails = async (id, data) =>
   axiosInstance.put(`/visitors/${id}.json`, data, {
@@ -2052,6 +2096,19 @@ export const getVisitorCategory = async () =>
       token: token,
     },
   });
+
+export const getAllVisitorLogs = async () =>
+  axiosInstance.get(`/visitor_device_logs.json`, {
+    params: {
+      token: token,
+    },
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
+  });
+
 
 export const postVisitorCategory = async (data) =>
   axiosInstance.post("/visitor_staff_categories.json", data, {

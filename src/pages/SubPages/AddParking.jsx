@@ -32,7 +32,7 @@ const AddParking = () => {
   return (
     <section className="w-screen">
       <div className="flex flex-col md:items-center mb-10">
-        <div style={{background: themeColor}} className="flex justify-center bg-black mx-5 my-2 w-full p-2 rounded-md">
+        <div style={{background: "rgb(19 27 32)"}} className="flex justify-center bg-black mx-5 my-2 w-full p-2 rounded-md">
           <h2 className="text-xl font-semibold text-center mx-2 text-white w-full">
             Book Parking
           </h2>

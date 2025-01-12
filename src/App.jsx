@@ -705,6 +705,8 @@ import PantryDetails from "./pages/SubPages/details/PantryDetails.jsx";
 import FBRestaurtantDetails from "./pages/SubPages/details/FBSubDetails/FBResturantsDetails.jsx";
 import AboutUs from "./pages/Setup/AboutUs.jsx";
 import OtherProject from "./pages/Setup/OtherProject.jsx";
+import Slideshow from "./Extra/Demo.jsx";
+import EditAmenitySetup from "./pages/SubPages/EditAmenitySetup.jsx";
 // new admin hrms
 
 function App() {
@@ -1154,7 +1156,7 @@ function App() {
             }
           />
           {/* materials */}
-
+          <Route path="/extra" element={<Slideshow />} />
           {/* About Us */}
           <Route path="/setup/about_us" element={<AboutUs />} />
           <Route path="/setup/other_projects" element={<OtherProject />} />
@@ -1179,6 +1181,10 @@ function App() {
           <Route
             path="/setup/facility-details/:id"
             element={<BookingFacilityDetails />}
+          />
+          <Route
+            path="/setup/facility-details/edit/:id"
+            element={<EditAmenitySetup />}
           />
           <Route
             path="/setup/facility/create-facility"

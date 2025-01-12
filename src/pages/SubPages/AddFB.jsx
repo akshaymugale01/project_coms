@@ -419,7 +419,7 @@ const AddFB = () => {
     <div className="flex flex-col overflow-hidden w-full">
       <div className="md:mx-20 mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg sm:shadow-xl">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           className="text-center text-xl font-bold p-2 rounded-md text-white"
         >
           New F&B

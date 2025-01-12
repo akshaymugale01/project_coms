@@ -16,8 +16,9 @@ const VisitorDetails = () => {
     const fetchVisitorDetails = async () => {
       try {
         const detailsResp = await getVisitorDetails(id);
-        setDetails(detailsResp.data);
-        console.log(detailsResp.data);
+        const data = detailsResp.data;
+        setDetails(data);
+        console.log("Visistore Details", data);
       } catch (error) {
         console.log(error);
       }
@@ -25,6 +26,7 @@ const VisitorDetails = () => {
     fetchVisitorDetails();
   }, [id]);
 
+  
   const themeColor = useSelector((state) => state.theme.color);
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
@@ -92,6 +94,7 @@ const VisitorDetails = () => {
       sortable: true,
     },
   ];
+  // console.log("details", details.hosts[0]?.is_approved);
   const [qrModal, setQrmodal] = useState(false);
   return (
     <section className="flex">
@@ -100,7 +103,7 @@ const VisitorDetails = () => {
         <div className="flex flex-col gap-2">
           <h2
             style={{
-              background: themeColor,
+              background: "rgb(19 27 32)",
             }}
             className="text-center rounded-full w-full text-white font-semibold text-lg p-2 px-4 mt-2 "
           >
@@ -220,6 +223,17 @@ const VisitorDetails = () => {
                 </p>
               )}
             </div>
+            <div className="grid grid-cols-2">
+              <p className="font-semibold text-sm">Approve Status:</p>
+              {details?.hosts?.[0]?.is_approved !== null ? (
+                <p className={details.is_approved ? "text-green-600" : "text-red-600"}>
+                  {details.is_approved ? "Approved" : "Not Approved"}
+                </p>
+              ) : (
+                <p className="text-gray-500 text-xs font-medium py-0.5 px-2 rounded border border-gray-300 inline-block">Pending</p> 
+              )}
+            </div>
+
             <div className="grid grid-cols-2 ">
               <p className="font-semibold text-sm">Created On : </p>
               <p className="">{dateFormat(details.created_at)}</p>

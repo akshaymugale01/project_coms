@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 // import DataTable from "react-data-table-component";
-import { BiExport } from "react-icons/bi";
+import { BiEdit, BiExport } from "react-icons/bi";
 import { ImEye } from "react-icons/im";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
@@ -25,7 +25,7 @@ const SetupBookingFacility = () => {
         const response = await getFacitilitySetup();
         SetBookingFacility(response.data);
         console.log("Response", response);
-         // Correct function name
+        // Correct function name
         setLoading(false); // Stop loading when data is fetched
       } catch (error) {
         console.error("Error fetching facilities", error);
@@ -42,12 +42,19 @@ const SetupBookingFacility = () => {
     {
       name: "Action",
       cell: (row) => (
-        <Link to={`/setup/facility-details/${row.id}`}>
-          <BsEye />
-        </Link>
+        <div className="flex items-center gap-2 px-2 py-2 mt-1">
+          <Link to={`/setup/facility-details/${row.id}`}>
+            <BsEye />
+          </Link>
+          <Link to={`/setup/facility-details/edit/${row.id}`}>
+            <BiEdit size={15} />
+          </Link>
+        </div>
+
       ),
       sortable: true,
     },
+
     { name: "ID", selector: (row) => row.id, sortable: true },
     {
       name: "Name",
@@ -147,10 +154,9 @@ const SetupBookingFacility = () => {
         <div className="flex justify-center my-2">
           <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200 ">
             <h2
-              className={`p-1 ${
-                page === "facility" &&
+              className={`p-1 ${page === "facility" &&
                 "bg-white text-blue-500 shadow-custom-all-sides"
-              } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
+                } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
               onClick={() => setPage("facility")}
             >
               Amenities
@@ -213,11 +219,11 @@ const SetupBookingFacility = () => {
               )}
             </div>
           </>
-          
+
         )}
 
         {page === "seatBooking" && (
-         <SetupSeatBooking/>
+          <SetupSeatBooking />
         )}
       </div>
     </div>
