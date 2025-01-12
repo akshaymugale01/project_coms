@@ -707,6 +707,7 @@ import AboutUs from "./pages/Setup/AboutUs.jsx";
 import OtherProject from "./pages/Setup/OtherProject.jsx";
 import Slideshow from "./Extra/Demo.jsx";
 import EditAmenitySetup from "./pages/SubPages/EditAmenitySetup.jsx";
+import PrivacyPolicy from "./pages/Setup/PrivacyPolicy.jsx";
 // new admin hrms
 
 function App() {
@@ -1159,6 +1160,8 @@ function App() {
           <Route path="/extra" element={<Slideshow />} />
           {/* About Us */}
           <Route path="/setup/about_us" element={<AboutUs />} />
+          
+          <Route path="/logicon-privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/setup/other_projects" element={<OtherProject />} />
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
@@ -1182,6 +1185,7 @@ function App() {
             path="/setup/facility-details/:id"
             element={<BookingFacilityDetails />}
           />
+          
           <Route
             path="/setup/facility-details/edit/:id"
             element={<EditAmenitySetup />}
