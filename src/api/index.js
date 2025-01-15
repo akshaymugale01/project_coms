@@ -11,10 +11,7 @@ export const vibeMedia = "https://app.myciti.life/api/media/";
 export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
 const token = getItemInLocalStorage("TOKEN");
-export const domainPrefix = "https://app.myciti.life";
-// export const domainPrefix = "http://13.215.74.38";
 */
-
 export const API_URL = "https://app.myciti.life";
 export const vibeMedia = "https://app.myciti.life/api/media/";
 export const hrmsDomain = "https://api.hrms.app.myciti.life/";
@@ -1068,8 +1065,6 @@ export const getFacilitySlots = async (data) =>
     },
   });
 
-
-
 export const postFacitilitySetup = async (data) =>
   axiosInstance.post(`/amenities.json`, data, {
     params: {
@@ -1267,6 +1262,20 @@ export const getSetupUsers = async () =>
       token: token,
     },
   });
+
+  export const postDeletUsers = async (data) =>
+    axiosInstance.post("/deleted_users.json", data, {
+      params: {
+        token: token,
+      },
+    });
+  
+    export const getDeleteUsers = async () =>
+      axiosInstance.get("/deleted_users.json", {
+        params: {
+          token: token,
+        },
+      });
 
 //Food and Beverages f&b
 
