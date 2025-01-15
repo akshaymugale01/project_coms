@@ -26,7 +26,7 @@ const SetupFacility = () => {
   const sitID = getItemInLocalStorage('SITEID');
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    
+
     amenity: {
       site_id: sitID,
       fac_type: "",
@@ -43,7 +43,7 @@ const SetupFacility = () => {
       member_price_child: "",
       guest_price_adult: "",
       guest_price_child: "",
-      tenant_price_child:"",
+      tenant_price_child: "",
       tenant_price_adult: "",
       min_people: "",
       max_people: "",
@@ -90,50 +90,50 @@ const SetupFacility = () => {
 
     // Append covers as an array
     if (formData.covers.length > 0) {
-        formData.covers.forEach((file) => {
-            postData.append("cover_images[]", file); // Use "cover_images[]" for Rails to recognize it as an array
-        });
+      formData.covers.forEach((file) => {
+        postData.append("cover_images[]", file); // Use "cover_images[]" for Rails to recognize it as an array
+      });
     }
 
     // Append attachments as an array
     if (formData.attachments.length > 0) {
-        formData.attachments.forEach((file) => {
-            postData.append("attachments[]", file); // Use "attachments[]" for Rails to recognize it as an array
-        });
+      formData.attachments.forEach((file) => {
+        postData.append("attachments[]", file); // Use "attachments[]" for Rails to recognize it as an array
+      });
     }
 
     // Append amenity fields
     Object.entries(formData.amenity).forEach(([key, value]) => {
-        // Handle arrays like payment_methods separately
-        if (Array.isArray(value)) {
-            value.forEach((item) => {
-                postData.append(`amenity[${key}][]`, item); // For arrays
-            });
-        } else {
-            postData.append(`amenity[${key}]`, value); // For regular fields
-        }
+      // Handle arrays like payment_methods separately
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          postData.append(`amenity[${key}][]`, item); // For arrays
+        });
+      } else {
+        postData.append(`amenity[${key}]`, value); // For regular fields
+      }
     });
 
     // Append slots as an array with the correct structure
     formData.slots.forEach((slot, index) => {
-        Object.entries(slot).forEach(([key, value]) => {
-            postData.append(`amenity[amenity_slots_attributes][${index}][${key}]`, value);
-        });
+      Object.entries(slot).forEach(([key, value]) => {
+        postData.append(`amenity[amenity_slots_attributes][${index}][${key}]`, value);
+      });
     });
 
     try {
-        const response = await postFacitilitySetup(postData);
-        console.log(response);
+      const response = await postFacitilitySetup(postData);
+      console.log(response);
 
-        toast.success("Amenity setup successfully!");
-        navigate("/setup/facility");
+      toast.success("Amenity setup successfully!");
+      navigate("/setup/facility");
     } catch (error) {
-        console.error(error);
-        toast.error("Failed to post amenity setup. Please try again.");
+      console.error(error);
+      toast.error("Failed to post amenity setup. Please try again.");
     }
-};
+  };
 
-    
+
   const handleCheckboxChange = (type) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -163,7 +163,7 @@ const SetupFacility = () => {
       [key]: [...(prevState[key] || []), ...files], // Append new files to the existing array
     }));
   };
-  
+
   const handleAmenityChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -198,11 +198,43 @@ const SetupFacility = () => {
   };
 
   // Handle input change
+  // const handleInputChange = (e) => {
+  //   const { name, value } = e.target;
+
+  //   setFormData((prevData) => {
+  //     // Update the specific field in the formData
+  //     const updatedFormData = {
+  //       ...prevData,
+  //       amenity: {
+  //         ...prevData.amenity,
+  //         [name]: value,
+  //       },
+  //     };
+
+  //     // Construct the combined `book_before` value
+  //     const { book_before_days, book_before_hours, book_before_mins } = updatedFormData.amenity;
+  //     updatedFormData.amenity.book_before =
+  //       parseInt(`${book_before_days || 0}${book_before_hours || 0}${book_before_mins || 0}`, 10);
+
+  //     const { advance_days, advance_hours, advance_mins } = updatedFormData.amenity;
+  //     updatedFormData.amenity.advance_booking =
+  //       parseInt(`${advance_days || 0}${advance_hours || 0}${advance_mins || 0}`, 10);
+
+  //     const { cancel_before_days, cancel_before_hours, cancel_before_min } = updatedFormData.amenity;
+  //     updatedFormData.amenity.cancel_before =
+  //       parseInt(`${cancel_before_days || 0}${cancel_before_hours || 0}${cancel_before_min || 0}`, 10);
+
+
+  //     return updatedFormData;
+  //   });
+  // };
+
+  // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     setFormData((prevData) => {
-      // Update the specific field in the formData
+      // Update the specific field
       const updatedFormData = {
         ...prevData,
         amenity: {
@@ -211,23 +243,45 @@ const SetupFacility = () => {
         },
       };
 
-      // Construct the combined `book_before` value
-      const { book_before_days, book_before_hours, book_before_mins } = updatedFormData.amenity;
-      updatedFormData.amenity.book_before =
-        parseInt(`${book_before_days || 0}${book_before_hours || 0}${book_before_mins || 0}`, 10);
+      // Dynamically calculate total minutes for time fields
+      const calculateTotalMinutes = (prefix) => {
+        const days = parseInt(updatedFormData.amenity[`${prefix}_days`]) || 0;
+        const hours = parseInt(updatedFormData.amenity[`${prefix}_hours`]) || 0;
+        const minutes = parseInt(updatedFormData.amenity[`${prefix}_mins`]) || 0;
+        return (days * 24 * 60) + (hours * 60) + minutes;
+      };
 
-      const { advance_days, advance_hours, advance_mins } = updatedFormData.amenity;
-      updatedFormData.amenity.advance_booking =
-        parseInt(`${advance_days || 0}${advance_hours || 0}${advance_mins || 0}`, 10);
-
-      const { cancel_before_days, cancel_before_hours, cancel_before_min } = updatedFormData.amenity;
-      updatedFormData.amenity.cancel_before =
-        parseInt(`${cancel_before_days || 0}${cancel_before_hours || 0}${cancel_before_min || 0}`, 10);
-
+      if (name.includes("book_before")) {
+        updatedFormData.amenity.book_before = calculateTotalMinutes("book_before");
+      } else if (name.includes("advance")) {
+        updatedFormData.amenity.advance_booking = calculateTotalMinutes("advance");
+      } else if (name.includes("cancel_before")) {
+        updatedFormData.amenity.cancel_before = calculateTotalMinutes("cancel_before");
+      }
 
       return updatedFormData;
     });
   };
+
+  // Validate Inputs
+  const validateInput = (e) => {
+    const { name, value } = e.target;
+    const intValue = parseInt(value);
+
+    if (isNaN(intValue) || intValue < 0) {
+      toast.error(`${name.replace('_', ' ')} must be a positive number.`);
+      return;
+    }
+
+    if (name.includes("days") && intValue > 365) {
+      toast.error(`${name.replace('_', ' ')} cannot exceed 365 days.`);
+    } else if (name.includes("hours") && intValue > 24) {
+      toast.error(`${name.replace('_', ' ')} cannot exceed 24 hours.`);
+    } else if (name.includes("mins") && intValue > 59) {
+      toast.error(`${name.replace('_', ' ')} cannot exceed 59 minutes.`);
+    }
+  };
+
 
 
   const [timeValues, setTimeValues] = useState({
@@ -286,7 +340,7 @@ const SetupFacility = () => {
     { timesPerDay: "", selectedOption: "" },
   ]);
 
-  const options = ["Members", "Guests","Tenant", "Staff", "Others"];
+  const options = ["Members", "Guests", "Tenant", "Staff", "Others"];
 
   const handleOptionChange = (index, field, value) => {
     const updatedRules = [...rules];
@@ -641,6 +695,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Day"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -651,6 +707,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Hour"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -661,6 +719,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Mins"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
 
               <input
@@ -687,6 +747,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Day"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -697,6 +759,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Hour"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -707,6 +771,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Mins"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
           </div>
@@ -726,6 +792,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Day"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -736,6 +804,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Hour"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -746,6 +816,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Mins"
+                onBlur={validateInput} // Validate on losing focus
+                maxLength="2" // Restrict input to a maximum of 2 characters
               />
             </div>
           </div>

@@ -46,8 +46,8 @@ const AddNewVisitor = () => {
     noOfGoods: "",
     goodsDescription: "",
     goodsAttachments: [],
-    supportCategory:"",
-    slotNumber:""
+    supportCategory: "",
+    slotNumber: ""
   });
 
   console.log(formData);
@@ -171,6 +171,12 @@ const AddNewVisitor = () => {
       return toast.error("Mobile number must be  10 digits.");
     }
 
+    if (!formData.host) {
+      toast.error("Host Must be Present!")
+      return;
+    }
+
+
 
     const postData = new FormData();
     postData.append("visitor[site_id]", siteId);
@@ -190,7 +196,8 @@ const AddNewVisitor = () => {
     postData.append("visitor[visit_type]", selectedVisitorType);
     postData.append("visitor[pass_number]", formData.passNumber);
     postData.append("visitor[frequency]", selectedFrequency);
-    postData.append("visitor[parking_slot]", formData.slotNumber );
+    postData.append("visitor[parking_slot]", formData.slotNumber);
+    postData.append("visitor[vhost_id]", formData.host);;
     if (capturedImage) {
       const response = await fetch(capturedImage);
       const blob = await response.blob();
@@ -200,16 +207,20 @@ const AddNewVisitor = () => {
     selectedWeekdays.forEach((day) => {
       postData.append("visitor[working_days][]", day);
     });
-    visitors.forEach((extraVisitor, index) => {
-      postData.append(
-        `visitor[extra_visitors_attributes][${index}][name]`,
-        extraVisitor.name
-      );
-      postData.append(
-        `visitor[extra_visitors_attributes][${index}][contact_no]`,
-        extraVisitor.mobile
-      );
-    });
+    if (extraVisitor.name || extraVisitor.mobile) {
+      if (extraVisitor.name) {
+        postData.append(
+          `visitor[extra_visitors_attributes][${index}][name]`,
+          extraVisitor.name
+        );
+      }
+      if (extraVisitor.mobile) {
+        postData.append(
+          `visitor[extra_visitors_attributes][${index}][contact_no]`,
+          extraVisitor.mobile
+        );
+      }
+    }
     try {
       toast.loading("Creating new visitor Please wait!");
       const visitResp = await postNewVisitor(postData);
@@ -239,18 +250,18 @@ const AddNewVisitor = () => {
       toast.dismiss();
     }
   };
- 
+
   useEffect(() => {
     const fetchUsers = async () => {
-     try {
-       const usersResp = await getHostList(siteId);
-       setHosts(usersResp.data.hosts);
-       console.log(usersResp);
-     } catch (error) {
-      console.log(error)
-     }
+      try {
+        const usersResp = await getHostList(siteId);
+        setHosts(usersResp.data.hosts);
+        console.log(usersResp);
+      } catch (error) {
+        console.log(error)
+      }
     };
-    const fetchVisitorCategory = async ()=>{
+    const fetchVisitorCategory = async () => {
       try {
         const visitorCat = await getVisitorStaffCategory()
         setStaffCategories(visitorCat.data.categories)
@@ -276,7 +287,7 @@ const AddNewVisitor = () => {
     <div className="flex justify-center items-center  w-full p-4">
       <div className="md:border border-gray-300 rounded-lg md:p-4 w-full md:mx-4 ">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "themeColor" }}
           className="text-center md:text-xl font-bold p-2 bg-black rounded-full text-white"
         >
           {getHeadingText()}
@@ -388,13 +399,13 @@ const AddNewVisitor = () => {
           {selectedVisitorType === "Support Staff" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="" className="font-medium">
-              Select Support Staff Category :
+                Select Support Staff Category :
               </label>
               <select className="border border-gray-400 p-2 rounded-md" value={formData.supportCategory} onChange={handleChange} name="supportCategory">
                 <option value="">Select Category</option>
-               {staffCategories.map((staffCat)=>(
-                <option value={staffCat.id} key={staffCat.id}>{staffCat.name}</option>
-               ))}
+                {staffCategories.map((staffCat) => (
+                  <option value={staffCat.id} key={staffCat.id}>{staffCat.name}</option>
+                ))}
               </select>
             </div>
           )}
@@ -433,7 +444,7 @@ const AddNewVisitor = () => {
 
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="" className="font-medium">
-              Host :
+              Host : <label>*</label>
             </label>
             <select
               className="border border-gray-400 p-2 rounded-md"
@@ -444,7 +455,7 @@ const AddNewVisitor = () => {
               <option value="">Select Person to meet</option>
               {hosts.map((host) => (
                 <option value={host.id} key={host.id}>
-                  {host.name} 
+                  {host.name}
                 </option>
               ))}
             </select>
@@ -499,7 +510,7 @@ const AddNewVisitor = () => {
             />
           </div>
           <div className="grid gap-2 items-center w-full">
-          <label htmlFor="slotNumber" className="font-semibold">
+            <label htmlFor="slotNumber" className="font-semibold">
               Select parking Slot
             </label>
             <select
@@ -515,7 +526,7 @@ const AddNewVisitor = () => {
                 </option>
               ))}
             </select>
-           
+
           </div>
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="expectedDate" className="font-semibold">
@@ -713,13 +724,12 @@ const AddNewVisitor = () => {
               {weekdaysMap.map((weekdayObj) => (
                 <button
                   key={weekdayObj.day}
-                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${
-                    selectedWeekdays?.includes(weekdayObj.day)
+                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${selectedWeekdays?.includes(weekdayObj.day)
                       ? // &&
-                        // weekdayObj.isActive
-                        "bg-green-400 text-white "
+                      // weekdayObj.isActive
+                      "bg-green-400 text-white "
                       : ""
-                  }`}
+                    }`}
                   onClick={(e) => {
                     e.preventDefault();
                     handleWeekdaySelection(weekdayObj.day);

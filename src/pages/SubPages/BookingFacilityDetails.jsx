@@ -36,6 +36,8 @@ const FacilityDetails = () => {
   console.log("AMENITIes", facilityData);
 
   const domainPrefix = "https://app.myciti.life";
+  // const domainPrefix = "http://localhost:3002";
+
 
   useEffect(() => {
     fetchFacilityBooking();
@@ -119,32 +121,32 @@ const FacilityDetails = () => {
                   <div>
                     <p>Start Time:</p>
                     <p>
-                      {/* {slot.slot_str} */}
-                      {slot.start_hr}:{slot.start_min}
-                      {/* {slot.start_hr && slot.start_min
-                        ? `${String(slot.start_hr).padStart(2, '0')}:${String(slot.start_min).padStart(2, '0')}`
-                        : 'N/A'} */}
+                      {String(slot.start_hr || 0).padStart(2, "0")}:
+                      {String(slot.start_min || 0).padStart(2, "0")}
                     </p>
                   </div>
                   <div>
                     <p>End Time:</p>
                     <p>
-                      {/* {slot.slot_str} */}
-                      {slot.end_hr}:{slot.end_min}
-                      {/* {slot.end_hr && slot.end_min
-                        ? `${String(slot.end_hr).padStart(2, '0')}:${String(slot.end_min).padStart(2, '0')}`
-                        : 'N/A'} */}
+                      {String(slot.end_hr || 0).padStart(2, "0")}:
+                      {String(slot.end_min || 0).padStart(2, "0")}
                     </p>
                   </div>
-                  <h1 className='text-gray-800'> From {slot.slot_str}</h1>
+                  <h1 className="text-gray-800">
+                    From{" "}
+                    {slot.slot_str
+                      .split(":")
+                      .map((part, index) => (index === 0 ? String(part).padStart(2, "0") : String(part).padStart(2, "0")))
+                      .join(":")}
+                  </h1>
                 </div>
-               
               </div>
             ))
           ) : (
             <p>No slots configured.</p>
           )}
         </div>
+
 
         {/* Images Section */}
         <div className="my-4">

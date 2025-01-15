@@ -47,7 +47,7 @@ const DeleteUsers = () => {
                     first_name: "",
                     last_name: "",
                 });
-                navigate("/setup");
+                navigate("/login");
             } else {
                 const errorData = await response.json();
                 toast.error(errorData.message || "Failed to delete user!");

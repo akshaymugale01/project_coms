@@ -178,7 +178,7 @@ const EditAmenitySetup = () => {
 
     const updateAmenitiesSetup = async () => {
         const postData = new FormData();
-
+        
         // Append amenity fields
         Object.entries(formData.amenity).forEach(([key, value]) => {
             postData.append(`amenity[${key}]`, value);
@@ -198,18 +198,20 @@ const EditAmenitySetup = () => {
             });
         }
 
-        // Append additional arrays (covers, attachments) if needed
+        // Append cover images
         if (formData.covers.length > 0) {
             formData.covers.forEach((file) => {
                 postData.append("cover_images[]", file);
             });
         }
 
+        // Append attachments
         if (formData.attachments.length > 0) {
             formData.attachments.forEach((file) => {
                 postData.append("attachments[]", file);
             });
         }
+
 
         try {
             if (!id) {
@@ -250,7 +252,7 @@ const EditAmenitySetup = () => {
 
 
     const handleFileChange = (event, key) => {
-        const files = Array.from(event.target.files); // Convert FileList to an Array
+        const files = Array.from(event.target.files); // Convert FileList to an Array of File objects
         setFormData((prevState) => ({
             ...prevState,
             [key]: [...(prevState[key] || []), ...files], // Append new files to the existing array
@@ -296,32 +298,36 @@ const EditAmenitySetup = () => {
         const { name, value } = e.target;
 
         setFormData((prevData) => {
-            // Update the specific field in the formData
             const updatedFormData = {
                 ...prevData,
                 amenity: {
                     ...prevData.amenity,
-                    [name]: value,
+                    [name]: value, // Update the specific field
                 },
             };
 
-            // Construct the combined `book_before` value
-            const { book_before_days, book_before_hours, book_before_mins } = updatedFormData.amenity;
-            updatedFormData.amenity.book_before =
-                parseInt(`${book_before_days || 0}${book_before_hours || 0}${book_before_mins || 0}`, 10);
+            // Dynamically calculate total minutes for time fields only when they change
+            const calculateTotalMinutes = (prefix) => {
+                const days = parseInt(updatedFormData.amenity[`${prefix}_days`]) || 0;
+                const hours = parseInt(updatedFormData.amenity[`${prefix}_hours`]) || 0;
+                const minutes = parseInt(updatedFormData.amenity[`${prefix}_mins`]) || 0;
+                return (days * 24 * 60) + (hours * 60) + minutes;
+            };
 
-            const { advance_days, advance_hours, advance_mins } = updatedFormData.amenity;
-            updatedFormData.amenity.advance_booking =
-                parseInt(`${advance_days || 0}${advance_hours || 0}${advance_mins || 0}`, 10);
-
-            const { cancel_before_days, cancel_before_hours, cancel_before_min } = updatedFormData.amenity;
-            updatedFormData.amenity.cancel_before =
-                parseInt(`${cancel_before_days || 0}${cancel_before_hours || 0}${cancel_before_min || 0}`, 10);
-
+            if (name.includes("book_before")) {
+                updatedFormData.amenity.book_before = calculateTotalMinutes("book_before");
+            } else if (name.includes("advance")) {
+                updatedFormData.amenity.advance_booking = calculateTotalMinutes("advance");
+            } else if (name.includes("cancel_before")) {
+                updatedFormData.amenity.cancel_before = calculateTotalMinutes("cancel_before");
+            }
 
             return updatedFormData;
         });
     };
+
+
+
 
 
     const [timeValues, setTimeValues] = useState({
@@ -410,6 +416,23 @@ const EditAmenitySetup = () => {
         });
     };
 
+    const removeImage = (index) => {
+        const updatedCovers = formData.covers.filter((_, i) => i !== index);
+        setFormData({
+            ...formData,
+            covers: updatedCovers,
+        });
+    };
+
+    const removeAttachment = (index) => {
+        const updatedAttachments = formData.attachments.filter((_, i) => i !== index);
+        setFormData({
+            ...formData,
+            attachments: updatedAttachments,
+        });
+    };
+
+
     // const handleSlotTimeChange = (index, timeType, timeValue) => {
 
 
@@ -486,13 +509,22 @@ const EditAmenitySetup = () => {
     //Validate 2 Inputs
     const validateInput = (e) => {
         const { name, value } = e.target;
+        const intValue = parseInt(value);
 
-        // Check if the input is not exactly 2 digits or contains non-numeric characters
-        if (!/^\d{2}$/.test(value)) {
-            // Show an alert message for invalid input
-            alert(`${name.replace('_', ' ')} must be exactly 2 digits. "05"`);
+        if (isNaN(intValue) || intValue < 0) {
+            toast.error(`${name.replace('_', ' ')} must be a positive number.`);
+            return;
+        }
+
+        if (name.includes("days") && intValue > 365) {
+            toast.error(`${name.replace('_', ' ')} cannot exceed 365 days.`);
+        } else if (name.includes("hours") && intValue > 24) {
+            toast.error(`${name.replace('_', ' ')} cannot exceed 24 hours.`);
+        } else if (name.includes("mins") && intValue > 59) {
+            toast.error(`${name.replace('_', ' ')} cannot exceed 59 minutes.`);
         }
     };
+
 
 
 
@@ -764,20 +796,13 @@ const EditAmenitySetup = () => {
                             </label>
                         </div>
                         <div>
-                            {dates?.amenity?.book_before &&
-                                (() => {
-                                    const bookBefore = dates.amenity.book_before.toString(); // Read the value as a string
-                                    const days = bookBefore.slice(0, 2); // Extract days
-                                    const hours = bookBefore.slice(2, 4); // Extract hours
-                                    const minutes = bookBefore.slice(4, 6); // Extract minutes
-                                    return `${days} days, ${hours} hours, ${minutes} minutes`; // Format and display
-                                })()}
+                            {dates?.amenity?.book_before[0] || "Not Updated Dates"}
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="book_before_days"
-                                value={formData.amenity.book_before_days}
+                                value={formData.amenity.book_before[1]?.days}
                                 onChange={handleInputChange}
                                 onBlur={validateInput} // Validate on losing focus
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
@@ -789,11 +814,11 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="book_before_hours"
-                                value={formData.amenity.book_before_hours}
+                                value={formData.amenity.book_before[1]?.hours}
                                 onChange={handleInputChange}
+                                onBlur={validateInput} // Validate on losing focus
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Hour"
-                                onBlur={validateInput} // Validate on losing focus
                                 maxLength="2" // Restrict input to a maximum of 2 characters
                             />
                         </div>
@@ -801,15 +826,16 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="book_before_mins"
-                                value={formData.amenity.book_before_min}
+                                value={formData.amenity.book_before[1]?.minutes}
                                 onChange={handleInputChange}
+                                onBlur={validateInput} // Validate on losing focus
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Mins"
                                 maxLength="2" // Restrict input to a maximum of 2 characters
-                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                     </div>
+
 
 
                     {/* Advance Booking */}
@@ -820,52 +846,46 @@ const EditAmenitySetup = () => {
                             </label>
                         </div>
                         <div>
-                            {dates?.amenity?.advance_booking &&
-                                (() => {
-                                    const bookBefore = dates.amenity.advance_booking.toString(); // Convert to string
-                                    const days = bookBefore.slice(0, 2); // First 2 digits for days
-                                    const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
-                                    const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
-                                    return `${days} days, ${hours} hours, ${minutes} minutes`;
-                                })()}
+                            {dates?.amenity?.advance_booking[0] || "Not Updated Dates"}
+
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="advance_days"
-                                value={formData.amenity.advance_days}
-
+                                value={formData.amenity.advance_booking[1]?.days}
+                                onBlur={validateInput} // Validate on losing focus
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Day"
                                 maxLength="2" // Restrict input to a maximum of 2 characters
-                                onBlur={validateInput} // Validate on losing focus
+
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="advance_hours"
-                                value={formData.amenity.advance_hours}
-
+                                value={formData.amenity.advance_booking[1]?.hours}
+                                onBlur={validateInput} // Validate on losing focus
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Hour"
                                 maxLength="2" // Restrict input to a maximum of 2 characters
-                                onBlur={validateInput} // Validate on losing focus
+
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="advance_mins"
-                                value={formData.amenity.advance_mins}
-
+                                value={formData.amenity.advance_booking[1]?.minutes}
+                                onBlur={validateInput} // Validate on losing focus
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Mins"
                                 maxLength="2" // Restrict input to a maximum of 2 characters
-                                onBlur={validateInput} // Validate on losing focus
+
                             />
                         </div>
                     </div>
@@ -878,52 +898,45 @@ const EditAmenitySetup = () => {
                             </label>
                         </div>
                         <div>
-                            {dates?.amenity?.cancel_before &&
-                                (() => {
-                                    const bookBefore = dates.amenity.cancel_before.toString(); // Convert to string
-                                    const days = bookBefore.slice(0, 2); // First 2 digits for days
-                                    const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
-                                    const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
-                                    return `${days} days, ${hours} hours, ${minutes} minutes`;
-                                })()}
+                            {dates?.amenity?.cancel_before[0] || "Not Updated Dates"}
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="cancel_before_days"
-                                value={formData.amenity.cancel_before_days}
-
+                                value={formData.amenity.cancel_before[1]?.days}
+                                onBlur={validateInput} // Validate on losing focus
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Day"
                                 maxLength="2" // Restrict input to a maximum of 2 characters
-                                onBlur={validateInput} // Validate on losing focus
+
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="cancel_before_hours"
-                                value={formData.amenity.cancel_before_hours}
-
+                                value={formData.amenity.cancel_before[1]?.hours}
+                                onBlur={validateInput} // Validate on losing focus
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Hour"
                                 maxLength="2" // Restrict input to a maximum of 2 characters
-                                onBlur={validateInput} // Validate on losing focus
+
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
                                 type="text"
                                 name="cancel_before_mins"
-                                value={formData.amenity.cancel_before_min}
-
+                                value={formData.amenity.cancel_before[1]?.minutes}
+                                onBlur={validateInput} // Validate on losing focus
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Mins"
                                 maxLength="2" // Restrict input to a maximum of 2 characters
-                                onBlur={validateInput} // Validate on losing focus
+
                             />
                         </div>
                     </div>
@@ -936,24 +949,33 @@ const EditAmenitySetup = () => {
                         type="file"
                         accept="image/*"
                         onChange={(e) => handleFileChange(e, "covers")}
+                        multiple // Allow multiple file uploads
                     />
                 </div>
+
                 <h2 className="font-medium text-lg mb-2">Cover Images</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {formData.covers && formData.covers.length > 0 ? (
-                        formData.covers.map((image_url, index) => (
-                            <div key={index} className="rounded-lg border overflow-hidden">
+                        formData.covers.map((cover, index) => (
+                            <div key={index} className="relative rounded-lg border overflow-hidden">
                                 <img
-                                    src={domainPrefix + image_url.image_url}
+                                    src={cover.image_url ? domainPrefix + cover.image_url : URL.createObjectURL(cover)}
                                     alt={`Cover ${index + 1}`}
                                     className="object-cover w-full h-40"
                                 />
+                                {/* <button
+                                    onClick={() => removeImage(index)}
+                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                                >
+                                    X
+                                </button> */}
                             </div>
                         ))
                     ) : (
                         <p>No cover images available.</p>
                     )}
                 </div>
+
 
                 <div className="my-4">
                     <h2 className="border-b border-black text-lg mb-1 font-medium">
@@ -962,18 +984,26 @@ const EditAmenitySetup = () => {
                     <input
                         type="file"
                         onChange={(e) => handleFileChange(e, "attachments")}
+                        multiple // Allow multiple file uploads
                     />
                 </div>
+
                 <h2 className="font-medium text-lg mb-2">Attachments</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {formData.attachments && formData.attachments.length > 0 ? (
                         formData.attachments.map((doc, index) => (
-                            <div key={index} className="rounded-lg border overflow-hidden">
+                            <div key={index} className="relative rounded-lg border overflow-hidden">
                                 <img
-                                    src={domainPrefix + doc.image_url}
-                                    alt={`Cover ${index + 1}`}
+                                    src={doc.image_url ? domainPrefix + doc.image_url : URL.createObjectURL(doc)}
+                                    alt={`Attachment ${index + 1}`}
                                     className="object-cover w-full h-40"
                                 />
+                                {/* <button
+                                    onClick={() => removeAttachment(index)}
+                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                                >
+                                    X
+                                </button> */}
                             </div>
                         ))
                     ) : (

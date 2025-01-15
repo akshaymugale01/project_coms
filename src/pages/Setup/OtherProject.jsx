@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
-import { getOtherProject, postOtherProject } from "../../api";
+import { getOtherProject, postOtherProject, postProjectLike } from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import { PiPlusCircle } from "react-icons/pi";
 
@@ -57,6 +57,18 @@ const OtherProject = () => {
             setFormData({ ...formData, attachments: files });
         } else {
             setFormData({ ...formData, [name]: value });
+        }
+    };
+    const handleLikeSubmit = async (id) => {
+        const formDataToSend = new FormData();
+        formDataToSend.append("other_project_id", id); // Use the passed id parameter
+        formDataToSend.append("status", "liked");
+
+        try {
+            await postProjectLike(formDataToSend); // Make the API call
+            console.log("Like submitted successfully");
+        } catch (error) {
+            console.error("Error submitting like:", error);
         }
     };
 
@@ -139,9 +151,13 @@ const OtherProject = () => {
                                             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
                                         />
                                     </div>
-                                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-sm font-bold py-1 px-3 rounded-full">
-                                        👍 {project.likes || 0}
+                                    <div
+                                        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-sm font-bold py-1 px-3 rounded-full cursor-pointer"
+                                        onClick={() => handleLikeSubmit(project.id)}
+                                    >
+                                        👍 {project.like_count || 0}
                                     </div>
+
                                 </div>
                                 <div className="p-4">
                                     <h2 className="text-lg font-bold mb-2">{project.title}</h2>

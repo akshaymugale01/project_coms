@@ -127,9 +127,11 @@ const Navbar = () => {
     // window.location.reload();
   };
   const siteId = getItemInLocalStorage("SITEID");
+  const UserType = getItemInLocalStorage("USERTYPE");
 
   const getAllowedFeatures = () => {
     const storedFeatures = getItemInLocalStorage("FEATURES");
+    console.log("ffaf", storedFeatures);
     if (storedFeatures) {
       setFeat(storedFeatures.map((feature) => feature.feature_name));
     }
@@ -507,7 +509,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )} */}
-                {feat.includes("communication") && (
+                {UserType !== "security_guard" && feat.includes("communication") && (
                   <NavLink
                     to={"/communication/events"}
                     className={({ isActive }) =>
@@ -1765,7 +1767,7 @@ const Navbar = () => {
                   </h2>
                 </NavLink>
               )}
-              {feat.includes("communication") && (
+              {UserType !== "security_guard" && feat.includes("communication") && (
                 <NavLink
                   to={"/employee/communication/events"}
                   className={({ isActive }) =>
@@ -1817,7 +1819,7 @@ const Navbar = () => {
                 </NavLink>
               )}
 
-              {feat.includes("space") && (
+              {UserType !== "security_guard" && feat.includes("space") && (
                 <NavLink
                   to={"/employees/booking"}
                   className={({ isActive }) =>
@@ -1845,7 +1847,7 @@ const Navbar = () => {
                   </h2>
                 </NavLink>
               )}
-              {feat.includes("business_cards") && (
+              {UserType !== "security_guard" && feat.includes("business_cards") && (
                 <NavLink
                   to={"/employees/businesscard"}
                   className={({ isActive }) =>
@@ -1957,7 +1959,7 @@ const Navbar = () => {
                   </h2>
                 </NavLink>
               )}
-              {feat.includes("document_pro") && (
+              {UserType !== "security_guard" && feat.includes("document_pro") && (
                 <NavLink
                   to={"/documents"}
                   className={({ isActive }) =>
@@ -2180,7 +2182,7 @@ const Navbar = () => {
                   </NavLink>
                 )} */}
 
-                {feat.includes("bills") && (
+                {UserType !== "security_guard" && feat.includes("bills") && (
                   <NavLink
                     to={"/employee/bill-pay"}
                     className={({ isActive }) =>
@@ -2233,7 +2235,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("bills") && (
+                {UserType !== "security_guard" && feat.includes("bills") && (
                   <NavLink
                     to={"/employee/advance-salary"}
                     className={({ isActive }) =>
@@ -2316,7 +2318,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("bills") && (
+                {UserType !== "security_guard" && feat.includes("bills") && (
                   <NavLink
                     to={"/employee-salary"}
                     className={({ isActive }) =>

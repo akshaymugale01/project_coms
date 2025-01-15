@@ -4,30 +4,52 @@ import Navbar from "../../components/Navbar";
 import { RiDeleteBin5Line } from "react-icons/ri";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { getItemInLocalStorage } from "../../utils/localStorage";
 
 function AddCAMBilling() {
+  const userId = getItemInLocalStorage("UserId");
   const themeColor = useSelector((state) => state.theme.color);
   const [billingPeriod, setBillingPeriod] = useState([null, null]);
   const [fields, setFields] = useState([
     {
-      description: "",
-      sacHsnCode: "",
-      qty: "",
-      unit: "",
-      rate: "",
-      totalValue: "",
-      percentage: "",
-      discount: "",
-      taxableValue: "",
-      cgstRate: "",
-      cgstAmount: "",
-      sgstRate: "",
-      sgstAmount: "",
-      igstRate: "",
-      igstAmount: "",
+      created_by: "",
+      unit_id: "",
+      user_id: userId,
+      bill_date: "",
+      due_date: "",
+      total_amount: "",
+      sub_amount: "",
+      invoice_type: "",
+      invoice_address_id: "",
+      invoice_number: "",
+      building_id: "",
+      flat_id: "",
+      due_amount: "",
+      due_amount_interest: "",
+      note: "",
       total: "",
+      cam_bill_charges_attributes: [
+        {
+          charge_id: "",
+          charge_amount: "",
+          sub_amount: "",
+          cgst_amount: "",
+          igst_amount: "",
+          sgst_amount: "",
+          description: "",
+          discount_percent: "",
+          quantity: "",
+          unit: "",
+          rate: "",
+          hsn_id: "",
+          taxable_value: "",
+        },
+      ],
     },
   ]);
+
+
+  console.log("fields", fields);
 
   const handleAdd = () => {
     setFields([
@@ -52,6 +74,9 @@ function AddCAMBilling() {
       },
     ]);
   };
+
+
+
 
   const handleRemove = (index) => {
     const updatedFields = fields.filter((_, i) => i !== index);
@@ -186,7 +211,7 @@ function AddCAMBilling() {
     const [start, end] = dates; // Destructure the selected start and end dates
     setBillingPeriod([start, end]); // Update the state
   };
-  
+
   return (
     <section className="flex">
       <div className="hidden md:block">
@@ -194,7 +219,7 @@ function AddCAMBilling() {
       </div>
       <div className="w-full flex  flex-col overflow-hidden">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           className="text-center text-xl font-bold my-5 p-2 bg-black rounded-full text-white mx-10"
         >
           Add CAM Billing
@@ -205,15 +230,12 @@ function AddCAMBilling() {
               <div className="flex flex-col">
                 <label htmlFor="InvoiceType" className="font-semibold my-2">
                   Invoice Type
-                </label>
+                </label>  
                 <select
                   name="invoice_type"
                   id=" InvoiceType"
                   className="border p-1 px-4 border-gray-500 rounded-md"
                 >
-                  <option value="" disabled selected>
-                    Select Invoice Type
-                  </option>
                   <option value="cam">CAM</option>
                 </select>
               </div>
@@ -276,12 +298,12 @@ function AddCAMBilling() {
                 </label>
                 <DatePicker
                   selectsRange
-                  startDate={billingPeriod[0]} 
-                  endDate={billingPeriod[1]} 
-                  onChange={handleDateChange} 
+                  startDate={billingPeriod[0]}
+                  endDate={billingPeriod[1]}
+                  onChange={handleDateChange}
                   placeholderText="Select Billing Period"
                   className="border p-1 px-4 border-gray-500 rounded-md w-full"
-                  isClearable 
+                  isClearable
                 />
               </div>
               <div className="flex flex-col">
