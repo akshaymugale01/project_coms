@@ -972,9 +972,7 @@ function App() {
           <Route
             path="/setup/users-setup/delete-user"
             element={
-              <ProtectedAdminRoutes>
                 <DeleteUsers />
-              </ProtectedAdminRoutes>
             }
           />
           <Route
