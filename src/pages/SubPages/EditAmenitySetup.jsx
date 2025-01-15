@@ -14,6 +14,13 @@ const EditAmenitySetup = () => {
     const [allowMultipleSlots, setAllowMultipleSlots] = useState("no");
     const [error, setError] = useState(null); // Error state
     const [loading, setLoading] = useState(true); // Loading state
+    const [dates, setDates] = useState({
+        amenity: {
+            book_before: "",
+            cancel_before: "",
+            advance_booking: ""
+        }
+    })
     const handleSelectChange = (e) => {
         setAllowMultipleSlots(e.target.value);
     };
@@ -99,6 +106,13 @@ const EditAmenitySetup = () => {
                 const book_before_hours = parseInt(bookBeforeStr.slice(2, 4), 10);
                 const book_before_mins = parseInt(bookBeforeStr.slice(4, 6), 10);
 
+                setDates({
+                    amenity: {
+                        book_before: facility.book_before || "",
+                        cancel_before: facility.cancel_before || "",
+                        advance_booking: facility.advance_booking || "",
+                    }
+                })
                 setFormData({
                     amenity: {
                         site_id: facility.site_id || "",
@@ -140,11 +154,11 @@ const EditAmenitySetup = () => {
                         amenity_id: slot.amenity_id || null, // Ensure correct key name for amenity_id
                         start_time: `${slot.start_hr}:${slot.start_min}`, // Correct start_time format
                         end_time: `${slot.end_hr}:${slot.end_min}`,
-                         
-                            start_hr: slot.start_hr || "", // Time in hour format
-                            end_hr: slot.end_hr || "", // Time in hour format
-                            start_min: slot.start_min || "", // Time in minute format
-                            end_min: slot.end_min || "", // Time in minute format
+
+                        start_hr: slot.start_hr || "", // Time in hour format
+                        end_hr: slot.end_hr || "", // Time in hour format
+                        start_min: slot.start_min || "", // Time in minute format
+                        end_min: slot.end_min || "", // Time in minute format
                     })),
                 });
             } else {
@@ -275,6 +289,7 @@ const EditAmenitySetup = () => {
             slots: prevState.slots.filter((_, i) => i !== index),
         }));
     };
+
 
     // Handle input change
     const handleInputChange = (e) => {
@@ -467,6 +482,18 @@ const EditAmenitySetup = () => {
             },
         });
     };
+
+    //Validate 2 Inputs
+    const validateInput = (e) => {
+        const { name, value } = e.target;
+
+        // Check if the input is not exactly 2 digits or contains non-numeric characters
+        if (!/^\d{2}$/.test(value)) {
+            // Show an alert message for invalid input
+            alert(`${name.replace('_', ' ')} must be exactly 2 digits. "05"`);
+        }
+    };
+
 
 
     return (
@@ -736,14 +763,15 @@ const EditAmenitySetup = () => {
                                 Booking allowed before
                             </label>
                         </div>
-                        <div> {formData?.amenity?.book_before &&
-                            (() => {
-                                const bookBefore = formData.amenity.book_before.toString(); // Convert to string
-                                const days = bookBefore.slice(0, 2); // First 2 digits for days
-                                const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
-                                const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
-                                return `${days} days, ${hours} hours, ${minutes} minutes`;
-                            })()}
+                        <div>
+                            {dates?.amenity?.book_before &&
+                                (() => {
+                                    const bookBefore = dates.amenity.book_before.toString(); // Read the value as a string
+                                    const days = bookBefore.slice(0, 2); // Extract days
+                                    const hours = bookBefore.slice(2, 4); // Extract hours
+                                    const minutes = bookBefore.slice(4, 6); // Extract minutes
+                                    return `${days} days, ${hours} hours, ${minutes} minutes`; // Format and display
+                                })()}
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
@@ -751,11 +779,11 @@ const EditAmenitySetup = () => {
                                 name="book_before_days"
                                 value={formData.amenity.book_before_days}
                                 onChange={handleInputChange}
+                                onBlur={validateInput} // Validate on losing focus
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
-
                                 placeholder="Day"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
                             />
-
                         </div>
                         <div className="flex justify-center my-2 w-full">
                             <input
@@ -764,8 +792,9 @@ const EditAmenitySetup = () => {
                                 value={formData.amenity.book_before_hours}
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
-
                                 placeholder="Hour"
+                                onBlur={validateInput} // Validate on losing focus
+                                maxLength="2" // Restrict input to a maximum of 2 characters
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
@@ -775,8 +804,9 @@ const EditAmenitySetup = () => {
                                 value={formData.amenity.book_before_min}
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
-
                                 placeholder="Mins"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
+                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                     </div>
@@ -790,9 +820,9 @@ const EditAmenitySetup = () => {
                             </label>
                         </div>
                         <div>
-                            {formData?.amenity?.advance_booking &&
+                            {dates?.amenity?.advance_booking &&
                                 (() => {
-                                    const bookBefore = formData.amenity.advance_booking.toString(); // Convert to string
+                                    const bookBefore = dates.amenity.advance_booking.toString(); // Convert to string
                                     const days = bookBefore.slice(0, 2); // First 2 digits for days
                                     const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
                                     const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
@@ -808,6 +838,8 @@ const EditAmenitySetup = () => {
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Day"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
+                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
@@ -819,6 +851,8 @@ const EditAmenitySetup = () => {
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Hour"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
+                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
@@ -830,6 +864,8 @@ const EditAmenitySetup = () => {
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Mins"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
+                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                     </div>
@@ -842,9 +878,9 @@ const EditAmenitySetup = () => {
                             </label>
                         </div>
                         <div>
-                            {formData?.amenity?.cancel_before &&
+                            {dates?.amenity?.cancel_before &&
                                 (() => {
-                                    const bookBefore = formData.amenity.cancel_before.toString(); // Convert to string
+                                    const bookBefore = dates.amenity.cancel_before.toString(); // Convert to string
                                     const days = bookBefore.slice(0, 2); // First 2 digits for days
                                     const hours = bookBefore.slice(2, 4); // Next 2 digits for hours
                                     const minutes = bookBefore.slice(4, 6); // Next 2 digits for minutes
@@ -860,6 +896,8 @@ const EditAmenitySetup = () => {
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Day"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
+                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
@@ -871,6 +909,8 @@ const EditAmenitySetup = () => {
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Hour"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
+                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                         <div className="flex justify-center my-2 w-full">
@@ -882,6 +922,8 @@ const EditAmenitySetup = () => {
                                 onChange={handleInputChange}
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                                 placeholder="Mins"
+                                maxLength="2" // Restrict input to a maximum of 2 characters
+                                onBlur={validateInput} // Validate on losing focus
                             />
                         </div>
                     </div>
