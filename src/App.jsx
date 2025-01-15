@@ -708,6 +708,7 @@ import OtherProject from "./pages/Setup/OtherProject.jsx";
 import Slideshow from "./Extra/Demo.jsx";
 import EditAmenitySetup from "./pages/SubPages/EditAmenitySetup.jsx";
 import PrivacyPolicy from "./pages/Setup/PrivacyPolicy.jsx";
+import DeleteUsers from "./pages/Setup/users/DeleteUsers.jsx";
 // new admin hrms
 
 function App() {
@@ -965,6 +966,14 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <AddUser />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/setup/users-setup/delete-user"
+            element={
+              <ProtectedAdminRoutes>
+                <DeleteUsers />
               </ProtectedAdminRoutes>
             }
           />
