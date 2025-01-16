@@ -32,7 +32,10 @@ const Booking = () => {
     const slot = amenitySlots.find((s) => s.id === booking.amenity_slot_id);
 
     // Format the slot time if found
-    const slotTime = slot ? `${slot.start_hr}:${slot.start_min} - ${slot.end_hr}:${slot.end_min}` : "N/A";
+    const slotTime = slot
+    ? `${String(slot.start_hr || 0).padStart(2, "0")}:${String(slot.start_min || 0).padStart(2, "0")} - ${String(slot.end_hr || 0).padStart(2, "0")}:${String(slot.end_min || 0).padStart(2, "0")}`
+    : "N/A";
+  
 
     return {
       ...booking,

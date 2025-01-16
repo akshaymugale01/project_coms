@@ -99,7 +99,7 @@ const BookingDetails = () => {
   }, [id]);
 
   const postPaymentBooking = async () => {
-    if (!formData.payment_method || !formData.paymen_date) {
+    if (!formData.payment_method || !formData.paymen_date || !formData.paid_amount) {
       toast.error("Payment Method and Date must be there!");
       return;
     }
@@ -187,12 +187,12 @@ const BookingDetails = () => {
       // Make the API call to update the booking status
       const response = await updateAmenityBook(id, updatedBookingData);  // Pass the id and updated data
       console.log("response", response);
-      
+
 
       // Check if the update was successful
       if (response?.status === 200) {
         // Redirect to bookings page after successful update
-        
+
         toast.success("Status Cancelled!");
         navigate("/bookings");
       } else {
@@ -243,24 +243,24 @@ const BookingDetails = () => {
   // Format date for created_at field
   const created = () => {
     const date = new Date(facilityDetails.created_at);
-    const yy = date.getFullYear().toString().slice(-2);
+    const yy = date.getFullYear().toString();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    return `${dd}/${mm}/${yy}`;
+    return `${yy}-${mm}-${dd}`;
   };
 
   // Find the relevant slot time based on the slot ID in the booking
   const amenitySlotId = bookingDetails.amenity_slot_id;
   const selectedSlot = facilityDetails.amenity_slots?.find((slot) => slot.id === amenitySlotId);
   const slotTime = selectedSlot
-    ? `${selectedSlot.start_hr}:${selectedSlot.start_min} - ${selectedSlot.end_hr}:${selectedSlot.end_min}`
+    ? `${String(selectedSlot.start_hr || 0).padStart(2, "0")}:${String(selectedSlot.start_min || 0).padStart(2, "0")} - ${String(selectedSlot.end_hr || 0).padStart(2, "0")}:${String(selectedSlot.end_min || 0).padStart(2, "0")}`
     : "N/A";
   // console.log("slot time", slotTime);
 
   // console.log("fac anem", bookingDetails.amount);
 
   return (
-    <section className="flex">
+    <section className="flex ">
       <Navbar />
 
       <div className="w-full p-4 mb-5">
@@ -274,12 +274,14 @@ const BookingDetails = () => {
           <h1 className="w-full font-medium text-lg">Title:  {facilityDetails.fac_name}</h1>
           <div>
             <div className="flex justify-end gap-2 w-full">
-              <button
-                className="bg-yellow-500 rounded-md text-white p-2 w-[150px] cursor-pointer"
-                onClick={() => setShowModal(true)}
-              >
-                Capture Payment
-              </button>
+              {bookingDetails.status !== "cancelled" && (
+                <button
+                  className="bg-yellow-500 rounded-md text-white p-2 w-[150px] cursor-pointer"
+                  onClick={() => setShowModal(true)}
+                >
+                  Capture Payment
+                </button>
+              )}
               {/* <button
                 className="bg-red-500 rounded-md text-white p-2 w-[100px] cursor-pointer"
                 onClick={() => navigate("/bookings")}
@@ -478,36 +480,64 @@ const BookingDetails = () => {
             <p>{userName}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
-            <p className="font-medium">GST:</p>
-            <p>{facilityDetails.gst_no} %</p>
+            <p className="font-medium">GST(%):</p>
+            <p>{facilityDetails.gst_no || "NA"}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 items-center">
-            <p className="font-medium">Payable Amount:</p>
-            <p>₹ {bookingDetails.amount}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 items-center">
+
+          {/* <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Transaction ID:</p>
-            <p>{bookingDetails.payment?.transaction_id || "Payment Not Done!"}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 items-center">
+            <p>{bookingDetails.payment?.transaction_id || "NA"}</p>
+          </div> */}
+          {bookingDetails.status === "paid" && (
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <p className="font-medium">Payment Status:</p>
+              <p
+                className={`${bookingDetails.status === "booked"
+                  ? "bg-yellow-500"
+                  : bookingDetails.status === "paid"
+                    ? "bg-green-400"
+                    : bookingDetails.status === "cancelled"
+                      ? "bg-red-500"
+                      : "bg-gray-300"} text-white text-center p-1 rounded-md`}
+              >
+                {bookingDetails.status}
+              </p>
+            </div>
+          )}
+
+
+
+          {/* <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payment Status:</p>
             <p
-              className={`${bookingDetails.payment_status === "Pending"
-                ? "bg-yellow-500"
-                : "bg-green-400"
-                } text-white text-center p-1 rounded-md`}
+              className={`
+                       ${bookingDetails.status === "booked"
+                                   ? "bg-yellow-500"
+                                   : bookingDetails.status === "paid"
+                                     ? "bg-green-400"
+                                     : bookingDetails.status === "cancelled"
+                                       ? "bg-red-500"
+                                       : "bg-gray-300"} 
+                       text-white text-center p-1 rounded-md
+                     `}
             >
-              {bookingDetails.payment_status}
+              {bookingDetails.status}
             </p>
-          </div>
+          </div> */}
+
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payment Method:</p>
             <p>{bookingDetails.payment_mode === "post" ? "Postpaid" : bookingDetails.payment_mode === "pre" ? "Prepaid" : "Unknown Payment Mode"}</p>
           </div>
+
           <div className="grid grid-cols-2 gap-2 items-center">
-            <p className="font-medium">Amount Paid:</p>
-            <p>₹ {bookingDetails.payment?.paid_amount || "Payment Not Done!"}</p>
+            <p className="font-medium">Payable Amount:</p>
+            <p>{bookingDetails.amount || "NA"}</p>
           </div>
+          {/* <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Amount Paid:</p>
+            <p>{bookingDetails.payment?.paid_amount || "NA"}</p>
+          </div> */}
         </div>
 
 
@@ -515,17 +545,17 @@ const BookingDetails = () => {
 
 
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="mt-2 p-4 bg-blue-50 grid grid-cols-3 rounded-lg shadow-md gap-4">
           {/* Member Section */}
           <div>
             <h2 className="border-b font-medium mb-2">Member:</h2>
             <div className="grid grid-cols-2 gap-2 items-center">
               <p className="font-medium">Adult:</p>
-              <p>{bookingDetails.member_adult}</p>
+              <p>{bookingDetails.member_adult || "NA"}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 items-center">
               <p className="font-medium">Child:</p>
-              <p>{bookingDetails.member_child}</p>
+              <p>{bookingDetails.member_child || "NA"}</p>
             </div>
           </div>
 
@@ -534,11 +564,11 @@ const BookingDetails = () => {
             <h2 className="border-b font-medium mb-2">Guest:</h2>
             <div className="grid grid-cols-2 gap-2 items-center">
               <p className="font-medium">Adult:</p>
-              <p>{bookingDetails.guest_adult}</p>
+              <p>{bookingDetails.guest_adult || "NA"}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 items-center">
               <p className="font-medium">Child:</p>
-              <p>{bookingDetails.guest_child}</p>
+              <p>{bookingDetails.guest_child || "NA"}</p>
             </div>
           </div>
 
@@ -546,11 +576,11 @@ const BookingDetails = () => {
             <h2 className="border-b font-medium mb-2">Tenant:</h2>
             <div className="grid grid-cols-2 gap-2 items-center">
               <p className="font-medium">Adult:</p>
-              <p>{bookingDetails.tenant_adult}</p>
+              <p>{bookingDetails.tenant_adult || "NA"}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 items-center">
               <p className="font-medium">Child:</p>
-              <p>{bookingDetails.tenant_adult}</p>
+              <p>{bookingDetails.tenant_adult || "NA"}</p>
             </div>
           </div>
         </div>
@@ -561,46 +591,46 @@ const BookingDetails = () => {
           </div>
 
           {bookingDetails?.payment?.paid_amount && (
-            <div className="mt-2 p-6 bg-white rounded-lg shadow-lg">
+            <div className="mt-2 p-6 bg-blue-50 rounded-lg shadow-md">
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Payment Method</label>
-                  <p>{bookingDetails.payment.payment_method || "Not Done Payment"}</p>
+                  <p>{bookingDetails.payment.payment_method || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Total Amount</label>
-                  <p>{bookingDetails.payment.total_amount}</p>
+                  <p>{bookingDetails.payment.total_amount || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Paid Amount</label>
-                  <p>{bookingDetails.payment.paid_amount}</p>
+                  <p>{bookingDetails.payment.paid_amount || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Payment Date</label>
-                  <p>{bookingDetails.payment.paymen_date}</p>
+                  <p>{bookingDetails.payment.paymen_date || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Transaction ID</label>
-                  <p>{bookingDetails.payment.transaction_id}</p>
+                  <p>{bookingDetails.payment.transaction_id || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Notes</label>
-                  <p>{bookingDetails.payment.notes}</p>
+                  <p>{bookingDetails.payment.notes || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Resource ID</label>
-                  <p>{formData.resource_id}</p>
+                  <p>{formData.resource_id || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Resource Type</label>
-                  <p>{bookingDetails.payment.resource_type}</p>
+                  <p>{bookingDetails.payment.resource_type || "NA"}</p>
                 </div>
               </div>
             </div>
@@ -611,10 +641,21 @@ const BookingDetails = () => {
 
 
 
-        <div className="mt-4">
-          <p className="border font-medium mb-2"  >Description: {facilityDetails.description}</p>
-          <p className="border font-medium mb-2"  >Terms: {facilityDetails.terms}</p>
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg shadow-md border">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Description:</h3>
+            <p className={`text-gray-600 ${facilityDetails.description ? '' : 'italic text-gray-400'}`}>
+              {facilityDetails.description || "NA"}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Terms:</h3>
+            <p className={`text-gray-600 ${facilityDetails.terms ? '' : 'italic text-gray-400'}`}>
+              {facilityDetails.terms || "NA"}
+            </p>
+          </div>
         </div>
+
 
       </div>
     </section>

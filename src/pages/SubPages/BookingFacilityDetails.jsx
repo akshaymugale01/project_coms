@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { getFacitilitySetup } from '../../api';
 import { useParams } from 'react-router-dom';
+import { formatTime } from '../../utils/dateUtils';
 
 const FacilityDetails = () => {
   const { id } = useParams(); // The ID from URL params
@@ -35,8 +36,8 @@ const FacilityDetails = () => {
 
   console.log("AMENITIes", facilityData);
 
-  const domainPrefix = "https://app.myciti.life";
-  // const domainPrefix = "http://localhost:3002";
+  // const domainPrefix = "https://app.myciti.life";
+  const domainPrefix = "http://localhost:3002";
 
 
   useEffect(() => {
@@ -89,7 +90,7 @@ const FacilityDetails = () => {
           <h2 className="border-b border-black text-lg font-medium mb-2">
             Fee Details
           </h2>
-          <div className="border rounded-lg bg-blue-50 p-4">
+          <div className="border shadow-md rounded-lg bg-blue-50 p-4">
             {['member', 'guest', 'tenant'].map((type) => (
               <div key={type} className="my-2">
                 <p className="font-medium capitalize">{type}:</p>
@@ -106,7 +107,50 @@ const FacilityDetails = () => {
               </div>
             ))}
           </div>
+          <div className='border-b border-black'>
+            <div className='grid grid-cols-3 p-4 gap-4'>
+              <div className='flex justify-start gap-4'>
+                <p className='font-medium'>Min Person Allowed:</p>
+                <p>{facilityData.min_people || 'N/A'}</p>
+              </div>
+              <div className='flex justify-start gap-4'>
+                <p className='font-medium'>Max Person Allowed:</p>
+                <p>{facilityData.max_people || 'N/A'}</p>
+              </div>
+              <div className='flex justify-start gap-4'>
+                <p className='font-medium'>GST:</p>
+                <p>{facilityData.gst_no || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
         </div>
+
+
+        {/* Time ALLOW */}
+        <div className='border rounded-lg shadow-md bg-blue-50'>
+          <div className='grid grid-cols-3 p-2 gap-4'>
+            <div >
+              <p className='font-medium'>Booking Allowed Before:</p>
+              <p>
+                {facilityData.book_before[0] || 'N/A'}
+              </p>
+            </div>
+            <div >
+              <p className='font-medium'>Advance Booking:</p>
+              <p>
+                {facilityData.advance_booking[0] || 'N/A'}
+              </p>
+            </div>
+            <div >
+              <p className='font-medium'>Can Cancel Before Schedule:</p>
+              <p>
+                {facilityData.cancel_before[0] || 'N/A'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+
 
         {/* Slot Configuration */}
         <div className="my-4">
@@ -164,7 +208,7 @@ const FacilityDetails = () => {
                       <img
                         src={domainPrefix + image_url.image_url}
                         alt={`Cover ${index + 1}`}
-                        className="object-cover w-full h-40"
+                        className="object-cover rounded-md w-full h-40 transition-transform transform hover:scale-110"
                       />
                     </div>
                   ))
@@ -174,6 +218,14 @@ const FacilityDetails = () => {
               </div>
             </div>
 
+
+            {/* <a href={domainPrefix + doc.image_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-40">
+                </a> 
+             */}
+
             {/* Attachments Section */}
             <div className="flex-1">
               <h2 className="font-medium text-lg mb-2">Attachments</h2>
@@ -181,18 +233,13 @@ const FacilityDetails = () => {
                 {facilityData.attachments && facilityData.attachments.length > 0 ? (
                   facilityData.attachments.map((doc, index) => (
                     <div key={index} className="rounded-lg border overflow-hidden">
-                      <a
-                        href={domainPrefix + doc.image_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block w-40"
-                      >
-                        <img
-                          src={domainPrefix + doc.image_url}
-                          alt={`Attachment`}
-                          className="w-full h-40 object-cover rounded-md"
-                        />
-                      </a>
+
+                      <img
+                        src={domainPrefix + doc.image_url}
+                        alt={`Attachment`}
+                        className="object-cover rounded-md w-full h-40 transition-transform transform hover:scale-110"
+                      />
+
                     </div>
                   ))
                 ) : (
@@ -204,27 +251,25 @@ const FacilityDetails = () => {
         </div>
 
         {/* Description */}
-        <div className="my-4">
-          <h2 className="border-b border-black text-lg font-medium mb-2">
-            Description
-          </h2>
-          <p>{facilityData.description || 'No description provided.'}</p>
-        </div>
-
-        {/* Terms and Conditions */}
-        <div className="my-4">
-          <h2 className="border-b border-black text-lg font-medium mb-2">
-            Terms and Conditions
-          </h2>
-          <p>{facilityData.terms || 'No terms provided.'}</p>
-        </div>
-
-        {/* Cancellation Policy */}
-        <div className="my-4">
-          <h2 className="border-b border-black text-lg font-medium mb-2">
-            Cancellation Policy
-          </h2>
-          <p>{facilityData.cancellation_policy || 'No policy provided.'}</p>
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg shadow-md border">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Description:</h3>
+            <p className={`text-gray-600 ${facilityData.description ? '' : 'italic text-gray-400'}`}>
+              {facilityData.description || "NA"}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Terms and Conditions:</h3>
+            <p className={`text-gray-600 ${facilityData.terms ? '' : 'italic text-gray-400'}`}>
+              {facilityData.terms || "NA"}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Terms and Conditions:</h3>
+            <p className={`text-gray-600 ${facilityData.cancellation_policy ? '' : 'italic text-gray-400'}`}>
+              {facilityData.cancellation_policy || "NA"}
+            </p>
+          </div>
         </div>
       </div>
     </section>

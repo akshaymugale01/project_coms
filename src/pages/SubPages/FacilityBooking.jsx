@@ -255,8 +255,8 @@ const FacilityBooking = () => {
   const postBookFacility = async () => {
     const postData = new FormData();
 
-    if (!formData.amenity_id || !formData.amenity_slot_id) {
-      toast.error("Facility and Slot Must be present!")
+    if (!formData.user_id || !formData.amenity_slot_id) {
+      toast.error("All Details are mandatory!")
       return;
     }
 
@@ -459,7 +459,7 @@ const FacilityBooking = () => {
               </div>
             </div>
             <div className="border-b text-xl border-black font-semibold">
-              Users
+              Members
             </div>
             {/* <div className="flex flex-col my-2">
               <label htmlFor="" className="font-semibold">

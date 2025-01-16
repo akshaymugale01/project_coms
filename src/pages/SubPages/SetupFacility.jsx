@@ -86,6 +86,12 @@ const SetupFacility = () => {
 
 
   const postAmenitiesSetup = async () => {
+    // Validate required fields
+    if (!formData.amenity.gst_no || !formData.amenity.fac_type || formData.slots.length === 0) {
+      toast.error("All fields are mandatory! Please provide GST number, Facility Type, and at least one slot.");
+      return; // Stop the function if validation fails
+    }
+
     const postData = new FormData();
 
     // Append covers as an array
@@ -423,7 +429,7 @@ const SetupFacility = () => {
   return (
     <section className="flex">
       <Navbar />
-      <div className="w-full p-4 mb-5">
+      <div className="w-full bg-gray-100 p-4 mb-5">
         <h1
           style={{ background: 'rgb(17, 24, 39)' }}
           className="bg-black text-white font-semibold rounded-md text-center p-2"

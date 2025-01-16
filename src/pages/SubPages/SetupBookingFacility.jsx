@@ -162,7 +162,7 @@ const SetupBookingFacility = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const [page, setPage] = useState("facility");
   return (
-    <div className="flex">
+    <div className="flex bg-gray-100">
       <Navbar />
 
       <div className="w-full flex mx-3 flex-col overflow-hidden">
@@ -222,7 +222,7 @@ const SetupBookingFacility = () => {
 
               // customStyles={customStyle}
             /> */}
-            <div className="flex  min-h-screen">
+            <div className="flex min-h-screen">
               {loading ? (
                 <p className="flex text-center">Loading bookings...</p>
               ) : error ? (
