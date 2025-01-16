@@ -119,7 +119,7 @@ const EditAmenitySetup = () => {
                         fac_type: facility.fac_type || "",
                         fac_name: facility.fac_name || "",
                         member_charges: facility.member_charges || "",
-                        book_before: facility.book_before || "",
+                        book_before: facility.book_before[2] || "",
                         disclaimer: facility.disclaimer || "",
                         cancellation_policy: facility.cancellation_policy || "",
                         cutoff_min: facility.cutoff_min || "",
@@ -134,10 +134,10 @@ const EditAmenitySetup = () => {
                         tenant_price_adult: facility.tenant_price_adult || "",
                         min_people: facility.min_people || "",
                         max_people: facility.max_people || "",
-                        cancel_before: facility.cancel_before || "",
+                        cancel_before: facility.cancel_before[2] || "",
                         terms: facility.terms || "",
                         gst_no: facility.gst_no || "",
-                        advance_booking: facility.advance_booking || "",
+                        advance_booking: facility.advance_booking[2] || "",
                         deposit: facility.deposit || "",
                         description: facility.description || "",
                         max_slots: facility.max_slots || "",
@@ -802,7 +802,7 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="book_before_days"
-                                value={formData.amenity.book_before[1]?.days}
+                                value={formData.amenity.book_before_days}
                                 onChange={handleInputChange}
                                 onBlur={validateInput} // Validate on losing focus
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
@@ -814,7 +814,7 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="book_before_hours"
-                                value={formData.amenity.book_before[1]?.hours}
+                                value={formData.amenity.book_before_hours}
                                 onChange={handleInputChange}
                                 onBlur={validateInput} // Validate on losing focus
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
@@ -826,7 +826,7 @@ const EditAmenitySetup = () => {
                             <input
                                 type="text"
                                 name="book_before_mins"
-                                value={formData.amenity.book_before[1]?.minutes}
+                                value={formData.amenity.book_before_mins}
                                 onChange={handleInputChange}
                                 onBlur={validateInput} // Validate on losing focus
                                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
@@ -839,7 +839,7 @@ const EditAmenitySetup = () => {
 
 
                     {/* Advance Booking */}
-                    <div className="grid grid-cols-5 items-center border-b px-4 gap-2">
+                     <div className="grid grid-cols-5 items-center border-b px-4 gap-2">
                         <div className="flex justify-center my-2">
                             <label htmlFor="advance_days" className="flex items-center gap-2">
                                 Advance Booking
@@ -888,7 +888,7 @@ const EditAmenitySetup = () => {
 
                             />
                         </div>
-                    </div>
+                    </div> 
 
                     {/* Can Cancel Before Schedule */}
                     <div className="grid grid-cols-5 items-center px-4 gap-2">
@@ -940,6 +940,7 @@ const EditAmenitySetup = () => {
                             />
                         </div>
                     </div>
+                    
                 </div>
                 <div className="my-4">
                     <h2 className="border-b border-black text-lg mb-1 font-medium">

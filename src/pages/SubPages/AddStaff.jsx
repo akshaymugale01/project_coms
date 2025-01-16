@@ -188,7 +188,7 @@ const EmployeeAddStaff = () => {
           >
             <h2
               className="text-center md:text-xl font-bold p-2 bg-black rounded-lg mb-4 text-white"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(19 27 38)" }}
             >
               Add Staff
             </h2>
