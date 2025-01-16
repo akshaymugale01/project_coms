@@ -98,25 +98,92 @@ const BookingDetails = () => {
     }
   }, [id]);
 
+  // const postPaymentBooking = async () => {
+  //   if (!formData.payment_method || !formData.transaction_id || !formData.paid_amount) {
+  //     toast.error("Payment Type ,amount and Transactioin_Id are mandatory!");
+  //     return;
+  //   }
+
+  //   try {
+  //     const postData = new FormData();
+
+  //     Object.keys(formData).forEach((key) => postData.append(`payment[${key}]`, formData[key]));
+
+  //     postData.append('payment[total_amount]', bookingDetails.amount);
+
+  //     const response = await postPaymentBookings(postData);
+  //     // console.log(response);
+  //     if (response?.status === 201) {
+  //       toast.success("Payment Captured successful!");
+  //       setShowModal(false);
+  //       navigate(`/bookings`);
+  //     } else {
+  //       toast.error("Booking failed. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in booking:", error);
+  //     toast.error("Error in booking. Please try again.");
+  //   }
+  // };
+
   const postPaymentBooking = async () => {
-    if (!formData.payment_method || !formData.paymen_date || !formData.paid_amount) {
-      toast.error("Payment Method and Date must be there!");
+    if (!formData.payment_method || !formData.transaction_id || !formData.paid_amount) {
+      toast.error("Payment Type, amount, and Transaction_Id are mandatory!");
+      return;
+    }
+
+    // Validate that the payable amount matches the paid amount
+    if (parseFloat(formData.paid_amount) !== parseFloat(bookingDetails.amount)) {
+      toast.error("Paid amount must equal the payable amount!");
       return;
     }
 
     try {
       const postData = new FormData();
 
-      Object.keys(formData).forEach((key) => postData.append(`payment[${key}]`, formData[key]));
+      // Append all form data fields
+      Object.keys(formData).forEach((key) =>
+        postData.append(`payment[${key}]`, formData[key])
+      );
 
-      postData.append('payment[total_amount]', bookingDetails.amount);
+      // Append the total amount (payable amount) to the request
+      postData.append("payment[total_amount]", bookingDetails.amount);
 
+      // Post payment data
       const response = await postPaymentBookings(postData);
-      // console.log(response);
+
       if (response?.status === 201) {
-        toast.success("Payment Captured successful!");
+
+        // Update the booking status to "paid"
+        const updatedBookingData = {
+          status: "paid", // Change the status to "paid"
+        };
+
+        console.log("Booking ID to update:", id); // Log the id to check
+        const updateResponse = await updateAmenityBook(id, updatedBookingData); // Pass the id and updated data
+        console.log("update response", updateResponse);
+
+        // Update the bookingDetails.payment directly with the posted data
+        const updatedPayment = {
+          payment_method: formData.payment_method,
+          total_amount: bookingDetails.amount,
+          paid_amount: formData.paid_amount,
+          paymen_date: new Date().toISOString().split("T")[0], // Use current date or adjust as needed
+          transaction_id: formData.transaction_id,
+          notes: formData.notes || "N/A",
+          resource_id: formData.resource_id,
+          resource_type: formData.resource_type,
+        };
+
+        // Update bookingDetails state with the payment details
+        setBookingDetails((prevDetails) => ({
+          ...prevDetails,
+          payment: updatedPayment,
+        }));
+
+        // Optionally navigate to another page or show a success message
         setShowModal(false);
-        navigate(`/bookings`);
+        toast.success("Payment Captured successfully!");
       } else {
         toast.error("Booking failed. Please try again.");
       }
@@ -125,6 +192,7 @@ const BookingDetails = () => {
       toast.error("Error in booking. Please try again.");
     }
   };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -270,11 +338,10 @@ const BookingDetails = () => {
         >
           <h2 className="text-xl font-semibold text-center text-white">Booking Details</h2>
         </div>
-        <div className="flex justify-between rounded border border-black p-2 items-center w-full">
-          <h1 className="w-full font-medium text-lg">Title:  {facilityDetails.fac_name}</h1>
+        <div className="flex justify-end rounded border border-black-50 p-2 items-center w-full">
           <div>
             <div className="flex justify-end gap-2 w-full">
-              {bookingDetails.status !== "cancelled" && (
+              {bookingDetails.status !== "cancelled" && bookingDetails.status !== "paid" && (
                 <button
                   className="bg-yellow-500 rounded-md text-white p-2 w-[150px] cursor-pointer"
                   onClick={() => setShowModal(true)}
@@ -289,12 +356,15 @@ const BookingDetails = () => {
                 Cancel
               </button> */}
               <div>
-                <button
-                  className="bg-red-500 rounded-md text-white p-2 w-[100px] cursor-pointer"
-                  onClick={handleCancelClick}
-                >
-                  Cancel
-                </button>
+                {bookingDetails.status !== "paid" && (
+                  <button
+                    className="bg-red-500 rounded-md text-white p-2 w-[100px] cursor-pointer"
+                    onClick={handleCancelClick}
+                  >
+                    Cancel
+                  </button>
+                )}
+
 
                 {/* Confirmation Popup */}
                 {showConfirmPopup && (
@@ -344,14 +414,14 @@ const BookingDetails = () => {
                         placeholder="Total Amount"
                         value={formData.total_amount || bookingDetails.amount} // Use formData.total_amount, fallback to bookingDetails.amount
                         onChange={handleInputChange}
-                        className="border p-2 rounded-md w-full"
+                        className="border p-2 bg-gray-100 rounded-md w-full"
                         disabled // This will disable the input field
                       />
                     </label>
 
 
                     <label>
-                      Paid Amount
+                      Paid Amount <label className="text-red-500 font-semibold">*</label>
                       <input
                         type="text"
                         name="paid_amount"
@@ -381,8 +451,8 @@ const BookingDetails = () => {
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
                     /> */}
-                    <label>Payment Method
-                      <select className="border p-2 rounde w-full"
+                    <label>Payment Method <label className="text-red-500 font-semibold">*</label>
+                      <select className="border p-2 rounded w-full"
                         value={formData.payment_method}
                         onChange={(e) => handlePaymentChange(e.target.value)}
                       >
@@ -393,7 +463,7 @@ const BookingDetails = () => {
                         <option value="CASH">Cash</option>
                       </select>
                     </label>
-                    <label> Transaction ID
+                    <label> Transaction ID <label className="text-red-500 font-semibold">*</label>
                       <input
                         type="text"
                         name="transaction_id"
@@ -445,6 +515,10 @@ const BookingDetails = () => {
         </div>
 
         <div className="grid grid-cols-4 w-full gap-5 my-2 bg-blue-50 border rounded-xl p-2">
+          <div className="grid grid-cols-2  gap-2 items-center">
+            <p className="font-medium">Facility Name</p>
+            <p>{facilityDetails.fac_name}</p>
+          </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Booking ID:</p>
             <p>{id}</p>
@@ -456,7 +530,7 @@ const BookingDetails = () => {
                 ? "bg-yellow-500" // yellow for booked
                 : bookingDetails.status === "cancelled"
                   ? "bg-red-500" // red for cancelled
-                  : "bg-gray-500" // default color for other statuses
+                  : "bg-green-500" // default color for other statuses
                 } text-white p-1 rounded-md text-center`}
             >
               {bookingDetails.status.charAt(0).toUpperCase() + bookingDetails.status.slice(1)} {/* Capitalize first letter */}
@@ -488,22 +562,6 @@ const BookingDetails = () => {
             <p className="font-medium">Transaction ID:</p>
             <p>{bookingDetails.payment?.transaction_id || "NA"}</p>
           </div> */}
-          {bookingDetails.status === "paid" && (
-            <div className="grid grid-cols-2 gap-2 items-center">
-              <p className="font-medium">Payment Status:</p>
-              <p
-                className={`${bookingDetails.status === "booked"
-                  ? "bg-yellow-500"
-                  : bookingDetails.status === "paid"
-                    ? "bg-green-400"
-                    : bookingDetails.status === "cancelled"
-                      ? "bg-red-500"
-                      : "bg-gray-300"} text-white text-center p-1 rounded-md`}
-              >
-                {bookingDetails.status}
-              </p>
-            </div>
-          )}
 
 
 
@@ -526,7 +584,7 @@ const BookingDetails = () => {
           </div> */}
 
           <div className="grid grid-cols-2 gap-2 items-center">
-            <p className="font-medium">Payment Method:</p>
+            <p className="font-medium">Payment Type:</p>
             <p>{bookingDetails.payment_mode === "post" ? "Postpaid" : bookingDetails.payment_mode === "pre" ? "Prepaid" : "Unknown Payment Mode"}</p>
           </div>
 
@@ -534,17 +592,39 @@ const BookingDetails = () => {
             <p className="font-medium">Payable Amount:</p>
             <p>{bookingDetails.amount || "NA"}</p>
           </div>
-          {/* <div className="grid grid-cols-2 gap-2 items-center">
-            <p className="font-medium">Amount Paid:</p>
-            <p>{bookingDetails.payment?.paid_amount || "NA"}</p>
-          </div> */}
+
+          {bookingDetails.status === "paid" && (
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <p className="font-medium">Amount Paid:</p>
+              <p>{bookingDetails.payment?.paid_amount || "NA"}</p>
+            </div>
+          )}
+          {/* 
+          {bookingDetails.status === "paid" && (
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <p className="font-medium">Payment Status:</p>
+              <p
+                className={`${bookingDetails.status === "booked"
+                  ? "bg-yellow-500"
+                  : bookingDetails.status === "paid"
+                    ? "bg-green-500"
+                    : bookingDetails.status === "cancelled"
+                      ? "bg-red-500"
+                      : "bg-gray-300"} text-white text-center p-1 rounded-md`}
+              >
+              </p>
+            </div>
+          )} */}
+
+          
+          {bookingDetails.status === "paid" && (
+            <div className="flex justify-center bg-gray-100 items-center gap-4 border rounded-lg h-10">
+              {bookingDetails.status.toUpperCase()}
+            </div>
+          )}
         </div>
 
-
         {/* Facility Details */}
-
-
-
         <div className="mt-2 p-4 bg-blue-50 grid grid-cols-3 rounded-lg shadow-md gap-4">
           {/* Member Section */}
           <div>
@@ -594,7 +674,7 @@ const BookingDetails = () => {
             <div className="mt-2 p-6 bg-blue-50 rounded-lg shadow-md">
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Payment Method</label>
+                  <label className="font-medium text-gray-600">Payment Type</label>
                   <p>{bookingDetails.payment.payment_method || "NA"}</p>
                 </div>
 
@@ -625,7 +705,7 @@ const BookingDetails = () => {
 
                 <div className="flex flex-col space-y-2">
                   <label className="font-medium text-gray-600">Resource ID</label>
-                  <p>{formData.resource_id || "NA"}</p>
+                  <p>{bookingDetails.payment.resource_id || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
@@ -635,6 +715,7 @@ const BookingDetails = () => {
               </div>
             </div>
           )}
+
         </div>
 
 
