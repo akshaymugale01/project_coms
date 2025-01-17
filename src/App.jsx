@@ -709,6 +709,7 @@ import Slideshow from "./Extra/Demo.jsx";
 import EditAmenitySetup from "./pages/SubPages/EditAmenitySetup.jsx";
 import PrivacyPolicy from "./pages/Setup/PrivacyPolicy.jsx";
 import DeleteUsers from "./pages/Setup/users/DeleteUsers.jsx";
+import PrivacyPolicyCapital from "./pages/Setup/AboutSetup/PrivacyPolicyCapital.jsx";
 // new admin hrms
 
 function App() {
@@ -1164,12 +1165,14 @@ function App() {
             }
           />
           {/* materials */}
-          <Route path="/extra" element={<Slideshow />} />
-          {/* About Us */}
-          <Route path="/setup/about_us" element={<AboutUs />} />
           
+          {/* AboutUS Pages */}
+          <Route path="/setup/about_us" element={<AboutUs />} />
           <Route path="/logicon-privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/setup/other_projects" element={<OtherProject />} />
+          <Route path="/extra" element={<Slideshow />} />
+          <Route path="/capital-privacy-policy" element={<PrivacyPolicyCapital />} />
+          
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route
