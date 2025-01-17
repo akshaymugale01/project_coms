@@ -26,7 +26,7 @@ const VisitorDetails = () => {
     fetchVisitorDetails();
   }, [id]);
 
-  
+
   const themeColor = useSelector((state) => state.theme.color);
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
@@ -127,12 +127,12 @@ const VisitorDetails = () => {
             {details.profile_picture && details.profile_picture !== null ? (
               // details.visitor_files.map((doc, index) => (
               <img
-                src={domainPrefix + details.profile_picture.url}
+                src={domainPrefix + details.profile_picture}
                 alt=""
                 className="w-48 h-48 rounded-full cursor-pointer"
                 onClick={() =>
                   window.open(
-                    domainPrefix + details.profile_picture.url,
+                    domainPrefix + details.profile_picture,
                     "_blank"
                   )
                 }
@@ -226,14 +226,15 @@ const VisitorDetails = () => {
             <div className="grid grid-cols-2">
               <p className="font-semibold text-sm">Approve Status:</p>
               {details?.hosts?.[0]?.is_approved !== null ? (
-                <p className={details.is_approved ? "text-green-600" : "text-red-600"}>
-                  {details.is_approved ? "Approved" : "Not Approved"}
+                <p className={details?.hosts?.[0]?.is_approved ? "text-green-600" : "text-red-600"}>
+                  {details?.hosts?.[0]?.is_approved ? "Approved" : "Not Approved"}
                 </p>
               ) : (
-                <p className="text-gray-500 text-xs font-medium py-0.5 px-2 rounded border border-gray-300 inline-block">Pending</p> 
+                <p className="text-gray-500 text-xs font-medium py-0.5 px-2 rounded border border-gray-300 inline-block">
+                  Pending
+                </p>
               )}
             </div>
-
             <div className="grid grid-cols-2 ">
               <p className="font-semibold text-sm">Created On : </p>
               <p className="">{dateFormat(details.created_at)}</p>
@@ -250,18 +251,22 @@ const VisitorDetails = () => {
             )}
           </div>
 
-          <div className="my-4 ">
-            <h2 className="font-medium border-b text-lg border-gray-400 px-2 ">
-              Additional Visitors Info
-            </h2>
-            <div className="m-4  ">
-              {details.extra_visitors && details.extra_visitors.length !== 0 ? (
-                <Table columns={VisitorColumns} data={details.extra_visitors} />
-              ) : (
-                <p className="text-center">No Additional Visitor Added</p>
-              )}
+          {/* Conditional Extra Visitor If Present Then show */}
+          {details.extra_visitors && details.extra_visitors.length !== 0 && (
+            <div className="my-4 ">
+              <h2 className="font-medium border-b text-lg border-gray-400 px-2 ">
+                Additional Visitors Info
+              </h2>
+              <div className="m-4  ">
+                {details.extra_visitors && details.extra_visitors.length !== 0 ? (
+                  <Table columns={VisitorColumns} data={details.extra_visitors} />
+                ) : (
+                  <p className="text-center">No Additional Visitor Added</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
           <div className="my-4">
             <h2 className="font-medium border-b text-lg border-gray-400 px-2 ">
               Visitor Log

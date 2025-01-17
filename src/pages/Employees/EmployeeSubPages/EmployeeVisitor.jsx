@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../../components/Navbar";
 import { useSelector } from "react-redux";
 import Table from "../../../components/table/Table";
-import { getExpectedUserVisitor, getExpectedVisitor, postOTPVerification, postVisitorLogFromDevice } from "../../../api";
+import { getExpectedUserVisitor, getExpectedVisitor, postOTPVerification, postVisitorCheckInCheckOut, postVisitorLogFromDevice } from "../../../api";
 import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
 import EmployeePasses from "../EmployeePasses";
@@ -193,6 +193,12 @@ const EmployeeVisitor = () => {
     // },
     {
       name: "Created by",
+      selector: (row) =>
+        `${row?.created_by_name?.firstname} ${row?.created_by_name?.lastname}`,
+      sortable: true,
+    },
+    {
+      name: "Resend OTP",
       selector: (row) =>
         `${row?.created_by_name?.firstname} ${row?.created_by_name?.lastname}`,
       sortable: true,

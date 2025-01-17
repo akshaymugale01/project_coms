@@ -41,7 +41,7 @@ const VisitorPage = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [histories, setHistories] = useState([]);
   const [filteredHistory, setFilteredHistory] = useState([]);
-
+  const [loading, setLoading] = useState(false);
   const webcamRef = useRef(null);
   const handleClick = (visitorType) => {
     setSelectedVisitor(visitorType);
@@ -54,6 +54,15 @@ const VisitorPage = () => {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
+
+  const handleLoading = (callback) => {
+    setLoading(true); // Start loading
+    setTimeout(() => {
+      setLoading(false); // Stop loading after 1 second
+      callback && callback();
+    }, 1000);
+  };
+
   useEffect(() => {
     const fetchExpectedVisitor = async () => {
       try {
@@ -73,6 +82,7 @@ const VisitorPage = () => {
         const filteredVisitorOut = sortedVisitor.filter(
           (visit) => visit.visitor_in_out === "OUT"
         );
+        handleLoading();
         setVisitor(sortedVisitor);
         setAll(sortedVisitor);
         setVisitorIn(filteredVisitorIn);
@@ -219,9 +229,20 @@ const VisitorPage = () => {
       name: "Status",
       selector: (row) => (
         <div
-          className={`${
-            row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
-          } `}
+          className={`${row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
+            } `}
+        >
+          {row.visitor_in_out}
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      name: "In/OUT",
+      selector: (row) => (
+        <div
+          className={`${row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
+            } `}
         >
           {row.visitor_in_out}
         </div>
@@ -457,7 +478,7 @@ const VisitorPage = () => {
     };
   };
 
- 
+
   useEffect(() => {
     const postLogs = async () => {
       const visitorLogData = getVisitorLogData();
@@ -545,61 +566,55 @@ const VisitorPage = () => {
           <div className="flex w-full  m-2">
             <div className="flex w-full md:flex-row flex-col space-x-4 border-b border-gray-400">
               <h2
-                className={`p-2 px-4 ${
-                  page === "all"
+                className={`p-2 px-4 ${page === "all"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                  } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("all")}
               >
                 All
               </h2>
               <h2
-                className={`p-2 ${
-                  page === "Visitor In"
+                className={`p-2 ${page === "Visitor In"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                  } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("Visitor In")}
               >
                 Visitor In
               </h2>
               <h2
-                className={`p-2 ${
-                  page === "Visitor Out"
+                className={`p-2 ${page === "Visitor Out"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                  }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("Visitor Out")}
               >
                 Visitor Out
               </h2>
               <h2
-                className={`p-2 ${
-                  page === "approval"
+                className={`p-2 ${page === "approval"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                  }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("approval")}
               >
                 Approvals
               </h2>
               <h2
-                className={`p-2 ${
-                  page === "History"
+                className={`p-2 ${page === "History"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                  }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("History")}
               >
                 History
               </h2>
               <h2
-                className={`p-2 ${
-                  page === "logs"
+                className={`p-2 ${page === "logs"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                  }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("logs")}
               >
                 Logs
@@ -618,21 +633,19 @@ const VisitorPage = () => {
               />
               <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                 <span
-                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${
-                    selectedVisitor === "expected"
+                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${selectedVisitor === "expected"
                       ? "text-blue-600 underline"
                       : ""
-                  } text-center`}
+                    } text-center`}
                   onClick={() => handleClick("expected")}
                 >
                   <span>Expected visitor</span>
                 </span>
                 <span
-                  className={`cursor-pointer hover:underline ${
-                    selectedVisitor === "unexpected"
+                  className={`cursor-pointer hover:underline ${selectedVisitor === "unexpected"
                       ? "text-blue-600 underline"
                       : ""
-                  } text-center`}
+                    } text-center`}
                   onClick={() => handleClick("unexpected")}
                 >
                   &nbsp; <span>Unexpected visitor</span>
@@ -661,21 +674,19 @@ const VisitorPage = () => {
               />
               <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                 <span
-                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${
-                    selectedVisitor === "expected"
+                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${selectedVisitor === "expected"
                       ? "text-blue-600 underline"
                       : ""
-                  } text-center`}
+                    } text-center`}
                   onClick={() => handleClick("expected")}
                 >
                   <span>Expected visitor</span>
                 </span>
                 <span
-                  className={`cursor-pointer hover:underline ${
-                    selectedVisitor === "unexpected"
+                  className={`cursor-pointer hover:underline ${selectedVisitor === "unexpected"
                       ? "text-blue-600 underline"
                       : ""
-                  } text-center`}
+                    } text-center`}
                   onClick={() => handleClick("unexpected")}
                 >
                   &nbsp; <span>Unexpected visitor</span>
@@ -706,21 +717,19 @@ const VisitorPage = () => {
 
                 <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                   <span
-                    className={` md:border-r px-2 border-black cursor-pointer hover:underline ${
-                      selectedVisitor === "expected"
+                    className={` md:border-r px-2 border-black cursor-pointer hover:underline ${selectedVisitor === "expected"
                         ? "text-blue-600 underline"
                         : ""
-                    } text-center`}
+                      } text-center`}
                     onClick={() => handleClick("expected")}
                   >
                     <span>Expected visitor</span>
                   </span>
                   <span
-                    className={`cursor-pointer hover:underline ${
-                      selectedVisitor === "unexpected"
+                    className={`cursor-pointer hover:underline ${selectedVisitor === "unexpected"
                         ? "text-blue-600 underline"
                         : ""
-                    } text-center`}
+                      } text-center`}
                     onClick={() => handleClick("unexpected")}
                   >
                     &nbsp; <span>Unexpected visitor</span>
@@ -767,32 +776,27 @@ const VisitorPage = () => {
             </div>
           )}
           <div className="my-4">
+
             {selectedVisitor === "expected" && page === "Visitor In" && (
               <Table columns={VisitorColumns} data={visitorIn} />
             )}
             {selectedVisitor === "unexpected" && page === "Visitor In" && (
-              <Table
-                columns={VisitorColumns}
-                data={FilteredUnexpectedVisitor}
-              />
-              // <p className="font-medium text-center">No Records</p>
+              <Table columns={VisitorColumns} data={FilteredUnexpectedVisitor} />
             )}
-            {/* all */}
-            <div className="">
-              {selectedVisitor === "expected" && page === "all" && (
-                <Table
-                  columns={VisitorColumns}
-                  data={FilteredExpectedVisitor}
-                />
-              )}
-              {selectedVisitor === "unexpected" && page === "all" && (
-                <Table
-                  columns={VisitorColumns}
-                  data={FilteredUnexpectedVisitor}
-                />
-                // <p className="font-medium text-center">No Records</p>
-              )}
-            </div>
+            {loading ? (
+              <p className="text-center text-gray-500 font-medium">Loading...</p> // Loading state
+            ) : (
+              <>
+                <div className="">
+                  {selectedVisitor === "expected" && page === "all" && (
+                    <Table columns={VisitorColumns} data={FilteredExpectedVisitor} />
+                  )}
+                  {selectedVisitor === "unexpected" && page === "all" && (
+                    <Table columns={VisitorColumns} data={FilteredUnexpectedVisitor} />
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>

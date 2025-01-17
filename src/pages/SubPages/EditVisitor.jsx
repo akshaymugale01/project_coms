@@ -265,428 +265,435 @@ const EditVisitor = () => {
 
   return (
     <section className="flex">
-        <Navbar />
-        <div className=" w-full flex mx-3  flex-col overflow-hidden">
-    <div className="flex justify-center items-center  w-full p-4">
-      <div className="md:border border-gray-300 rounded-lg md:p-4 w-full md:mx-4 ">
-       
-        <h2
-          style={{ background: themeColor }}
-          className="text-center md:text-xl font-bold p-2 bg-black rounded-full text-white"
-        >
-          Edit visitor
-        </h2>
-        <br />
-
-        <div
-          onClick={handleImageClick}
-          className="cursor-pointer flex justify-center items-center my-4"
-        >
-          {/* {imageFile ? (
-            <img
-              src={URL.createObjectURL(imageFile)}
-              alt="Uploaded"
-              className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
-            />
-          ) : (
-            <img
-              src={image}
-              alt="Default"
-              className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
-            />
-          )}
-          <input
-            type="file"
-            ref={inputRef}
-            onChange={handleImageChange}
-            style={{ display: "none" }}
-          /> */}
-           {details.visitor_files && details.visitor_files.length > 0 ? (
-              details.visitor_files.map((doc, index) => (  
-                <img src={domainPrefix + doc.document} alt="" className="w-48 h-48 rounded-full cursor-pointer"  onClick={() => window.open(domainPrefix + doc.document, "_blank")}/>
-               ))
-            ) : (
-            <img src={image} alt="" className="w-48 h-48" />
-          )}
-        </div>
-
-        <div className="flex md:flex-row flex-col  my-5 gap-10">
-          <div className="flex gap-2 flex-col">
-            <h2 className="font-semibold">Visitor Type :</h2>
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="Guest"
-                  name="attendance"
-                  value="Guest"
-                  checked={selectedVisitorType === "Guest"}
-                  onChange={handleVisitorTypeChange}
-                />
-                <label htmlFor="Guest" className="font-semibold ">
-                  Guest
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="staff"
-                  name="attendance"
-                  value="Support Staff"
-                  checked={selectedVisitorType === "Support Staff"}
-                  onChange={handleVisitorTypeChange}
-                />
-                <label htmlFor="staff" className="font-semibold ">
-                  Support Staff
-                </label>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-col">
-            <h2 className="font-semibold">Visiting Frequency :</h2>
-            <div className="flex items-center gap-4 ">
-              <div className="flex items-center gap-2 ">
-                <input
-                  type="radio"
-                  id="once"
-                  name="frequency"
-                  value="Once"
-                  checked={selectedFrequency === "Once"}
-                  onChange={handleFrequencyChange}
-                />
-                <label htmlFor="once" className="font-semibold">
-                  Once
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="Frequently"
-                  name="frequency"
-                  value="Frequently"
-                  checked={selectedFrequency === "Frequently"}
-                  onChange={handleFrequencyChange}
-                />
-                <label htmlFor="Frequently" className="font-semibold ">
-                  Frequently
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-5">
-          {selectedVisitorType === "Support Staff" && (
-            <div className="grid gap-2 items-center w-full">
-              <label htmlFor="" className="font-medium">
-                Support Category :
-              </label>
-              <select className="border border-gray-400 p-2 rounded-md">
-                <option value="">Select Support Staff Category</option>
-                <option value="">Test Category</option>
-                <option value="">Test Category - 2</option>
-                <option value="">Test Category - 3</option>
-              </select>
-            </div>
-          )}
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="visitorName" className="font-semibold">
-              Visitor Name:
-            </label>
-            <input
-              type="text"
-              value={formData.visitorName}
-              onChange={handleChange}
-              name="visitorName"
-              id="visitorName"
-              className="border border-gray-400 p-2 rounded-md"
-              placeholder="Enter Visitor Name"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="mobileNumber" className="font-semibold">
-              Mobile Number :
-            </label>
-            <input
-              type="number"
-              value={formData.mobile}
-              onChange={handleChange}
-              name="mobile"
-              id="mobileNumber"
-              className="border border-gray-400 p-2 rounded-md"
-              placeholder="Enter Mobile Number"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="" className="font-medium">
-              Host :
-            </label>
-            <select
-              className="border border-gray-400 p-2 rounded-md"
-              value={formData.host}
-              onChange={handleChange}
-              name="host"
+      <Navbar />
+      <div className=" w-full flex mx-3  flex-col overflow-hidden">
+        <div className="flex justify-center items-center  w-full p-4">
+          <div className="md:border border-gray-300 rounded-lg md:p-4 w-full md:mx-4 ">
+            <h2
+              style={{ background: "rgb(19 27 38)" }}
+              className="text-center md:text-xl font-bold p-2 bg-black rounded-full text-white"
             >
-              <option value="">Select Person to meet</option>
-              {hosts.map((host) => (
-                <option value={host.id} key={host.id}>
-                  {host.firstname} {host.lastname}
-                </option>
-              ))}
-            </select>
-          </div>
+              Edit visitor
+            </h2>
+            <br />
 
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="additionalVisitor" className="font-semibold">
-              Pass Number
-            </label>
-            <input
-              value={formData.passNumber}
-              onChange={handleChange}
-              name="passNumber"
-              type="number"
-              id="additionalVisitor"
-              className="border border-gray-400 p-2 rounded-md"
-              placeholder="Enter Pass number"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="comingFrom" className="font-semibold">
-              Coming from:
-            </label>
-            <input
-              type="text"
-              value={formData.comingFrom}
-              onChange={handleChange}
-              name="comingFrom"
-              id="comingFrom"
-              className="border border-gray-400 p-2 rounded-md"
-              placeholder="Enter Origin"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="vehicleNumber" className="font-semibold">
-              Vehicle Number:
-            </label>
-            <input
-              type="text"
-              value={formData.vehicleNumber}
-              onChange={handleChange}
-              name="vehicleNumber"
-              id="vehicleNumber"
-              className="border border-gray-400 p-2 rounded-md"
-              placeholder="Enter Vehicle Number"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="notes" className="font-semibold">
-              Notes:
-            </label>
-            <input
-              type="text"
-              id="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              name="notes"
-              className="border border-gray-400 p-2 rounded-md"
-              placeholder="Enter Notes"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="expectedDate" className="font-semibold">
-              Expected Date:
-            </label>
-            <input
-              type="date"
-              value={formData.expectedDate}
-              onChange={handleChange}
-              name="expectedDate"
-              id="expectedDate"
-              className="border border-gray-400 p-2 rounded-md"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="expectedTime" className="font-semibold">
-              Expected Time:
-            </label>
-            <input
-              type="time"
-              value={formData.expectedTime}
-              onChange={handleChange}
-              name="expectedTime"
-              id="expectedTime"
-              className="border border-gray-400 p-2 rounded-md"
-            />
-          </div>
-
-          <div className="grid gap-2 items-center w-full">
-            <label htmlFor="purpose" className="font-semibold">
-              Visit Purpose:
-            </label>
-            <select
-              id="purpose"
-              value={formData.purpose}
-              onChange={handleChange}
-              name="purpose"
-              className="border border-gray-400 p-2 rounded-md"
+            <div
+              onClick={handleImageClick}
+              className="cursor-pointer flex justify-center items-center my-4"
+              title="Click to upload an image"
+              aria-label="Click to upload an image"
             >
-              <option value="">Select Purpose</option>
-              <option value="Meeting">Meeting</option>
-              <option value="Delivery">Delivery</option>
-              <option value="Personal">Personal</option>
-              <option value="Fitout Staff">Fitout Staff</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+              {imageFile ? (
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Uploaded"
+                  className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
+                />
+              ) : (
+                <img
+                  src={image || "/default-image-path.jpg"}
+                  alt="Default"
+                  className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
+                />
+              )}
+              <input
+                id="file-upload"
+                type="file"
+                ref={inputRef}
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
+              {details.visitor_files?.length > 0 ? (
+                details.visitor_files.map((doc, index) => (
+                  <img
+                    key={index}
+                    src={domainPrefix + doc.document}
+                    alt={`Visitor File ${index + 1}`}
+                    className="w-48 h-48 rounded-full cursor-pointer"
+                    onClick={() => window.open(domainPrefix + doc.document, "_blank")}
+                  />
+                ))
+              ) : (
+                <p></p>
+              )}
 
-          <span>
-            <input
-              type="checkbox"
-              id="approval"
-              checked={formData.hostApproval}
-              onChange={() =>
-                setFormData((prevState) => ({
-                  ...prevState,
-                  hostApproval: !prevState.hostApproval,
-                }))
-              }
-            />
-            &nbsp;<label htmlFor="approval">Skip Host Approval</label>
-            &nbsp;&nbsp;&nbsp;
-            <input
-              type="checkbox"
-              id="goods"
-              checked={formData.goodsInward}
-              onChange={() =>
-                setFormData((prevState) => ({
-                  ...prevState,
-                  goodsInward: !prevState.goodsInward,
-                }))
-              }
-            />
-            &nbsp;&nbsp;<label htmlFor="goods">Goods Inwards</label>
-          </span>
-        </div>
-        <h2 className="font-medium border-b-2 mt-5 border-black">
-          Additional Visitor
-        </h2>
-        <div className="grid md:grid-cols-3 gap-3 mt-5">
-          {visitors
-            .filter((visitor) => visitor._destroy !== "1")
-            .map((visitor, index) => (
-              <div key={index}>
-                <div className="grid gap-2 items-center w-full">
-                  <label htmlFor="" className="font-semibold">
-                    Name:
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    name="name"
-                    className="border border-gray-400 p-2 rounded-md"
-                    value={visitor.name}
-                    onChange={(event) => handleInputChange(index, event)}
-                  />
-                </div>
-                &nbsp;&nbsp;
-                <div className="grid gap-2 items-center w-full">
-                  <label htmlFor="" className="font-semibold">
-                    Mobile:
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Mobile Number"
-                    name="mobile"
-                    className="border border-gray-400 p-2 rounded-md"
-                    value={visitor.mobile}
-                    onChange={(event) => handleInputChange(index, event)}
-                  />
-                  <button onClick={() => handleRemoveVisitor(index)}>
-                    <FaTrash />
-                  </button>
-                  &nbsp;
+            </div>
+            <div className="flex md:flex-row flex-col  my-5 gap-10">
+              <div className="flex gap-2 flex-col">
+                <h2 className="font-semibold">Visitor Type :</h2>
+                <div className="flex items-center gap-5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id="Guest"
+                      name="attendance"
+                      value="Guest"
+                      checked={selectedVisitorType === "Guest"}
+                      onChange={handleVisitorTypeChange}
+                    />
+                    <label htmlFor="Guest" className="font-semibold ">
+                      Guest
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id="staff"
+                      name="attendance"
+                      value="Support Staff"
+                      checked={selectedVisitorType === "Support Staff"}
+                      onChange={handleVisitorTypeChange}
+                    />
+                    <label htmlFor="staff" className="font-semibold ">
+                      Support Staff
+                    </label>
+                  </div>
                 </div>
               </div>
-            ))}
-
-          <div>
-            <button
-              onClick={handleAddVisitor}
-              className="bg-black text-white hover:bg-gray-700 font-semibold py-2 px-4 rounded"
-            >
-              Add Additional Visitor
-            </button>
-          </div>
-        </div>
-        {selectedFrequency === "Frequently" && (
-          <div className="flex flex-col gap-2 my-2">
-            <div className="grid md:grid-cols-3 gap-4 ">
-              <div className="flex flex-col">
-                <p className="font-medium"> Pass Valid From :</p>
-                <input
-                  type="date"
-                  min={todayDate}
-                  value={passStartDate}
-                  onChange={(event) => setPassStartDate(event.target.value)}
-                  className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
-                />
-              </div>
-              <div className="flex flex-col">
-                <p className="font-medium">Pass Valid To :</p>
-                <input
-                  type="date"
-                  min={todayDate}
-                  value={passEndDate ? passEndDate : todayDate}
-                  onChange={(event) => setPassEndDate(event.target.value)}
-                  className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
-                />
+              <div className="flex gap-2 flex-col">
+                <h2 className="font-semibold">Visiting Frequency :</h2>
+                <div className="flex items-center gap-4 ">
+                  <div className="flex items-center gap-2 ">
+                    <input
+                      type="radio"
+                      id="once"
+                      name="frequency"
+                      value="Once"
+                      checked={selectedFrequency === "Once"}
+                      onChange={handleFrequencyChange}
+                    />
+                    <label htmlFor="once" className="font-semibold">
+                      Once
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id="Frequently"
+                      name="frequency"
+                      value="Frequently"
+                      checked={selectedFrequency === "Frequently"}
+                      onChange={handleFrequencyChange}
+                    />
+                    <label htmlFor="Frequently" className="font-semibold ">
+                      Frequently
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="font-medium">Select Permitted Days :</p>
 
-            <div className="flex gap-4 flex-wrap ">
-              {weekdaysMap.map((weekdayObj) => (
+            <div className="grid md:grid-cols-3 gap-5">
+              {selectedVisitorType === "Support Staff" && (
+                <div className="grid gap-2 items-center w-full">
+                  <label htmlFor="" className="font-medium">
+                    Support Category :
+                  </label>
+                  <select className="border border-gray-400 p-2 rounded-md">
+                    <option value="">Select Support Staff Category</option>
+                    <option value="">Test Category</option>
+                    <option value="">Test Category - 2</option>
+                    <option value="">Test Category - 3</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="visitorName" className="font-semibold">
+                  Visitor Name:
+                </label>
+                <input
+                  type="text"
+                  value={formData.visitorName}
+                  onChange={handleChange}
+                  name="visitorName"
+                  id="visitorName"
+                  className="border border-gray-400 p-2 rounded-md"
+                  placeholder="Enter Visitor Name"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="mobileNumber" className="font-semibold">
+                  Mobile Number :
+                </label>
+                <input
+                  type="number"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  name="mobile"
+                  id="mobileNumber"
+                  className="border border-gray-400 p-2 rounded-md"
+                  placeholder="Enter Mobile Number"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="" className="font-medium">
+                  Host :
+                </label>
+                <select
+                  className="border border-gray-400 p-2 rounded-md"
+                  value={formData.host}
+                  onChange={handleChange}
+                  name="host"
+                >
+                  <option value="">Select Person to meet</option>
+                  {hosts.map((host) => (
+                    <option value={host.id} key={host.id}>
+                      {host.firstname} {host.lastname}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="additionalVisitor" className="font-semibold">
+                  Pass Number
+                </label>
+                <input
+                  value={formData.passNumber}
+                  onChange={handleChange}
+                  name="passNumber"
+                  type="number"
+                  id="additionalVisitor"
+                  className="border border-gray-400 p-2 rounded-md"
+                  placeholder="Enter Pass number"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="comingFrom" className="font-semibold">
+                  Coming from:
+                </label>
+                <input
+                  type="text"
+                  value={formData.comingFrom}
+                  onChange={handleChange}
+                  name="comingFrom"
+                  id="comingFrom"
+                  className="border border-gray-400 p-2 rounded-md"
+                  placeholder="Enter Origin"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="vehicleNumber" className="font-semibold">
+                  Vehicle Number:
+                </label>
+                <input
+                  type="text"
+                  value={formData.vehicleNumber}
+                  onChange={handleChange}
+                  name="vehicleNumber"
+                  id="vehicleNumber"
+                  className="border border-gray-400 p-2 rounded-md"
+                  placeholder="Enter Vehicle Number"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="notes" className="font-semibold">
+                  Notes:
+                </label>
+                <input
+                  type="text"
+                  id="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  name="notes"
+                  className="border border-gray-400 p-2 rounded-md"
+                  placeholder="Enter Notes"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="expectedDate" className="font-semibold">
+                  Expected Date:
+                </label>
+                <input
+                  type="date"
+                  value={formData.expectedDate}
+                  onChange={handleChange}
+                  name="expectedDate"
+                  id="expectedDate"
+                  className="border border-gray-400 p-2 rounded-md"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="expectedTime" className="font-semibold">
+                  Expected Time:
+                </label>
+                <input
+                  type="time"
+                  value={formData.expectedTime}
+                  onChange={handleChange}
+                  name="expectedTime"
+                  id="expectedTime"
+                  className="border border-gray-400 p-2 rounded-md"
+                />
+              </div>
+
+              <div className="grid gap-2 items-center w-full">
+                <label htmlFor="purpose" className="font-semibold">
+                  Visit Purpose:
+                </label>
+                <select
+                  id="purpose"
+                  value={formData.purpose}
+                  onChange={handleChange}
+                  name="purpose"
+                  className="border border-gray-400 p-2 rounded-md"
+                >
+                  <option value="">Select Purpose</option>
+                  <option value="Meeting">Meeting</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Fitout Staff">Fitout Staff</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <span>
+                <input
+                  type="checkbox"
+                  id="approval"
+                  checked={formData.hostApproval}
+                  onChange={() =>
+                    setFormData((prevState) => ({
+                      ...prevState,
+                      hostApproval: !prevState.hostApproval,
+                    }))
+                  }
+                />
+                &nbsp;<label htmlFor="approval">Skip Host Approval</label>
+                &nbsp;&nbsp;&nbsp;
+                <input
+                  type="checkbox"
+                  id="goods"
+                  checked={formData.goodsInward}
+                  onChange={() =>
+                    setFormData((prevState) => ({
+                      ...prevState,
+                      goodsInward: !prevState.goodsInward,
+                    }))
+                  }
+                />
+                &nbsp;&nbsp;<label htmlFor="goods">Goods Inwards</label>
+              </span>
+            </div>
+            <h2 className="font-medium border-b-2 mt-5 border-black">
+              Additional Visitor
+            </h2>
+            <div className="grid md:grid-cols-3 gap-3 mt-5">
+              {visitors
+                .filter((visitor) => visitor._destroy !== "1")
+                .map((visitor, index) => (
+                  <div key={index}>
+                    <div className="grid gap-2 items-center w-full">
+                      <label htmlFor="" className="font-semibold">
+                        Name:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        name="name"
+                        className="border border-gray-400 p-2 rounded-md"
+                        value={visitor.name}
+                        onChange={(event) => handleInputChange(index, event)}
+                      />
+                    </div>
+                    &nbsp;&nbsp;
+                    <div className="grid gap-2 items-center w-full">
+                      <label htmlFor="" className="font-semibold">
+                        Mobile:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Mobile Number"
+                        name="mobile"
+                        className="border border-gray-400 p-2 rounded-md"
+                        value={visitor.mobile}
+                        onChange={(event) => handleInputChange(index, event)}
+                      />
+                      <button onClick={() => handleRemoveVisitor(index)}>
+                        <FaTrash />
+                      </button>
+                      &nbsp;
+                    </div>
+                  </div>
+                ))}
+
+              <div>
                 <button
-                  key={weekdayObj.day}
-                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${
-                    selectedWeekdays?.includes(weekdayObj.day)
-                      ? // &&
+                  onClick={handleAddVisitor}
+                  className="bg-black text-white hover:bg-gray-700 font-semibold py-2 px-4 rounded"
+                >
+                  Add Additional Visitor
+                </button>
+              </div>
+            </div>
+            {selectedFrequency === "Frequently" && (
+              <div className="flex flex-col gap-2 my-2">
+                <div className="grid md:grid-cols-3 gap-4 ">
+                  <div className="flex flex-col">
+                    <p className="font-medium"> Pass Valid From :</p>
+                    <input
+                      type="date"
+                      min={todayDate}
+                      value={passStartDate}
+                      onChange={(event) => setPassStartDate(event.target.value)}
+                      className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="font-medium">Pass Valid To :</p>
+                    <input
+                      type="date"
+                      min={todayDate}
+                      value={passEndDate ? passEndDate : todayDate}
+                      onChange={(event) => setPassEndDate(event.target.value)}
+                      className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                    />
+                  </div>
+                </div>
+                <p className="font-medium">Select Permitted Days :</p>
+
+                <div className="flex gap-4 flex-wrap ">
+                  {weekdaysMap.map((weekdayObj) => (
+                    <button
+                      key={weekdayObj.day}
+                      className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${selectedWeekdays?.includes(weekdayObj.day)
+                        ? // &&
                         // weekdayObj.isActive
                         "bg-green-400 text-white "
-                      : ""
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleWeekdaySelection(weekdayObj.day);
-                  }}
-                >
-                  <a>{weekdayObj.day}</a>
-                </button>
-              ))}
+                        : ""
+                        }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleWeekdaySelection(weekdayObj.day);
+                      }}
+                    >
+                      <a>{weekdayObj.day}</a>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-5 justify-center items-center my-4 mb-10">
+              <button
+                onClick={handleEditVisitor}
+                className="bg-black text-white hover:bg-gray-700 font-semibold py-2 px-4 rounded"
+              >
+                Save
+              </button>
             </div>
           </div>
-        )}
-
-        <div className="flex gap-5 justify-center items-center my-4 mb-10">
-          <button
-            onClick={handleEditVisitor}
-            className="bg-black text-white hover:bg-gray-700 font-semibold py-2 px-4 rounded"
-          >
-            Save
-          </button>
         </div>
       </div>
-      </div>
-    </div>
-    </section>
+    </section >
   );
 };
 

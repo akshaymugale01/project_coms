@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import image from "/profile.png";
 import { FaTrash } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
 import toast from "react-hot-toast";
-import { getSetupUsers, postNewVisitor } from "../../../api";
+import { getHostList, getSetupUsers, postNewVisitor } from "../../../api";
 import { useNavigate } from "react-router-dom";
 import FileInputBox from "../../../containers/Inputs/FileInputBox";
 
@@ -15,18 +15,22 @@ const EmployeeAddVisitor = () => {
   const inputRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
   const [visitors, setVisitors] = useState([{ name: "", mobile: "" }]);
+  const [hosts, setHosts] = useState([]);
   const [selectedFrequency, setSelectedFrequency] = useState("Once");
   const [selectedVisitorType, setSelectedVisitorType] = useState("Guest");
   const [passStartDate, setPassStartDate] = useState("");
   const [passEndDate, setPassEndDate] = useState("");
+  const [capturedImage, setCapturedImage] = useState(null);
 
   const [formData, setFormData] = useState({
     visitorName: "",
+    vhost_id: "",
     mobile: "",
     purpose: "",
     comingFrom: "",
+    pass_number: "",
     vehicleNumber: "",
-    expectedDate: "",
+    expectedDate: new Date().toISOString().split("T")[0],
     expectedTime: "",
     hostApproval: false,
     goodsInward: false,
@@ -57,6 +61,22 @@ const EmployeeAddVisitor = () => {
     setVisitors(newVisitors);
   };
 
+
+  const fetchUsers = async () => {
+    try {
+      const usersResp = await getHostList(siteId);
+      setHosts(usersResp.data.hosts);
+      console.log(usersResp);
+    } catch (error) {
+      console.log(error)
+    }
+  };
+
+  useEffect(() => {
+
+    fetchUsers();
+  }, [])
+
   const getHeadingText = () => {
     switch (behalf) {
       case "Visitor":
@@ -70,6 +90,7 @@ const EmployeeAddVisitor = () => {
     }
   };
 
+
   const handleImageClick = () => {
     inputRef.current.click();
   };
@@ -81,28 +102,45 @@ const EmployeeAddVisitor = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
   const navigate = useNavigate();
+
+
   const createNewVisitor = async () => {
+    // Check for required fields
     if (
       formData.visitorName === "" ||
       formData.purpose === "" ||
-      formData.mobile === ""
+      formData.mobile === "" ||
+      formData.vhost_id === ""
     ) {
-      return toast.error("All fields are Required");
+      return toast.error("All fields are required");
     }
+  
+    // Validate mobile number
     const mobilePattern = /^\d{10}$/;
     if (!mobilePattern.test(formData.mobile)) {
-      return toast.error("Mobile number must be  10 digits.");
+      return toast.error("Mobile number must be 10 digits.");
     }
-
+  
+    // Prepare FormData
     const postData = new FormData();
     postData.append("visitor[site_id]", siteId);
     postData.append("visitor[created_by_id]", userId);
     postData.append("visitor[name]", formData.visitorName);
-    // if (capturedImage) {
-    //   const response = await fetch(capturedImage);
-    //   const blob = await response.blob();
-    // postData.append("visitor[profile_pic]", imageFile, "visitor_image.jpg");
-    // }
+  
+    // Handle profile_pic (file upload)
+    if (imageFile) {
+      postData.append("visitor[profile_pic]", imageFile, "visitor_image.jpg");
+    } else if (capturedImage) {
+      try {
+        const response = await fetch(capturedImage); // Fetch the captured image
+        const blob = await response.blob(); // Convert to blob
+        postData.append("visitor[profile_pic]", blob, "visitor_image.jpg");
+      } catch (error) {
+        console.error("Error while processing the captured image:", error);
+      }
+    }
+  
+    // Append other form data
     postData.append("visitor[contact_no]", formData.mobile);
     postData.append("visitor[purpose]", formData.purpose);
     postData.append("visitor[start_pass]", passStartDate);
@@ -111,32 +149,49 @@ const EmployeeAddVisitor = () => {
     postData.append("visitor[vehicle_number]", formData.vehicleNumber);
     postData.append("visitor[expected_date]", formData.expectedDate);
     postData.append("visitor[expected_time]", formData.expectedTime);
+    postData.append("visitor[pass_number]", formData.pass_number);
+    postData.append("visitor[vhost_id]", formData.vhost_id);
     postData.append("visitor[skip_host_approval]", formData.hostApproval);
     postData.append("visitor[goods_inwards]", formData.goodsInward);
     postData.append("visitor[visit_type]", selectedVisitorType);
     postData.append("visitor[frequency]", selectedFrequency);
+  
+    // Add selected weekdays
     selectedWeekdays.forEach((day) => {
       postData.append("visitor[working_days][]", day);
     });
-    visitors.forEach((extraVisitor, index) => {
-      postData.append(
-        `visitor[extra_visitors_attributes][${index}][name]`,
-        extraVisitor.name
-      );
-      postData.append(
-        `visitor[extra_visitors_attributes][${index}][contact_no]`,
-        extraVisitor.mobile
-      );
-    });
+    // Only send extra visitors if there are any
+    if (visitors.length > 0) {
+      visitors.forEach((extraVisitor, index) => {
+        if (extraVisitor.name || extraVisitor.mobile) {
+          if (extraVisitor.name) {
+            postData.append(
+              `visitor[extra_visitors_attributes][${index}][name]`,
+              extraVisitor.name
+            );
+          }
+          if (extraVisitor.mobile) {
+            postData.append(
+              `visitor[extra_visitors_attributes][${index}][contact_no]`,
+              extraVisitor.mobile
+            );
+          }
+        }
+      });
+    }
+  
+    // Send the data to the backend
     try {
       const visitResp = await postNewVisitor(postData);
       console.log(visitResp);
       navigate("/employee/passes/visitors");
       toast.success("Visitor Added Successfully");
     } catch (error) {
-      console.log(error);
+      console.error("Error while creating visitor:", error);
+      toast.error("Failed to create visitor. Please try again.");
     }
   };
+  
 
   const currentDates = new Date();
   const year = currentDates.getFullYear();
@@ -180,7 +235,7 @@ const EmployeeAddVisitor = () => {
     <div className="flex justify-center items-center  w-full p-4">
       <div className="md:border border-gray-300 rounded-lg md:p-4 w-full md:mx-4 ">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 38)" }}
           className="text-center md:text-xl font-bold p-2 bg-black rounded-full text-white"
         >
           {getHeadingText()}
@@ -279,7 +334,6 @@ const EmployeeAddVisitor = () => {
             </div>
           </div>
         </div>
-
         <div className="grid md:grid-cols-3 gap-5">
           {selectedVisitorType === "Support Staff" && (
             <div className="grid gap-2 items-center w-full">
@@ -327,26 +381,41 @@ const EmployeeAddVisitor = () => {
             </div>
           )}
 
-          {/* <div className="grid gap-2 items-center w-full">
-            <label htmlFor="">Host</label>
-            <select className="border border-gray-400 p-2 rounded-md"><option value="">Select Person to meet</option>
-            <option value="">Mittu</option></select>
-            
-            </div> */}
-
+          <div className="grid gap-2 items-center w-full">
+            <label htmlFor="" className="font-medium">
+              Host : <label>*</label>
+            </label>
+            <select
+              className="border border-gray-400 p-2 rounded-md"
+              value={formData.vhost_id}
+              onChange={handleChange}
+              name="vhost_id"
+            >
+              <option value="">Select Person to meet</option>
+              {hosts.map((host) => (
+                <option value={host.id} key={host.id}>
+                  {host.name}
+                </option>
+              ))}
+            </select>
+          </div>
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="additionalVisitor" className="font-semibold">
                 Pass Number
               </label>
               <input
-                type="number"
+                type="text" // Change this to "text" instead of "pass_number"
                 id="additionalVisitor"
+                name="pass_number" // Add a name attribute for easier identification
+                value={formData.pass_number || ""} // Ensure it has a fallback value
+                onChange={handleChange} // Add onChange handler
                 className="border border-gray-400 p-2 rounded-md"
                 placeholder="Enter Pass number"
               />
             </div>
           )}
+
 
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
@@ -572,13 +641,12 @@ const EmployeeAddVisitor = () => {
               {weekdaysMap.map((weekdayObj) => (
                 <button
                   key={weekdayObj.day}
-                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${
-                    selectedWeekdays?.includes(weekdayObj.day)
-                      ? // &&
-                        // weekdayObj.isActive
-                        "bg-green-400 text-white "
-                      : ""
-                  }`}
+                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${selectedWeekdays?.includes(weekdayObj.day)
+                    ? // &&
+                    // weekdayObj.isActive
+                    "bg-green-400 text-white "
+                    : ""
+                    }`}
                   onClick={(e) => {
                     e.preventDefault();
                     handleWeekdaySelection(weekdayObj.day);

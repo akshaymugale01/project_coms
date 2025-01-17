@@ -53,6 +53,7 @@ const Asset = () => {
   const [selectedUnit, setSelectedUnit] = useState("");
   const [page, setPage] = useState("assets");
   const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const themeColor = useSelector((state) => state.theme.color);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -81,6 +82,13 @@ const Asset = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+
   }, []);
 
   const dateFormat = (dateString) => {
@@ -652,9 +660,7 @@ const Asset = () => {
           <>
             <Table
               selectableRows
-              columns={column.filter(
-                (col) => !selectedOptions.includes(col.name)
-              )}
+              columns={column.filter((col) => !selectedOptions.includes(col.name))}
               data={filteredData}
               fixedHeader
               pagination={false}
@@ -673,6 +679,10 @@ const Asset = () => {
               />
             </div>
           </>
+        ) : assets.length === 0 ? (
+          <div className="flex justify-center items-center h-full">
+            <p className="text-gray-500 text-lg">No Records!</p>
+          </div>
         ) : (
           <div className="flex justify-center items-center h-full">
             <DNA
@@ -685,6 +695,7 @@ const Asset = () => {
             />
           </div>
         )}
+
         {/* </>
         )} */}
         {page === "AMC" && <AMC />}

@@ -147,7 +147,7 @@ const AddBusiness = () => {
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <div className="flex flex-col w-full gap-4 p-4">
           <h2
-            style={{ background: themeColor }}
+            style={{ background: "rgb(19 27 38)" }}
             className="text-center text-white font-semibold p-2 rounded-full text-lg "
           >
             Add Business Contact

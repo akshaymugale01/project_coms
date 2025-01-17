@@ -22,6 +22,7 @@ const AddNewVisitor = () => {
   const [showWebcam, setShowWebcam] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [slots, setSlots] = useState([]);
+  const webcamRef = useRef(null);
   const handleOpenCamera = () => {
     setShowWebcam(true);
   };
@@ -29,6 +30,29 @@ const AddNewVisitor = () => {
   const handleCloseCamera = () => {
     setShowWebcam(false);
   };
+
+  // const capture = useCallback(() => {
+  //   const imageSrc = webcamRef.current.getScreenshot();
+  //   console.log(imageSrc);
+  //   setShowWebcam(false);
+  //   setCapturedImage(imageSrc);
+  // }, [webcamRef]);
+
+  const capture = () => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setCapturedImage(imageSrc); // Save captured image
+    setShowWebcam(false); // Close the webcam after capturing
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file); // Save uploaded image file
+      setCapturedImage(null); // Reset captured image if uploading a file
+    }
+  };
+
+
   const [staffCategories, setStaffCategories] = useState([])
   const [passEndDate, setPassEndDate] = useState("");
   const [formData, setFormData] = useState({
@@ -37,17 +61,19 @@ const AddNewVisitor = () => {
     purpose: "",
     comingFrom: "",
     vehicleNumber: "",
-    expectedDate: "",
+    expectedDate: new Date().toISOString().split("T")[0],
     expectedTime: "",
     hostApproval: false,
     goodsInward: false,
     host: "",
+    profile_picture: "",
     passNumber: "",
     noOfGoods: "",
     goodsDescription: "",
     goodsAttachments: [],
     supportCategory: "",
-    slotNumber: ""
+    slotNumber: "",
+    vhost_id: "",
   });
 
   console.log(formData);
@@ -136,13 +162,7 @@ const AddNewVisitor = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const webcamRef = useRef(null);
-  const capture = useCallback(() => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    console.log(imageSrc);
-    setShowWebcam(false);
-    setCapturedImage(imageSrc);
-  }, [webcamRef]);
+
 
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -176,8 +196,6 @@ const AddNewVisitor = () => {
       return;
     }
 
-
-
     const postData = new FormData();
     postData.append("visitor[site_id]", siteId);
     postData.append("visitor[created_by_id]", formData.host);
@@ -197,29 +215,36 @@ const AddNewVisitor = () => {
     postData.append("visitor[pass_number]", formData.passNumber);
     postData.append("visitor[frequency]", selectedFrequency);
     postData.append("visitor[parking_slot]", formData.slotNumber);
-    postData.append("visitor[vhost_id]", formData.host);;
+    postData.append("visitor[vhost_id]", formData.host);
+
     if (capturedImage) {
       const response = await fetch(capturedImage);
       const blob = await response.blob();
       postData.append("visitor[profile_pic]", blob, "visitor_image.jpg");
+    } else if (imageFile){
+      postData.append("visitor[profile_pic]", imageFile, imageFile.name);
     }
     const blob = await fetch(capturedImage).then((res) => res.blob());
     selectedWeekdays.forEach((day) => {
       postData.append("visitor[working_days][]", day);
     });
-    if (extraVisitor.name || extraVisitor.mobile) {
-      if (extraVisitor.name) {
-        postData.append(
-          `visitor[extra_visitors_attributes][${index}][name]`,
-          extraVisitor.name
-        );
-      }
-      if (extraVisitor.mobile) {
-        postData.append(
-          `visitor[extra_visitors_attributes][${index}][contact_no]`,
-          extraVisitor.mobile
-        );
-      }
+    if (visitors.length > 0) {
+      visitors.forEach((extraVisitor, index) => {
+        if (extraVisitor.name || extraVisitor.mobile) {
+          if (extraVisitor.name) {
+            postData.append(
+              `visitor[extra_visitors_attributes][${index}][name]`,
+              extraVisitor.name
+            );
+          }
+          if (extraVisitor.mobile) {
+            postData.append(
+              `visitor[extra_visitors_attributes][${index}][contact_no]`,
+              extraVisitor.mobile
+            );
+          }
+        }
+      });
     }
     try {
       toast.loading("Creating new visitor Please wait!");
@@ -293,17 +318,39 @@ const AddNewVisitor = () => {
           {getHeadingText()}
         </h2>
         <br />
+
         <div className="flex justify-center">
           {!showWebcam ? (
-            <button onClick={handleOpenCamera}>
-              <img
-                src={capturedImage || image}
-                alt="Uploaded"
-                className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
-              />
-            </button>
+            <div className="flex flex-col items-center">
+              {/* Button to Open Camera */}
+              <button onClick={handleOpenCamera}>
+                <img
+                  src={imageFile ? URL.createObjectURL(imageFile) : capturedImage || image}
+                  alt="Uploaded or Captured"
+                  className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
+                />
+              </button>
+
+              {/* Upload Image from Local */}
+              <div className="mt-4">
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer bg-blue-400 rounded-md text-white p-1 px-4"
+                >
+                  Upload Image
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleFileUpload}
+                />
+              </div>
+            </div>
           ) : (
             <div>
+              {/* Webcam Section */}
               <div className="rounded-full">
                 <Webcam
                   audio={false}
@@ -312,6 +359,7 @@ const AddNewVisitor = () => {
                   className="rounded-full w-60 h-60 object-cover"
                 />
               </div>
+              {/* Webcam Buttons */}
               <div className="flex gap-2 justify-center my-2 items-center">
                 <button
                   onClick={capture}
@@ -329,6 +377,8 @@ const AddNewVisitor = () => {
             </div>
           )}
         </div>
+
+
 
         <div className="flex md:flex-row flex-col  my-5 gap-10">
           <div className="flex gap-2 flex-col">
@@ -412,7 +462,7 @@ const AddNewVisitor = () => {
           {behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="visitorName" className="font-semibold">
-                Visitor Name:
+                Visitor Name: <label className="text-red-500 font-semibold">*</label>
               </label>
               <input
                 type="text"
@@ -428,7 +478,7 @@ const AddNewVisitor = () => {
           {behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="mobileNumber" className="font-semibold">
-                Mobile Number :
+                Mobile Number : <label className="text-red-500 font-semibold">*</label>
               </label>
               <input
                 type="number"
@@ -444,7 +494,7 @@ const AddNewVisitor = () => {
 
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="" className="font-medium">
-              Host : <label>*</label>
+              Host : <label className="text-red-500 font-semibold">*</label>
             </label>
             <select
               className="border border-gray-400 p-2 rounded-md"
@@ -459,7 +509,8 @@ const AddNewVisitor = () => {
                 </option>
               ))}
             </select>
-          </div>
+          </div> 
+          
 
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
@@ -560,7 +611,7 @@ const AddNewVisitor = () => {
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="purpose" className="font-semibold">
-                Visit Purpose:
+                Visit Purpose: <label className="text-red-500 font-semibold">*</label>
               </label>
               <select
                 id="purpose"
@@ -725,10 +776,10 @@ const AddNewVisitor = () => {
                 <button
                   key={weekdayObj.day}
                   className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${selectedWeekdays?.includes(weekdayObj.day)
-                      ? // &&
-                      // weekdayObj.isActive
-                      "bg-green-400 text-white "
-                      : ""
+                    ? // &&
+                    // weekdayObj.isActive
+                    "bg-green-400 text-white "
+                    : ""
                     }`}
                   onClick={(e) => {
                     e.preventDefault();

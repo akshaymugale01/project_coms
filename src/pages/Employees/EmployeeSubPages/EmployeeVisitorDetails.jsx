@@ -19,7 +19,7 @@ const EmployeeVisitorDetails = () => {
     try {
       const detailsResp = await getVisitorDetails(id);
       setDetails(detailsResp.data);
-      console.log(detailsResp.data);
+      console.log("visd",detailsResp.data);
     } catch (error) {
       console.log(error);
     }
@@ -131,8 +131,15 @@ const EmployeeVisitorDetails = () => {
       sortable: true,
     },
     {
-      name: " Check out",
-      selector: (row) => (row.check_in ? dateTimeFormat(row.check_out) : null),
+      name: "Check out",
+      selector: (row) => {
+        // Check if `row.out_time` is valid
+        if (row.out_time && !isNaN(new Date(row.out_time))) {
+          return dateTimeFormat(row.out_time); // Format the valid date
+        } else {
+          return "Not yet updated!"; // Fallback for invalid or missing date
+        }
+      },
       sortable: true,
     },
   ];
@@ -148,11 +155,21 @@ const EmployeeVisitorDetails = () => {
       sortable: true,
     },
     {
-      name: " Check out",
-      selector: (row) => (row.out_time ? dateTimeFormat(row.out_time) : null),
+      name: "Check out",
+      selector: (row) => {
+        // Check if `row.out_time` is valid
+        if (row.out_time && !isNaN(new Date(row.out_time))) {
+          return dateTimeFormat(row.out_time); // Format the valid date
+        } else {
+          return "Not yet updated"; // Fallback for invalid or missing date
+        }
+      },
       sortable: true,
-    },
+    },    
   ];
+
+
+  
 
   return (
     <div className="w-screen mb-4">
@@ -194,7 +211,7 @@ const EmployeeVisitorDetails = () => {
         </div>
         <h2
           style={{
-            background: themeColor,
+            background: "rgb(19 27 32)",
           }}
           className="text-center w-full text-white font-semibold text-lg p-2 px-4 "
         >
@@ -204,12 +221,12 @@ const EmployeeVisitorDetails = () => {
           {details.profile_picture && details.profile_picture !== null ? (
             // details.visitor_files.map((doc, index) => (
             <img
-              src={domainPrefix + details.profile_picture.url}
+              src={domainPrefix + details.profile_picture}
               alt=""
               className="w-48 h-48 rounded-full cursor-pointer"
               onClick={() =>
                 window.open(
-                  domainPrefix + details.profile_picture.url,
+                  domainPrefix + details.profile_picture,
                   "_blank"
                 )
               }
