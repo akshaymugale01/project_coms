@@ -35,7 +35,7 @@ const OtherProject = () => {
         const transformedProjects = data.map((project) => ({
           ...project,
           image: project.attachments?.[0]?.document
-            ? `https://app.myciti.life${project.attachments[0].document}`
+            ? `http://app.myciti.life${project.attachments[0].document}`
             : "https://via.placeholder.com/300", // Default image
         }));
         setProjects(transformedProjects);
@@ -162,6 +162,10 @@ const OtherProject = () => {
       formDataToSend.append("attachments[]", file);
     });
 
+      // Log the formData to verify its structure
+  for (let pair of formDataToSend.entries()) {
+    console.log(pair[0], pair[1]);
+  }
     try {
       if (isEditMode) {
         // Edit Mode: Call PUT API
@@ -249,6 +253,7 @@ const OtherProject = () => {
                       : `👍 ${project.liked_count || 0}`}
                   </div>
 
+                  {/* {} */}
                   <div
                     className="absolute top-4 right-14 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
                     onClick={() => handleEdit(project.id)}

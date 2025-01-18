@@ -117,7 +117,7 @@ const SetupNavbar = () => {
             </Link>
           )}
 
-          {feat.includes("vendors") && (
+          {feat.includes("other_projects") && (
             <Link to="/setup/other_projects" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaDiagramProject /> Other Projets
             </Link>
