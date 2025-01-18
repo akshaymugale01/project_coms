@@ -13,6 +13,7 @@ import { FiEdit, FiTrash2 } from "react-icons/fi"; // Trash icon for delete
 
 const OtherProject = () => {
   const companyID = getItemInLocalStorage("COMPANYID");
+  const userID = getItemInLocalStorage("UserId");
   const [projects, setProjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [likedProjects, setLikedProjects] = useState([]);
@@ -198,7 +199,7 @@ const OtherProject = () => {
 
       <div className="min-h-screen bg-gray-700 w-full p-6">
         <div className="flex justify-end text-right mb-4">
-          {companyID === 48 && (
+          {companyID === 47 && (
             <>
               <button
                 onClick={handleOpenModal}
@@ -253,20 +254,24 @@ const OtherProject = () => {
                       : `👍 ${project.liked_count || 0}`}
                   </div>
 
-                  {/* {} */}
-                  <div
+                   {userID === 574 && (
+                    <div
                     className="absolute top-4 right-14 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
                     onClick={() => handleEdit(project.id)}
                   >
                     <FiEdit size={18} />
                   </div>
+                   )}
 
-                  <div
+                   {userID === 574 && (
+                    <div
                     className="absolute top-4 right-4 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
                     onClick={() => handleDelete(project.id)}
                   >
                     <FiTrash2 className="text-red-500" size={18} />
                   </div>
+                   )} 
+                  
                 </div>
                 <div className="p-4">
                   <h2 className="text-lg font-bold mb-2">{project.title}</h2>
