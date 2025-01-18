@@ -163,7 +163,7 @@ const CreateBroadcast = () => {
         <div className="flex justify-center">
           <div className="md:mx-20 my-5 mb-10 md:border p-2 md:px-2 rounded-lg w-full">
             <h2
-              style={{ background: themeColor }}
+              style={{ background: "rgb(19 27 38)" }}
               className="text-center text-xl font-bold p-2 mb-2  rounded-md text-white"
             >
               Create Broadcast

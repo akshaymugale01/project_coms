@@ -3,7 +3,7 @@ import { getItemInLocalStorage } from "../utils/localStorage";
 import axiosInstance from "./axiosInstance";
 import HrmsAuth from "./HrmsAuth";
 import vibeAuth from "./vibeAuth";
-import DigestFetch from 'digest-fetch';
+import DigestFetch from "digest-fetch";
 
 /*
 export const API_URL = "https://app.myciti.life";
@@ -32,10 +32,10 @@ export const getTicketDashboard = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 //Assets
 export const getPerPageSiteAsset = async (page, perPage) =>
@@ -397,11 +397,12 @@ export const getAdminComplaints = async () =>
   axiosInstance.get(`/pms/admin/complaints.json`, {
     params: {
       token: token,
-    }, headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const getCARItems = async (ticketId) =>
   axiosInstance.get(
@@ -423,21 +424,22 @@ export const getAdminPerPageComplaints = async (page, perPage) =>
       page: page,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 
 export const getComplaintsDetails = async (id) =>
   axiosInstance.get(`pms/complaints/${id}.json`, {
     params: {
       token: token,
-    }, headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 
 export const fetchSubCategories = async (categoryId) =>
@@ -902,7 +904,20 @@ export const postOtherProject = async (data) =>
   axiosInstance.post(`/other_projects.json`, data, {
     params: {
       token: token,
-    }
+    },
+  });
+
+export const deleteOtherProject = async (id) =>
+  axiosInstance.delete(`/other_projects/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const putOtherProject = async (id) =>
+  axiosInstance.put(`/other_projects/${id}.json`, {
+    params: {
+      token: token,
+    },
   });
 
 export const getOtherProject = async () =>
@@ -911,21 +926,38 @@ export const getOtherProject = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 
+// Likes
+export const postProjectLike = async (data) =>
+  axiosInstance.post("/likes/create_other_project_like.json", data, {
+    params: {
+      token: token,
+    },
+  });
 
+export const getLikes = async () =>
+  axiosInstance.get(`/other_projects.json`, {
+    params: {
+      token: token,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
 
 export const postAboutUs = async (data) =>
   axiosInstance.post(`/abouts.json`, data, {
     params: {
       token: token,
-    }
+    },
   });
-
 
 export const postBanner = async (data) =>
   axiosInstance.post(`/banners.json`, data, {
@@ -940,13 +972,11 @@ export const getBanner = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
-
-
 
 export const getAboutUs = async () =>
   axiosInstance.get(`/abouts.json`, {
@@ -954,14 +984,13 @@ export const getAboutUs = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 
-
-// Amenities Booking Api Cache 
+// Amenities Booking Api Cache
 // export const getAmenitiesBooking = async () =>
 //   axiosInstance.get(`/amenity_bookings.json`, {
 //     params: {
@@ -975,13 +1004,12 @@ export const getAmenitiesBooking = async () => {
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',  // Disable caching on the client side
-      'Pragma': 'no-cache',  // Older HTTP/1.0 caches
-      'Expires': '0',  // Immediately expires the cached response
+      "Cache-Control": "no-cache", // Disable caching on the client side
+      Pragma: "no-cache", // Older HTTP/1.0 caches
+      Expires: "0", // Immediately expires the cached response
     },
   });
 };
-
 
 export const getAmenitiesIdBooking = async (id) => {
   try {
@@ -990,16 +1018,16 @@ export const getAmenitiesIdBooking = async (id) => {
         token: token,
       },
       headers: {
-        'Cache-Control': 'no-cache',  // Disable caching on the client side
-        'Pragma': 'no-cache',  // Older HTTP/1.0 caches
-        'Expires': '0',  // Immediately expires the cached response
+        "Cache-Control": "no-cache", // Disable caching on the client side
+        Pragma: "no-cache", // Older HTTP/1.0 caches
+        Expires: "0", // Immediately expires the cached response
       },
     });
 
-    return response;  // Ensure the response is returned
+    return response; // Ensure the response is returned
   } catch (error) {
     console.error("Error fetching amenity booking by ID:", error);
-    throw error;  // Optionally, you can throw an error or handle it as needed
+    throw error; // Optionally, you can throw an error or handle it as needed
   }
 };
 
@@ -1018,16 +1046,12 @@ export const postPaymentBookings = async (data) =>
     },
   });
 
-
 export const getPaymentBookings = async (resourceId) =>
   axiosInstance.get(`/payments.json`, {
     params: {
       token: token,
     },
   });
-
-
-
 
 // Facitility Setup
 // export const getFacitilitySetup = async () =>
@@ -1037,7 +1061,6 @@ export const getPaymentBookings = async (resourceId) =>
 //     },
 //   });
 
-
 export const getFacitilitySetup = async () => {
   try {
     const response = await axiosInstance.get(`/amenities.json`, {
@@ -1045,9 +1068,9 @@ export const getFacitilitySetup = async () => {
         token: token,
       },
       headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
     return response;
@@ -1056,7 +1079,6 @@ export const getFacitilitySetup = async () => {
     throw error;
   }
 };
-
 
 export const getFacilitySlots = async (data) =>
   axiosInstance.get(`/slots/available.json`, {
@@ -1263,19 +1285,19 @@ export const getSetupUsers = async () =>
     },
   });
 
-  export const postDeletUsers = async (data) =>
-    axiosInstance.post("/deleted_users.json", data, {
-      params: {
-        token: token,
-      },
-    });
-  
-    export const getDeleteUsers = async () =>
-      axiosInstance.get("/deleted_users.json", {
-        params: {
-          token: token,
-        },
-      });
+export const postDeletUsers = async (data) =>
+  axiosInstance.post("/deleted_users.json", data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getDeleteUsers = async () =>
+  axiosInstance.get("/deleted_users.json", {
+    params: {
+      token: token,
+    },
+  });
 
 //Food and Beverages f&b
 
@@ -1342,7 +1364,6 @@ export const getCuisinesFBSetup = async () =>
     },
   });
 
-
 export const getHostList = async (siteId) =>
   axiosInstance.get(`/visitors/fetch_potential_hosts.json?site_id=${siteId}`, {
     params: {
@@ -1397,8 +1418,6 @@ export const editVehicleParking = async (data, id) =>
     },
   });
 
-
-
 export const postOTPVisitors = async (data) =>
   axiosInstance.post("/visitors/verify_votp.json", data, {
     params: {
@@ -1406,6 +1425,12 @@ export const postOTPVisitors = async (data) =>
     },
   });
 
+export const postOTPResend = async (data) =>
+  axiosInstance.post("/visitors/verify_votp.json", data, {
+    params: {
+      token: token,
+    },
+  });
 
 export const postNewVisitor = async (data) =>
   axiosInstance.post("/visitors.json", data, {
@@ -1414,12 +1439,6 @@ export const postNewVisitor = async (data) =>
     },
   });
 
-export const postProjectLike = async (data) =>
-  axiosInstance.post("/likes/create_other_project_like.json", data, {
-    params: {
-      token: token,
-    },
-  });
 export const getPatrollings = async () =>
   axiosInstance.get("/patrollings.json", {
     params: {
@@ -1803,10 +1822,10 @@ export const getFolderDocumentCommon = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const deleteShareFile = async (id) =>
   axiosInstance.delete(`/share_withs/${id}.json`, {
@@ -1820,10 +1839,10 @@ export const getFolderDocumentPersonal = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const getSharedwith = async () =>
   axiosInstance.get(`/folders/get_share_with.json`, {
@@ -1831,10 +1850,10 @@ export const getSharedwith = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const getSubFolderDocumentCommon = async (id) =>
   axiosInstance.get(`/folders/get_folders.json?parent_id=${id}`, {
@@ -1842,10 +1861,10 @@ export const getSubFolderDocumentCommon = async (id) =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const postSharePersonal = async (data) =>
   axiosInstance.post("/share_withs.json", data, {
@@ -1890,7 +1909,6 @@ export const postFileDocumentCommon = async (data) =>
     },
   });
 
-
 export const getServicesRoutineList = async (page, perpage) =>
   axiosInstance.get(
     `/activities.json?q[soft_service_id_null]=0&per_page=${perpage}&page=${page}`,
@@ -1928,11 +1946,12 @@ export const getExpectedVisitor = async () =>
   axiosInstance.get(`/visitors.json`, {
     params: {
       token: token,
-    }, headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const getRegisteredVehicle = async () =>
   axiosInstance.get(`/registered_vehicles.json`, {
@@ -2060,11 +2079,12 @@ export const getVisitorApprovals = async () =>
   axiosInstance.get(`/visitors/approval_form.json`, {
     params: {
       token: token,
-    }, headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const visitorApproval = async (id, data) =>
   axiosInstance.patch(`/visitors/${id}/approve_visitor.json`, data, {
@@ -2076,21 +2096,23 @@ export const getVisitorHistory = async () =>
   axiosInstance.get(`/visitors/approval_history.json`, {
     params: {
       token: token,
-    }, headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const getVisitorDetails = async (id) =>
   axiosInstance.get(`/visitors/${id}.json`, {
     params: {
       token: token,
-    }, headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 export const editVisitorDetails = async (id, data) =>
   axiosInstance.put(`/visitors/${id}.json`, data, {
@@ -2112,12 +2134,11 @@ export const getAllVisitorLogs = async () =>
       token: token,
     },
     headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
-
 
 export const postVisitorCategory = async (data) =>
   axiosInstance.post("/visitor_staff_categories.json", data, {
