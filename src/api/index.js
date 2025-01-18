@@ -913,8 +913,8 @@ export const deleteOtherProject = async (id) =>
       token: token,
     },
   });
-export const putOtherProject = async (id) =>
-  axiosInstance.put(`/other_projects/${id}.json`, {
+export const putOtherProject = async (id, formData) =>
+  axiosInstance.put(`/other_projects/${id}.json`, formData,{
     params: {
       token: token,
     },
