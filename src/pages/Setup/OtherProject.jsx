@@ -61,7 +61,7 @@ const OtherProject = () => {
             ...project,
             images: lastFivePictures.map((attachments) =>
               attachments.document
-                ? `http://localhost:3002${attachments.document}`
+                ? `https://app.myciti.life${attachments.document}`
                 : "https://via.placeholder.com/300"
             ),
           };
@@ -191,22 +191,35 @@ const OtherProject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formDataToSend = new FormData();
-    formDataToSend.append("other_project[title]", formData.title);
-    formDataToSend.append("other_project[description]", formData.description);
-    formDataToSend.append("other_project[address]", formData.address);
 
-    Array.from(formData.attachments).forEach((file) => {
+    // Ensure `attachments` and `pdf` are arrays before processing
+    const attachments = formData.attachments || []; // Default to an empty array if undefined
+    const pdf = formData.pdf || []; // Default to an empty array if undefined
+
+    // Prepare FormData for submission
+    const formDataToSend = new FormData();
+    formDataToSend.append("other_project[title]", formData.title || ""); // Default empty string if undefined
+    formDataToSend.append(
+      "other_project[description]",
+      formData.description || ""
+    );
+    formDataToSend.append("other_project[address]", formData.address || "");
+
+    // Append attachments
+    Array.from(attachments).forEach((file) => {
       formDataToSend.append("attachments[]", file);
     });
-    Array.from(formData.pdf).forEach((file) => {
+
+    // Append PDFs
+    Array.from(pdf).forEach((file) => {
       formDataToSend.append("pdf[]", file);
     });
 
-    // Log the formData to verify its structure
+    // Log the FormData to verify structure
     for (let pair of formDataToSend.entries()) {
       console.log(pair[0], pair[1]);
     }
+
     try {
       if (isEditMode) {
         // Edit Mode: Call PUT API
@@ -225,7 +238,7 @@ const OtherProject = () => {
         setProjects((prevProjects) => [...prevProjects, response.data]);
         console.log("Project created successfully!");
       }
-      handleCloseModal(); // Close Modal after successful submission
+      handleCloseModal(); // Close modal after successful submission
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -348,7 +361,7 @@ const OtherProject = () => {
 
                 <div className="p-4">
                   <h2 className="text-lg font-bold mb-2">{project.title}</h2>
-                  
+
                   {project.pdf && project.pdf[0]?.document ? (
                     <a
                       href={project.pdf[0]?.document}
