@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import {
   deleteOtherProject,
+  domainPrefix,
   getOtherProject,
   postOtherProject,
   postProjectLike,
@@ -10,6 +11,9 @@ import {
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import { PiPlusCircle } from "react-icons/pi";
 import { FiEdit, FiTrash2 } from "react-icons/fi"; // Trash icon for delete
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const OtherProject = () => {
   const companyID = getItemInLocalStorage("COMPANYID");
@@ -19,13 +23,31 @@ const OtherProject = () => {
   const [likedProjects, setLikedProjects] = useState([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
+  const [galleries, setGalleries] = useState([]);
+  const [error, setError] = useState(null);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     address: "",
     attachments: [],
+    pdf: [],
   });
   const [loading, setLoading] = useState(true);
+
+  const fetchGalleries = async () => {
+    try {
+      const response = await axios.get(
+        "https://panchshil-super.lockated.com/galleries.json?project_id=1"
+      );
+      setGalleries(response.data); // Assuming response.data contains the gallery data
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching galleries:", error);
+      setError("Failed to fetch galleries. Please try again later.");
+      setLoading(false);
+    }
+  };
 
   // Fetch projects from the API
   useEffect(() => {
@@ -33,12 +55,17 @@ const OtherProject = () => {
       try {
         const response = await getOtherProject();
         const data = response.data;
-        const transformedProjects = data.map((project) => ({
-          ...project,
-          image: project.attachments?.[0]?.document
-            ? `http://app.myciti.life${project.attachments[0].document}`
-            : "https://via.placeholder.com/300", // Default image
-        }));
+        const transformedProjects = data.map((project) => {
+          const lastFivePictures = project.attachments.slice(-5) || [];
+          return {
+            ...project,
+            images: lastFivePictures.map((attachments) =>
+              attachments.document
+                ? `http://localhost:3002${attachments.document}`
+                : "https://via.placeholder.com/300"
+            ),
+          };
+        });
         setProjects(transformedProjects);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -47,9 +74,9 @@ const OtherProject = () => {
       }
     };
     fetchProjects();
+    fetchGalleries();
   }, []);
 
-  // Handle Modal Open/Close
   const handleOpenModal = () => {
     setIsEditMode(false); // Set to Add mode
     setFormData({
@@ -57,6 +84,7 @@ const OtherProject = () => {
       description: "",
       address: "",
       attachments: [],
+      pdf: [],
     });
     setIsModalOpen(true);
   };
@@ -82,16 +110,25 @@ const OtherProject = () => {
       description: "",
       address: "",
       attachments: [],
+      pdf: [],
     });
   };
 
   // Handle Form Changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "attachments") {
-      setFormData({ ...formData, attachments: files });
+    if (name === "attachments" || name === "pdf") {
+      // Handle both 'attachments' and 'pdf' the same way
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: files, // Set files as an array of file objects
+      }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      // For other input types, set the value normally
+      setFormData({
+        ...formData,
+        [name]: e.target.value,
+      });
     }
   };
 
@@ -162,11 +199,14 @@ const OtherProject = () => {
     Array.from(formData.attachments).forEach((file) => {
       formDataToSend.append("attachments[]", file);
     });
+    Array.from(formData.pdf).forEach((file) => {
+      formDataToSend.append("pdf[]", file);
+    });
 
-      // Log the formData to verify its structure
-  for (let pair of formDataToSend.entries()) {
-    console.log(pair[0], pair[1]);
-  }
+    // Log the formData to verify its structure
+    for (let pair of formDataToSend.entries()) {
+      console.log(pair[0], pair[1]);
+    }
     try {
       if (isEditMode) {
         // Edit Mode: Call PUT API
@@ -191,6 +231,19 @@ const OtherProject = () => {
     }
   };
 
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: true,
+  };
+
+  // console.log("slider", projects);
+
+  console.log("formdata", formData);
+
   return (
     <section className="flex">
       <div className="hidden md:block">
@@ -199,7 +252,7 @@ const OtherProject = () => {
 
       <div className="min-h-screen bg-gray-700 w-full p-6">
         <div className="flex justify-end text-right mb-4">
-          {companyID === 47 && (
+          {userID === 574 && (
             <>
               <button
                 onClick={handleOpenModal}
@@ -229,13 +282,33 @@ const OtherProject = () => {
                 className="bg-white shadow-md rounded-lg overflow-hidden group"
               >
                 <div className="relative">
-                  <div className="overflow-hidden">
-                    <img
-                      src={project.image}
-                      alt={project.title}
-                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
+                  <div className="relative">
+                    {/* Conditional rendering based on the number of images */}
+                    {project?.images?.length === 1 ? (
+                      // Single image layout
+                      <div className="overflow-hidden">
+                        <img
+                          src={project.images[0]}
+                          alt={`${project.title} - Image`}
+                          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+                    ) : (
+                      // Slider layout for multiple images
+                      <Slider {...sliderSettings}>
+                        {project?.images?.map((image, index) => (
+                          <div key={index}>
+                            <img
+                              src={image}
+                              alt={`${project.title} - Image ${index + 1}`}
+                              className="w-full h-48 object-cover"
+                            />
+                          </div>
+                        ))}
+                      </Slider>
+                    )}
                   </div>
+
                   <div
                     className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 ${
                       likedProjects.includes(project.id)
@@ -254,30 +327,43 @@ const OtherProject = () => {
                       : `👍 ${project.liked_count || 0}`}
                   </div>
 
-                   {userID === 574 && (
+                  {userID === 574 && (
                     <div
-                    className="absolute top-4 right-14 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
-                    onClick={() => handleEdit(project.id)}
-                  >
-                    <FiEdit size={18} />
-                  </div>
-                   )}
+                      className="absolute top-4 right-14 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
+                      onClick={() => handleEdit(project.id)}
+                    >
+                      <FiEdit size={18} />
+                    </div>
+                  )}
 
-                   {userID === 574 && (
+                  {userID === 574 && (
                     <div
-                    className="absolute top-4 right-4 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
-                    onClick={() => handleDelete(project.id)}
-                  >
-                    <FiTrash2 className="text-red-500" size={18} />
-                  </div>
-                   )} 
-                  
+                      className="absolute top-4 right-4 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
+                      onClick={() => handleDelete(project.id)}
+                    >
+                      <FiTrash2 className="text-red-500" size={18} />
+                    </div>
+                  )}
                 </div>
+
                 <div className="p-4">
                   <h2 className="text-lg font-bold mb-2">{project.title}</h2>
+                  
+                  {project.pdf && project.pdf[0]?.document ? (
+                    <a
+                      href={project.pdf[0]?.document}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-lg font-bold mb-2"
+                    >
+                      Download PDF
+                    </a>
+                  ) : null}
+
                   <p className="text-sm text-gray-600 mb-2">
                     {project.address}
                   </p>
+
                   <p className="text-sm text-gray-800">{project.description}</p>
                 </div>
               </div>
@@ -411,6 +497,18 @@ const OtherProject = () => {
                   className="w-full p-2 border border-gray-300 rounded"
                 />
               </div>
+              <div className="mb-4">
+                <label className="block text-sm font-bold mb-2">PDF</label>
+                <input
+                  type="file"
+                  name="pdf"
+                  multiple
+                  accept="application/pdf" // Restrict to PDF files
+                  onChange={handleChange}
+                  className="w-full p-2 border border-gray-300 rounded"
+                />
+              </div>
+
               <div className="flex justify-end">
                 <button
                   type="button"
