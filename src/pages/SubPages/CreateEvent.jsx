@@ -204,7 +204,7 @@ const CreateEvent = () => {
   const handleFileChange = (files, fieldName) => {
     setFormData({
       ...formData,
-      [fieldName]: Array.isArray(files) ? files : [files], // Ensure it's always an array
+      [fieldName]: Array.isArray(files) ? files : [files],
     });
   };
 

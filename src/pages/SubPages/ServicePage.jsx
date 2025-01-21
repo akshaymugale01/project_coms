@@ -97,7 +97,7 @@ const ServicePage = () => {
 
     return () => clearTimeout(timer);
 
-    fetchService();
+    // fetchService();
   }, []);
   const handleSearch = (event) => {
     const searchValue = event.target.value;

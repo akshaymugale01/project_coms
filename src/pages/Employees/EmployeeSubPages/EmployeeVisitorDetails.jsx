@@ -132,14 +132,15 @@ const EmployeeVisitorDetails = () => {
     },
     {
       name: "Check out",
-      selector: (row) => {
+      selector: (row) => (row.check_out ? dateTimeFormat(row.check_out) : ""),
+        // {
         // Check if `row.out_time` is valid
-        if (row.out_time && !isNaN(new Date(row.out_time))) {
-          return dateTimeFormat(row.out_time); // Format the valid date
-        } else {
-          return "Not yet updated!"; // Fallback for invalid or missing date
-        }
-      },
+        // if (row.check_out && !isNaN(new Date(row.out_time))) {
+        //   return dateTimeFormat(row.out_time); // Format the valid date
+        // } else {
+        //   return "Not yet updated!"; // Fallback for invalid or missing date
+        // }
+      // },
       sortable: true,
     },
   ];

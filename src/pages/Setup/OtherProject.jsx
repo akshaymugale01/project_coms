@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import Navbar from "../../components/Navbar";
 import {
   deleteOtherProject,
@@ -12,8 +14,6 @@ import { getItemInLocalStorage } from "../../utils/localStorage";
 import { PiPlusCircle } from "react-icons/pi";
 import { FiEdit, FiTrash2 } from "react-icons/fi"; // Trash icon for delete
 import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 
 const OtherProject = () => {
   const companyID = getItemInLocalStorage("COMPANYID");
@@ -35,20 +35,6 @@ const OtherProject = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchGalleries = async () => {
-    try {
-      const response = await axios.get(
-        "https://panchshil-super.lockated.com/galleries.json?project_id=1"
-      );
-      setGalleries(response.data); // Assuming response.data contains the gallery data
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching galleries:", error);
-      setError("Failed to fetch galleries. Please try again later.");
-      setLoading(false);
-    }
-  };
-
   // Fetch projects from the API
   useEffect(() => {
     const fetchProjects = async () => {
@@ -61,7 +47,7 @@ const OtherProject = () => {
             ...project,
             images: lastFivePictures.map((attachments) =>
               attachments.document
-                ? `https://app.myciti.life${attachments.document}`
+                ? `http://localhost:3002${attachments.document}`
                 : "https://via.placeholder.com/300"
             ),
           };
@@ -74,7 +60,6 @@ const OtherProject = () => {
       }
     };
     fetchProjects();
-    fetchGalleries();
   }, []);
 
   const handleOpenModal = () => {

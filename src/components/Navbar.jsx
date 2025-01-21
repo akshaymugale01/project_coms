@@ -131,7 +131,7 @@ const Navbar = () => {
 
   const getAllowedFeatures = () => {
     const storedFeatures = getItemInLocalStorage("FEATURES");
-    console.log("ffaf", storedFeatures);
+    // console.log("ffaf", storedFeatures);
     if (storedFeatures) {
       setFeat(storedFeatures.map((feature) => feature.feature_name));
     }
