@@ -47,7 +47,7 @@ const OtherProject = () => {
             ...project,
             images: lastFivePictures.map((attachments) =>
               attachments.document
-                ? `http://localhost:3002${attachments.document}`
+                ? `https://app.myciti.life${attachments.document}`
                 : "https://via.placeholder.com/300"
             ),
           };

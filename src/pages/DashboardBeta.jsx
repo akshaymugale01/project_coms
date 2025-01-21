@@ -61,7 +61,7 @@ const DashboardBeta = () => {
         setInUseCount(inUseAssets.length);
         setCriticalBreakdown(criticalBreakdownAsset.length);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching siteAsset data:", error);
       }
     };
     fetchData();

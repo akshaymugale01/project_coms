@@ -31,6 +31,7 @@
     "date-fns": "^3.6.0",
     "digest-fetch": "^3.1.1",
     "highcharts": "^11.4.3",
+    "highcharts-accessibility": "^0.1.7",
     "highcharts-react-official": "^3.2.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",

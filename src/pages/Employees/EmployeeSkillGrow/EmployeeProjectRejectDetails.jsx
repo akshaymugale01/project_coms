@@ -4,7 +4,7 @@ import { CiCalendar, CiFlag1 } from "react-icons/ci";
 import { IoTimeOutline } from "react-icons/io5";
 import { MdOutlineCurrencyRupee } from "react-icons/md";
 import { FiShoppingCart } from "react-icons/fi";
-import { LuPieChart } from "react-icons/lu";
+// import { LuPieChart } from "react-icons/lu";
 import { BsDatabaseDash } from "react-icons/bs";
 import profile1 from "/profile1.jpg";
 import profile2 from "/profile2.jpg";
@@ -14,6 +14,7 @@ import profile5 from "/profile5.jpg";
 import profile6 from "/profile6.jpg";
 import Chart from "react-apexcharts";
 import { FaRegFileLines } from "react-icons/fa6";
+import { LucidePieChart } from "lucide-react";
 function EmployeeProjectRejectDetails() {
   const options = {
     chart: {
@@ -414,7 +415,7 @@ function EmployeeProjectRejectDetails() {
                   <p className="text-base text-gray-700 ml-2">Remaining</p>
                 </div>
                 <div className="bg-green-100 rounded-full p-3">
-                  <LuPieChart
+                  <LucidePieChart
                     className="items-center text-green-400"
                     size={30}
                   />

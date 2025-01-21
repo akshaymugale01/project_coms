@@ -12,14 +12,22 @@ const TicketDashboard = () => {
   const [statusData, setStatusData] = useState({});
   //const [statusData, setStatusData] = useState({});
   useEffect(() => {
-    const fetchTicketInfo = async () => {
+    const fetchTicketInfo = async (retry = 0) => {
       try {
         const ticketInfoResp = await getTicketDashboard();
         setTotalTickets(ticketInfoResp.data.total);
         setStatusData(ticketInfoResp.data.by_status);
-        console.log(ticketInfoResp);
+        // console.log(ticketInfoResp);
       } catch (error) {
-        console.log(error);
+        if (retry < 1) {
+          setTimeout(() => {
+            console.log("Ticket DashBoard",error);
+            fetchTicketInfo(retry + 1)
+          }, 100)  
+        } else {
+          console.error("Error fetching dashboard ticket  info:", error);
+        }
+        
       }
     };
     fetchTicketInfo();

@@ -21,7 +21,7 @@ import { SlDocs } from "react-icons/sl";
 import { HiMiniTicket, HiMiniUser } from "react-icons/hi2";
 import { FaTasks } from "react-icons/fa";
 import { BsMailboxFlag } from "react-icons/bs";
-import { LuParkingSquare } from "react-icons/lu";
+// import { LuParkingSquare } from "react-icons/lu";
 import { MdOutlineInventory2 } from "react-icons/md";
 import { BsDoorOpen } from "react-icons/bs";
 import { AiOutlineAudit } from "react-icons/ai";

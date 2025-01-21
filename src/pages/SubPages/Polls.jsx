@@ -64,44 +64,44 @@ function Polls() {
               const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Convert to days
 
               return (
-                <div className="flex w-full p-2 ">
-                  <div className="max-w-2xl w-full ">
+                <div key={poll.id} className="flex w-full p-2">
+                  {" "}
+                  {/* Correctly added key here */}
+                  <div className="max-w-2xl w-full">
                     <div className="bg-white shadow-custom-all-sides rounded-lg p-6 h-full">
-                      <div key={poll.id}>
-                        <h2 className="text-xl font-semibold mb-4">
-                          {poll.title}
-                        </h2>
-                        <div className="flex justify-between my-3">
-                          <span className="text-gray-500 text-sm">
-                            1/20 responded
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            {poll.visibility}
-                          </span>
-                        </div>
+                      <h2 className="text-xl font-semibold mb-4">
+                        {poll.title}
+                      </h2>
+                      <div className="flex justify-between my-3">
+                        <span className="text-gray-500 text-sm">
+                          1/20 responded
+                        </span>
+                        <span className="text-gray-500 text-sm">
+                          {poll.visibility}
+                        </span>
+                      </div>
 
-                        {/* Loop through poll options */}
-                        <div className="space-y-4 border-t border-b border-gray-200 py-4">
-                          {poll.poll_options.map((option) => (
-                            <div
-                              key={option.id}
-                              className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
-                            >
-                              <span>{option.content}</span>
-                              <span className="text-blue-600 font-semibold">
-                                {option.votes} votes
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                      {/* Loop through poll options */}
+                      <div className="space-y-4 border-t border-b border-gray-200 py-4">
+                        {poll.poll_options.map((option) => (
+                          <div
+                            key={option.id}
+                            className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
+                          >
+                            <span>{option.content}</span>
+                            <span className="text-blue-600 font-semibold">
+                              {option.votes} votes
+                            </span>
+                          </div>
+                        ))}
+                      </div>
 
-                        {/* Display total votes and days left */}
-                        <div className="mt-6 text-gray-500 text-sm">
-                          <p>
-                            {totalVotes} votes •{" "}
-                            {daysLeft > 0 ? `${daysLeft}d left` : "Poll closed"}
-                          </p>
-                        </div>
+                      {/* Display total votes and days left */}
+                      <div className="mt-6 text-gray-500 text-sm">
+                        <p>
+                          {totalVotes} votes •{" "}
+                          {daysLeft > 0 ? `${daysLeft}d left` : "Poll closed"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -112,25 +112,6 @@ function Polls() {
             <p>No polls available</p>
           )}
         </div>
-
-        {/* <div>
-      <h1>Polls Data</h1>
-      <ul>
-        {pollsData.length > 0 ? (
-          pollsData.map((poll) => (
-            <li key={poll.id}>
-              <h2>{poll.title}</h2>
-              <p>{poll.description}</p>
-              <p>Start Date: {poll.start_date}</p>
-              <p>End Date: {poll.end_date}</p>
-             
-            </li>
-          ))
-        ) : (
-          <p>No polls available</p>
-        )}
-      </ul>
-    </div> */}
       </div>
     </div>
   );

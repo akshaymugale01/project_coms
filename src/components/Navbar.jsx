@@ -33,7 +33,7 @@ import {
   RiSettings4Line,
   RiUserLocationFill,
 } from "react-icons/ri";
-import { LuParkingSquare, LuSettings2 } from "react-icons/lu";
+import { LuSettings2 } from "react-icons/lu";
 import {
   IoBusinessOutline,
   IoCashOutline,
@@ -70,6 +70,7 @@ import { ImFileText2 } from "react-icons/im";
 import { FcMoneyTransfer } from "react-icons/fc";
 import { GrCertificate } from "react-icons/gr";
 import { persistor } from "../store/store";
+import { LucideParkingSquare } from "lucide-react";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -1477,7 +1478,7 @@ const Navbar = () => {
                     }
                   >
                     <div>
-                      {React.createElement(LuParkingSquare, { size: "20" })}
+                      {React.createElement(LucideParkingSquare, { size: "20" })}
                     </div>
 
                     <h2

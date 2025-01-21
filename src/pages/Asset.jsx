@@ -83,11 +83,11 @@ const Asset = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
 
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 3000);
+    // const timer = setTimeout(() => {
+    //   setLoading(false);
+    // }, 3000);
 
-    return () => clearTimeout(timer);
+    // return () => clearTimeout(timer);
 
   }, []);
 

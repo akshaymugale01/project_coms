@@ -36,8 +36,8 @@ const FacilityDetails = () => {
 
   console.log("AMENITIes", facilityData);
 
-  // const domainPrefix = "https://app.myciti.life";
-  const domainPrefix = "http://localhost:3002";
+  const domainPrefix = "https://app.myciti.life";
+  // const domainPrefix = "http://localhost:3002";
 
 
   useEffect(() => {

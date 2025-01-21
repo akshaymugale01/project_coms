@@ -529,7 +529,7 @@ function AssetDashboard() {
     const fetchRoutineOverdueCount = async () => {
       try {
         const routineOverdue = await getRoutineOverdueCount(); // API call to fetch users
-        console.log(routineOverdue);
+        // console.log(routineOverdue);
         setRoutineOverdueCount(routineOverdue.data.count);
       } catch (error) {
         console.log(error);
@@ -539,7 +539,7 @@ function AssetDashboard() {
     const fetchRoutineCompleteCount = async () => {
       try {
         const routineComplete = await getRoutineCompleteCount(); // API call to fetch users
-        console.log(routineComplete);
+        // console.log(routineComplete);
         setRoutineCompleteCount(routineComplete.data.count);
       } catch (error) {
         console.log(error);
@@ -549,7 +549,7 @@ function AssetDashboard() {
     const fetchRoutinePendingCount = async () => {
       try {
         const routinePending = await getRoutinePendingCount(); // API call to fetch users
-        console.log(routinePending);
+        // console.log(routinePending);
         setRoutinePendingCount(routinePending.data.count);
       } catch (error) {
         console.log(error);

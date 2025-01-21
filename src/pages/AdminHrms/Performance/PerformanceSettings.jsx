@@ -2,20 +2,21 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { ImFileText2 } from "react-icons/im";
 import AdminHRMS from "../AdminHrms";
-import { LuBookTemplate, LuGoal } from "react-icons/lu";
+// import { LuBookTemplate, LuGoal } from "react-icons/lu";
 import { MdAutoGraph } from "react-icons/md";
 import { FaChevronRight } from "react-icons/fa";
 import GoalCompetency from "./GoalCompetency";
 import EvaluationTemplate from "./EvaluationTemplate";
 import PerformanceCycle from "./PerformanceCycle";
+import { LucideBookTemplate, LucideGoal } from "lucide-react";
 
 const PerformanceSettings = () => {
   const stepsData = [
-    { id: 0, title: "1.Goal Category / Competency Bank", icon: <LuGoal /> },
+    { id: 0, title: "1.Goal Category / Competency Bank", icon: <LucideGoal /> },
     {
       id: 1,
       title: "2. Evaluation Template",
-      icon: <LuBookTemplate />,
+      icon: <LucideBookTemplate />,
     },
     {
       id: 2,

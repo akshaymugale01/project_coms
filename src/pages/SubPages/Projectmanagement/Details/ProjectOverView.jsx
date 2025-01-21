@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CiCalendar, CiFlag1 } from "react-icons/ci";
 import { FiMessageSquare, FiShoppingCart } from "react-icons/fi";
 import { IoAddCircleOutline, IoClose, IoTimeOutline } from "react-icons/io5";
-import { LuPieChart } from "react-icons/lu";
+// import { LuPieChart } from "react-icons/lu";
 import { MdDeleteForever, MdEdit, MdOutlineCurrencyRupee, MdOutlineEmail } from "react-icons/md";
 import profile1 from "/profile1.jpg";
 import profile2 from "/profile2.jpg";

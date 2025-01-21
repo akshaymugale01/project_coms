@@ -1,13 +1,15 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { persistReducer, persistStore } from "redux-persist";
+import storage from "redux-persist/lib/storage";
+
 import groupReducer from "../features/group/groupSlice";
 import themeReducer from "../features/theme/themeSlice";
 import fileExplorerReducer from "../features/FileExplorer/FileExplorer";
-import storage from "redux-persist/lib/storage";
-import { persistReducer, persistStore } from "redux-persist";
 import fontSizeReducer from "../features/font/fontSizeSlice";
-import backgroundReducer from "../features/theme/backgroundSlice"
-import boardReducer from "../features/Project/ProjectSlice"
-import addedReducer from "../features/Project/Added"
+import backgroundReducer from "../features/theme/backgroundSlice";
+import boardReducer from "../features/Project/ProjectSlice";
+import addedReducer from "../features/Project/Added";
+
 const persistConfig = {
   key: "root",
   storage,
@@ -20,7 +22,7 @@ const rootReducer = combineReducers({
   fontSize: fontSizeReducer,
   background: backgroundReducer,
   board: boardReducer,
-  added:addedReducer
+  added: addedReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -30,9 +32,11 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore these action types
-        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
-        // Optionally, ignore paths in the state
+        ignoredActions: [
+          "persist/PERSIST",
+          "persist/REHYDRATE",
+          "persist/PURGE",
+        ],
         ignoredPaths: ["_persist"],
       },
     }),

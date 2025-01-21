@@ -67,7 +67,7 @@ export const colors = [
   { name: "gradient-indigo", code: "linear-gradient(90deg, #6366f1, #4338ca)" },
   { name: "gradient-yellow", code: "linear-gradient(90deg, #eab308, #ca8a04)" },
   {
-    name: "gradient-yellowoo",
+    name: "gradient-yellow",
     code: " linear-gradient( 64.3deg,  rgba(254,122,152,0.81) 17.7%, rgba(255,206,134,1) 64.7%, rgba(172,253,163,0.64) 112.1% )",
   },
   {

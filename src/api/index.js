@@ -17,8 +17,9 @@ export const vibeMedia = "https://app.myciti.life/api/media/";
 export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
 const token = getItemInLocalStorage("TOKEN");
-// export const domainPrefix = "https://app.myciti.life";
-export const domainPrefix = "http://localhost:3002";
+console.log(token)
+export const domainPrefix = "https://app.myciti.life";
+// export const domainPrefix = "http://localhost:3002";
 
 // export const domainPrefix = "http://13.215.74.38";
 export const login = async (data) => axiosInstance.post("/login.json", data);
@@ -7370,7 +7371,7 @@ export const postUniformApproval = async (approvalId, data) => {
 };
 
 // site id
-export const getSiteData = async () =>
+export const getSiteData = async () => 
   axiosInstance.get(`/get_user_site.json`, {
     params: {
       token: token,

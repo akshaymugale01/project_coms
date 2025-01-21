@@ -4,7 +4,7 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import wave from "/wave.png";
 import { login, vibeLogin } from "../../api";
-import Typewriter from 'typewriter-effect';
+import Typewriter from "typewriter-effect";
 import { setItemInLocalStorage } from "../../utils/localStorage";
 
 const Login = () => {
@@ -22,14 +22,36 @@ const Login = () => {
     }));
   };
 
+  // useEffect(() => {
+  //   const token = localStorage.getItem("TOKEN");
+  //   const user = localStorage.getItem("Name");
+  //   // console.log(user)
+  //   if (token) {
+  //     navigate("/dashboard");
+  //     toast.success("You are already logged in!");
+  //   }
+  // }, []);
+
   useEffect(() => {
-    const token = localStorage.getItem("TOKEN");
-    const user = localStorage.getItem("Name");
-    // console.log(user)
-    if (token) {
-      navigate("/dashboard");
-      toast.success("You are already logged in!");
-    }
+    const validateToken = async () => {
+      const token = localStorage.getItem("TOKEN");
+      if (token) {
+        try {
+          // Optionally validate token via an API call
+          const isValid = await someTokenValidationAPI(token);
+          if (isValid) {
+            navigate("/dashboard");
+            toast.success("You are already logged in!");
+          } else {
+            localStorage.removeItem("TOKEN"); // Clear invalid token
+          }
+        } catch (error) {
+          console.error("Token validation failed:", error);
+        }
+      }
+    };
+
+    validateToken();
   }, []);
 
   const onSubmit = async (e) => {
@@ -38,6 +60,7 @@ const Login = () => {
       toast.error("Please fill in all fields.");
       return;
     }
+    toast.loading("Processing your data, please wait...");
     try {
       const response = await login({
         user: {
@@ -75,10 +98,10 @@ const Login = () => {
       }
 
       //
-      console.log("skipped copilot");
+      // console.log("skipped copilot");
       const loginD = response.data.user;
       setItemInLocalStorage("user", loginD);
-      console.log("User details", loginD);
+      // console.log("User details", loginD);
       const userId = response.data.user.id;
       setItemInLocalStorage("UserId", userId);
       // console.log(userId)
@@ -117,13 +140,22 @@ const Login = () => {
       // console.log(userName)
       // console.log("Sit",selectedSiteId)
       toast.loading("Processing your data please wait...");
-      if (userType === "pms_admin") {
-        navigate("/dashboard");
-      } else {
-        navigate(selectedSiteId === 10 ? "/employee/dashboard" : "/mytickets");
-      }
+      // if (userType === "pms_admin") {
+      //   navigate("/dashboard");
+      // } else {
+      //   navigate(selectedSiteId === 10 ? "/employee/dashboard" : "/mytickets");
+      // }
+      const route =
+        userType === "pms_admin"
+          ? "/dashboard"
+          : selectedSiteId === 10
+          ? "/employee/dashboard"
+          : "/mytickets";
+
+      navigate(route);
       toast.dismiss();
-      window.location.reload();
+
+      toast.success("Login Successfully");
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Login failed. Please check your credentials.");
@@ -134,33 +166,43 @@ const Login = () => {
     showPassword(!password);
   };
 
-  new Typewriter('#typewriter', {
-    strings: ['Hello', 'World'],
-    autoStart: true,
-  });
+  // new Typewriter("#typewriter", {
+  //   strings: ["Hello", "World"],
+  //   autoStart: true,
+  // });
 
   return (
+    // <div
+    //   className="h-screen relative"
+    //   style={{
+    //     backgroundImage: `url(${wave})`,
+    //     backgroundSize: "cover",
+    //     backgroundPosition: "center",
+    //     background: "blur",
+    //     opacity: 0.9,
+    //   }}
+    // >
     <div
-      className="h-screen relative"
+      className="h-screen relative bg-cover bg-center"
       style={{
         backgroundImage: `url(${wave})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        background: "blur",
         opacity: 0.9,
       }}
     >
       <div className=" rounded-md  ">
         <h1 className="flex text-3xl text-white  p-2 px-10 font-semibold jersey-15-regular ">
-        {/* My Citi Life */}
-        <Typewriter
-          options={{
-            strings: ['My Citi Life', `Welcome to My Citi World`, 'Live Fully!'],
-            autoStart: true,
-            loop: true,
-          }}
-        />
-        
+          {/* My Citi Life */}
+          <Typewriter
+            options={{
+              strings: [
+                "My Citi Life",
+                `Welcome to My Citi World`,
+                "Live Fully!",
+              ],
+              autoStart: true,
+              loop: true,
+            }}
+          />
         </h1>
       </div>
       <div className=" flex justify-center  h-[90vh] items-center">

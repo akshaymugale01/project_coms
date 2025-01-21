@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import Highcharts from "highcharts";
-import HighchartsReact from "highcharts-react-official";
+import Highcharts from 'highcharts';
+import HighchartsAccessibility from 'highcharts/modules/accessibility';
 import { getTicketDashboard, getTicketStatusDownload} from "../api";
 import { useSelector } from "react-redux";
 import { CirclesWithBar, DNA, ThreeDots } from "react-loader-spinner";
 import { FaDownload } from "react-icons/fa";
 import toast from "react-hot-toast";
+import HighchartsReact from "highcharts-react-official";
 
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 const TicketHighCharts = () => {
@@ -15,23 +16,40 @@ const TicketHighCharts = () => {
   const [floorTickets, setFloorTickets] = useState({});
   const [unitTickets, setUnitTickets] = useState({});
   const themeColor = useSelector((state) => state.theme.color);
+
+
   useEffect(() => {
-    const fetchTicketInfo = async () => {
+    const fetchTicketInfo = async (retry = 0) => {
       try {
         const ticketInfoResp = await getTicketDashboard();
         setStatusData(ticketInfoResp.data.by_status);
         setCategoryData(ticketInfoResp.data.by_category);
-
         setTicketTypes(ticketInfoResp.data.by_type);
         setFloorTickets(ticketInfoResp.data.by_floor);
         setUnitTickets(ticketInfoResp.data.by_unit);
+        // console.log("FullResponse", ticketInfoResp)
       } catch (error) {
-        console.log("Error fetching ticket info:", error);
+        if (retry < 3) {
+          setTimeout(() => {
+            console.log("Error fetching ticket info:", error);
+            fetchTicketInfo(retry + 1);
+          }, 100);
+          
+        }else {
+          console.error(
+            "Failed to fetch ticket data after 3 attempts, please check your internet connection",
+            error
+          );
+          toast.error("Failed to fetch ticket data, please check your internet connection");
+        }
+        
       }
     };
-
     fetchTicketInfo();
   }, []);
+
+
+  
 
   // download section 
   const handleTicketStatusDownload = async () => {
@@ -333,6 +351,7 @@ const TicketHighCharts = () => {
       ],
     };
   };
+  HighchartsAccessibility(Highcharts);
   return (
     <div>
       <div className="bg-white grid md:grid-cols-2 mr-2  gap-2">
@@ -363,6 +382,8 @@ const TicketHighCharts = () => {
             </div>
           )}
         </div>
+
+        
 
         <div className="bg-white shadow-custom-all-sides rounded-md">
         <div className="flex justify-end p-3">

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import { useSelector } from "react-redux";
-import { getTicketDashboard, getVibeCalendar } from "../api";
+import { getTicketDashboard } from "../api";
 import {
   getItemInLocalStorage,
   setItemInLocalStorage,
@@ -19,26 +19,26 @@ import { FaBuilding } from "react-icons/fa";
 import AssetDashboard from "./SubPages/AssetDashboard";
 const Dashboard = () => {
   const themeColor = useSelector((state) => state.theme.color);
-  const vibeUserId = getItemInLocalStorage("UserId");
+  // const vibeUserId = getItemInLocalStorage("UserId");
   const [feat, setFeat] = useState("");
   const [site, setSite] = useState(false);
   const [siteData, setSiteData] = useState([]);
   const dropdownRef = useRef(null);
   const [siteName, setSiteName] = useState("");
-  console.log(vibeUserId);
+  // console.log(vibeUserId);
   const contentRef = useRef(null);
 
   useEffect(() => {
-    const fetchCalendar = async () => {
-      try {
-        const calendarResponse = await getVibeCalendar(vibeUserId);
-        console.log(calendarResponse);
-      } catch (error) {
-        console.log(error);
-      }
-    };
+    // const fetchCalendar = async () => {
+    //   try {
+    //     const calendarResponse = await getVibeCalendar(vibeUserId);
+    //     console.log(calendarResponse);
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    // };
     getAllowedFeatures();
-    fetchCalendar();
+    // fetchCalendar();
   }, []);
 
   const getAllowedFeatures = () => {
@@ -73,17 +73,28 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    const fetchSiteData = async () => {
+    const fetchSiteData = async (retry = 0) => {
       try {
         const response = await getSiteData();
         setSiteData(response.data.sites);
-        console.log(response.data.sites);
+        console.log("Site Data", response.data.sites);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        if (retry < 3) {
+          setTimeout(() => {
+            console.error("Error fetching Site data:", error);
+            fetchSiteData(retry + 1);
+          }, 100);
+        } else {
+          console.error(
+            "Failed to fetch site data after 3 attempts, please check your internet connection",
+            error
+          );
+        }
       }
     };
     fetchSiteData();
   }, []);
+
   const site_name = getItemInLocalStorage("SITENAME");
   const handleSiteChange = async (id, site) => {
     try {
@@ -92,7 +103,7 @@ const Dashboard = () => {
       setItemInLocalStorage("SITENAME", site);
       window.location.reload();
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching sitechange data:", error);
     }
   };
 
@@ -129,7 +140,7 @@ const Dashboard = () => {
           <div></div>
           <nav>
             <h1 className="text-white text-center text-xl ml-5">
-             {/* Dashboard Name */}
+              {/* Dashboard Name */}
             </h1>
           </nav>
 

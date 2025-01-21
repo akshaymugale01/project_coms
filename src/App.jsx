@@ -722,31 +722,31 @@ function App() {
   );
   document.documentElement.style.setProperty("--calendar-Header", themeColor);
   const dispatch = useDispatch();
-  const Get_Background = async () => {
-    try {
-      // const params = {
-      //   user_id: user_id,
-      // };
-      const user_id = getItemInLocalStorage("VIBEUSERID");
+  // const Get_Background = async () => {
+  //   try {
+  //     // const params = {
+  //     //   user_id: user_id,
+  //     // };
+  //     const user_id = getItemInLocalStorage("VIBEUSERID");
 
-      const data = await getVibeBackground(user_id);
+  //     const data = await getVibeBackground(user_id);
 
-      if (data.success) {
-        const selectedImageSrc = API_URL + data.data.image;
+  //     if (data.success) {
+  //       const selectedImageSrc = API_URL + data.data.image;
 
-        const selectedImageIndex = data.data.index;
+  //       const selectedImageIndex = data.data.index;
 
-        dispatch(setBackground(selectedImageSrc));
-      } else {
-        console.log("Something went wrong");
-      }
-    } catch (error) {
-      // console.error("Error:", error);
-    }
-  };
+  //       dispatch(setBackground(selectedImageSrc));
+  //     } else {
+  //       console.log("Something went wrong");
+  //     }
+  //   } catch (error) {
+  //     // console.error("Error:", error);
+  //   }
+  // };
 
   useEffect(() => {
-    Get_Background();
+    // Get_Background();
   }, [setBackground]);
 
   return (
