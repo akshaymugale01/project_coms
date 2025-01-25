@@ -17,7 +17,7 @@ export const vibeMedia = "https://app.myciti.life/api/media/";
 export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
 const token = getItemInLocalStorage("TOKEN");
-console.log(token)
+console.log(token);
 export const domainPrefix = "https://app.myciti.life";
 // export const domainPrefix = "http://localhost:3002";
 
@@ -910,7 +910,7 @@ export const deleteOtherProject = async (id) =>
     },
   });
 export const putOtherProject = async (id, formData) =>
-  axiosInstance.put(`/other_projects/${id}.json`, formData,{
+  axiosInstance.put(`/other_projects/${id}.json`, formData, {
     params: {
       token: token,
     },
@@ -7371,7 +7371,7 @@ export const postUniformApproval = async (approvalId, data) => {
 };
 
 // site id
-export const getSiteData = async () => 
+export const getSiteData = async () =>
   axiosInstance.get(`/get_user_site.json`, {
     params: {
       token: token,

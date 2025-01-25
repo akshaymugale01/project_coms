@@ -2134,7 +2134,7 @@ const Navbar = () => {
                   }
                 >
                   <div>
-                    {React.createElement(LuParkingSquare, { size: "20" })}
+                    {React.createElement(LucideParkingSquare, { size: "20" })}
                   </div>
 
                   <h2
