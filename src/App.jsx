@@ -712,6 +712,7 @@ import DeleteUsers from "./pages/Setup/users/DeleteUsers.jsx";
 import PrivacyPolicyCapital from "./pages/Setup/AboutSetup/PrivacyPolicyCapital.jsx";
 import PrivacyPolicyContact from "./pages/Setup/AboutSetup/PrivacyPolicyContact.jsx";
 import PrivacyPolicyBhoomiCelestia from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomiCelestia.jsx";
+import PrivacyPolicyBhoomi from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomi.jsx";
 // new admin hrms
 
 function App() {
@@ -1176,6 +1177,7 @@ function App() {
           <Route path="/capital-privacy-policy" element={<PrivacyPolicyCapital />} />
           <Route path="/privacy-policy-bhoomi-celestia" element={<PrivacyPolicyBhoomiCelestia />} />
           <Route path="/capital-privacy-policy-contact_us" element={<PrivacyPolicyContact />} />
+          <Route path="/bhoomi-privacy-policy-contact_us" element={<PrivacyPolicyBhoomi />} />
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route
