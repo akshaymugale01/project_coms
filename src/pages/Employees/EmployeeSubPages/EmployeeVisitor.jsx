@@ -350,7 +350,7 @@ const EmployeeVisitor = () => {
     }
   };
   const [otp, setOtp] = useState(Array(5).fill(""));
-  console.log(otp.join(""));
+  // console.log(otp.join(""));
   const handleChange = (value, index) => {
     // Only accept digits
     if (/^\d?$/.test(value)) {
@@ -393,11 +393,11 @@ const EmployeeVisitor = () => {
       toast.success(res.data.message);
       setVisitorId(res.data.vid);
       setOTPModal(false);
-      // console.log(res.data)
+      console.log(res.data)
       navigate(`/employee/passes/visitors/visitor-details/${res.data.vid}`);
     } catch (error) {
       toast.error("Invalid or expired OTP")
-      console.log(error);
+      console.log("Invalid or expired OTP",error);
       // toast.error(error.response.data.error);
     }
   };
@@ -582,7 +582,7 @@ const EmployeeVisitor = () => {
               <div className="flex  gap-2">
                 {otp.map((digit, index) => (
                   <input
-                    key={index}
+                    key={index.id}
                     id={`otp-input-${index}`}
                     type="text"
                     maxLength={1}

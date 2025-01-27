@@ -681,10 +681,12 @@ const SetupFacility = () => {
                   }
                 />
               </div>
+
+              
             </div>
           </div>
         </div>
-
+        
         <div className="bg-blue-50 border-y">
           {/* Booking Allowed Before */}
           <div className="grid grid-cols-4 items-center border-b px-4 gap-2">

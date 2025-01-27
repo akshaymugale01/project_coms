@@ -14,6 +14,7 @@ import { getItemInLocalStorage } from "../../utils/localStorage";
 import { PiPlusCircle } from "react-icons/pi";
 import { FiEdit, FiTrash2 } from "react-icons/fi"; // Trash icon for delete
 import Slider from "react-slick";
+import toast from "react-hot-toast";
 
 const OtherProject = () => {
   const companyID = getItemInLocalStorage("COMPANYID");
@@ -48,6 +49,7 @@ const OtherProject = () => {
             images: lastFivePictures.map((attachments) =>
               attachments.document
                 ? `https://app.myciti.life${attachments.document}`
+                // ? `http://localhost:3002${attachments.document}`
                 : "https://via.placeholder.com/300"
             ),
           };
@@ -176,7 +178,7 @@ const OtherProject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    toast.loading("Posting Please Wait")
     // Ensure `attachments` and `pdf` are arrays before processing
     const attachments = formData.attachments || []; // Default to an empty array if undefined
     const pdf = formData.pdf || []; // Default to an empty array if undefined
@@ -216,7 +218,8 @@ const OtherProject = () => {
               : project
           )
         );
-        console.log("Project updated successfully!");
+        toast.dismiss();
+        toast.success("Project updated successfully!");
       } else {
         // Add Mode: Call POST API
         const response = await postOtherProject(formDataToSend);

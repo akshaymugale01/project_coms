@@ -152,7 +152,10 @@ const Login = () => {
           ? "/employee/dashboard"
           : "/mytickets";
 
-      navigate(route);
+      setTimeout(() => {
+        navigate(route);
+      }, 100);
+
       toast.dismiss();
 
       toast.success("Login Successfully");
