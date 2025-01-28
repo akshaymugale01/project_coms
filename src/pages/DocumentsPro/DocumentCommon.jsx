@@ -1,8 +1,25 @@
 import React, { useState, useEffect } from "react";
 // import { toast } from "react-toastify";
-import { deleteFilePersonal, deleteFolderPersonal, getFolderDocumentCommon, getFolderDocumentPersonal, getSetupUsers, getSubFolderDocumentCommon, postFileDocumentCommon, postFolderDocumentCommon, postFolderDocumentPersonal, postSharePersonal } from "../../api";
+import {
+  deleteFilePersonal,
+  deleteFolderPersonal,
+  getFolderDocumentCommon,
+  getFolderDocumentPersonal,
+  getSetupUsers,
+  getSubFolderDocumentCommon,
+  postFileDocumentCommon,
+  postFolderDocumentCommon,
+  postFolderDocumentPersonal,
+  postSharePersonal,
+} from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { FaEllipsisV, FaFile, FaFolder, FaPlus, FaUpload } from "react-icons/fa";
+import {
+  FaEllipsisV,
+  FaFile,
+  FaFolder,
+  FaPlus,
+  FaUpload,
+} from "react-icons/fa";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Select from "react-select";
@@ -13,8 +30,12 @@ const DocumentCommon = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const [assignedUser, setAssignedUser] = useState([]);
 
-  const [formData, setFormData] = useState({ name: "", description: "", file: null });
-  const [breadcrumbs, setBreadcrumbs] = useState([{ id: null, name: "Root" }]); // Default breadcrumb starting at Root
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    file: null,
+  });
+  const [breadcrumbs, setBreadcrumbs] = useState([{ id: null, name: "Home" }]); // Default breadcrumb starting at Root
   const [parentID, setParentID] = useState(null); // Dynamically update parent ID based on breadcrumbs
   const [folders, setFolders] = useState([]); // List of folders
   const [files, setFiles] = useState([]); // List of files
@@ -28,11 +49,19 @@ const DocumentCommon = () => {
     setMenuOpen(menuOpen === id ? null : id); // Toggle menu visibility
   };
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareData, setShareData] = useState({ folderID: null, fileID: null, username: "" });
+  const [shareData, setShareData] = useState({
+    folderID: null,
+    fileID: null,
+    username: "",
+  });
 
   // Open share modal
   const handleShareClick = (id, type) => {
-    setShareData({ folderID: type === "folder" ? id : null, fileID: type === "file" ? id : null, username: "" });
+    setShareData({
+      folderID: type === "folder" ? id : null,
+      fileID: type === "file" ? id : null,
+      username: "",
+    });
     setIsShareModalOpen(true);
   };
   useEffect(() => {
@@ -55,7 +84,10 @@ const DocumentCommon = () => {
     fetchAssignedTo();
   }, []);
   const handleSelectChange = (selectedOption) => {
-    setShareData((prev) => ({ ...prev, username: selectedOption?.value || "" }));
+    setShareData((prev) => ({
+      ...prev,
+      username: selectedOption?.value || "",
+    }));
   };
 
   // Handle share submission
@@ -69,7 +101,7 @@ const DocumentCommon = () => {
       };
 
       // if (shareData.username) {
-      //   payload.shared_with_username = shareData.username; 
+      //   payload.shared_with_username = shareData.username;
       // }
 
       const response = await postSharePersonal(payload);
@@ -191,27 +223,28 @@ const DocumentCommon = () => {
           unit_id: folder.unit_id,
           created_at: folder.created_at,
           updated_at: folder.updated_at,
-          type: 'folder',
+          type: "folder",
         }));
 
         const fileData = documents.map((file) => ({
           id: file.id,
           name: file.image_file_name,
-          type: 'file',
+          type: "file",
           document_url: file.document_url,
         }));
 
         return { folders: folderData, files: fileData };
       } else {
-        throw new Error(response.data.message || 'Failed to retrieve folder contents');
+        throw new Error(
+          response.data.message || "Failed to retrieve folder contents"
+        );
       }
     } catch (error) {
-      console.error('Error fetching folder and document contents:', error);
-      toast.error('Failed to fetch folder and document contents');
+      console.error("Error fetching folder and document contents:", error);
+      toast.error("Failed to fetch folder and document contents");
       return { folders: [], files: [] };
     }
   };
-
 
   useEffect(() => {
     fetchFolderDocumentCommon().then((data) => {
@@ -238,7 +271,7 @@ const DocumentCommon = () => {
 
     if (index === 0) {
       // If "Root" is clicked, reset breadcrumbs and fetch root-level contents
-      setBreadcrumbs([{ id: null, name: "Root" }]);
+      setBreadcrumbs([{ id: null, name: "Home" }]);
       const data = await fetchFolderDocumentCommon();
       setFolders(data.folders);
       setFiles(data.files);
@@ -283,8 +316,6 @@ const DocumentCommon = () => {
     }
   };
 
-
-
   // Open a folder and fetch its contents
   const openFolder = async (folder) => {
     try {
@@ -312,7 +343,7 @@ const DocumentCommon = () => {
             unit_id: subFolder.unit_id,
             created_at: subFolder.created_at,
             updated_at: subFolder.updated_at,
-            type: 'folder',
+            type: "folder",
           }))
         );
 
@@ -320,19 +351,20 @@ const DocumentCommon = () => {
           subFiles.map((file) => ({
             id: file.id,
             name: file.image_file_name,
-            type: 'file',
+            type: "file",
             document_url: file.document_url,
           }))
         );
       } else {
-        throw new Error(response.data.message || "Failed to fetch folder contents");
+        throw new Error(
+          response.data.message || "Failed to fetch folder contents"
+        );
       }
     } catch (error) {
       console.error("Error opening folder:", error);
       toast.error("Failed to open folder");
     }
   };
-
 
   // Create a new folder
   const createFolder = async () => {
@@ -392,9 +424,6 @@ const DocumentCommon = () => {
     }
   };
 
-
-
-
   // Upload file to the selected folder
   const uploadFile = async () => {
     if (!formData.file) {
@@ -412,11 +441,10 @@ const DocumentCommon = () => {
       sendData.append("folder_document[parent_id]", parentID);
     }
     sendData.append("folder_document[folder_document]", formData.file); // Assuming `formData.file` is the file blob
-    // formData.unitIds.forEach((id) => sendData.append("unit_ids[]", id)); 
+    // formData.unitIds.forEach((id) => sendData.append("unit_ids[]", id));
 
     sendData.append("folder_document[uploaded_by]", userID);
     sendData.append("folder_document[site_id]", siteID);
-
 
     try {
       const resp = await postFileDocumentCommon(sendData);
@@ -452,7 +480,31 @@ const DocumentCommon = () => {
       console.log(resp);
     } catch (error) {
       console.error("Upload error:", error);
+    }
+  };
 
+  const handleDownload = async (url, filename) => {
+    try {
+      const response = await fetch(url, { method: "GET" });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.statusText}`);
+      }
+
+      const blob = await response.blob(); // Convert the response to a blob
+      const blobUrl = URL.createObjectURL(blob); // Create a temporary URL for the blob
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.setAttribute("download", filename || "file");
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up the temporary URL
+      URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading the file:", error);
+      alert("Failed to download the file. Please try again.");
     }
   };
 
@@ -478,7 +530,8 @@ const DocumentCommon = () => {
         {/* Create Folder Button */}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-blue-500 flex items-center gap-2 text-white py-2 px-4 rounded-md " style={{ background: themeColor }}
+          className="bg-blue-500 flex items-center gap-2 text-white py-2 px-4 rounded-md "
+          style={{ background: themeColor }}
         >
           <FaPlus />
           Create Folder
@@ -487,7 +540,8 @@ const DocumentCommon = () => {
         {/* Upload File Button */}
         <button
           onClick={() => setIsUploadFileModalOpen(true)}
-          className="bg-blue-500 flex items-center gap-2 text-white py-2 px-4 rounded-md" style={{ background: themeColor }}
+          className="bg-blue-500 flex items-center gap-2 text-white py-2 px-4 rounded-md"
+          style={{ background: themeColor }}
         >
           <FaUpload />
           Upload File
@@ -507,10 +561,20 @@ const DocumentCommon = () => {
                 className="relative flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer transition duration-200 hover:bg-gray-200"
               >
                 <FaFolder className="text-4xl text-yellow-400 mb-2" />
-                <button onClick={() => openFolder(folder)} className="text-sm font-medium text-gray-800 text-center">{folder.name}</button>
+                <button
+                  onClick={() => openFolder(folder)}
+                  className="text-sm font-medium text-gray-800 text-center"
+                >
+                  {folder.name}
+                </button>
                 {/* Three-dot menu */}
                 <div className="absolute top-2 right-2">
-                  <button className="text-gray-500 hover:text-gray-800" onClick={() => setMenuOpen(menuOpen === folder.id ? null : folder.id)} >
+                  <button
+                    className="text-gray-500 hover:text-gray-800"
+                    onClick={() =>
+                      setMenuOpen(menuOpen === folder.id ? null : folder.id)
+                    }
+                  >
                     <FaEllipsisV />
                   </button>
                   {menuOpen === folder.id && (
@@ -560,7 +624,12 @@ const DocumentCommon = () => {
                 )}
                 {/* Three-dot menu */}
                 <div className="absolute top-2 right-2">
-                  <button className="text-gray-500 hover:text-gray-800" onClick={() => setMenuOpen(menuOpen === file.id ? null : file.id)}>
+                  <button
+                    className="text-gray-500 hover:text-gray-800"
+                    onClick={() =>
+                      setMenuOpen(menuOpen === file.id ? null : file.id)
+                    }
+                  >
                     <FaEllipsisV />
                   </button>
                   {menuOpen === file.id && (
@@ -577,6 +646,19 @@ const DocumentCommon = () => {
                       >
                         Delete
                       </button>
+
+                      <button
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() =>
+                          handleDownload(
+                            `https://app.myciti.life${file.document_url}`,
+                            // `http://localhost:3002${file.document_url}`,
+                            file.name
+                          )
+                        }
+                      >
+                        Download
+                      </button>
                     </div>
                   )}
                 </div>
@@ -589,10 +671,14 @@ const DocumentCommon = () => {
       {isShareModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white w-96 rounded-lg shadow-lg p-4 relative">
-            <h2 className="text-xl font-semibold mb-4">Share Folder and Files</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Share Folder and Files
+            </h2>
             <Select
               options={assignedUser}
-              value={assignedUser.find((user) => user.value === shareData.username)}
+              value={assignedUser.find(
+                (user) => user.value === shareData.username
+              )}
               onChange={handleSelectChange}
               placeholder="Select User"
               isSearchable
@@ -601,7 +687,8 @@ const DocumentCommon = () => {
             />
             <button
               onClick={handleShareSubmit}
-              className="bg-blue-500 text-white py-2 px-4 rounded-md" style={{ background: themeColor }}
+              className="bg-blue-500 text-white py-2 px-4 rounded-md"
+              style={{ background: themeColor }}
             >
               Share
             </button>
@@ -610,7 +697,8 @@ const DocumentCommon = () => {
                 setIsShareModalOpen(false); // Close the share modal
                 setMenuOpen(null); // Close the menu
               }}
-              className="bg-red-500 text-white py-2 px-4 rounded-md ml-2" style={{ background: themeColor }}
+              className="bg-red-500 text-white py-2 px-4 rounded-md ml-2"
+              style={{ background: themeColor }}
             >
               Close
             </button>
@@ -618,11 +706,9 @@ const DocumentCommon = () => {
         </div>
       )}
 
-
       {/* Create Folder Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-
           <div className="bg-white  rounded-lg shadow-lg p-4 relative z-10">
             <h2 className="text-xl font-semibold mb-4">Create Folder</h2>
             <input
@@ -642,13 +728,15 @@ const DocumentCommon = () => {
             /> */}
             <button
               onClick={createFolder}
-              className="bg-blue-500 text-white py-2 px-4 rounded-md" style={{ background: themeColor }}
+              className="bg-blue-500 text-white py-2 px-4 rounded-md"
+              style={{ background: themeColor }}
             >
               Create Folder
             </button>
             <button
               onClick={() => setIsModalOpen(false)}
-              className="bg-red-500 text-white py-2 px-4 rounded-md ml-2" style={{ background: themeColor }}
+              className="bg-red-500 text-white py-2 px-4 rounded-md ml-2"
+              style={{ background: themeColor }}
             >
               Close
             </button>
@@ -659,7 +747,6 @@ const DocumentCommon = () => {
       {/* Upload File Modal */}
       {isUploadFileModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-
           <div className="bg-white  rounded-lg shadow-lg p-4 relative z-10">
             <h2 className="text-xl font-semibold mb-4">Upload File</h2>
             {/* <input
@@ -678,22 +765,21 @@ const DocumentCommon = () => {
             />
             <button
               onClick={uploadFile}
-              className="bg-blue-500 text-white py-2 px-4 rounded-md" style={{ background: themeColor }}
+              className="bg-blue-500 text-white py-2 px-4 rounded-md"
+              style={{ background: themeColor }}
             >
               Upload File
             </button>
             <button
               onClick={() => setIsUploadFileModalOpen(false)}
-              className="bg-red-500 text-white py-2 px-4 rounded-md ml-2" style={{ background: themeColor }}
+              className="bg-red-500 text-white py-2 px-4 rounded-md ml-2"
+              style={{ background: themeColor }}
             >
               Close
             </button>
           </div>
         </div>
       )}
-
-
-
     </div>
   );
 };

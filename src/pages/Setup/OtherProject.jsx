@@ -224,7 +224,8 @@ const OtherProject = () => {
         // Add Mode: Call POST API
         const response = await postOtherProject(formDataToSend);
         setProjects((prevProjects) => [...prevProjects, response.data]);
-        console.log("Project created successfully!");
+        toast.dismiss();
+        toast.success("Created Sucessfully!");
       }
       handleCloseModal(); // Close modal after successful submission
     } catch (error) {
