@@ -63,17 +63,18 @@ const UserSetup = () => {
     }
   };
 
+
   const userColumn = [
-    // {
-    //   name: "View",
-    //   cell: (row) => (
-    //     <div className="flex items-center gap-4">
-    //       <Link to={`/setup/user-details/${row.id}`}>
-    //         <BsEye size={15} />
-    //       </Link>
-    //     </div>
-    //   ),
-    // },
+    {
+      name: "View",
+      cell: (row) => (
+        <div className="flex items-center gap-4">
+          <Link to={`/setup/users-details/${row.id}`}>
+            <BsEye size={15} />
+          </Link>
+        </div>
+      ),
+    },
     {
       name: "First Name",
       selector: (row) => row.firstname,
@@ -116,7 +117,7 @@ const UserSetup = () => {
       name: "Send Email",
       cell: (row) => (
         <button
-          style={{ background: themeColor }}
+          style={{ background: "rgb(19 27 32)" }}
           onClick={() => handleSendMail(row.id, row.firstname, row.lastname)}
           className="text-white md:text-sm text-xs rounded-full  shadow-custom-all-sides p-1 px-4"
         >
@@ -143,7 +144,7 @@ const UserSetup = () => {
           />
           {siteId === 56 && ( <Link
             to={"/setup/users-setup/add-new-user"}
-            style={{ background: themeColor }}
+            style={{ background: "rgb(19 27 32)" }}
             className="font-semibold duration-300 ease-in-out transition-all  p-1 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
           >
             <PiPlusCircle size={20} />

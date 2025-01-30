@@ -134,7 +134,7 @@ import EditStocks from "./pages/SubPages/EditStocks.jsx";
 import DocumentPro from "./pages/DocumentsPro/DocumentPro.jsx";
 import AddProjectTask from "./pages/SubPages/AddProjectTask.jsx";
 import UserSetup from "./pages/Setup/UserSetup.jsx";
-import UserSetupDetails from "./pages/SubPages/details/UserSetupDetails.jsx";
+
 import EmployeeProjectManagement from "./pages/Employees/EmployeeProjectManagement.jsx";
 import EmployeeCreateProject from "./pages/Employees/EmployeeSubPages/EmployeeCreateProject.jsx";
 import EditProject from "./pages/SubPages/EditProject.jsx";
@@ -713,6 +713,7 @@ import PrivacyPolicyCapital from "./pages/Setup/AboutSetup/PrivacyPolicyCapital.
 import PrivacyPolicyContact from "./pages/Setup/AboutSetup/PrivacyPolicyContact.jsx";
 import PrivacyPolicyBhoomiCelestia from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomiCelestia.jsx";
 import PrivacyPolicyBhoomi from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomi.jsx";
+import SetupUserDetails from "./pages/Setup/users/UserDetails.jsx";
 // new admin hrms
 
 function App() {
@@ -980,13 +981,19 @@ function App() {
             }
           />
           <Route
+            path="/setup/users-details/:id"
+            element={
+                <SetupUserDetails />
+            }
+          />
+          {/* <Route
             path="/setup/users-details"
             element={
               <ProtectedAdminRoutes>
                 <UserSetupDetails />
               </ProtectedAdminRoutes>
             }
-          />
+          /> */}
 
           <Route
             path="/setup/asset-group"

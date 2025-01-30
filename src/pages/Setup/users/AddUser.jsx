@@ -78,7 +78,10 @@ const AddUser = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sitesResp, unitsResp] = await Promise.all([getSites(), getAllUnits()]);
+        const [sitesResp, unitsResp] = await Promise.all([
+          getSites(),
+          getAllUnits(),
+        ]);
         setSites(
           sitesResp.data.map((site) => ({
             value: site.id,
@@ -95,7 +98,12 @@ const AddUser = () => {
   }, []);
 
   const handleAddUser = async () => {
-    if (!formData.firstname || !formData.lastname || !formData.email || !formData.password) {
+    if (
+      !formData.firstname ||
+      !formData.lastname ||
+      !formData.email ||
+      !formData.password
+    ) {
       return toast.error("All fields are required!");
     }
     const postData = {
@@ -141,20 +149,57 @@ const AddUser = () => {
         <div className="md:mx-20 my-5 md:mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg">
           {/* User Details */}
           <div className="grid md:grid-cols-2 gap-4">
-            {["First Name", "Last Name", "Email", "Mobile", "Password"].map((field, idx) => (
-              <div key={idx} className="flex flex-col gap-1">
-                <label className="font-semibold">{field}:</label>
-                <input
-                  type="text"
-                  name={field.toLowerCase().replace(" ", "")}
-                  value={formData[field.toLowerCase().replace(" ", "")]}
-                  onChange={handleChange}
-                  placeholder={`Enter ${field}`}
-                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
-                />
-              </div>
-            ))}
+            {["First Name", "Last Name", "Email", "Mobile", "Password"].map(
+              (field, idx) => (
+                <div key={idx} className="flex flex-col gap-1">
+                  <label className="font-semibold">{field}:</label>
+                  <input
+                    type="text"
+                    name={field.toLowerCase().replace(" ", "")}
+                    value={formData[field.toLowerCase().replace(" ", "")]}
+                    onChange={handleChange}
+                    placeholder={`Enter ${field}`}
+                    className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
+                  />
+                </div>
+              )
+            )}
           </div>
+
+          {/* <div className="grid mt-3 md:grid-cols-2">
+            <div className="flex flex-col px-4 gap-1">
+              <label className="font-semibold">Phase:</label>
+              <select className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm">
+                <option value="">Select Phase</option>
+                <option value="post_sales">Post Sales</option>
+                <option value="post_possesions">Post Possesions</option>
+              </select>
+            </div>
+            <div className="flex flex-col px-4 gap-1">
+              <label className="font-semibold">Status:</label>
+              <select className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm">
+                <option value="">Select Status</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <div className="flex flex-col px-4 mt-2 gap-1">
+              <label className="font-semibold">Tower:</label>
+              <select className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm">
+                <option value="">Select Tower</option>
+                <option value="post_sales">Post Sales</option>
+                <option value="post_possesions">Post Possesions</option>
+              </select>
+            </div>
+            <div className="flex flex-col px-4 mt-2 gap-1">
+              <label className="font-semibold">Flat:</label>
+              <select className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm">
+                <option value="">Select Flat</option>
+                <option value="post_sales">Post Sales</option>
+                <option value="post_possesions">Post Possesions</option>
+              </select>
+            </div>
+          </div> */}
 
           {/* Associated Units */}
           {formData.user_sites.map((site, index) => (
@@ -172,38 +217,40 @@ const AddUser = () => {
                   <label className="font-semibold">{label}:</label>
                   <select
                     value={site[field]}
-                    onChange={(e) => handleSiteChange(index, field, e.target.value)}
+                    onChange={(e) =>
+                      handleSiteChange(index, field, e.target.value)
+                    }
                     className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
                   >
                     <option value="">{`Select ${label}`}</option>
                     {field === "unit_id"
                       ? units.map((unit) => (
-                        <option key={unit.id} value={unit.id}>
-                          {unit.building_name}-{unit.floor_name}-{unit.name}
-                        </option>
-                      ))
+                          <option key={unit.id} value={unit.id}>
+                            {unit.building_name}-{unit.floor_name}-{unit.name}
+                          </option>
+                        ))
                       : field === "ownership"
-                        ? ["owner", "tenant"].map((opt) => (
+                      ? ["owner", "tenant"].map((opt) => (
                           <option key={opt} value={opt}>
                             {opt.charAt(0).toUpperCase() + opt.slice(1)}
                           </option>
                         ))
-                        : field === "ownership_type"
-                          ? ["primary", "secondary"].map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                            </option>
-                          ))
-                          : field === "lives_here"
-                            ? [
-                              { label: "Yes", value: true },
-                              { label: "No", value: false },
-                            ].map((opt) => (
-                              <option key={opt.label} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))
-                            : null}
+                      : field === "ownership_type"
+                      ? ["primary", "secondary"].map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                          </option>
+                        ))
+                      : field === "lives_here"
+                      ? [
+                          { label: "Yes", value: true },
+                          { label: "No", value: false },
+                        ].map((opt) => (
+                          <option key={opt.label} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))
+                      : null}
                   </select>
                 </div>
               ))}

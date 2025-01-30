@@ -151,7 +151,7 @@ const UserDetails = () => {
         ) : null,
     },
   ];
-  const domainPrefix = "https://admin.vibecopilot.ai";
+  const domainPrefix = "https://app.myciti.life";
   
   return (
     <div className="">
