@@ -714,6 +714,7 @@ import PrivacyPolicyContact from "./pages/Setup/AboutSetup/PrivacyPolicyContact.
 import PrivacyPolicyBhoomiCelestia from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomiCelestia.jsx";
 import PrivacyPolicyBhoomi from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomi.jsx";
 import SetupUserDetails from "./pages/Setup/users/UserDetails.jsx";
+import PrivacyPolicyMycitiLife from "./pages/Setup/AboutSetup/PrivacyPolicyMycitiLife.jsx";
 // new admin hrms
 
 function App() {
@@ -1185,6 +1186,7 @@ function App() {
           <Route path="/privacy-policy-bhoomi-celestia" element={<PrivacyPolicyBhoomiCelestia />} />
           <Route path="/capital-privacy-policy-contact_us" element={<PrivacyPolicyContact />} />
           <Route path="/bhoomi-privacy-policy-contact_us" element={<PrivacyPolicyBhoomi />} />
+          <Route path="/bhoomi-privacy-myciti-life" element={<PrivacyPolicyMycitiLife />} />
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route
