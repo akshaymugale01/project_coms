@@ -1186,7 +1186,7 @@ function App() {
           <Route path="/privacy-policy-bhoomi-celestia" element={<PrivacyPolicyBhoomiCelestia />} />
           <Route path="/capital-privacy-policy-contact_us" element={<PrivacyPolicyContact />} />
           <Route path="/bhoomi-privacy-policy-contact_us" element={<PrivacyPolicyBhoomi />} />
-          <Route path="/bhoomi-privacy-myciti-life" element={<PrivacyPolicyMycitiLife />} />
+          <Route path="/privacy-policy-myciti-life" element={<PrivacyPolicyMycitiLife />} />
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route
