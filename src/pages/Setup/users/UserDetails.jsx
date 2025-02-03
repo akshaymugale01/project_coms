@@ -113,7 +113,7 @@ const SetupUserDetails = () => {
           </h2>
           <div className="flex justify-end gap-2 mx-2 mt-1">
             <Link
-              //   to={`/admin/passes/visitors/edit-visitor/${id}`}
+                to={`/setup/users-edit-page/${id}`}
               className="border-2 border-black rounded-full px-2 p-1 flex items-center gap-2"
             >
               <BiEdit /> Edit Details

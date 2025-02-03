@@ -23,10 +23,9 @@ const SetupFacility = () => {
     setAllowMultipleSlots(e.target.value);
   };
   const themeColor = useSelector((state) => state.theme.color);
-  const sitID = getItemInLocalStorage('SITEID');
+  const sitID = getItemInLocalStorage("SITEID");
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-
     amenity: {
       site_id: sitID,
       fac_type: "",
@@ -57,6 +56,9 @@ const SetupFacility = () => {
       member: null,
       guest: null,
       tenant: null,
+      pay_on_facility: null,
+      gst: "",
+      sgst: "",
     },
     covers: [],
     attachments: [],
@@ -70,7 +72,7 @@ const SetupFacility = () => {
     ],
   });
 
-  console.log("DATA:", formData)
+  console.log("DATA:", formData);
 
   // const fecthFacitySetup = async() => {
   //   try {
@@ -82,32 +84,33 @@ const SetupFacility = () => {
 
   // useEffect(() => {
   //   fecthFacitySetup();
-  // },[]) // [] for 
-
+  // },[]) // [] for
 
   const postAmenitiesSetup = async () => {
     // Validate required fields
-    if (!formData.amenity.gst_no || !formData.amenity.fac_type || formData.slots.length === 0) {
-      toast.error("All fields are mandatory! Please provide GST number, Facility Type, and at least one slot.");
+    if (
+      !formData.amenity.gst_no ||
+      !formData.amenity.fac_type ||
+      formData.slots.length === 0
+    ) {
+      toast.error(
+        "All fields are mandatory! Please provide GST number, Facility Type, and at least one slot."
+      );
       return; // Stop the function if validation fails
     }
-
     const postData = new FormData();
-
     // Append covers as an array
     if (formData.covers.length > 0) {
       formData.covers.forEach((file) => {
         postData.append("cover_images[]", file); // Use "cover_images[]" for Rails to recognize it as an array
       });
     }
-
     // Append attachments as an array
     if (formData.attachments.length > 0) {
       formData.attachments.forEach((file) => {
         postData.append("attachments[]", file); // Use "attachments[]" for Rails to recognize it as an array
       });
     }
-
     // Append amenity fields
     Object.entries(formData.amenity).forEach(([key, value]) => {
       // Handle arrays like payment_methods separately
@@ -119,14 +122,15 @@ const SetupFacility = () => {
         postData.append(`amenity[${key}]`, value); // For regular fields
       }
     });
-
     // Append slots as an array with the correct structure
     formData.slots.forEach((slot, index) => {
       Object.entries(slot).forEach(([key, value]) => {
-        postData.append(`amenity[amenity_slots_attributes][${index}][${key}]`, value);
+        postData.append(
+          `amenity[amenity_slots_attributes][${index}][${key}]`,
+          value
+        );
       });
     });
-
     try {
       const response = await postFacitilitySetup(postData);
       console.log(response);
@@ -138,8 +142,6 @@ const SetupFacility = () => {
       toast.error("Failed to post amenity setup. Please try again.");
     }
   };
-
-
   const handleCheckboxChange = (type) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -149,7 +151,6 @@ const SetupFacility = () => {
       },
     }));
   };
-
   const handlePriceChange = (field, value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -159,9 +160,6 @@ const SetupFacility = () => {
       },
     }));
   };
-
-
-
   const handleFileChange = (event, key) => {
     const files = Array.from(event.target.files); // Convert FileList to an Array
     setFormData((prevState) => ({
@@ -169,7 +167,6 @@ const SetupFacility = () => {
       [key]: [...(prevState[key] || []), ...files], // Append new files to the existing array
     }));
   };
-
   const handleAmenityChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -179,18 +176,16 @@ const SetupFacility = () => {
       },
     }));
   };
-
-
   const handleAddSlot = () => {
     setFormData((prevState) => ({
       ...prevState,
       slots: [
         ...prevState.slots,
         {
-          start_hr: "",      // Hour for start time
-          start_min: "",     // Minute for start time
-          end_hr: "",        // Hour for end time
-          end_min: "",       // Minute for end time
+          start_hr: "", // Hour for start time
+          start_min: "", // Minute for start time
+          end_hr: "", // Hour for end time
+          end_min: "", // Minute for end time
         },
       ],
     }));
@@ -230,7 +225,6 @@ const SetupFacility = () => {
   //     updatedFormData.amenity.cancel_before =
   //       parseInt(`${cancel_before_days || 0}${cancel_before_hours || 0}${cancel_before_min || 0}`, 10);
 
-
   //     return updatedFormData;
   //   });
   // };
@@ -248,48 +242,46 @@ const SetupFacility = () => {
           [name]: value,
         },
       };
-
       // Dynamically calculate total minutes for time fields
       const calculateTotalMinutes = (prefix) => {
         const days = parseInt(updatedFormData.amenity[`${prefix}_days`]) || 0;
         const hours = parseInt(updatedFormData.amenity[`${prefix}_hours`]) || 0;
-        const minutes = parseInt(updatedFormData.amenity[`${prefix}_mins`]) || 0;
-        return (days * 24 * 60) + (hours * 60) + minutes;
+        const minutes =
+          parseInt(updatedFormData.amenity[`${prefix}_mins`]) || 0;
+        return days * 24 * 60 + hours * 60 + minutes;
       };
-
       if (name.includes("book_before")) {
-        updatedFormData.amenity.book_before = calculateTotalMinutes("book_before");
+        updatedFormData.amenity.book_before =
+          calculateTotalMinutes("book_before");
       } else if (name.includes("advance")) {
-        updatedFormData.amenity.advance_booking = calculateTotalMinutes("advance");
+        updatedFormData.amenity.advance_booking =
+          calculateTotalMinutes("advance");
       } else if (name.includes("cancel_before")) {
-        updatedFormData.amenity.cancel_before = calculateTotalMinutes("cancel_before");
+        updatedFormData.amenity.cancel_before =
+          calculateTotalMinutes("cancel_before");
       }
 
       return updatedFormData;
     });
   };
-
   // Validate Inputs
   const validateInput = (e) => {
     const { name, value } = e.target;
     const intValue = parseInt(value);
 
     if (isNaN(intValue) || intValue < 0) {
-      toast.error(`${name.replace('_', ' ')} must be a positive number.`);
+      toast.error(`${name.replace("_", " ")} must be a positive number.`);
       return;
     }
 
     if (name.includes("days") && intValue > 365) {
-      toast.error(`${name.replace('_', ' ')} cannot exceed 365 days.`);
+      toast.error(`${name.replace("_", " ")} cannot exceed 365 days.`);
     } else if (name.includes("hours") && intValue > 24) {
-      toast.error(`${name.replace('_', ' ')} cannot exceed 24 hours.`);
+      toast.error(`${name.replace("_", " ")} cannot exceed 24 hours.`);
     } else if (name.includes("mins") && intValue > 59) {
-      toast.error(`${name.replace('_', ' ')} cannot exceed 59 minutes.`);
+      toast.error(`${name.replace("_", " ")} cannot exceed 59 minutes.`);
     }
   };
-
-
-
   const [timeValues, setTimeValues] = useState({
     time1: "00:00",
     time2: "00:00",
@@ -341,13 +333,9 @@ const SetupFacility = () => {
     const updatedRules = rules.filter((_, i) => i !== index);
     setRules(updatedRules);
   };*/
-  //new 
-  const [rules, setRules] = useState([
-    { timesPerDay: "", selectedOption: "" },
-  ]);
-
+  //new
+  const [rules, setRules] = useState([{ timesPerDay: "", selectedOption: "" }]);
   const options = ["Members", "Guests", "Tenant", "Staff", "Others"];
-
   const handleOptionChange = (index, field, value) => {
     const updatedRules = [...rules];
     updatedRules[index][field] = value;
@@ -363,23 +351,22 @@ const SetupFacility = () => {
       setRules([...rules, { timesPerDay: "", selectedOption: "" }]);
     }
   };
-
   const [blockData, setBlockData] = useState({
     blockBy: "",
   });
-
   const handelRadioChange = (e) => {
     setFormData({
-      ...formData, amenity: {
-        ...formData.amenity, fac_type: e.target.value,
+      ...formData,
+      amenity: {
+        ...formData.amenity,
+        fac_type: e.target.value,
       },
     });
   };
-
   const handleSlotTimeChange = (index, timeType, timeValue) => {
     const [hours, minutes] = timeValue.split(":");
 
-    setFormData(prevState => {
+    setFormData((prevState) => {
       const updatedSlots = [...prevState.slots];
       updatedSlots[index] = {
         ...updatedSlots[index],
@@ -389,7 +376,6 @@ const SetupFacility = () => {
       return { ...prevState, slots: updatedSlots };
     });
   };
-
   const handleDescriptionChange = (event) => {
     const { value } = event.target;
     setFormData({
@@ -400,7 +386,6 @@ const SetupFacility = () => {
       },
     });
   };
-
   //handle tearms
   const handleTermsChange = (event) => {
     const { value } = event.target;
@@ -412,7 +397,6 @@ const SetupFacility = () => {
       },
     });
   };
-
   // Handle cancellation policy change
   const handleCancellationPolicyChange = (event) => {
     const { value } = event.target;
@@ -425,13 +409,12 @@ const SetupFacility = () => {
     });
   };
 
-
   return (
     <section className="flex">
       <Navbar />
       <div className="w-full bg-gray-100 p-4 mb-5">
         <h1
-          style={{ background: 'rgb(17, 24, 39)' }}
+          style={{ background: "rgb(17, 24, 39)" }}
           className="bg-black text-white font-semibold rounded-md text-center p-2"
         >
           Setup New Facility
@@ -439,7 +422,10 @@ const SetupFacility = () => {
 
         <div className="flex  gap-4 my-4">
           <div className="flex gap-2 items-center">
-            <input type="radio" name="type" id="bookable"
+            <input
+              type="radio"
+              name="type"
+              id="bookable"
               value="bookable"
               checked={formData.amenity.fac_type === "bookable"}
               onChange={handelRadioChange}
@@ -449,7 +435,10 @@ const SetupFacility = () => {
             </label>
           </div>
           <div className="flex gap-2 items-center">
-            <input type="radio" name="type" id="request"
+            <input
+              type="radio"
+              name="type"
+              id="request"
               value="request"
               onChange={handelRadioChange}
               checked={formData.amenity.fac_type === "request"}
@@ -474,7 +463,9 @@ const SetupFacility = () => {
                 name="fac_name"
                 id=""
                 value={formData.amenity.fac_name}
-                onChange={(e) => handleAmenityChange("fac_name", e.target.value)}
+                onChange={(e) =>
+                  handleAmenityChange("fac_name", e.target.value)
+                }
                 className="border border-gray-400 rounded-md p-2"
                 placeholder="Facility name"
               />
@@ -629,6 +620,52 @@ const SetupFacility = () => {
               </div>
             </div>
 
+            <div className="grid grid-cols-4 items-center border-b p-2 gap-4">
+              {/* Checkbox */}
+              <div className="flex justify-center my-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.amenity.pay_on_facility === true}
+                    onChange={() => handleCheckboxChange("pay_on_facility")}
+                  />
+                  Pay On Facility
+                </label>
+              </div>
+              {/* GST Input */}
+              <div className="flex items-center space-x-2">
+                <label htmlFor="gst">GST:</label>
+                <input
+                  type="number"
+                  id="gst"
+                  name="gst"
+                  value={formData.amenity.gst || ""}
+                  onChange={(e) =>
+                    handlePriceChange("gst", e.target.value)
+                  }
+                  step="0.01"
+                  placeholder="Enter GST"
+                  className="border border-gray-400 rounded p-2 outline-none"
+                />
+              </div>
+
+              {/* SGST Input */}
+              <div className="flex items-center space-x-2">
+                <label htmlFor="sgst">SGST:</label>
+                <input
+                  type="number"
+                  id="sgst"
+                  value={formData.amenity.sgst || ""}
+                  onChange={(e) =>
+                    handlePriceChange("sgst", e.target.value)
+                  }
+                  name="sgst"
+                  step="0.01"
+                  placeholder="Enter SGST"
+                  className="border border-gray-400 rounded p-2 outline-none"
+                />
+              </div>
+            </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div className="my-2 flex flex-col gap-2">
@@ -681,17 +718,18 @@ const SetupFacility = () => {
                   }
                 />
               </div>
-
-              
             </div>
           </div>
         </div>
-        
+
         <div className="bg-blue-50 border-y">
           {/* Booking Allowed Before */}
           <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
             <div className="flex justify-center my-2">
-              <label htmlFor="book_before_days" className="flex items-center gap-2">
+              <label
+                htmlFor="book_before_days"
+                className="flex items-center gap-2"
+              >
                 Booking allowed before
               </label>
             </div>
@@ -738,7 +776,6 @@ const SetupFacility = () => {
               />
             </div>
           </div>
-
 
           {/* Advance Booking */}
           <div className="grid grid-cols-4 items-center border-b px-4 gap-2">
@@ -788,7 +825,10 @@ const SetupFacility = () => {
           {/* Can Cancel Before Schedule */}
           <div className="grid grid-cols-4 items-center px-4 gap-2">
             <div className="flex justify-center my-2">
-              <label htmlFor="cancel_before_days" className="flex items-center gap-2">
+              <label
+                htmlFor="cancel_before_days"
+                className="flex items-center gap-2"
+              >
                 Can Cancel Before Schedule
               </label>
             </div>
@@ -852,8 +892,6 @@ const SetupFacility = () => {
           />
         </div>
 
-
-
         <div>
           <div className="flex flex-col">
             <label htmlFor="description" className="font-medium">
@@ -871,14 +909,16 @@ const SetupFacility = () => {
           </div>
         </div>
 
-
         <div className="my-4">
           <h2 className="border-b border-black text-lg mb-1 font-medium">
             Configure Slot
           </h2>
 
           {formData.slots.map((slot, index) => (
-            <div key={index} className="grid grid-cols-3 gap-2 bg-white my-2 rounded-lg">
+            <div
+              key={index}
+              className="grid grid-cols-3 gap-2 bg-white my-2 rounded-lg"
+            >
               <div className="flex flex-col">
                 <label htmlFor="" className="font-medium">
                   Start time
@@ -964,7 +1004,6 @@ const SetupFacility = () => {
             />
           </div>
         </div>
-
 
         <div className="flex justify-center my-2">
           <button

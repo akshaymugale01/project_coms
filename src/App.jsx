@@ -715,6 +715,7 @@ import PrivacyPolicyBhoomiCelestia from "./pages/Setup/AboutSetup/PrivacyPolicyB
 import PrivacyPolicyBhoomi from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomi.jsx";
 import SetupUserDetails from "./pages/Setup/users/UserDetails.jsx";
 import PrivacyPolicyMycitiLife from "./pages/Setup/AboutSetup/PrivacyPolicyMycitiLife.jsx";
+import EditPageUser from "./pages/Setup/users/EditPageUser.jsx";
 // new admin hrms
 
 function App() {
@@ -985,6 +986,12 @@ function App() {
             path="/setup/users-details/:id"
             element={
                 <SetupUserDetails />
+            }
+          />
+          <Route
+            path="/setup/users-edit-page/:id"
+            element={
+                <EditPageUser />
             }
           />
           {/* <Route
