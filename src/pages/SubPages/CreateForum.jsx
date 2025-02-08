@@ -53,7 +53,7 @@ function CreateForum() {
         <div className="flex justify-center">
           <div className="border border-gray-400 rounded-md my-5 w-4/5">
             <h2
-              style={{ background: themeColor }}
+              style={{ background: "rgb(19 27 32)" }}
               className="text-center text-xl font-bold my-2 p-2  rounded-md text-white mx-2"
             >
               Create Forum

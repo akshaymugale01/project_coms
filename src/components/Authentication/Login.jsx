@@ -69,7 +69,8 @@ const Login = () => {
         },
       });
 
-      const selectedSiteId = response.data.user.selected_site_id;
+      const selectedSiteId = response?.data?.user?.selected_site_id;
+      console.log("User", selectedSiteId);
       const userName = response.data.user.firstname;
       const userEmail = response.data?.user?.email;
       setItemInLocalStorage("USEREMAIL", userEmail);
@@ -96,8 +97,7 @@ const Login = () => {
         const vibeOrganizationId = vibeResponse.data.data.organization_id;
         setItemInLocalStorage("VIBEORGID", vibeOrganizationId);
       }
-
-      //
+      
       // console.log("skipped copilot");
       const loginD = response.data.user;
       setItemInLocalStorage("user", loginD);

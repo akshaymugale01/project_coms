@@ -190,7 +190,7 @@ function CreatePolls() {
         <div className="my-5 mb-10 border border-gray-200 p-2 m-5 px-2 rounded-lg">
           <h2
             className="text-center text-xl font-bold  p-2 bg-black rounded-md text-white"
-            style={{ background: themeColor }}
+            style={{ background: "rgb(19 27 32)" }}
           >
             Create Polls
           </h2>
