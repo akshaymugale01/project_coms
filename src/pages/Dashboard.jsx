@@ -76,8 +76,8 @@ const Dashboard = () => {
     const fetchSiteData = async (retry = 0) => {
       try {
         const response = await getSiteData();
-        setSiteData(response.data.sites);
-        console.log("Site Data", response.data.sites);
+        setSiteData(response?.data?.sites);
+        console.log("Site Data", response?.data?.sites);
       } catch (error) {
         if (retry < 3) {
           setTimeout(() => {

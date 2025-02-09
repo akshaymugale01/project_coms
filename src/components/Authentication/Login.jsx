@@ -175,16 +175,6 @@ const Login = () => {
   // });
 
   return (
-    // <div
-    //   className="h-screen relative"
-    //   style={{
-    //     backgroundImage: `url(${wave})`,
-    //     backgroundSize: "cover",
-    //     backgroundPosition: "center",
-    //     background: "blur",
-    //     opacity: 0.9,
-    //   }}
-    // >
     <div
       className="h-screen relative bg-cover bg-center"
       style={{

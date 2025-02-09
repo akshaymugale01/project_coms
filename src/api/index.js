@@ -1281,6 +1281,14 @@ export const getSetupUsers = async () =>
     },
   });
 
+
+   export const editSetupUsers = async (id, data) =>
+     axiosInstance.put(`/users/update_user/${id}.json`, data,{
+       params: {
+         token: token,
+       },
+     });  
+
 export const postDeletUsers = async (data) =>
   axiosInstance.post("/deleted_users.json", data, {
     params: {

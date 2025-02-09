@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAllUnits, getSetupUsers, getSites } from '../../../api';
+import { editSetupUsers, getAllUnits, getSetupUsers, getSites } from '../../../api';
 import { RiDeleteBin5Line } from 'react-icons/ri';
 import { getItemInLocalStorage } from '../../../utils/localStorage';
+import toast from 'react-hot-toast';
 
 const EditPageUser = () => {
     const { id } = useParams();
@@ -118,8 +119,7 @@ const EditPageUser = () => {
     if (
       !formData.firstname ||
       !formData.lastname ||
-      !formData.email ||
-      !formData.password
+      !formData.email
     ) {
       return toast.error("All fields are required!");
     }
@@ -142,14 +142,14 @@ const EditPageUser = () => {
     };
 
     try {
-      await postSetupUsers(postData);
+      await editSetupUsers(id , postData);
 
-      console.log("created details", postData);
-      toast.success("User created successfully!");
+      console.log("Updated details", postData);
+      toast.success("User Updated successfully!");
       navigate("/setup/users-setup");
     } catch (error) {
-      console.error("Error creating user:", error);
-      toast.error("Failed to create user.");
+      console.error("Error Updating  user:", error);
+      toast.error("Failed to Update user.");
     }
   };
   return (
@@ -299,7 +299,7 @@ const EditPageUser = () => {
               onClick={handleAddUser}
               className="bg-black text-white p-2 px-4 rounded-md font-medium"
             >
-              Create User
+              Update User
             </button>
           </div>
         </div>

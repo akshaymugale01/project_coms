@@ -208,7 +208,6 @@ const CreateEvent = () => {
     });
   };
 
-
   return (
     <section className="flex">
       <div className="hidden md:block">
@@ -297,7 +296,6 @@ const CreateEvent = () => {
                 className="border-gray-400 border px-2 p-1 rounded-md"
               />
             </div>
-
             <div className="flex gap-4 my-5">
               <div className="flex gap-2 items-center">
                 <input type="checkbox" name="" id="imp" checked={formData.important === true} onChange={() => setFormData({ ...formData, important: !formData.important })} />
@@ -312,14 +310,12 @@ const CreateEvent = () => {
                 </label>
               </div>
             </div>
-
             {/* <input
               ref={fileInputRef}
               type="file"
               multiple
               onChange={handleFileAttachment}
             /> */}
-
             <div className="">
               <h2 className="border-b t border-black my-5 text-lg font-semibold">
                 Share With
@@ -404,7 +400,6 @@ const CreateEvent = () => {
                 </div>
               </div>
             </div>
-
             <div>
               <h2 className="border-b text-xl border-black my-5 font-semibold">
                 Upload Attachments
@@ -415,7 +410,6 @@ const CreateEvent = () => {
                 fileType="image/*"
               />
             </div>
-
             <div className="flex justify-center mt-10 my-5">
               <button
                 style={{ background: themeColor }}
