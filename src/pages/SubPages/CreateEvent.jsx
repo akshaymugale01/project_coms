@@ -5,7 +5,13 @@ import FileInputBox from "../../containers/Inputs/FileInputBox";
 import { useSelector } from "react-redux";
 import Navbar from "../../components/Navbar";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { postEvents, getAssignedTo, getGroups } from "../../api";
+import {
+  postEvents,
+  getAssignedTo,
+  getGroups,
+  getSetupUsers,
+  getAllUnits,
+} from "../../api";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -20,7 +26,15 @@ const CreateEvent = () => {
   const [share, setShare] = useState("all");
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("");
+  const [ownership, setOwnership] = useState([]);
+  const [selectedOwnership, setSelectedOwnership] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState(null);
   const [users, setUsers] = useState([]);
+  const [selectedUnits, setSelectedUnits] = useState([]);
+  const [members, setMembers] = useState([]);  
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
+  const [units, setUnits] = useState([]);
   const [selectedOption, setSelectedOption] = useState([]);
   const [formData, setFormData] = useState({
     site_id: siteId,
@@ -37,7 +51,7 @@ const CreateEvent = () => {
     shared: "",
     email_enabled: false,
     rsvp_enabled: false,
-    important: false
+    important: false,
   });
   console.log(formData);
   const fileInputRef = useRef(null);
@@ -55,6 +69,59 @@ const CreateEvent = () => {
 
   const formatDateTime = (date) => {
     return format(date, "yyyy-MM-dd HH:mm:ss");
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const usersRes = await getSetupUsers();
+        const unitsRes = await getAllUnits();
+
+        setUnits(unitsRes.data);
+
+        const employeesList = usersRes.data.map((emp) => ({
+          id: emp.id,
+          name: `${emp.firstname} ${emp.lastname}`,
+          userSites: emp.user_sites || [],
+        }));
+
+        setMembers(employeesList);
+        setFilteredMembers(employeesList);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleFilter = () => {
+    console.log(
+      "Selected Unit:",
+      selectedUnit,
+      "Selected Ownership:",
+      selectedOwnership
+    );
+    console.log("Members Before Filtering:", members);
+
+    const filtered = members.filter((member) =>
+      member.userSites.some((site) => {
+        console.log("Checking Site:", site);
+        const unitMatch =
+          !selectedUnit || Number(site.unit_id) === Number(selectedUnit);
+        const ownershipMatch =
+          !selectedOwnership ||
+          site.ownership?.toLowerCase() === selectedOwnership.toLowerCase();
+        console.log(
+          "Unit Match:",
+          unitMatch,
+          "Ownership Match:",
+          ownershipMatch
+        );
+        return unitMatch && ownershipMatch;
+      })
+    );
+    console.log("Filtered Members:", filtered);
+    setFilteredMembers(filtered);
   };
 
   useEffect(() => {
@@ -79,6 +146,17 @@ const CreateEvent = () => {
     fetchUsers();
   }, [share]);
 
+  useEffect(() => {
+    const filtered = members.filter((user) =>
+      user.userSites.some(
+        (site) =>
+          (selectedUnits.length === 0 ||
+            selectedUnits.includes(site.unit_id)) &&
+          (ownership.length === 0 || ownership.includes(site.ownership))
+      )
+    );
+    setFilteredMembers(filtered);
+  }, [selectedUnits, ownership, members]);
 
   const fetchGroups = async () => {
     try {
@@ -95,8 +173,6 @@ const CreateEvent = () => {
     setSelectedGroup(event.target.value);
     setFormData({ ...formData, group_id: groupId });
   };
-
-
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -141,7 +217,6 @@ const CreateEvent = () => {
       }
       // formDataSend.append("event[important]", formData.important);
 
-
       // formData.user_ids.forEach((user_id) => {
       //   formDataSend.append("event[user_ids]", user_id);
       // });
@@ -175,12 +250,11 @@ const CreateEvent = () => {
     if (event.target.files) {
       // Convert the FileList to an array
       const newAttachments = Array.from(event.target.files);
-      
+
       // Update state
       setFormData({ ...formData, event_images: newAttachments });
     }
   };
-  
 
   const filterTime = (time) => {
     const selectedDate = new Date(time);
@@ -207,6 +281,16 @@ const CreateEvent = () => {
       [fieldName]: Array.isArray(files) ? files : [files],
     });
   };
+
+
+  const handleSelectEdit = (option) => {
+    if (selectedMembers.includes(option)) {
+      setSelectedMembers(selectedMembers.filter((item) => item !== option));
+    } else {
+      setSelectedMembers([...selectedMembers, option]);
+    }
+  };
+
 
   return (
     <section className="flex">
@@ -298,13 +382,32 @@ const CreateEvent = () => {
             </div>
             <div className="flex gap-4 my-5">
               <div className="flex gap-2 items-center">
-                <input type="checkbox" name="" id="imp" checked={formData.important === true} onChange={() => setFormData({ ...formData, important: !formData.important })} />
+                <input
+                  type="checkbox"
+                  name=""
+                  id="imp"
+                  checked={formData.important === true}
+                  onChange={() =>
+                    setFormData({ ...formData, important: !formData.important })
+                  }
+                />
                 <label htmlFor="imp" className="font-semibold">
                   Important
                 </label>
               </div>
               <div className="flex gap-2 items-center">
-                <input type="checkbox" name="" id="email" checked={formData.email_enabled === true} onChange={() => setFormData({ ...formData, email_enabled: !formData.email_enabled })} />
+                <input
+                  type="checkbox"
+                  name=""
+                  id="email"
+                  checked={formData.email_enabled === true}
+                  onChange={() =>
+                    setFormData({
+                      ...formData,
+                      email_enabled: !formData.email_enabled,
+                    })
+                  }
+                />
                 <label htmlFor="email" className="font-semibold">
                   Send Email
                 </label>
@@ -323,22 +426,25 @@ const CreateEvent = () => {
               <div className="flex flex-col items-center justify-center">
                 <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                   <h2
-                    className={`p-1 ${share === "all" && "bg-black text-white"
-                      } rounded-full px-6 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "all" && "bg-black text-white"
+                    } rounded-full px-6 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("all")}
                   >
                     All
                   </h2>
                   <h2
-                    className={`p-1 ${share === "individual" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "individual" && "bg-black text-white"
+                    } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("individual")}
                   >
                     Individuals
                   </h2>
                   <h2
-                    className={`p-1 ${share === "groups" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "groups" && "bg-black text-white"
+                    } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("groups")}
                   >
                     Groups
@@ -346,21 +452,73 @@ const CreateEvent = () => {
                 </div>
                 <div className="my-5 flex w-full">
                   {share === "individual" && (
-                    <Select
-                      options={users}
-                      closeMenuOnSelect={false}
-                      placeholder="Select User"
-                      value={users.filter((user) =>
-                        formData.user_ids.includes(user.value)
-                      )}
-                      onChange={handleSelectChange}
-                      isMulti
-                      className="w-full"
-                    />
+                    <div className="flex gap-2 mt-2 items-end">
+                      {/* Unit Select Dropdown */}
+                      <select
+                        className="border p-3 border-gray-300 rounded-md flex-1"
+                        value={selectedUnit || ""}
+                        onChange={(e) =>
+                          setSelectedUnit(Number(e.target.value))
+                        }
+                      >
+                        <option value="">Select Unit</option>
+                        {units.map((unit) => (
+                          <option key={unit.id} value={unit.id}>
+                            {unit.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Ownership Select Dropdown */}
+                      <select
+                        className="border p-3 border-gray-300 rounded-md flex-1"
+                        value={selectedOwnership}
+                        onChange={(e) => setSelectedOwnership(e.target.value)}
+                      >
+                        <option value="">Select Ownership</option>
+                        <option value="tenant">Tenant</option>
+                        <option value="owner">Owner</option>
+                      </select>
+
+                      {/* Filter Button */}
+                      <button
+                        onClick={handleFilter}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                      >
+                        Filter
+                      </button>
+                      <Select
+                        options={filteredMembers.map((member) => ({
+                          value: member.id,
+                          label: member.name,
+                        }))}
+                        className="w-full"
+                        title="Select Members"
+                        handleSelect={handleSelectEdit}
+                        selectedOptions={selectedMembers}
+                        setSelectedOptions={setSelectedMembers}
+                        compTitle="Select Group Members"
+                      />
+                      {/* <MultiSelect
+                        options={filteredMembers.map((member) => ({
+                          value: member.id,
+                          label: member.name,
+                        }))}
+                        className="w-full"
+                        title="Select Members"
+                        handleSelect={handleSelectEdit}
+                        selectedOptions={selectedMembers}
+                        setSelectedOptions={setSelectedMembers}
+                        compTitle="Select Group Members"
+                      /> */}
+                    </div>
                   )}
                   {share === "groups" && (
                     <div className="group-dropdown">
-                      <label htmlFor="group-select" className="block mb-2 font-medium">
+                      <label
+                        htmlFor="group-select"
+                        className="block mb-2 font-medium"
+                      >
                         Select a Group:
                       </label>
                       <select
@@ -387,13 +545,29 @@ const CreateEvent = () => {
               </h2>
               <div className="flex gap-4 mt-2">
                 <div className="flex gap-2 ">
-                  <input type="radio" name="RSVP" id="yes" checked={formData.rsvp_enabled === true} onChange={() => setFormData({ ...formData, rsvp_enabled: true })} />
+                  <input
+                    type="radio"
+                    name="RSVP"
+                    id="yes"
+                    checked={formData.rsvp_enabled === true}
+                    onChange={() =>
+                      setFormData({ ...formData, rsvp_enabled: true })
+                    }
+                  />
                   <label htmlFor="yes" className="text-lg">
                     Yes
                   </label>
                 </div>
                 <div className="flex gap-2">
-                  <input type="radio" name="RSVP" id="no" checked={formData.rsvp_enabled === false} onChange={() => setFormData({ ...formData, rsvp_enabled: false })} />
+                  <input
+                    type="radio"
+                    name="RSVP"
+                    id="no"
+                    checked={formData.rsvp_enabled === false}
+                    onChange={() =>
+                      setFormData({ ...formData, rsvp_enabled: false })
+                    }
+                  />
                   <label htmlFor="no" className="text-lg">
                     No
                   </label>
@@ -416,7 +590,7 @@ const CreateEvent = () => {
                 className="bg-black text-white p-2 rounded-md hover:bg-white  flex items-center gap-2 px-4"
                 onClick={handleCreateEvent}
               >
-                <FaCheck />  Submit
+                <FaCheck /> Submit
               </button>
             </div>
           </div>

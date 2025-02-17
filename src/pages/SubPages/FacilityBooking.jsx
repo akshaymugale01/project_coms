@@ -4,6 +4,7 @@ import CustomTrigger from "../../containers/CustomTrigger";
 import SeatTimeSlot, { initialSelectedTimes } from "./SeatTimeSlot";
 import Select from "react-select";
 import {
+  getAllUnits,
   getAssignedTo,
   getFacitilitySetup,
   getLogin,
@@ -62,6 +63,8 @@ const FacilityBooking = () => {
     no_of_tenants: 0,
   });
 
+  const [units, setUnits] = useState([]); // To store units
+
   const [prices, setPrices] = useState({
     member_price_adult: 0,
     member_price_child: 0,
@@ -75,6 +78,16 @@ const FacilityBooking = () => {
 
   //Use Effect
 
+  const fetchUnits = async () => {
+    try {
+      const response = await getAllUnits(); // Fetch all units
+      console.log("Units:", response);
+      setUnits(response.data); // Store the units in state
+    } catch (error) {
+      console.error("Error fetching units:", error);
+    }
+  };
+
   useEffect(() => {
     fetchFacilities();
     if (!formData.booking_date) {
@@ -84,6 +97,7 @@ const FacilityBooking = () => {
       }));
     }
     fetchUsers();
+    fetchUnits();
   }, []);
 
   const handlePaymentChange = (mode) => {
@@ -311,22 +325,52 @@ const FacilityBooking = () => {
       alert("Error in booking. Please try again.");
     }
   };
-
-  const fetchUsers = async () => {
+   console.log("uuu", units);
+   const fetchUsers = async () => {
     try {
       const response = await getSetupUsers();
-      // console.log("Users al:", response);
-      const transformedUsers = response.data.map((user) => ({
-        value: user.id,
-        label: `${user.firstname} ${user.lastname}`,
-      }));
+      console.log("Users:", response);
+  
+      const transformedUsers = response.data.map((user) => {
+        console.log("User:", user);
+        // Ensure user.user_sites is defined
+        const userSite = user?.user_sites?.[0];
+        
+        if (!userSite) {
+          console.warn(`No user site found for user ${user.id}`);
+          return {
+            value: user.id,
+            label: `${user.firstname} ${user.lastname} - Unknown Unit - ${user?.user_sites?.[0]?.ownership || "Unknown Ownership"}`,
+          };
+        }
+  
+        const unit = units.find((unit) => unit?.id === userSite?.unit_id);
+        console.log("Found unit:", unit);
+  
+        return {
+          value: user.id,
+          label: `${user.firstname} ${user.lastname} - ${unit ? unit.name : "Unknown Unit"} - ${userSite.ownership || "Unknown Ownership"}`,
+        };
+      });
+  
       setUserOptions(transformedUsers);
       console.log("Fetched Users:", transformedUsers);
     } catch (error) {
       console.error("Error fetching assigned users:", error);
     }
   };
+  
 
+  useEffect(() => {
+    
+  }, []);
+
+  useEffect(() => {
+    if (units.length > 0) {
+      fetchUsers();
+    }
+  }, [units]);
+  
   const handleFacilityChange = (e) => {
     const selectedFacilityId = e.target.value; // Get the selected facility ID from the dropdown
     setSelectedSlot(""); // Reset selected slot
@@ -349,7 +393,7 @@ const FacilityBooking = () => {
       user_id: selectedUserId, // Update user_id in the formData state
     }));
   };
-
+  
   const [searchText, setSearchText] = useState("");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null); // Store the selected user
@@ -444,7 +488,7 @@ const FacilityBooking = () => {
               <div className="mt-3 relative p-2">
               <label htmlFor="users" className="font-semibold">
                   Select User:
-                </label>
+              </label>
                 <input
                   type="text"
                   value={searchText}

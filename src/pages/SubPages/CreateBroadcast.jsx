@@ -3,7 +3,15 @@ import FileInput from "../../Buttons/FileInput";
 import { useSelector } from "react-redux";
 import ReactDatePicker from "react-datepicker";
 import Select from "react-select";
-import { getAssignedTo, getBroadCast, getGroups, postBroadCast, postGroups } from "../../api";
+import {
+  getAllUnits,
+  getAssignedTo,
+  getBroadCast,
+  getGroups,
+  getSetupUsers,
+  postBroadCast,
+  postGroups,
+} from "../../api";
 import FileInputBox from "../../containers/Inputs/FileInputBox";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
@@ -15,8 +23,14 @@ const CreateBroadcast = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("");
   const themeColor = useSelector((state) => state.theme.color);
+  const [selectedUnit, setSelectedUnit] = useState(null);
   const siteId = getItemInLocalStorage("SITEID");
+  const [units, setUnits] = useState([]);
   const [users, setUsers] = useState([]);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [selectedOwnership, setSelectedOwnership] = useState("");
+  const [filteredMembers, setFilteredMembers] = useState([]);
+  const [members, setMembers] = useState([]);  
   const [formData, setFormData] = useState({
     site_id: siteId,
     notice_title: "",
@@ -40,6 +54,16 @@ const CreateBroadcast = () => {
     setFormData({ ...formData, expiry_date: date });
   };
 
+
+  const handleSelectEdit = (option) => {
+    if (selectedMembers.includes(option)) {
+      setSelectedMembers(selectedMembers.filter((item) => item !== option));
+    } else {
+      setSelectedMembers([...selectedMembers, option]);
+    }
+  };
+
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -62,6 +86,59 @@ const CreateBroadcast = () => {
     fetchUsers();
   }, [share]);
 
+  const handleFilter = () => {
+    console.log(
+      "Selected Unit:",
+      selectedUnit,
+      "Selected Ownership:",
+      selectedOwnership
+    );
+    console.log("Members Before Filtering:", members);
+
+    const filtered = members.filter((member) =>
+      member.userSites.some((site) => {
+        console.log("Checking Site:", site);
+        const unitMatch =
+          !selectedUnit || Number(site.unit_id) === Number(selectedUnit);
+        const ownershipMatch =
+          !selectedOwnership ||
+          site.ownership?.toLowerCase() === selectedOwnership.toLowerCase();
+        console.log(
+          "Unit Match:",
+          unitMatch,
+          "Ownership Match:",
+          ownershipMatch
+        );
+        return unitMatch && ownershipMatch;
+      })
+    );
+    console.log("Filtered Members:", filtered);
+    setFilteredMembers(filtered);
+  };
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const usersRes = await getSetupUsers();
+          const unitsRes = await getAllUnits();
+  
+          setUnits(unitsRes.data);
+  
+          const employeesList = usersRes.data.map((emp) => ({
+            id: emp.id,
+            name: `${emp.firstname} ${emp.lastname}`,
+            userSites: emp.user_sites || [],
+          }));
+  
+          setMembers(employeesList);
+          setFilteredMembers(employeesList);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+      fetchData();
+    }, []);
+  
 
   const fetchGroups = async () => {
     try {
@@ -80,7 +157,8 @@ const CreateBroadcast = () => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       group_id: selectedGroupId, // Set the selected group_id
-      group_name: groups.find((group) => group.id === selectedGroupId)?.group_name || "", // Optionally, set the group_name if needed
+      group_name:
+        groups.find((group) => group.id === selectedGroupId)?.group_name || "", // Optionally, set the group_name if needed
     }));
   };
 
@@ -95,7 +173,6 @@ const CreateBroadcast = () => {
       user_ids: shareType === "individual" ? prevFormData.user_ids : "", // Clear user_ids unless "individual" is selected
     }));
   };
-
 
   const navigate = useNavigate();
 
@@ -118,13 +195,16 @@ const CreateBroadcast = () => {
       // Common fields
       formDataSend.append("notice[site_id]", formData.site_id);
       formDataSend.append("notice[notice_title]", formData.notice_title);
-      formDataSend.append("notice[notice_discription]", formData.notice_discription);
+      formDataSend.append(
+        "notice[notice_discription]",
+        formData.notice_discription
+      );
       formDataSend.append("notice[expiry_date]", formData.expiry_date);
       if (share === "all") {
         formDataSend.append("notice[shared]", "all");
       } else if (share === "individual") {
         formDataSend.append("notice[shared]", "individual");
-        formDataSend.append("notice[user_ids]", formData.user_ids); 
+        formDataSend.append("notice[user_ids]", formData.user_ids);
       } else if (share === "groups") {
         formDataSend.append("notice[shared]", "groups");
         formDataSend.append("notice[group_id]", formData.group_id);
@@ -239,19 +319,25 @@ const CreateBroadcast = () => {
                 <div className="flex flex-col items-center justify-center">
                   <div className="flex flex-row gap-2 w-full font-semibold p-2">
                     <h2
-                      className={`p-1 ${share === "all" && "bg-black text-white"} rounded-full px-6 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${
+                        share === "all" && "bg-black text-white"
+                      } rounded-full px-6 cursor-pointer border-2 border-black`}
                       onClick={() => handleShareChange("all")}
                     >
                       All
                     </h2>
                     <h2
-                      className={`p-1 ${share === "individual" && "bg-black text-white"} rounded-full px-4 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${
+                        share === "individual" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                       onClick={() => handleShareChange("individual")}
                     >
                       Individuals
                     </h2>
                     <h2
-                      className={`p-1 ${share === "groups" && "bg-black text-white"} rounded-full px-4 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${
+                        share === "groups" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                       onClick={() => handleShareChange("groups")}
                     >
                       Groups
@@ -260,18 +346,73 @@ const CreateBroadcast = () => {
 
                   <div className="my-2 flex w-full">
                     {share === "individual" && (
-                      <Select
-                        options={users}
-                        placeholder="Select User"
-                        value={users.filter((user) => formData.user_ids.includes(user.value))}
-                        onChange={handleSelectChange}
-                        isMulti
+                      <div className="flex gap-2 mt-2 items-end">
+                        {/* Unit Select Dropdown */}
+                        <select
+                          className="border p-3 border-gray-300 rounded-md flex-1"
+                          value={selectedUnit || ""}
+                          onChange={(e) =>
+                            setSelectedUnit(Number(e.target.value))
+                          }
+                        >
+                          <option value="">Select Unit</option>
+                          {units.map((unit) => (
+                            <option key={unit.id} value={unit.id}>
+                              {unit.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Ownership Select Dropdown */}
+                        <select
+                          className="border p-3 border-gray-300 rounded-md flex-1"
+                          value={selectedOwnership}
+                          onChange={(e) => setSelectedOwnership(e.target.value)}
+                        >
+                          <option value="">Select Ownership</option>
+                          <option value="tenant">Tenant</option>
+                          <option value="owner">Owner</option>
+                        </select>
+
+                        {/* Filter Button */}
+                        <button
+                          onClick={handleFilter}
+                          className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                        >
+                          Filter
+                        </button>
+                        <Select
+                          options={filteredMembers.map((member) => ({
+                            value: member.id,
+                            label: member.name,
+                          }))}
+                          className="w-full"
+                          title="Select Members"
+                          handleSelect={handleSelectEdit}
+                          selectedOptions={selectedMembers}
+                          setSelectedOptions={setSelectedMembers}
+                          compTitle="Select Group Members"
+                        />
+                        {/* <MultiSelect
+                        options={filteredMembers.map((member) => ({
+                          value: member.id,
+                          label: member.name,
+                        }))}
                         className="w-full"
-                      />
+                        title="Select Members"
+                        handleSelect={handleSelectEdit}
+                        selectedOptions={selectedMembers}
+                        setSelectedOptions={setSelectedMembers}
+                        compTitle="Select Group Members"
+                      /> */}
+                      </div>
                     )}
                     {share === "groups" && (
                       <div className="group-dropdown">
-                        <label htmlFor="group-select" className="block mb-2 font-medium">
+                        <label
+                          htmlFor="group-select"
+                          className="block mb-2 font-medium"
+                        >
                           Select a Group:
                         </label>
                         <select

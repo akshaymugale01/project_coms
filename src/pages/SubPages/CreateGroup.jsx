@@ -33,16 +33,16 @@ function CreateGroup({ onclose }) {
         const usersRes = await getSetupUsers();
         const unitsRes = await getAllUnits();
 
-        setUnits(unitsRes.data); // Store all units
+        setUnits(unitsRes.data);
 
         const employeesList = usersRes.data.map((emp) => ({
           id: emp.id,
           name: `${emp.firstname} ${emp.lastname}`,
-          userSites: emp.user_sites || [], // Ensure `user_sites` is not undefined
+          userSites: emp.user_sites || [],
         }));
 
         setMembers(employeesList);
-        setFilteredMembers(employeesList); // Default view
+        setFilteredMembers(employeesList);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -83,7 +83,7 @@ function CreateGroup({ onclose }) {
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0]; // Get selected file
+    const file = e.target.files[0];
     setFormData((prev) => ({
       ...prev,
       profilePic: file,
@@ -125,7 +125,7 @@ function CreateGroup({ onclose }) {
     if (formData.profilePic) {
       postData.append("attachment", formData.profilePic);
     }
-  
+
     selectedMembers.forEach((member) => {
       postData.append("group[member_ids][]", member);
     });
@@ -164,7 +164,6 @@ function CreateGroup({ onclose }) {
           </div>
         </div>
         <div className="flex gap-2 mt-2 items-end">
-          {/* Unit Select Dropdown */}
           <select
             className="border p-3 border-gray-300 rounded-md flex-1"
             value={selectedUnit || ""}
@@ -178,7 +177,6 @@ function CreateGroup({ onclose }) {
             ))}
           </select>
 
-          {/* Ownership Select Dropdown */}
           <select
             className="border p-3 border-gray-300 rounded-md flex-1"
             value={selectedOwnership}
@@ -198,15 +196,16 @@ function CreateGroup({ onclose }) {
           </button>
         </div>
 
-        <MultiSelect
+        <Select
           options={filteredMembers.map((member) => ({
             value: member.id,
             label: member.name,
           }))}
+          className="w-full"
           title="Select Members"
-          handleSelect={handleSelectEdit} // Ensure it directly takes the option
-          selectedOptions={selectedMembers} // Pass the correct selected state
-          setSelectedOptions={setSelectedMembers} // Ensure it updates state
+          handleSelect={handleSelectEdit}
+          selectedOptions={selectedMembers}
+          setSelectedOptions={setSelectedMembers}
           compTitle="Select Group Members"
         />
 
@@ -225,9 +224,9 @@ function CreateGroup({ onclose }) {
           <label className="font-medium">Group profile picture</label>
           <input
             type="file"
-            accept="image/*" // Restrict to images
+            accept="image/*"
             className="border p-2 border-gray-300 rounded-md"
-            onChange={handleFileChange} // Call function on file select
+            onChange={handleFileChange}
           />
         </div>
 
