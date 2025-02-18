@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import {
   getAllUnits,
   getAssignedTo,
+  getBuildings,
   getGroups,
   getSetupUsers,
   postPolls,
@@ -37,29 +38,6 @@ function CreatePolls() {
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0]; // Format date as YYYY-MM-DD
     setCurrentDate(formattedDate);
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const usersRes = await getSetupUsers();
-        const unitsRes = await getAllUnits();
-
-        setUnits(unitsRes.data);
-
-        const employeesList = usersRes.data.map((emp) => ({
-          id: emp.id,
-          name: `${emp.firstname} ${emp.lastname}`,
-          userSites: emp.user_sites || [],
-        }));
-
-        setMembers(employeesList);
-        setFilteredMembers(employeesList);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
   }, []);
 
   const navigate = useNavigate();
@@ -221,13 +199,14 @@ function CreatePolls() {
     const fetchData = async () => {
       try {
         const usersRes = await getSetupUsers();
-        const unitsRes = await getAllUnits();
-
+        const unitsRes = await getBuildings();
+        console.log("userSites", unitsRes);
         setUnits(unitsRes.data);
 
         const employeesList = usersRes.data.map((emp) => ({
           id: emp.id,
           name: `${emp.firstname} ${emp.lastname}`,
+          building_id: emp.building_id,
           userSites: emp.user_sites || [],
         }));
 
@@ -242,30 +221,38 @@ function CreatePolls() {
 
   const handleFilter = () => {
     console.log(
-      "Selected Unit:",
+      "Selected Building ID:",
       selectedUnit,
       "Selected Ownership:",
       selectedOwnership
     );
     console.log("Members Before Filtering:", members);
 
-    const filtered = members.filter((member) =>
-      member.userSites.some((site) => {
-        console.log("Checking Site:", site);
-        const unitMatch =
-          !selectedUnit || Number(site.unit_id) === Number(selectedUnit);
-        const ownershipMatch =
-          !selectedOwnership ||
-          site.ownership?.toLowerCase() === selectedOwnership.toLowerCase();
-        console.log(
-          "Unit Match:",
-          unitMatch,
-          "Ownership Match:",
-          ownershipMatch
+    const filtered = members.filter((member) => {
+      // Check if the user belongs to the selected building
+      const buildingMatch =
+        !selectedUnit || Number(member.building_id) === Number(selectedUnit);
+
+      // Check if any of the user's sites match the selected ownership
+      const ownershipMatch =
+        !selectedOwnership ||
+        member.userSites.some(
+          (site) =>
+            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase()
         );
-        return unitMatch && ownershipMatch;
-      })
-    );
+
+      console.log(
+        "User:",
+        member.name,
+        "Building Match:",
+        buildingMatch,
+        "Ownership Match:",
+        ownershipMatch
+      );
+
+      return buildingMatch && ownershipMatch;
+    });
+
     console.log("Filtered Members:", filtered);
     setFilteredMembers(filtered);
   };
@@ -425,7 +412,7 @@ function CreatePolls() {
                       value={selectedUnit || ""}
                       onChange={(e) => setSelectedUnit(Number(e.target.value))}
                     >
-                      <option value="">Select Unit</option>
+                      <option value="">Select Tower</option>
                       {units.map((unit) => (
                         <option key={unit.id} value={unit.id}>
                           {unit.name}

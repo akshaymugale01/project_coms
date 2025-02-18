@@ -11,6 +11,7 @@ import {
   getGroups,
   getSetupUsers,
   getAllUnits,
+  getBuildings,
 } from "../../api";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
@@ -59,6 +60,69 @@ const CreateEvent = () => {
   const datePickerRef = useRef(null);
   const currentDate = new Date();
 
+  useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const usersRes = await getSetupUsers();
+          const unitsRes = await getBuildings();
+          console.log("userSites", unitsRes);
+          setUnits(unitsRes.data);
+  
+          const employeesList = usersRes.data.map((emp) => ({
+            id: emp.id,
+            name: `${emp.firstname} ${emp.lastname}`,
+            building_id: emp.building_id,
+            userSites: emp.user_sites || [],
+          }));
+  
+          setMembers(employeesList);
+          setFilteredMembers(employeesList);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+      fetchData();
+    }, []);
+
+    const handleFilter = () => {
+      console.log(
+        "Selected Building ID:",
+        selectedUnit,
+        "Selected Ownership:",
+        selectedOwnership
+      );
+      console.log("Members Before Filtering:", members);
+  
+      const filtered = members.filter((member) => {
+        // Check if the user belongs to the selected building
+        const buildingMatch =
+          !selectedUnit ||
+          Number(member.building_id) === Number(selectedUnit);
+  
+        // Check if any of the user's sites match the selected ownership
+        const ownershipMatch =
+          !selectedOwnership ||
+          member.userSites.some(
+            (site) =>
+              site.ownership?.toLowerCase() === selectedOwnership.toLowerCase()
+          );
+  
+        console.log(
+          "User:",
+          member.name,
+          "Building Match:",
+          buildingMatch,
+          "Ownership Match:",
+          ownershipMatch
+        );
+  
+        return buildingMatch && ownershipMatch;
+      });
+  
+      console.log("Filtered Members:", filtered);
+      setFilteredMembers(filtered);
+    };
+
   const handleStartDateChange = (date) => {
     setFormData({ ...formData, start_date_time: date });
   };
@@ -71,58 +135,58 @@ const CreateEvent = () => {
     return format(date, "yyyy-MM-dd HH:mm:ss");
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const usersRes = await getSetupUsers();
-        const unitsRes = await getAllUnits();
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const usersRes = await getSetupUsers();
+  //       const unitsRes = await getAllUnits();
 
-        setUnits(unitsRes.data);
+  //       setUnits(unitsRes.data);
 
-        const employeesList = usersRes.data.map((emp) => ({
-          id: emp.id,
-          name: `${emp.firstname} ${emp.lastname}`,
-          userSites: emp.user_sites || [],
-        }));
+  //       const employeesList = usersRes.data.map((emp) => ({
+  //         id: emp.id,
+  //         name: `${emp.firstname} ${emp.lastname}`,
+  //         userSites: emp.user_sites || [],
+  //       }));
 
-        setMembers(employeesList);
-        setFilteredMembers(employeesList);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
-  }, []);
+  //       setMembers(employeesList);
+  //       setFilteredMembers(employeesList);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
+  //   fetchData();
+  // }, []);
 
-  const handleFilter = () => {
-    console.log(
-      "Selected Unit:",
-      selectedUnit,
-      "Selected Ownership:",
-      selectedOwnership
-    );
-    console.log("Members Before Filtering:", members);
+  // const handleFilter = () => {
+  //   console.log(
+  //     "Selected Unit:",
+  //     selectedUnit,
+  //     "Selected Ownership:",
+  //     selectedOwnership
+  //   );
+  //   console.log("Members Before Filtering:", members);
 
-    const filtered = members.filter((member) =>
-      member.userSites.some((site) => {
-        console.log("Checking Site:", site);
-        const unitMatch =
-          !selectedUnit || Number(site.unit_id) === Number(selectedUnit);
-        const ownershipMatch =
-          !selectedOwnership ||
-          site.ownership?.toLowerCase() === selectedOwnership.toLowerCase();
-        console.log(
-          "Unit Match:",
-          unitMatch,
-          "Ownership Match:",
-          ownershipMatch
-        );
-        return unitMatch && ownershipMatch;
-      })
-    );
-    console.log("Filtered Members:", filtered);
-    setFilteredMembers(filtered);
-  };
+  //   const filtered = members.filter((member) =>
+  //     member.userSites.some((site) => {
+  //       console.log("Checking Site:", site);
+  //       const unitMatch =
+  //         !selectedUnit || Number(site.unit_id) === Number(selectedUnit);
+  //       const ownershipMatch =
+  //         !selectedOwnership ||
+  //         site.ownership?.toLowerCase() === selectedOwnership.toLowerCase();
+  //       console.log(
+  //         "Unit Match:",
+  //         unitMatch,
+  //         "Ownership Match:",
+  //         ownershipMatch
+  //       );
+  //       return unitMatch && ownershipMatch;
+  //     })
+  //   );
+  //   console.log("Filtered Members:", filtered);
+  //   setFilteredMembers(filtered);
+  // };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -461,7 +525,7 @@ const CreateEvent = () => {
                           setSelectedUnit(Number(e.target.value))
                         }
                       >
-                        <option value="">Select Unit</option>
+                        <option value="">Select Tower</option>
                         {units.map((unit) => (
                           <option key={unit.id} value={unit.id}>
                             {unit.name}

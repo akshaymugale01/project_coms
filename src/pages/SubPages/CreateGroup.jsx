@@ -2,11 +2,17 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { PiPlusCircle } from "react-icons/pi";
 import MultiSelect from "../AdminHrms/Components/MultiSelect";
-import { getAllUnits, getSetupUsers, postGroups } from "../../api";
+import {
+  getAllUnits,
+  getBuildings,
+  getSetupUsers,
+  postGroups,
+} from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import { FaCheck } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
 import toast from "react-hot-toast";
+import { Select } from "antd";
 
 function CreateGroup({ onclose }) {
   const [formData, setFormData] = useState({
@@ -27,17 +33,19 @@ function CreateGroup({ onclose }) {
   const [ownership, setOwnership] = useState([]);
   const [selectedOwnership, setSelectedOwnership] = useState("");
 
+  console.log("Flats", units);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const usersRes = await getSetupUsers();
-        const unitsRes = await getAllUnits();
-
+        const unitsRes = await getBuildings();
+        console.log("userSites", usersRes);
         setUnits(unitsRes.data);
 
         const employeesList = usersRes.data.map((emp) => ({
           id: emp.id,
           name: `${emp.firstname} ${emp.lastname}`,
+          building_id: emp.building_id,
           userSites: emp.user_sites || [],
         }));
 
@@ -52,32 +60,39 @@ function CreateGroup({ onclose }) {
 
   const handleFilter = () => {
     console.log(
-      "Selected Unit:",
+      "Selected Building ID:",
       selectedUnit,
       "Selected Ownership:",
       selectedOwnership
     );
     console.log("Members Before Filtering:", members);
 
-    const filtered = members.filter((member) =>
-      member.userSites.some((site) => {
-        console.log("Checking Site:", site);
+    const filtered = members.filter((member) => {
+      // Check if the user belongs to the selected building
+      const buildingMatch =
+        !selectedUnit ||
+        Number(member.building_id) === Number(selectedUnit);
 
-        const unitMatch =
-          !selectedUnit || Number(site.unit_id) === Number(selectedUnit);
-        const ownershipMatch =
-          !selectedOwnership ||
-          site.ownership?.toLowerCase() === selectedOwnership.toLowerCase();
-
-        console.log(
-          "Unit Match:",
-          unitMatch,
-          "Ownership Match:",
-          ownershipMatch
+      // Check if any of the user's sites match the selected ownership
+      const ownershipMatch =
+        !selectedOwnership ||
+        member.userSites.some(
+          (site) =>
+            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase()
         );
-        return unitMatch && ownershipMatch;
-      })
-    );
+
+      console.log(
+        "User:",
+        member.name,
+        "Building Match:",
+        buildingMatch,
+        "Ownership Match:",
+        ownershipMatch
+      );
+
+      return buildingMatch && ownershipMatch;
+    });
+
     console.log("Filtered Members:", filtered);
     setFilteredMembers(filtered);
   };
@@ -169,7 +184,7 @@ function CreateGroup({ onclose }) {
             value={selectedUnit || ""}
             onChange={(e) => setSelectedUnit(Number(e.target.value))}
           >
-            <option value="">Select Unit</option>
+            <option value="">Select Tower</option>
             {units.map((unit) => (
               <option key={unit.id} value={unit.id}>
                 {unit.name}
@@ -195,7 +210,7 @@ function CreateGroup({ onclose }) {
             Filter
           </button>
         </div>
-
+        <div className="mt-2">
         <Select
           options={filteredMembers.map((member) => ({
             value: member.id,
@@ -208,6 +223,7 @@ function CreateGroup({ onclose }) {
           setSelectedOptions={setSelectedMembers}
           compTitle="Select Group Members"
         />
+        </div>
 
         <div className="flex flex-col mt-2">
           <label className="font-medium">Description</label>
