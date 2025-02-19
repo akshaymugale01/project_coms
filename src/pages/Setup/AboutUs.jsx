@@ -520,7 +520,42 @@ const AboutUs = () => {
           ? `${domainPrefix}${bannerData[3].attachments[0].document}`
           : "/path-to-default-image.jpg", // Fallback image
       caption: "First Slide",
-    }
+    },
+    {
+      url:
+        bannerData[4]?.attachments?.[0]?.document
+          ? `${domainPrefix}${bannerData[4].attachments[0].document}`
+          : "/path-to-default-image.jpg", // Fallback image
+      caption: "First Slide",
+    },
+    {
+      url:
+        bannerData[5]?.attachments?.[0]?.document
+          ? `${domainPrefix}${bannerData[5].attachments[0].document}`
+          : "/path-to-default-image.jpg", // Fallback image
+      caption: "First Slide",
+    },
+    {
+      url:
+        bannerData[6]?.attachments?.[0]?.document
+          ? `${domainPrefix}${bannerData[6].attachments[0].document}`
+          : "/path-to-default-image.jpg", // Fallback image
+      caption: "First Slide",
+    },
+    {
+      url:
+        bannerData[7]?.attachments?.[0]?.document
+          ? `${domainPrefix}${bannerData[7].attachments[0].document}`
+          : "/path-to-default-image.jpg", // Fallback image
+      caption: "First Slide",
+    },
+    {
+      url:
+        bannerData[8]?.attachments?.[0]?.document
+          ? `${domainPrefix}${bannerData[8].attachments[0].document}`
+          : "/path-to-default-image.jpg", // Fallback image
+      caption: "First Slide",
+    },
   ];
 
   return (

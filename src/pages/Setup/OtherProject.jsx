@@ -254,7 +254,7 @@ const OtherProject = () => {
 
       <div className="min-h-screen bg-gray-700 w-full p-6">
         <div className="flex justify-end text-right mb-4">
-          {userID === 574 && (
+          {(userID === 574 || userID === 570)&& (
             <>
               <button
                 onClick={handleOpenModal}
@@ -338,7 +338,7 @@ const OtherProject = () => {
                     </div>
                   )}
 
-                  {userID === 574 && (
+                  {(userID === 574 || userID === 570)&& (
                     <div
                       className="absolute top-4 right-4 bg-gray-900 text-white text-sm p-2 rounded-full cursor-pointer"
                       onClick={() => handleDelete(project.id)}
