@@ -111,7 +111,6 @@ const VisitorPage = () => {
         console.log(error);
       }
     };
-
     fetchApprovals();
     fetchExpectedVisitor();
     fetchVisitorHistory();

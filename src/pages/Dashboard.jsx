@@ -17,6 +17,7 @@ import { getSiteData, siteChange } from "../api";
 import { MdExpandLess, MdExpandMore } from "react-icons/md";
 import { FaBuilding } from "react-icons/fa";
 import AssetDashboard from "./SubPages/AssetDashboard";
+import VisitorsDashboard from "./SubPages/Projectmanagement/VisitorsDashboard";
 const Dashboard = () => {
   const themeColor = useSelector((state) => state.theme.color);
   // const vibeUserId = getItemInLocalStorage("UserId");
@@ -178,6 +179,9 @@ const Dashboard = () => {
         </header>
         <div className="m-5">
           <TicketDashboard />
+        </div>
+        <div className="m-5">
+          <VisitorsDashboard />
         </div>
         <div className="w-full flex mx-3 flex-col p-2  ">
           <HighchartsComponent />

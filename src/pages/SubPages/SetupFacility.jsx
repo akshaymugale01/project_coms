@@ -633,7 +633,7 @@ const SetupFacility = () => {
                 </label>
               </div>
               {/* GST Input */}
-              <div className="flex items-center space-x-2">
+              {/* <div className="flex items-center space-x-2">
                 <label htmlFor="gst">GST:</label>
                 <input
                   type="number"
@@ -647,11 +647,33 @@ const SetupFacility = () => {
                   placeholder="Enter GST"
                   className="border border-gray-400 rounded p-2 outline-none"
                 />
+              </div> */}
+              <div className="flex items-center space-x-2">
+                <label htmlFor="gst_no" className="font-medium">
+                  GST
+                </label>
+                <input
+                  type="number"
+                  name="gst_no"
+                  id="gst_no"
+                  className="border border-gray-400 rounded p-2 outline-none"
+                  placeholder="GST(%)"
+                  value={formData.amenity.gst_no || ""} // Add GST to the state if necessary
+                  onChange={(e) =>
+                    setFormData((prevState) => ({
+                      ...prevState,
+                      amenity: {
+                        ...prevState.amenity,
+                        gst_no: e.target.value, // Add GST handler
+                      },
+                    }))
+                  }
+                />
               </div>
 
               {/* SGST Input */}
               <div className="flex items-center space-x-2">
-                <label htmlFor="sgst">SGST:</label>
+                <label className="font-medium" htmlFor="sgst">SGST:</label>
                 <input
                   type="number"
                   id="sgst"
@@ -666,7 +688,6 @@ const SetupFacility = () => {
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-3 gap-4">
               <div className="my-2 flex flex-col gap-2">
                 <label htmlFor="min_people" className="font-medium">
@@ -696,28 +717,7 @@ const SetupFacility = () => {
                   onChange={handleInputChange}
                 />
               </div>
-              <div className="my-2 flex flex-col gap-2">
-                <label htmlFor="gst_no" className="font-medium">
-                  GST
-                </label>
-                <input
-                  type="number"
-                  name="gst_no"
-                  id="gst_no"
-                  className="border rounded-md p-2"
-                  placeholder="GST(%)"
-                  value={formData.amenity.gst_no || ""} // Add GST to the state if necessary
-                  onChange={(e) =>
-                    setFormData((prevState) => ({
-                      ...prevState,
-                      amenity: {
-                        ...prevState.amenity,
-                        gst_no: e.target.value, // Add GST handler
-                      },
-                    }))
-                  }
-                />
-              </div>
+              
             </div>
           </div>
         </div>
