@@ -4,7 +4,18 @@ import { FaTrash } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { getItemInLocalStorage } from "../utils/localStorage";
 import toast from "react-hot-toast";
-import { getHostList, getParkingConfig, getSetupUsers, getVisitorStaffCategory, postNewGoods, postNewVisitor, postVisitorOTPApi } from "../api";
+import {
+  getBuildings,
+  getFloors,
+  getHostList,
+  getParkingConfig,
+  getSetupUsers,
+  getUnits,
+  getVisitorStaffCategory,
+  postNewGoods,
+  postNewVisitor,
+  postVisitorOTPApi,
+} from "../api";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
 import FileInputBox from "../containers/Inputs/FileInputBox";
@@ -22,7 +33,15 @@ const AddNewVisitor = () => {
   const [showWebcam, setShowWebcam] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [slots, setSlots] = useState([]);
+
   const webcamRef = useRef(null);
+  const [units, setUnits] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [floors, setFloors] = useState([]);
+
+  const [selectedBuilding, setSelectedBuilding] = useState("");
+  const [selectedFloor, setSelectedFloor] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState("");
   const handleOpenCamera = () => {
     setShowWebcam(true);
   };
@@ -52,8 +71,14 @@ const AddNewVisitor = () => {
     }
   };
 
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0"); // Ensure two digits
+    const minutes = now.getMinutes().toString().padStart(2, "0"); // Ensure two digits
+    return `${hours}:${minutes}`;
+  };
 
-  const [staffCategories, setStaffCategories] = useState([])
+  const [staffCategories, setStaffCategories] = useState([]);
   const [passEndDate, setPassEndDate] = useState("");
   const [formData, setFormData] = useState({
     visitorName: "",
@@ -62,7 +87,7 @@ const AddNewVisitor = () => {
     comingFrom: "",
     vehicleNumber: "",
     expectedDate: new Date().toISOString().split("T")[0],
-    expectedTime: "",
+    expectedTime: getCurrentTime(),
     hostApproval: false,
     goodsInward: false,
     host: "",
@@ -163,7 +188,6 @@ const AddNewVisitor = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
   };
@@ -192,7 +216,7 @@ const AddNewVisitor = () => {
     }
 
     if (!formData.host) {
-      toast.error("Host Must be Present!")
+      toast.error("Host Must be Present!");
       return;
     }
 
@@ -200,7 +224,10 @@ const AddNewVisitor = () => {
     postData.append("visitor[site_id]", siteId);
     postData.append("visitor[created_by_id]", formData.host);
     postData.append("visitor[name]", formData.visitorName);
-    postData.append("visitor[visitor_staff_category_id]", formData.supportCategory);
+    postData.append(
+      "visitor[visitor_staff_category_id]",
+      formData.supportCategory
+    );
     postData.append("visitor[contact_no]", formData.mobile);
     postData.append("visitor[purpose]", formData.purpose);
     postData.append("visitor[start_pass]", passStartDate);
@@ -221,7 +248,7 @@ const AddNewVisitor = () => {
       const response = await fetch(capturedImage);
       const blob = await response.blob();
       postData.append("visitor[profile_pic]", blob, "visitor_image.jpg");
-    } else if (imageFile){
+    } else if (imageFile) {
       postData.append("visitor[profile_pic]", imageFile, imageFile.name);
     }
     const blob = await fetch(capturedImage).then((res) => res.blob());
@@ -261,10 +288,10 @@ const AddNewVisitor = () => {
       postGoods.append("goods_in_out[person_name]", formData.visitorName);
       postGoods.append("goods_in_out[created_by_id]", userId);
       try {
-        const goodsRes = await postNewGoods(postGoods)
-        console.log(goodsRes)
+        const goodsRes = await postNewGoods(postGoods);
+        console.log(goodsRes);
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
       console.log(visitResp);
       navigate("/admin/passes/visitors");
@@ -280,21 +307,30 @@ const AddNewVisitor = () => {
     const fetchUsers = async () => {
       try {
         const usersResp = await getHostList(siteId);
+        const unitsRes = await getBuildings();
+
+        const floors = await getFloors();
+        const unitsget = await getUnits();
+
         setHosts(usersResp.data.hosts);
-        console.log(usersResp);
+        setBuildings(unitsRes.data);
+        setFloors(floors.data);
+        setUnits(floors.data);
+        // console.log(usersResp);
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
     };
+
+    
     const fetchVisitorCategory = async () => {
       try {
-        const visitorCat = await getVisitorStaffCategory()
-        setStaffCategories(visitorCat.data.categories)
+        const visitorCat = await getVisitorStaffCategory();
+        setStaffCategories(visitorCat.data.categories);
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
-
-    }
+    };
     const fetchParkingConfig = async () => {
       try {
         const parkingRes = await getParkingConfig();
@@ -304,9 +340,18 @@ const AddNewVisitor = () => {
       }
     };
     fetchUsers();
-    fetchVisitorCategory()
-    fetchParkingConfig()
+    fetchVisitorCategory();
+    fetchParkingConfig();
   }, []);
+
+  const filteredFloors = floors.filter(
+    (floor) => floor.building_id === Number(selectedBuilding)
+  );
+
+  // Filter Units based on selected Floor
+  const filteredUnits = units.filter(
+    (unit) => unit.floor_id === Number(selectedFloor)
+  );
 
   return (
     <div className="flex justify-center items-center  w-full p-4">
@@ -325,7 +370,11 @@ const AddNewVisitor = () => {
               {/* Button to Open Camera */}
               <button onClick={handleOpenCamera}>
                 <img
-                  src={imageFile ? URL.createObjectURL(imageFile) : capturedImage || image}
+                  src={
+                    imageFile
+                      ? URL.createObjectURL(imageFile)
+                      : capturedImage || image
+                  }
                   alt="Uploaded or Captured"
                   className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
                 />
@@ -377,8 +426,6 @@ const AddNewVisitor = () => {
             </div>
           )}
         </div>
-
-
 
         <div className="flex md:flex-row flex-col  my-5 gap-10">
           <div className="flex gap-2 flex-col">
@@ -451,10 +498,17 @@ const AddNewVisitor = () => {
               <label htmlFor="" className="font-medium">
                 Select Support Staff Category :
               </label>
-              <select className="border border-gray-400 p-2 rounded-md" value={formData.supportCategory} onChange={handleChange} name="supportCategory">
+              <select
+                className="border border-gray-400 p-2 rounded-md"
+                value={formData.supportCategory}
+                onChange={handleChange}
+                name="supportCategory"
+              >
                 <option value="">Select Category</option>
                 {staffCategories.map((staffCat) => (
-                  <option value={staffCat.id} key={staffCat.id}>{staffCat.name}</option>
+                  <option value={staffCat.id} key={staffCat.id}>
+                    {staffCat.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -462,7 +516,8 @@ const AddNewVisitor = () => {
           {behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="visitorName" className="font-semibold">
-                Visitor Name: <label className="text-red-500 font-semibold">*</label>
+                Visitor Name:{" "}
+                <label className="text-red-500 font-semibold">*</label>
               </label>
               <input
                 type="text"
@@ -478,7 +533,8 @@ const AddNewVisitor = () => {
           {behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="mobileNumber" className="font-semibold">
-                Mobile Number : <label className="text-red-500 font-semibold">*</label>
+                Mobile Number :{" "}
+                <label className="text-red-500 font-semibold">*</label>
               </label>
               <input
                 type="number"
@@ -509,8 +565,65 @@ const AddNewVisitor = () => {
                 </option>
               ))}
             </select>
-          </div> 
-          
+          </div>
+
+          <div>
+            <label className="font-medium">
+              Select Building: <span className="text-red-500">*</span>
+            </label>
+            <select
+              className="border p-3 border-gray-300 rounded-md w-full"
+              value={selectedBuilding}
+              onChange={(e) => setSelectedBuilding(e.target.value)}
+            >
+              <option value="">Select Building</option>
+              {buildings.map((building) => (
+                <option key={building.id} value={building.id}>
+                  {building.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Select Floor */}
+          {/* <div>
+            <label className="font-medium">
+              Select Floor: <span className="text-red-500">*</span>
+            </label>
+            <select
+              className="border p-3 border-gray-300 rounded-md w-full"
+              value={selectedFloor}
+              onChange={(e) => setSelectedFloor(e.target.value)}
+              disabled={!selectedBuilding} // Disable if no building selected
+            >
+              <option value="">Select Floor</option>
+              {filteredFloors.map((floor) => (
+                <option key={floor.id} value={floor.id}>
+                  {floor.name}
+                </option>
+              ))}
+            </select>
+          </div> */}
+
+          {/* Select Unit */}
+          {/* <div>
+            <label className="font-medium">
+              Select Unit: <span className="text-red-500">*</span>
+            </label>
+            <select
+              className="border p-3 border-gray-300 rounded-md w-full"
+              value={selectedUnit}
+              onChange={(e) => setSelectedUnit(e.target.value)}
+              disabled={!selectedFloor} // Disable if no floor selected
+            >
+              <option value="">Select Unit</option>
+              {filteredUnits.map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                </option>
+              ))}
+            </select>
+          </div> */}
 
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
@@ -577,7 +690,6 @@ const AddNewVisitor = () => {
                 </option>
               ))}
             </select>
-
           </div>
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="expectedDate" className="font-semibold">
@@ -611,7 +723,8 @@ const AddNewVisitor = () => {
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="purpose" className="font-semibold">
-                Visit Purpose: <label className="text-red-500 font-semibold">*</label>
+                Visit Purpose:{" "}
+                <label className="text-red-500 font-semibold">*</label>
               </label>
               <select
                 id="purpose"
@@ -775,12 +888,13 @@ const AddNewVisitor = () => {
               {weekdaysMap.map((weekdayObj) => (
                 <button
                   key={weekdayObj.day}
-                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${selectedWeekdays?.includes(weekdayObj.day)
-                    ? // &&
-                    // weekdayObj.isActive
-                    "bg-green-400 text-white "
-                    : ""
-                    }`}
+                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${
+                    selectedWeekdays?.includes(weekdayObj.day)
+                      ? // &&
+                        // weekdayObj.isActive
+                        "bg-green-400 text-white "
+                      : ""
+                  }`}
                   onClick={(e) => {
                     e.preventDefault();
                     handleWeekdaySelection(weekdayObj.day);
