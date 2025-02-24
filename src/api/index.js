@@ -13,6 +13,7 @@ export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 const token = getItemInLocalStorage("TOKEN");
 */
 export const API_URL = "https://app.myciti.life";
+// export const API_URL = "http://localhost:3002";
 export const vibeMedia = "https://app.myciti.life/api/media/";
 export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
@@ -1281,13 +1282,19 @@ export const getSetupUsers = async () =>
     },
   });
 
+export const getFilterUsers = async () =>
+  axiosInstance.get("/users.json", {
+    params: {
+      token: token,
+    },
+  });
 
-   export const editSetupUsers = async (id, data) =>
-     axiosInstance.put(`/users/update_user/${id}.json`, data,{
-       params: {
-         token: token,
-       },
-     });  
+export const editSetupUsers = async (id, data) =>
+  axiosInstance.put(`/users/update_user/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
 
 export const postDeletUsers = async (data) =>
   axiosInstance.post("/deleted_users.json", data, {
@@ -1957,6 +1964,12 @@ export const getExpectedVisitor = async () =>
       Expires: "0",
     },
   });
+  export const getVisitorDashboard = async () =>
+    axiosInstance.get("/visitors/visitors_dashboard.json", {
+      params: {
+        token: token,
+      },
+    });
 export const getRegisteredVehicle = async () =>
   axiosInstance.get(`/registered_vehicles.json`, {
     params: {
@@ -2306,12 +2319,13 @@ export const getAllFeature = async () =>
       token: token,
     },
   });
+
 export const getBuildings = async () =>
   axiosInstance.get(`/buildings.json`, {
     params: {
       token: token,
     },
-  });
+});
 
 export const getSites = async () =>
   axiosInstance.get(`/sites.json`, {
