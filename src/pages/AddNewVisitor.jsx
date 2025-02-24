@@ -356,6 +356,8 @@ const AddNewVisitor = () => {
     fetchParkingConfig();
   }, []);
 
+  console.log("buildings", buildings);
+
   useEffect(() => {
     if (selectedBuilding) {
       const filteredFloors = floors.filter(
@@ -640,38 +642,23 @@ const AddNewVisitor = () => {
 
           {filteredData.length > 0 && (
             <div className="border border-gray-300 rounded-md p-3 mt-3">
-              <h3 className="font-semibold mb-2">Building Details</h3>
-              {filteredData.map((floor) => (
-                <div key={floor.floorId} className="mb-2">
-                  <h4 className="font-medium text-lg">
-                    Floor: {floor.floorName}
-                  </h4>
-                  <ul className="list-disc ml-5">
-                    {floor.units.map((unit) => (
-                      <li
-                        key={unit.id}
-                        className="text-gray-700 flex items-center"
-                      >
-                        <input
-                          type="radio"
-                          id={`unit-${unit.id}`}
-                          name="selectedUnit"
-                          value={formData.unit_id}
-                          onChange={() => handleUnitChange(unit.id)}
-                          checked={selectedUnit === unit.id}
-                          className="mr-2"
-                        />
-                        <label
-                          htmlFor={`unit-${unit.id}`}
-                          className="cursor-pointer"
-                        >
-                          {unit.name}
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+              <h3 className="font-semibold mb-2">Select Unit</h3>
+
+              {/* Single Unit Dropdown */}
+              <select
+                className="border p-3 border-gray-300 rounded-md w-full mt-2"
+                value={formData.unit_id || ""}
+                onChange={(e) => handleUnitChange(e.target.value)}
+              >
+                <option value="">Select Unit</option>
+                {filteredData.flatMap((floor) =>
+                  floor.units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {`Floor: ${floor.floorName} - Unit: ${unit.name}`}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
           )}
 
