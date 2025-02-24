@@ -5,8 +5,10 @@ import { useSelector } from "react-redux";
 import { getItemInLocalStorage } from "../utils/localStorage";
 import toast from "react-hot-toast";
 import {
+  getAllUnits,
   getBuildings,
   getFloors,
+  getfloorsType,
   getHostList,
   getParkingConfig,
   getSetupUsers,
@@ -34,17 +36,23 @@ const AddNewVisitor = () => {
   const [capturedImage, setCapturedImage] = useState(null);
   const [slots, setSlots] = useState([]);
 
-  const webcamRef = useRef(null);
-  const [units, setUnits] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
+  const [units, setUnits] = useState([]);
 
   const [selectedBuilding, setSelectedBuilding] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+
+  const webcamRef = useRef(null);
+
   const [selectedFloor, setSelectedFloor] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
   const handleOpenCamera = () => {
     setShowWebcam(true);
   };
+
+  console.log("floors", floors);
+  console.log("Units", units);
 
   const handleCloseCamera = () => {
     setShowWebcam(false);
@@ -99,6 +107,9 @@ const AddNewVisitor = () => {
     supportCategory: "",
     slotNumber: "",
     vhost_id: "",
+    building_id: "",
+    unit_id: "",
+    floor_id: "",
   });
 
   console.log(formData);
@@ -243,6 +254,9 @@ const AddNewVisitor = () => {
     postData.append("visitor[frequency]", selectedFrequency);
     postData.append("visitor[parking_slot]", formData.slotNumber);
     postData.append("visitor[vhost_id]", formData.host);
+    postData.append("visitor[building_id]", formData.building_id);
+    postData.append("visitor[unit_id]", formData.unit_id);
+    postData.append("visitor[floor_id]", formData.floor_id);
 
     if (capturedImage) {
       const response = await fetch(capturedImage);
@@ -308,21 +322,19 @@ const AddNewVisitor = () => {
       try {
         const usersResp = await getHostList(siteId);
         const unitsRes = await getBuildings();
-
-        const floors = await getFloors();
-        const unitsget = await getUnits();
+        const floors = await getfloorsType();
+        const unitsget = await getAllUnits();
 
         setHosts(usersResp.data.hosts);
         setBuildings(unitsRes.data);
         setFloors(floors.data);
-        setUnits(floors.data);
+        setUnits(unitsget.data);
         // console.log(usersResp);
       } catch (error) {
         console.log(error);
       }
     };
 
-    
     const fetchVisitorCategory = async () => {
       try {
         const visitorCat = await getVisitorStaffCategory();
@@ -344,6 +356,27 @@ const AddNewVisitor = () => {
     fetchParkingConfig();
   }, []);
 
+  useEffect(() => {
+    if (selectedBuilding) {
+      const filteredFloors = floors.filter(
+        (floor) => floor.building_id === Number(selectedBuilding)
+      );
+      const filteredUnits = units.filter(
+        (unit) => unit.building_id === Number(selectedBuilding)
+      );
+
+      const combinedData = filteredFloors.map((floor) => ({
+        floorId: floor.id,
+        floorName: floor.name,
+        units: filteredUnits.filter((unit) => unit.floor_id === floor.id),
+      }));
+
+      setFilteredData(combinedData);
+    } else {
+      setFilteredData([]);
+    }
+  }, [selectedBuilding, floors, units]);
+
   const filteredFloors = floors.filter(
     (floor) => floor.building_id === Number(selectedBuilding)
   );
@@ -352,6 +385,26 @@ const AddNewVisitor = () => {
   const filteredUnits = units.filter(
     (unit) => unit.floor_id === Number(selectedFloor)
   );
+
+  const handleBuildingChange = (e) => {
+    const selectedBuildingId = e.target.value;
+    const selectedUnitId = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      building_id: selectedBuildingId,
+      floor_id: "", // Reset floor selection
+      unit_id: "", // Reset unit selection
+    }));
+    setSelectedBuilding(selectedBuildingId);
+  };
+
+  const handleUnitChange = (unitId) => {
+    setFormData((prev) => ({
+      ...prev,
+      unit_id: unitId,
+    }));
+    setSelectedUnit(unitId);
+  };
 
   return (
     <div className="flex justify-center items-center  w-full p-4">
@@ -573,8 +626,8 @@ const AddNewVisitor = () => {
             </label>
             <select
               className="border p-3 border-gray-300 rounded-md w-full"
-              value={selectedBuilding}
-              onChange={(e) => setSelectedBuilding(e.target.value)}
+              value={formData.building_id}
+              onChange={handleBuildingChange} // Updated event handler
             >
               <option value="">Select Building</option>
               {buildings.map((building) => (
@@ -584,6 +637,43 @@ const AddNewVisitor = () => {
               ))}
             </select>
           </div>
+
+          {filteredData.length > 0 && (
+            <div className="border border-gray-300 rounded-md p-3 mt-3">
+              <h3 className="font-semibold mb-2">Building Details</h3>
+              {filteredData.map((floor) => (
+                <div key={floor.floorId} className="mb-2">
+                  <h4 className="font-medium text-lg">
+                    Floor: {floor.floorName}
+                  </h4>
+                  <ul className="list-disc ml-5">
+                    {floor.units.map((unit) => (
+                      <li
+                        key={unit.id}
+                        className="text-gray-700 flex items-center"
+                      >
+                        <input
+                          type="radio"
+                          id={`unit-${unit.id}`}
+                          name="selectedUnit"
+                          value={formData.unit_id}
+                          onChange={() => handleUnitChange(unit.id)}
+                          checked={selectedUnit === unit.id}
+                          className="mr-2"
+                        />
+                        <label
+                          htmlFor={`unit-${unit.id}`}
+                          className="cursor-pointer"
+                        >
+                          {unit.name}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Select Floor */}
           {/* <div>
