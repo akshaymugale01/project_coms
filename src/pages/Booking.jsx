@@ -94,6 +94,21 @@ const Booking = () => {
       sortable: true,
     },
     {
+      name: "Total Amount",
+      selector: (row) => row.amount || "NA",
+      sortable: true,
+    },
+    {
+      name: "Paymnet Status",
+      selector: (row) => row.status || "NA",
+      sortable: true,
+    },
+    {
+      name: "Paymnet Method",
+      selector: (row) => row?.payment?.payment_method || "NA",
+      sortable: true,
+    },
+    {
       name: "Booked By",
       selector: (row) => {
         const userName = localStorage.getItem("Name")?.replace(/"/g, ""); // Remove double quotes
@@ -169,10 +184,8 @@ const Booking = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
-
 
   return (
     <section className="flex">
@@ -190,7 +203,6 @@ const Booking = () => {
             </h2>
           </div>
         </div>
-
         {page === "meetingBooking" && (
           <div>
             <div className="flex gap-2 items-center">

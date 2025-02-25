@@ -4,6 +4,7 @@ import axiosInstance from "./axiosInstance";
 import HrmsAuth from "./HrmsAuth";
 import vibeAuth from "./vibeAuth";
 import DigestFetch from "digest-fetch";
+import axios from "axios";
 
 /*
 export const API_URL = "https://app.myciti.life";
@@ -1290,7 +1291,7 @@ export const getFilterUsers = async () =>
   });
 
 export const editSetupUsers = async (id, data) =>
-  axiosInstance.put(`/users/update_user/${id}.json`, data, {
+  axiosInstance.post(`/users/update_user/${id}.json`, data, {
     params: {
       token: token,
     },
@@ -1367,14 +1368,12 @@ export const getPantryDetails = async (id) =>
       token: token,
     },
   });
-
 export const getCuisinesFBSetup = async () =>
   axiosInstance.get(`/generic_infos.json?q[info_type_eq]=Cuisins`, {
     params: {
       token: token,
     },
   });
-
 export const getHostList = async (siteId) =>
   axiosInstance.get(`/visitors/fetch_potential_hosts.json?site_id=${siteId}`, {
     params: {
@@ -1405,7 +1404,6 @@ export const deleteVehicleParking = async (id) =>
       token: token,
     },
   });
-
 export const deleteQuestionChecklist = async (id, qid) =>
   axiosInstance.delete(
     `/checklists/${id}/delete_question.json?question_id=${qid}`,
@@ -1415,7 +1413,6 @@ export const deleteQuestionChecklist = async (id, qid) =>
       },
     }
   );
-
 export const getVehicleParkingDetails = async (id) =>
   axiosInstance.get(`/parking_configurations/${id}.json`, {
     params: {
@@ -1428,14 +1425,12 @@ export const editVehicleParking = async (data, id) =>
       token: token,
     },
   });
-
 export const postOTPVisitors = async (data) =>
   axiosInstance.post("/visitors/verify_votp.json", data, {
     params: {
       token: token,
     },
   });
-
 export const postOTPResend = async (data) =>
   axiosInstance.post("/visitors/verify_votp.json", data, {
     params: {
@@ -1449,6 +1444,15 @@ export const postNewVisitor = async (data) =>
       token: token,
     },
   });
+
+export const getVisitorByNumber = async (mobile) =>
+  axiosInstance.get("/visitors/get_visitor.json",{
+    params: {
+      mobile: mobile,
+      token: token,
+    },
+  });
+
 
 export const getPatrollings = async () =>
   axiosInstance.get("/patrollings.json", {
@@ -1964,12 +1968,12 @@ export const getExpectedVisitor = async () =>
       Expires: "0",
     },
   });
-  export const getVisitorDashboard = async () =>
-    axiosInstance.get("/visitors/visitors_dashboard.json", {
-      params: {
-        token: token,
-      },
-    });
+export const getVisitorDashboard = async () =>
+  axiosInstance.get("/visitors/visitors_dashboard.json", {
+    params: {
+      token: token,
+    },
+  });
 export const getRegisteredVehicle = async () =>
   axiosInstance.get(`/registered_vehicles.json`, {
     params: {
@@ -2325,7 +2329,7 @@ export const getBuildings = async () =>
     params: {
       token: token,
     },
-});
+  });
 
 export const getSites = async () =>
   axiosInstance.get(`/sites.json`, {

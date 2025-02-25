@@ -13,6 +13,7 @@ import {
   getParkingConfig,
   getSetupUsers,
   getUnits,
+  getVisitorByNumber,
   getVisitorStaffCategory,
   postNewGoods,
   postNewVisitor,
@@ -35,42 +36,36 @@ const AddNewVisitor = () => {
   const [showWebcam, setShowWebcam] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [slots, setSlots] = useState([]);
-
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
   const [units, setUnits] = useState([]);
-
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [filteredData, setFilteredData] = useState([]);
-
   const webcamRef = useRef(null);
-
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [error, setError] = useState('');
+  // const history = useHistory();
   const [selectedFloor, setSelectedFloor] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
   const handleOpenCamera = () => {
     setShowWebcam(true);
   };
-
   console.log("floors", floors);
   console.log("Units", units);
-
   const handleCloseCamera = () => {
     setShowWebcam(false);
   };
-
   // const capture = useCallback(() => {
   //   const imageSrc = webcamRef.current.getScreenshot();
   //   console.log(imageSrc);
   //   setShowWebcam(false);
   //   setCapturedImage(imageSrc);
   // }, [webcamRef]);
-
   const capture = () => {
     const imageSrc = webcamRef.current.getScreenshot();
     setCapturedImage(imageSrc); // Save captured image
     setShowWebcam(false); // Close the webcam after capturing
   };
-
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -78,14 +73,12 @@ const AddNewVisitor = () => {
       setCapturedImage(null); // Reset captured image if uploading a file
     }
   };
-
   const getCurrentTime = () => {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, "0"); // Ensure two digits
     const minutes = now.getMinutes().toString().padStart(2, "0"); // Ensure two digits
     return `${hours}:${minutes}`;
   };
-
   const [staffCategories, setStaffCategories] = useState([]);
   const [passEndDate, setPassEndDate] = useState("");
   const [formData, setFormData] = useState({
@@ -111,7 +104,16 @@ const AddNewVisitor = () => {
     unit_id: "",
     floor_id: "",
   });
-
+  const fetchDetails = async () => {
+    try {
+      const details = await getVisitorByNumber();
+      const data = details.data;
+      setFormData(data);
+      console.log("details", details);
+    } catch (error) {
+      console.log("error",error);
+    }
+  }
   console.log(formData);
   const handleFrequencyChange = (e) => {
     setSelectedFrequency(e.target.value);
@@ -119,7 +121,6 @@ const AddNewVisitor = () => {
   const handleVisitorTypeChange = (e) => {
     setSelectedVisitorType(e.target.value);
   };
-
   const currentDates = new Date();
   const year = currentDates.getFullYear();
   const month = String(currentDates.getMonth() + 1).padStart(2, "0");
@@ -136,12 +137,9 @@ const AddNewVisitor = () => {
     { day: "Sun", index: 6, isActive: false },
   ]);
   console.log(selectedWeekdays);
-
   const handleWeekdaySelection = (weekday) => {
     console.log(`Selected day: ${weekday}`);
-
     const index = weekdaysMap.find((dayObj) => dayObj.day === weekday)?.index;
-
     if (index !== undefined) {
       const updatedWeekdaysMap = weekdaysMap.map((dayObj) =>
         dayObj.index === index
@@ -149,7 +147,6 @@ const AddNewVisitor = () => {
           : dayObj
       );
       setWeekdaysMap(updatedWeekdaysMap);
-
       setSelectedWeekdays((prevSelectedWeekdays) =>
         prevSelectedWeekdays.includes(weekday)
           ? prevSelectedWeekdays.filter((day) => day !== weekday)
@@ -166,20 +163,17 @@ const AddNewVisitor = () => {
     event.preventDefault();
     setVisitors([...visitors, { name: "", mobile: "" }]);
   };
-
   const handleInputChange = (index, event) => {
     const { name, value } = event.target;
     const newVisitors = [...visitors];
     newVisitors[index][name] = value;
     setVisitors(newVisitors);
   };
-
   const handleRemoveVisitor = (index) => {
     const newVisitors = [...visitors];
     newVisitors.splice(index, 1);
     setVisitors(newVisitors);
   };
-
   const getHeadingText = () => {
     switch (behalf) {
       case "Visitor":
@@ -192,17 +186,13 @@ const AddNewVisitor = () => {
         return "CREATE VISITOR";
     }
   };
-
   const themeColor = useSelector((state) => state.theme.color);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
   };
-
   const otp = generateOtp();
   const handleFileChange = (files, fieldName) => {
     // Changed to receive 'files' directly
@@ -225,12 +215,10 @@ const AddNewVisitor = () => {
     if (!mobilePattern.test(formData.mobile)) {
       return toast.error("Mobile number must be  10 digits.");
     }
-
     if (!formData.host) {
       toast.error("Host Must be Present!");
       return;
     }
-
     const postData = new FormData();
     postData.append("visitor[site_id]", siteId);
     postData.append("visitor[created_by_id]", formData.host);
@@ -257,7 +245,6 @@ const AddNewVisitor = () => {
     postData.append("visitor[building_id]", formData.building_id);
     postData.append("visitor[unit_id]", formData.unit_id);
     postData.append("visitor[floor_id]", formData.floor_id);
-
     if (capturedImage) {
       const response = await fetch(capturedImage);
       const blob = await response.blob();
@@ -316,7 +303,6 @@ const AddNewVisitor = () => {
       toast.dismiss();
     }
   };
-
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -325,6 +311,7 @@ const AddNewVisitor = () => {
         const floors = await getfloorsType();
         const unitsget = await getAllUnits();
 
+        fetchDetails();
         setHosts(usersResp.data.hosts);
         setBuildings(unitsRes.data);
         setFloors(floors.data);
@@ -355,9 +342,7 @@ const AddNewVisitor = () => {
     fetchVisitorCategory();
     fetchParkingConfig();
   }, []);
-
   console.log("buildings", buildings);
-
   useEffect(() => {
     if (selectedBuilding) {
       const filteredFloors = floors.filter(
@@ -378,11 +363,9 @@ const AddNewVisitor = () => {
       setFilteredData([]);
     }
   }, [selectedBuilding, floors, units]);
-
   const filteredFloors = floors.filter(
     (floor) => floor.building_id === Number(selectedBuilding)
   );
-
   // Filter Units based on selected Floor
   const filteredUnits = units.filter(
     (unit) => unit.floor_id === Number(selectedFloor)
@@ -481,7 +464,6 @@ const AddNewVisitor = () => {
             </div>
           )}
         </div>
-
         <div className="flex md:flex-row flex-col  my-5 gap-10">
           <div className="flex gap-2 flex-col">
             <h2 className="font-semibold">Visitor Type :</h2>
@@ -602,7 +584,6 @@ const AddNewVisitor = () => {
               />
             </div>
           )}
-
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="" className="font-medium">
               Host : <label className="text-red-500 font-semibold">*</label>

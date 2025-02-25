@@ -265,7 +265,6 @@ const FacilityBooking = () => {
 
   const postBookFacility = async () => {
     const postData = new FormData();
-
     if (!formData.user_id || !formData.amenity_slot_id) {
       toast.error("All Details are mandatory!");
       return;
@@ -316,13 +315,12 @@ const FacilityBooking = () => {
 
       // Handle the response
       console.log("Booking response:", response);
-
       toast.success("Booking successful!");
       navigate("/bookings");
     } catch (error) {
       // Handle errors
       console.error("Error in booking:", error);
-      alert("Error in booking. Please try again.");
+      alert("Error in booking. Please try again.", error);
     }
   };
    console.log("uuu", units);
@@ -343,7 +341,8 @@ const FacilityBooking = () => {
             label: `${user.firstname} ${user.lastname} - Unknown Unit - ${user?.user_sites?.[0]?.ownership || "Unknown Ownership"}`,
           };
         }
-  
+
+
         const unit = units.find((unit) => unit?.id === userSite?.unit_id);
         console.log("Found unit:", unit);
   

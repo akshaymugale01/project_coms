@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 //import Navbar from '../../components/Navbar'
 import { PiPlusCircle } from "react-icons/pi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Passes from "../Passes";
 import Navbar from "../../components/Navbar";
 import { useSelector } from "react-redux";
@@ -10,6 +10,7 @@ import {
   getAllVisitorLogs,
   getExpectedVisitor,
   getVisitorApprovals,
+  getVisitorByNumber,
   getVisitorHistory,
   postVisitorLogFromDevice,
   visitorApproval,
@@ -34,6 +35,14 @@ const VisitorPage = () => {
   const [FilteredUnexpectedVisitor, setFilteredUnexpectedVisitor] = useState(
     []
   );
+
+  const [formData, setFormData] = useState({
+    mobile: ""
+  });
+
+  const [showPopup, setShowPopup] = useState(false);
+  const [mobile, setMobile] = useState("");
+  const navigate = useNavigate();
   const [expectedVisitor, setExpectedVisitor] = useState([]);
   const [FilteredExpectedVisitor, setFilteredExpectedVisitor] = useState([]);
   const [FilteredApproval, setFilteredApproval] = useState([]);
@@ -61,6 +70,35 @@ const VisitorPage = () => {
       setLoading(false); // Stop loading after 1 second
       callback && callback();
     }, 1000);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (!mobile) {
+        alert("Please enter a mobile number");
+        return;
+      }
+
+      const visitorDetails = await getVisitorByNumber(mobile);
+
+      if (visitorDetails && Object.keys(visitorDetails).length > 0) {
+        
+        console.log("Visitor found:", visitorDetails);
+        setFormData((prev) => ({
+          ...prev,
+          ...visitorDetails,
+          mobile,
+        }));
+        setShowPopup(false);
+      } else {
+        
+        console.log("No visitor found, redirecting...");
+        navigate(`/admin/add-new-visitor?mobile=${mobile}`);
+      }
+    } catch (error) {
+      console.error("Error fetching visitor details:", error);
+      alert("Something went wrong. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -228,8 +266,9 @@ const VisitorPage = () => {
       name: "Status",
       selector: (row) => (
         <div
-          className={`${row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
-            } `}
+          className={`${
+            row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
+          } `}
         >
           {row.visitor_in_out}
         </div>
@@ -240,8 +279,9 @@ const VisitorPage = () => {
       name: "In/OUT",
       selector: (row) => (
         <div
-          className={`${row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
-            } `}
+          className={`${
+            row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
+          } `}
         >
           {row.visitor_in_out}
         </div>
@@ -477,7 +517,6 @@ const VisitorPage = () => {
     };
   };
 
-
   useEffect(() => {
     const postLogs = async () => {
       const visitorLogData = getVisitorLogData();
@@ -565,55 +604,61 @@ const VisitorPage = () => {
           <div className="flex w-full  m-2">
             <div className="flex w-full md:flex-row flex-col space-x-4 border-b border-gray-400">
               <h2
-                className={`p-2 px-4 ${page === "all"
+                className={`p-2 px-4 ${
+                  page === "all"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                  } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("all")}
               >
                 All
               </h2>
               <h2
-                className={`p-2 ${page === "Visitor In"
+                className={`p-2 ${
+                  page === "Visitor In"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                  } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                } rounded-t-md  cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("Visitor In")}
               >
                 Visitor In
               </h2>
               <h2
-                className={`p-2 ${page === "Visitor Out"
+                className={`p-2 ${
+                  page === "Visitor Out"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                  }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("Visitor Out")}
               >
                 Visitor Out
               </h2>
               <h2
-                className={`p-2 ${page === "approval"
+                className={`p-2 ${
+                  page === "approval"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                  }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                }  rounded-t-md  rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("approval")}
               >
                 Approvals
               </h2>
               <h2
-                className={`p-2 ${page === "History"
+                className={`p-2 ${
+                  page === "History"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                  }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("History")}
               >
                 History
               </h2>
               <h2
-                className={`p-2 ${page === "logs"
+                className={`p-2 ${
+                  page === "logs"
                     ? "text-blue-500 font-medium  shadow-custom-all-sides"
                     : "text-black"
-                  }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("logs")}
               >
                 Logs
@@ -632,25 +677,27 @@ const VisitorPage = () => {
               />
               <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                 <span
-                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${selectedVisitor === "expected"
+                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${
+                    selectedVisitor === "expected"
                       ? "text-blue-600 underline"
                       : ""
-                    } text-center`}
+                  } text-center`}
                   onClick={() => handleClick("expected")}
                 >
                   <span>Expected visitor</span>
                 </span>
                 <span
-                  className={`cursor-pointer hover:underline ${selectedVisitor === "unexpected"
+                  className={`cursor-pointer hover:underline ${
+                    selectedVisitor === "unexpected"
                       ? "text-blue-600 underline"
                       : ""
-                    } text-center`}
+                  } text-center`}
                   onClick={() => handleClick("unexpected")}
                 >
                   &nbsp; <span>Unexpected visitor</span>
                 </span>
               </div>
-              <div className="flex justify-end">
+              {/* <div className="flex justify-end">
                 <Link
                   to={"/admin/add-new-visitor"}
                   style={{ background: themeColor }}
@@ -659,7 +706,7 @@ const VisitorPage = () => {
                   <PiPlusCircle size={20} />
                   Add New Visitor
                 </Link>
-              </div>
+              </div> */}
             </div>
           )}
           {page === "Visitor In" && (
@@ -673,33 +720,71 @@ const VisitorPage = () => {
               />
               <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                 <span
-                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${selectedVisitor === "expected"
+                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${
+                    selectedVisitor === "expected"
                       ? "text-blue-600 underline"
                       : ""
-                    } text-center`}
+                  } text-center`}
                   onClick={() => handleClick("expected")}
                 >
                   <span>Expected visitor</span>
                 </span>
                 <span
-                  className={`cursor-pointer hover:underline ${selectedVisitor === "unexpected"
+                  className={`cursor-pointer hover:underline ${
+                    selectedVisitor === "unexpected"
                       ? "text-blue-600 underline"
                       : ""
-                    } text-center`}
+                  } text-center`}
                   onClick={() => handleClick("unexpected")}
                 >
                   &nbsp; <span>Unexpected visitor</span>
                 </span>
               </div>
-              <div className="flex justify-end">
-                <Link
-                  to={"/admin/add-new-visitor"}
-                  style={{ background: themeColor }}
-                  className=" font-semibold  hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                >
-                  <PiPlusCircle size={20} />
-                  Add New Visitor
-                </Link>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <button
+              style={{ background: themeColor }}
+              className="font-semibold hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
+              onClick={() => {
+                console.log("Opening Popup");
+                setShowPopup(true);
+              }}
+            >
+              <PiPlusCircle size={20} />
+              Add New Visitor
+            </button>
+          </div>
+          {console.log("Popup state:", showPopup)}
+          {showPopup && (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+              <div className="bg-white p-5 rounded-lg shadow-lg w-96 relative z-50">
+                <h2 className="text-lg font-semibold mb-3">
+                  Enter Mobile Number
+                </h2>
+                <input
+                  type="number"
+                  className="border border-gray-400 p-2 rounded-md w-full mb-4"
+                  placeholder="Enter Mobile Number"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="bg-gray-500 text-white px-4 py-2 rounded-md"
+                    onClick={() => setShowPopup(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    style={{ background: themeColor }}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                    onClick={handleSubmit}
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -716,19 +801,21 @@ const VisitorPage = () => {
 
                 <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                   <span
-                    className={` md:border-r px-2 border-black cursor-pointer hover:underline ${selectedVisitor === "expected"
+                    className={` md:border-r px-2 border-black cursor-pointer hover:underline ${
+                      selectedVisitor === "expected"
                         ? "text-blue-600 underline"
                         : ""
-                      } text-center`}
+                    } text-center`}
                     onClick={() => handleClick("expected")}
                   >
                     <span>Expected visitor</span>
                   </span>
                   <span
-                    className={`cursor-pointer hover:underline ${selectedVisitor === "unexpected"
+                    className={`cursor-pointer hover:underline ${
+                      selectedVisitor === "unexpected"
                         ? "text-blue-600 underline"
                         : ""
-                      } text-center`}
+                    } text-center`}
                     onClick={() => handleClick("unexpected")}
                   >
                     &nbsp; <span>Unexpected visitor</span>
@@ -775,23 +862,33 @@ const VisitorPage = () => {
             </div>
           )}
           <div className="my-4">
-
             {selectedVisitor === "expected" && page === "Visitor In" && (
               <Table columns={VisitorColumns} data={visitorIn} />
             )}
             {selectedVisitor === "unexpected" && page === "Visitor In" && (
-              <Table columns={VisitorColumns} data={FilteredUnexpectedVisitor} />
+              <Table
+                columns={VisitorColumns}
+                data={FilteredUnexpectedVisitor}
+              />
             )}
             {loading ? (
-              <p className="text-center text-gray-500 font-medium">Loading...</p> // Loading state
+              <p className="text-center text-gray-500 font-medium">
+                Loading...
+              </p> // Loading state
             ) : (
               <>
                 <div className="">
                   {selectedVisitor === "expected" && page === "all" && (
-                    <Table columns={VisitorColumns} data={FilteredExpectedVisitor} />
+                    <Table
+                      columns={VisitorColumns}
+                      data={FilteredExpectedVisitor}
+                    />
                   )}
                   {selectedVisitor === "unexpected" && page === "all" && (
-                    <Table columns={VisitorColumns} data={FilteredUnexpectedVisitor} />
+                    <Table
+                      columns={VisitorColumns}
+                      data={FilteredUnexpectedVisitor}
+                    />
                   )}
                 </div>
               </>
