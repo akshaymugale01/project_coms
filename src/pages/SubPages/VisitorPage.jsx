@@ -35,11 +35,9 @@ const VisitorPage = () => {
   const [FilteredUnexpectedVisitor, setFilteredUnexpectedVisitor] = useState(
     []
   );
-
   const [formData, setFormData] = useState({
     mobile: ""
   });
-
   const [showPopup, setShowPopup] = useState(false);
   const [mobile, setMobile] = useState("");
   const navigate = useNavigate();
@@ -63,7 +61,6 @@ const VisitorPage = () => {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
-
   const handleLoading = (callback) => {
     setLoading(true); // Start loading
     setTimeout(() => {
@@ -71,18 +68,14 @@ const VisitorPage = () => {
       callback && callback();
     }, 1000);
   };
-
   const handleSubmit = async () => {
     try {
       if (!mobile) {
         alert("Please enter a mobile number");
         return;
       }
-
       const visitorDetails = await getVisitorByNumber(mobile);
-
       if (visitorDetails && Object.keys(visitorDetails).length > 0) {
-        
         console.log("Visitor found:", visitorDetails);
         setFormData((prev) => ({
           ...prev,
@@ -90,17 +83,17 @@ const VisitorPage = () => {
           mobile,
         }));
         setShowPopup(false);
+        navigate(`/admin/add-new-visitor?mobile=${mobile}`);
       } else {
-        
         console.log("No visitor found, redirecting...");
         navigate(`/admin/add-new-visitor?mobile=${mobile}`);
       }
     } catch (error) {
-      console.error("Error fetching visitor details:", error);
-      alert("Something went wrong. Please try again.");
+      // console.error("Error fetching visitor details:", error);
+      navigate(`/admin/add-new-visitor?mobile=${mobile}`);
+      // alert("Something went wrong. Please try again.");
     }
   };
-
   useEffect(() => {
     const fetchExpectedVisitor = async () => {
       try {

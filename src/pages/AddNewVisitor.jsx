@@ -19,7 +19,7 @@ import {
   postNewVisitor,
   postVisitorOTPApi,
 } from "../api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Webcam from "react-webcam";
 import FileInputBox from "../containers/Inputs/FileInputBox";
 const AddNewVisitor = () => {
@@ -28,7 +28,7 @@ const AddNewVisitor = () => {
   const [behalf, setbehalf] = useState("Visitor");
   const inputRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
-  const [visitors, setVisitors] = useState([{ name: "", mobile: "" }]);
+  const [visitors, setVisitors] = useState([{ name: "", contact_no: "" }]);
   const [selectedFrequency, setSelectedFrequency] = useState("Once");
   const [selectedVisitorType, setSelectedVisitorType] = useState("Guest");
   const [hosts, setHosts] = useState([]);
@@ -42,8 +42,8 @@ const AddNewVisitor = () => {
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const webcamRef = useRef(null);
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [error, setError] = useState('');
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [error, setError] = useState("");
   // const history = useHistory();
   const [selectedFloor, setSelectedFloor] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -80,6 +80,10 @@ const AddNewVisitor = () => {
     return `${hours}:${minutes}`;
   };
   const [staffCategories, setStaffCategories] = useState([]);
+  const [searchParams] = useSearchParams();
+  const mobile = searchParams.get("mobile");
+  // const [formData, setFormData] = useState(null);
+  
   const [passEndDate, setPassEndDate] = useState("");
   const [formData, setFormData] = useState({
     visitorName: "",
@@ -104,17 +108,57 @@ const AddNewVisitor = () => {
     unit_id: "",
     floor_id: "",
   });
+
   const fetchDetails = async () => {
+    if (!mobile) return;
     try {
-      const details = await getVisitorByNumber();
-      const data = details.data;
-      setFormData(data);
-      console.log("details", details);
+      const details = await getVisitorByNumber(mobile);
+      if (details?.data) {
+        const data = details?.data
+        setFormData({
+          ...formData,
+          visitorName: data.name,
+          mobile: data.contact_no,
+          purpose: data.purpose,
+          comingFrom: data.coming_from,
+          vehicleNumber: data.vehicle_no,
+          vhost_id: data.vhost_id,
+          expectedDate: data.expected_date,
+          expectedTime: data.expected_time,
+          hostApproval: data.skip_host_approval,
+          goodsInward: data.goods_inwards,
+          host: data.created_by_id,
+          supportCategory: data.support_category_id,
+          additionalVisitors: visitors,
+          passNumber: data.pass_number,
+          building_id: data.building_id,
+          unit_id: data.unit_id,
+          floor_id: data.floor_id,
+          noOfGoods: data.no_of_goods,
+          goodsDescription: data.goods_description,
+          goodsAttachments: data.goods_attachments,
+        });
+
+        setVisitors(data.extra_visitors || []);
+      } else {
+        console.warn("No visitor data found");
+        setFormData({}); 
+        setVisitors([]);
+      }
     } catch (error) {
-      console.log("error",error);
+      console.error("Error fetching visitor details:", error);
+      setFormData({}); 
+      setVisitors([]);
     }
-  }
-  console.log(formData);
+  };
+
+  console.log("User", visitors);
+
+  useEffect(() => {
+    fetchDetails();
+  }, [mobile]);
+  console.log("By Mobile Number", formData);
+  console.log("By Visitor", visitors);
   const handleFrequencyChange = (e) => {
     setSelectedFrequency(e.target.value);
   };
@@ -195,7 +239,6 @@ const AddNewVisitor = () => {
   };
   const otp = generateOtp();
   const handleFileChange = (files, fieldName) => {
-    // Changed to receive 'files' directly
     setFormData({
       ...formData,
       [fieldName]: files,
@@ -310,18 +353,15 @@ const AddNewVisitor = () => {
         const unitsRes = await getBuildings();
         const floors = await getfloorsType();
         const unitsget = await getAllUnits();
-
         fetchDetails();
         setHosts(usersResp.data.hosts);
         setBuildings(unitsRes.data);
         setFloors(floors.data);
         setUnits(unitsget.data);
-        // console.log(usersResp);
       } catch (error) {
         console.log(error);
       }
     };
-
     const fetchVisitorCategory = async () => {
       try {
         const visitorCat = await getVisitorStaffCategory();
@@ -357,7 +397,6 @@ const AddNewVisitor = () => {
         floorName: floor.name,
         units: filteredUnits.filter((unit) => unit.floor_id === floor.id),
       }));
-
       setFilteredData(combinedData);
     } else {
       setFilteredData([]);
@@ -370,7 +409,6 @@ const AddNewVisitor = () => {
   const filteredUnits = units.filter(
     (unit) => unit.floor_id === Number(selectedFloor)
   );
-
   const handleBuildingChange = (e) => {
     const selectedBuildingId = e.target.value;
     const selectedUnitId = e.target.value;
@@ -382,7 +420,6 @@ const AddNewVisitor = () => {
     }));
     setSelectedBuilding(selectedBuildingId);
   };
-
   const handleUnitChange = (unitId) => {
     setFormData((prev) => ({
       ...prev,
@@ -390,7 +427,6 @@ const AddNewVisitor = () => {
     }));
     setSelectedUnit(unitId);
   };
-
   return (
     <div className="flex justify-center items-center  w-full p-4">
       <div className="md:border border-gray-300 rounded-lg md:p-4 w-full md:mx-4 ">
@@ -401,7 +437,6 @@ const AddNewVisitor = () => {
           {getHeadingText()}
         </h2>
         <br />
-
         <div className="flex justify-center">
           {!showWebcam ? (
             <div className="flex flex-col items-center">
@@ -417,7 +452,6 @@ const AddNewVisitor = () => {
                   className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
                 />
               </button>
-
               {/* Upload Image from Local */}
               <div className="mt-4">
                 <label
@@ -528,7 +562,6 @@ const AddNewVisitor = () => {
             </div>
           </div>
         </div>
-
         <div className="grid md:grid-cols-3 gap-5">
           {selectedVisitorType === "Support Staff" && (
             <div className="grid gap-2 items-center w-full">
@@ -602,7 +635,6 @@ const AddNewVisitor = () => {
               ))}
             </select>
           </div>
-
           <div>
             <label className="font-medium">
               Select Building: <span className="text-red-500">*</span>
@@ -620,7 +652,6 @@ const AddNewVisitor = () => {
               ))}
             </select>
           </div>
-
           {filteredData.length > 0 && (
             <div className="border border-gray-300 rounded-md p-3 mt-3">
               <h3 className="font-semibold mb-2">Select Unit</h3>
@@ -642,7 +673,6 @@ const AddNewVisitor = () => {
               </select>
             </div>
           )}
-
           {/* Select Floor */}
           {/* <div>
             <label className="font-medium">
@@ -662,7 +692,6 @@ const AddNewVisitor = () => {
               ))}
             </select>
           </div> */}
-
           {/* Select Unit */}
           {/* <div>
             <label className="font-medium">
@@ -682,7 +711,6 @@ const AddNewVisitor = () => {
               ))}
             </select>
           </div> */}
-
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="additionalVisitor" className="font-semibold">
@@ -699,7 +727,6 @@ const AddNewVisitor = () => {
               />
             </div>
           )}
-
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="comingFrom" className="font-semibold">
@@ -716,7 +743,6 @@ const AddNewVisitor = () => {
               />
             </div>
           )}
-
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="vehicleNumber" className="font-semibold">
               Vehicle Number:
@@ -777,7 +803,6 @@ const AddNewVisitor = () => {
               className="border border-gray-400 p-2 rounded-md"
             />
           </div>
-
           {behalf !== "Delivery" && behalf !== "Cab" && (
             <div className="grid gap-2 items-center w-full">
               <label htmlFor="purpose" className="font-semibold">
