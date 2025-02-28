@@ -25,6 +25,8 @@ const Floor = () => {
   const [submittedData, setSubmittedData] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [editModal, setEditModal] = useState(false);
+  const UserId = getItemInLocalStorage("UserId");
+  console.log("User", UserId);
   const [id, setId] = useState("");
   useEffect(() => {
     const fetchAllFloors = async () => {
@@ -115,16 +117,18 @@ const Floor = () => {
       <div className=" w-full flex lg:mx-3 flex-col overflow-hidden">
         <Account />
         <div className="flex flex-col m-2  gap-2">
-          <div className="flex justify-end ">
-            <h2
-              className="font-semibold hover:text-white duration-150 transition-all  p-2 rounded-md text-white cursor-pointer text-center flex items-center  gap-2"
-              onClick={() => setShowFields(!showFields)}
-              style={{ background: themeColor }}
-            >
-              <PiPlusCircle size={20} />
-              Add Floor
-            </h2>
-          </div>
+          {UserId === 574 && (
+            <div className="flex justify-end">
+              <h2
+                className="font-semibold hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2"
+                onClick={() => setShowFields(!showFields)}
+                style={{ background: themeColor }}
+              >
+                <PiPlusCircle size={20} />
+                Add Floor
+              </h2>
+            </div>
+          )}
           {showFields && (
             <div>
               <div className="flex gap-3 md:flex-row flex-col">
