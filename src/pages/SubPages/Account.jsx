@@ -11,7 +11,7 @@ const Account = () => {
       <div className="flex justify-center w-full my-1 ">
         <div className="w-full mx-2 ">
         <ul
-        style={{background: themeColor}}
+        style={{background: "rgb(19 27 32)"}}
         className="p-2 bg-black rounded-xl flex max-w-screen w-full  items-center text-white text-md text-center   gap-2 ">
             {/* <NavLink to={"/setup"}
             
