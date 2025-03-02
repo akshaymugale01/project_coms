@@ -121,20 +121,37 @@ const FacilityBooking = () => {
     }
   };
 
+  console.log("Slots", slots);
+
+  const formatTime = (hr, min) => {
+    return `${hr}:${min.toString().padStart(2, "0")}`; // Ensures minutes are always two digits
+  };
+
   const fetchSlotsForFacility = async (facilityId) => {
     try {
       const response = await getFacitilitySetup(); // Fetch facilities
+
       if (response?.data) {
-        // Find the selected facility by ID
         const selectedFacility = response.data.find(
           (facility) => facility.id === parseInt(facilityId)
         );
 
         if (selectedFacility?.amenity_slots) {
-          setSlots(selectedFacility.amenity_slots); // Update slots state with amenity_slots
+          const formattedSlots = selectedFacility.amenity_slots.map((slot) => {
+            const startTime = formatTime(slot.start_hr, slot.start_min);
+            const endTime = formatTime(slot.end_hr, slot.end_min);
+            console.log("Formatted Slot:", startTime, "-", endTime); // Debugging output
+
+            return {
+              ...slot,
+              slot_str: `${startTime} to ${endTime}`,
+            };
+          });
+
+          setSlots(formattedSlots); // Update slots state with formatted slot strings
         } else {
           console.log("No Slots Found for this Facility");
-          setSlots([]); // Reset slots if none are found
+          setSlots([]);
         }
       } else {
         console.log("No Facilities Found");
@@ -323,53 +340,55 @@ const FacilityBooking = () => {
       alert("Error in booking. Please try again.", error);
     }
   };
-   console.log("uuu", units);
-   const fetchUsers = async () => {
+  console.log("uuu", units);
+  const fetchUsers = async () => {
     try {
       const response = await getSetupUsers();
       console.log("Users:", response);
-  
+
       const transformedUsers = response.data.map((user) => {
         console.log("User:", user);
         // Ensure user.user_sites is defined
         const userSite = user?.user_sites?.[0];
-        
+
         if (!userSite) {
           console.warn(`No user site found for user ${user.id}`);
           return {
             value: user.id,
-            label: `${user.firstname} ${user.lastname} - Unknown Unit - ${user?.user_sites?.[0]?.ownership || "Unknown Ownership"}`,
+            label: `${user.firstname} ${user.lastname} - Unknown Unit - ${
+              user?.user_sites?.[0]?.ownership || "Unknown Ownership"
+            }`,
           };
         }
 
-
         const unit = units.find((unit) => unit?.id === userSite?.unit_id);
         console.log("Found unit:", unit);
-  
+
         return {
           value: user.id,
-          label: `${user.firstname} ${user.lastname} - ${unit ? unit.name : "Unknown Unit"} - ${userSite.ownership || "Unknown Ownership"}`,
+          label: `${user.firstname} ${user.lastname} -${
+            unit ? unit.building_name : "Unknown Unit"
+          } - ${unit ? unit.name : "Unknown Unit"} - ${
+            unit ? unit.floor_name : "Unknown Unit"
+          }`,
         };
       });
-  
+
       setUserOptions(transformedUsers);
       console.log("Fetched Users:", transformedUsers);
     } catch (error) {
       console.error("Error fetching assigned users:", error);
     }
   };
-  
 
-  useEffect(() => {
-    
-  }, []);
+  useEffect(() => {}, []);
 
   useEffect(() => {
     if (units.length > 0) {
       fetchUsers();
     }
   }, [units]);
-  
+
   const handleFacilityChange = (e) => {
     const selectedFacilityId = e.target.value; // Get the selected facility ID from the dropdown
     setSelectedSlot(""); // Reset selected slot
@@ -392,7 +411,7 @@ const FacilityBooking = () => {
       user_id: selectedUserId, // Update user_id in the formData state
     }));
   };
-  
+
   const [searchText, setSearchText] = useState("");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null); // Store the selected user
@@ -435,10 +454,10 @@ const FacilityBooking = () => {
             </h2>
             <div className="grid grid-cols-4 gap-2">
               <div className="relative mt-3 p-2">
-              <label htmlFor="facility" className="font-semibold">
+                <label htmlFor="facility" className="font-semibold">
                   Select Facility:
                 </label>
-                
+
                 {/* Search input */}
                 <input
                   type="text"
@@ -483,11 +502,11 @@ const FacilityBooking = () => {
                   ))}
                 </select>
               </div> */}
-              
+
               <div className="mt-3 relative p-2">
-              <label htmlFor="users" className="font-semibold">
+                <label htmlFor="users" className="font-semibold">
                   Select User:
-              </label>
+                </label>
                 <input
                   type="text"
                   value={searchText}
@@ -558,8 +577,7 @@ const FacilityBooking = () => {
                     <option value="">Select Slot</option>
                     {slots.map((slot) => (
                       <option key={slot.id} value={slot.id}>
-                        {slot.start_hr}:{slot.start_min} - {slot.end_hr}:
-                        {slot.end_min}
+                        {slot.slot_str} {/* Use formatted slot_str here */}
                       </option>
                     ))}
                   </select>
