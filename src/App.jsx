@@ -716,6 +716,7 @@ import PrivacyPolicyBhoomi from "./pages/Setup/AboutSetup/PrivacyPolicyBhoomi.js
 import SetupUserDetails from "./pages/Setup/users/UserDetails.jsx";
 import PrivacyPolicyMycitiLife from "./pages/Setup/AboutSetup/PrivacyPolicyMycitiLife.jsx";
 import EditPageUser from "./pages/Setup/users/EditPageUser.jsx";
+import ForgotPassword from "./pages/Setup/users/ForgotPassword.jsx";
 // new admin hrms
 
 function App() {
@@ -992,6 +993,12 @@ function App() {
             path="/setup/users-edit-page/:id"
             element={
                 <EditPageUser />
+            }
+          />
+          <Route
+            path="/setup/forgot-password"
+            element={
+                <ForgotPassword />
             }
           />
           {/* <Route

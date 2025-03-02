@@ -97,7 +97,7 @@ const Login = () => {
         const vibeOrganizationId = vibeResponse.data.data.organization_id;
         setItemInLocalStorage("VIBEORGID", vibeOrganizationId);
       }
-      
+
       // console.log("skipped copilot");
       const loginD = response.data.user;
       setItemInLocalStorage("user", loginD);
@@ -239,12 +239,29 @@ const Login = () => {
                 </div>
               </div>
             )}
-            <div className="mx-5 flex gap-2">
-              <input type="checkbox" name="" id="" />
-              <label htmlFor="" className="">
-                Remember Me
-              </label>
+            <div className="mx-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  className="cursor-pointer"
+                />
+                <label
+                  htmlFor="rememberMe"
+                  className="text-gray-700 cursor-pointer"
+                >
+                  Remember Me
+                </label>
+              </div>
+
+              <a
+                href="/setup/forgot-password"
+                className="text-blue-800 font-semibold hover:underline transition-all duration-300 ease-in-out hover:text-blue-600"
+              >
+                Forgot Password?
+              </a>
             </div>
+
             <div className="flex justify-center gap-4 w-full">
               {page === "login" && (
                 <button

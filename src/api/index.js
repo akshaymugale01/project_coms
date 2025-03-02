@@ -1281,10 +1281,15 @@ export const getSetupUsers = async () =>
     params: {
       token: token,
     },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
   });
 
-export const getFilterUsers = async () =>
-  axiosInstance.get("/users.json", {
+export const getFilterUsers = async (id) =>
+  axiosInstance.get(`/users/${id}.json`, {
     params: {
       token: token,
     },
