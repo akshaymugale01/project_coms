@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
+import MultiSelect from "../AdminHrms/Components/MultiSelect";
 
 const CreateEvent = () => {
   const siteId = getItemInLocalStorage("SITEID");
@@ -32,11 +33,12 @@ const CreateEvent = () => {
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [users, setUsers] = useState([]);
   const [selectedUnits, setSelectedUnits] = useState([]);
-  const [members, setMembers] = useState([]);  
+  const [members, setMembers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [units, setUnits] = useState([]);
   const [selectedOption, setSelectedOption] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState([]);
   const [formData, setFormData] = useState({
     site_id: siteId,
     created_by: userID,
@@ -61,67 +63,66 @@ const CreateEvent = () => {
   const currentDate = new Date();
 
   useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const usersRes = await getSetupUsers();
-          const unitsRes = await getBuildings();
-          console.log("userSites", unitsRes);
-          setUnits(unitsRes.data);
-  
-          const employeesList = usersRes.data.map((emp) => ({
-            id: emp.id,
-            name: `${emp.firstname} ${emp.lastname}`,
-            building_id: emp.building_id,
-            userSites: emp.user_sites || [],
-          }));
-  
-          setMembers(employeesList);
-          setFilteredMembers(employeesList);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      };
-      fetchData();
-    }, []);
+    const fetchData = async () => {
+      try {
+        const usersRes = await getSetupUsers();
+        const unitsRes = await getBuildings();
+        console.log("userSites", unitsRes);
+        setUnits(unitsRes.data);
 
-    const handleFilter = () => {
-      console.log(
-        "Selected Building ID:",
-        selectedUnit,
-        "Selected Ownership:",
-        selectedOwnership
-      );
-      console.log("Members Before Filtering:", members);
-  
-      const filtered = members.filter((member) => {
-        // Check if the user belongs to the selected building
-        const buildingMatch =
-          !selectedUnit ||
-          Number(member.building_id) === Number(selectedUnit);
-  
-        // Check if any of the user's sites match the selected ownership
-        const ownershipMatch =
-          !selectedOwnership ||
-          member.userSites.some(
-            (site) =>
-              site.ownership?.toLowerCase() === selectedOwnership.toLowerCase()
-          );
-  
-        console.log(
-          "User:",
-          member.name,
-          "Building Match:",
-          buildingMatch,
-          "Ownership Match:",
-          ownershipMatch
-        );
-  
-        return buildingMatch && ownershipMatch;
-      });
-  
-      console.log("Filtered Members:", filtered);
-      setFilteredMembers(filtered);
+        const employeesList = usersRes.data.map((emp) => ({
+          id: emp.id,
+          name: `${emp.firstname} ${emp.lastname}`,
+          building_id: emp.building_id,
+          userSites: emp.user_sites || [],
+        }));
+
+        setMembers(employeesList);
+        setFilteredMembers(employeesList);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
+    fetchData();
+  }, []);
+
+  const handleFilter = () => {
+    console.log(
+      "Selected Building ID:",
+      selectedUnit,
+      "Selected Ownership:",
+      selectedOwnership
+    );
+    console.log("Members Before Filtering:", members);
+
+    const filtered = members.filter((member) => {
+      // Check if the user belongs to the selected building
+      const buildingMatch =
+        !selectedUnit || Number(member.building_id) === Number(selectedUnit);
+
+      // Check if any of the user's sites match the selected ownership
+      const ownershipMatch =
+        !selectedOwnership ||
+        member.userSites.some(
+          (site) =>
+            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase()
+        );
+
+      console.log(
+        "User:",
+        member.name,
+        "Building Match:",
+        buildingMatch,
+        "Ownership Match:",
+        ownershipMatch
+      );
+
+      return buildingMatch && ownershipMatch;
+    });
+
+    console.log("Filtered Members:", filtered);
+    setFilteredMembers(filtered);
+  };
 
   const handleStartDateChange = (date) => {
     setFormData({ ...formData, start_date_time: date });
@@ -346,15 +347,17 @@ const CreateEvent = () => {
     });
   };
 
+  const handleSelectEdit = (selectedOption) => {
+    setSelectedMembers(selectedOption); // Update state for selected members
 
-  const handleSelectEdit = (option) => {
-    if (selectedMembers.includes(option)) {
-      setSelectedMembers(selectedMembers.filter((item) => item !== option));
-    } else {
-      setSelectedMembers([...selectedMembers, option]);
-    }
+    const selectedUserIds = selectedOption.map((option) => option.value); // Extract user IDs
+    console.log("akshay", selectedUserIds);
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      user_ids: selectedUserIds.join(","), // Store user IDs as a comma-separated string
+    }));
   };
-
 
   return (
     <section className="flex">
@@ -514,9 +517,10 @@ const CreateEvent = () => {
                     Groups
                   </h2>
                 </div>
-                <div className="my-5 flex w-full">
-                  {share === "individual" && (
-                    <div className="flex gap-2 mt-2 items-end">
+                {share === "individual" && (
+                  <div className="flex flex-col gap-2 mt-2 w-full">
+                    {/* First Row: Unit Select, Ownership Select, and Filter Button */}
+                    <div className="flex gap-2 items-end">
                       {/* Unit Select Dropdown */}
                       <select
                         className="border p-3 border-gray-300 rounded-md flex-1"
@@ -546,61 +550,31 @@ const CreateEvent = () => {
 
                       {/* Filter Button */}
                       <button
+                        style={{ background: themeColor }}
                         onClick={handleFilter}
                         className="bg-blue-500 text-white px-4 py-2 rounded-md"
                       >
                         Filter
                       </button>
+                    </div>
+
+                    {/* Second Row: User Selection Dropdown - Now Below */}
+                    <div className="w-full">
                       <Select
                         options={filteredMembers.map((member) => ({
                           value: member.id,
                           label: member.name,
                         }))}
                         className="w-full"
+                        isMulti // Enables multi-select functionality
                         title="Select Members"
-                        handleSelect={handleSelectEdit}
-                        selectedOptions={selectedMembers}
-                        setSelectedOptions={setSelectedMembers}
-                        compTitle="Select Group Members"
+                        value={selectedMembers} // This should be the selected state
+                        onChange={handleSelectEdit} // Correct event handler
+                        placeholder="Select Group Members"
                       />
-                      {/* <MultiSelect
-                        options={filteredMembers.map((member) => ({
-                          value: member.id,
-                          label: member.name,
-                        }))}
-                        className="w-full"
-                        title="Select Members"
-                        handleSelect={handleSelectEdit}
-                        selectedOptions={selectedMembers}
-                        setSelectedOptions={setSelectedMembers}
-                        compTitle="Select Group Members"
-                      /> */}
                     </div>
-                  )}
-                  {share === "groups" && (
-                    <div className="group-dropdown">
-                      <label
-                        htmlFor="group-select"
-                        className="block mb-2 font-medium"
-                      >
-                        Select a Group:
-                      </label>
-                      <select
-                        id="group-select"
-                        className="border border-gray-300 rounded px-4 py-2"
-                        value={selectedGroup}
-                        onChange={handleGroupChange}
-                      >
-                        <option value="">-- Select a Group --</option>
-                        {groups.map((group) => (
-                          <option key={group.id} value={group.id}>
-                            {group.group_name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="mb-4">
