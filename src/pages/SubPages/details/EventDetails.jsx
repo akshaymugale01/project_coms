@@ -45,7 +45,7 @@ const EventDetails = () => {
   return (
     <section>
       <div className="m-2">
-        <h2 style={{ background: themeColor }} className="text-center text-xl font-bold p-2 bg-black rounded-full text-white">
+        <h2 style={{ background: "rgb(19 27 38)" }} className="text-center text-xl font-bold p-2 bg-black rounded-full text-white">
           Event Details
         </h2>
         <div className="my-2 mb-10 border-2 p-2 rounded-md border-gray-400">

@@ -48,6 +48,8 @@ const AddNewVisitor = () => {
   // const history = useHistory();
   const [selectedFloor, setSelectedFloor] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
+  const [searchUnit, setSearchUnit] = useState(""); // Search term state
+  const [showDropdown, setShowDropdown] = useState(false);
   const handleOpenCamera = () => {
     setShowWebcam(true);
   };
@@ -123,7 +125,7 @@ const AddNewVisitor = () => {
           mobile: data.contact_no,
           purpose: data.purpose,
           comingFrom: data.coming_from,
-          vehicleNumber: data.vehicle_no,
+          vehicleNumber: data.vehicle_number,
           vhost_id: data.vhost_id,
           expectedDate: data.expected_date,
           expectedTime: data.expected_time,
@@ -416,9 +418,9 @@ const AddNewVisitor = () => {
     (floor) => floor.building_id === Number(selectedBuilding)
   );
   // Filter Units based on selected Floor
-  const filteredUnits = units.filter(
-    (unit) => unit.floor_id === Number(selectedFloor)
-  );
+  // const filteredUnits = units.filter(
+  //   (unit) => unit.floor_id === Number(selectedFloor)
+  // );
   const handleBuildingChange = (e) => {
     const selectedBuildingId = e.target.value;
     const selectedUnitId = e.target.value;
@@ -430,13 +432,40 @@ const AddNewVisitor = () => {
     }));
     setSelectedBuilding(selectedBuildingId);
   };
-  const handleUnitChange = (unitId) => {
+  // const handleUnitChange = (unitId) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     unit_id: unitId,
+  //   }));
+  //   setSelectedUnit(unitId);
+  // };
+
+  const handleUnitSelect = (unit) => {
     setFormData((prev) => ({
       ...prev,
-      unit_id: unitId,
+      unit_id: unit.id,
     }));
-    setSelectedUnit(unitId);
+    setSearchUnit(unit.name); // Update input with selected value
+    setShowDropdown(false); // Hide dropdown after selection
   };
+
+  const filteredUnits = filteredData.flatMap((floor) =>
+    floor.units
+      .filter((unit) =>
+        unit.name.toLowerCase().includes(searchUnit.toLowerCase())
+      )
+      .map((unit) => ({
+        id: unit.id,
+        name: `Floor: ${floor.floorName} - Unit: ${unit.name}`,
+      }))
+  );
+
+  const unitOptions = filteredData.flatMap((floor) =>
+    floor.units.map((unit) => ({
+      value: unit.id,
+      label: `Floor: ${floor.floorName} - Unit: ${unit.name}`,
+    }))
+  );
   return (
     <div className="flex justify-center items-center  w-full p-4">
       <div className="md:border border-gray-300 rounded-lg md:p-4 w-full md:mx-4 ">
@@ -663,24 +692,37 @@ const AddNewVisitor = () => {
             </select>
           </div>
           {filteredData.length > 0 && (
-            <div className="border border-gray-300 rounded-md p-3 mt-3">
+            <div className="border border-gray-300 rounded-md p-3 mt-3 relative">
               <h3 className="font-semibold mb-2">Select Unit</h3>
 
-              {/* Single Unit Dropdown */}
-              <select
-                className="border p-3 border-gray-300 rounded-md w-full mt-2"
-                value={formData.unit_id || ""}
-                onChange={(e) => handleUnitChange(e.target.value)}
-              >
-                <option value="">Select Unit</option>
-                {filteredData.flatMap((floor) =>
-                  floor.units.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {`Floor: ${floor.floorName} - Unit: ${unit.name}`}
-                    </option>
-                  ))
-                )}
-              </select>
+              {/* Search Input */}
+              <input
+                type="text"
+                value={searchUnit}
+                onChange={(e) => setSearchUnit(e.target.value)} // Update search term
+                onFocus={() => setShowDropdown(true)} // Show dropdown on focus
+                className="border p-2 px-4 border-gray-500 rounded-md w-full"
+                placeholder="Search Unit"
+              />
+
+              {/* Dropdown List */}
+              {showDropdown && (
+                <div className="absolute z-10 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto w-full">
+                  {filteredUnits.length > 0 ? (
+                    filteredUnits.map((unit) => (
+                      <div
+                        key={unit.id}
+                        onClick={() => handleUnitSelect(unit)} // Handle selection
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {unit.name}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-2 text-gray-500">No results found</div>
+                  )}
+                </div>
+              )}
             </div>
           )}
           {/* Select Floor */}
@@ -931,7 +973,7 @@ const AddNewVisitor = () => {
                   placeholder="Mobile Number"
                   name="mobile"
                   className="border border-gray-400 p-2 rounded-md"
-                  value={visitor.mobile}
+                  value={visitor.mobile || visitor.contact_no}
                   onChange={(event) => handleInputChange(index, event)}
                 />
                 <button onClick={() => handleRemoveVisitor(index)}>
