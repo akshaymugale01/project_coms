@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { getItemInLocalStorage } from "../utils/localStorage";
 import toast from "react-hot-toast";
 import {
+  domainPrefix,
   getAllUnits,
   getBuildings,
   getFloors,
@@ -83,7 +84,7 @@ const AddNewVisitor = () => {
   const [searchParams] = useSearchParams();
   const mobile = searchParams.get("mobile");
   // const [formData, setFormData] = useState(null);
-  
+
   const [passEndDate, setPassEndDate] = useState("");
   const [formData, setFormData] = useState({
     visitorName: "",
@@ -107,6 +108,7 @@ const AddNewVisitor = () => {
     building_id: "",
     unit_id: "",
     floor_id: "",
+    profile_picture: "",
   });
 
   const fetchDetails = async () => {
@@ -114,7 +116,7 @@ const AddNewVisitor = () => {
     try {
       const details = await getVisitorByNumber(mobile);
       if (details?.data) {
-        const data = details?.data
+        const data = details?.data;
         setFormData({
           ...formData,
           visitorName: data.name,
@@ -137,17 +139,20 @@ const AddNewVisitor = () => {
           noOfGoods: data.no_of_goods,
           goodsDescription: data.goods_description,
           goodsAttachments: data.goods_attachments,
+          profile_picture: data.profile_picture
+            ? `${domainPrefix}${data.profile_picture}`
+            : "", // Ensure full URL
         });
 
         setVisitors(data.extra_visitors || []);
       } else {
         console.warn("No visitor data found");
-        setFormData({}); 
+        setFormData({});
         setVisitors([]);
       }
     } catch (error) {
       console.error("Error fetching visitor details:", error);
-      setFormData({}); 
+      setFormData({});
       setVisitors([]);
     }
   };
@@ -321,9 +326,14 @@ const AddNewVisitor = () => {
       toast.loading("Creating new visitor Please wait!");
       const visitResp = await postNewVisitor(postData);
       const postGoods = new FormData();
-      formData.goodsAttachments.forEach((docs) => {
-        postGoods.append("goods_files[]", docs);
-      });
+
+      if (formData.goodsAttachments && formData.goodsAttachments.length > 0) {
+        formData.goodsAttachments.forEach((docs) => {
+          postGoods.append("goods_files[]", docs);
+        });
+      } else {
+        console.warn("No goodsAttachments found in formData.");
+      }
       postGoods.append("goods_in_out[visitor_id]", visitResp.data.id);
       postGoods.append("goods_in_out[no_of_goods]", formData.noOfGoods);
       postGoods.append("goods_in_out[description]", formData.noOfGoods);
@@ -446,7 +456,7 @@ const AddNewVisitor = () => {
                   src={
                     imageFile
                       ? URL.createObjectURL(imageFile)
-                      : capturedImage || image
+                      : capturedImage || formData.profile_picture || image
                   }
                   alt="Uploaded or Captured"
                   className="border-4 border-gray-300 rounded-full w-40 h-40 object-cover"
