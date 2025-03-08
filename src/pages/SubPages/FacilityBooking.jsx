@@ -6,6 +6,7 @@ import Select from "react-select";
 import {
   getAllUnits,
   getAssignedTo,
+  getFacilitySlots,
   getFacitilitySetup,
   getLogin,
   getSetupUsers,
@@ -128,39 +129,44 @@ const FacilityBooking = () => {
     return `${hr}:${safeMin.toString().padStart(2, "0")}`;
   };
 
-  const fetchSlotsForFacility = async (facilityId) => {
+  const fetchSlotsForFacility = async (facilityId, selectedDate) => {
     try {
-      const response = await getFacitilitySetup(); // Fetch facilities
-
-      if (response?.data) {
-        const selectedFacility = response.data.find(
-          (facility) => facility.id === parseInt(facilityId)
-        );
-
-        if (selectedFacility?.amenity_slots) {
-          const formattedSlots = selectedFacility.amenity_slots.map((slot) => {
-            const startTime = formatTime(slot.start_hr, slot.start_min);
-            const endTime = formatTime(slot.end_hr, slot.end_min);
-            console.log("Formatted Slot:", startTime, "-", endTime); // Debugging output
-
-            return {
-              ...slot,
-              slot_str: `${startTime} to ${endTime}`,
-            };
-          });
-
-          setSlots(formattedSlots); // Update slots state with formatted slot strings
-        } else {
-          console.log("No Slots Found for this Facility");
-          setSlots([]);
-        }
+      const response = await getFacilitySlots(facilityId, selectedDate); // API Call
+  
+      if (response?.data?.slots) {
+        const now = new Date();
+        const currentHr = now.getHours();
+        const currentMin = now.getMinutes();
+        const selectedDt = new Date(selectedDate);
+        const isToday = selectedDt.toDateString() === now.toDateString();
+  
+        const formattedSlots = response.data.slots
+          .filter((slot) => {
+            if (isToday) {
+              return (
+                slot.start_hr > currentHr ||
+                (slot.start_hr === currentHr && slot.start_min > currentMin)
+              );
+            }
+            return true; // Include all slots for future dates
+          })
+          .map((slot) => ({
+            ...slot,
+            slot_str: `${formatTime(slot.start_hr, slot.start_min)} to ${formatTime(slot.end_hr, slot.end_min)}`
+          }));
+  
+        setSlots(formattedSlots); // Update slots state
       } else {
-        console.log("No Facilities Found");
+        console.log("No Slots Found");
+        setSlots([]);
       }
     } catch (error) {
       console.log("Error Fetching Slots", error);
+      setSlots([]); // Reset slots if there's an error
     }
   };
+  
+  
 
   //fetch terms ,cancel, gst, member price
   const fetchTermsPolicy = async (facilityId) => {
@@ -254,12 +260,16 @@ const FacilityBooking = () => {
 
   const handleDateChange = (e) => {
     const selectedDate = e.target.value;
-    setDate(selectedDate); // Update local date state
+    setDate(selectedDate); // Update date state
+  
     setFormData((prevData) => ({
       ...prevData,
-      booking_date: selectedDate, // Update booking_date in formData state
+      booking_date: selectedDate
     }));
+  
+    fetchSlotsForFacility(facility?.id, selectedDate); // Fetch slots
   };
+  
 
   // const handleButtonClick = (selectedTime) => {
   //   setSelectedTimes((prevState) => {
@@ -391,20 +401,22 @@ const FacilityBooking = () => {
   }, [units]);
 
   const handleFacilityChange = (e) => {
-    const selectedFacilityId = e.target.value; // Get the selected facility ID from the dropdown
+    const selectedFacilityId = e.target.value;
     setSelectedSlot(""); // Reset selected slot
-    fetchSlotsForFacility(selectedFacilityId);
-    fetchTermsPolicy(selectedFacilityId);
-    const selectedAFacility = facilities.find(
-      (facility) => facility.id === selectedFacilityId
-    ); // Find the facility by ID
-    setFacility(selectedAFacility);
+  
+    fetchSlotsForFacility(selectedFacilityId, date); // Fetch slots
+  
+    fetchTermsPolicy(selectedFacilityId); // Fetch Terms
+  
+    const selectedFacility = facilities.find(facility => facility.id === parseInt(selectedFacilityId));
+    setFacility(selectedFacility);
+  
     setFormData((prevData) => ({
       ...prevData,
-      amenity_id: selectedFacilityId, // Update amenity_id in formData state
+      amenity_id: selectedFacilityId
     }));
   };
-
+  
   const handleSelectChange = (e) => {
     const selectedUserId = e.target.value;
     setFormData((prevData) => ({

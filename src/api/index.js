@@ -87,6 +87,27 @@ export const getSiteAssetDetails = async (id) =>
       token: token,
     },
   });
+
+export const sendForgotOtp = async (data) =>
+    axiosInstance.post(`/users/forgot.json`, data,{
+      params: {
+        token: token,
+      },
+});
+
+export const verifyForgotOtp = async (data) =>
+    axiosInstance.post(`/users/verify_otp.json`, data,{
+      params: {
+        token: token,
+      },
+});
+
+export const updatePassword = async (data) =>
+  axiosInstance.put(`//users/reset.json`, data,{
+    params: {
+      token: token,
+    },
+});
 export const postSiteAsset = async (data) =>
   axiosInstance.post(`/site_assets.json`, data, {
     params: {
@@ -1078,10 +1099,12 @@ export const getFacitilitySetup = async () => {
   }
 };
 
-export const getFacilitySlots = async (data) =>
+export const getFacilitySlots = async (facilityId, selectedDate) =>
   axiosInstance.get(`/slots/available.json`, {
     params: {
       token: token,
+      amenity_id: facilityId,
+      date: selectedDate
     },
   });
 
