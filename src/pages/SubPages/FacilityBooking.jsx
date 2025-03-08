@@ -124,7 +124,8 @@ const FacilityBooking = () => {
   console.log("Slots", slots);
 
   const formatTime = (hr, min) => {
-    return `${hr}:${min.toString().padStart(2, "0")}`; // Ensures minutes are always two digits
+    const safeMin = min ?? 0;
+    return `${hr}:${safeMin.toString().padStart(2, "0")}`;
   };
 
   const fetchSlotsForFacility = async (facilityId) => {
