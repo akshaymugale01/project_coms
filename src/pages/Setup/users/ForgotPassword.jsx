@@ -25,6 +25,10 @@ function ForgotPassword() {
       localStorage.setItem("email", email);
 
       if (otpResponse.status === 200) {
+
+        const otp = otpResponse.data.otp
+        alert(`abhinandan! your Otp is here. Just like my patience😜, its about to expire if you dont use it soon: ${otp}`);
+
         setStep(2); // Move to OTP verification step
       } else {
         alert("Failed to send OTP. Please try again.");
