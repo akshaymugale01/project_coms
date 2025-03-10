@@ -1,36 +1,92 @@
 import React, { useState } from "react";
+import { sendForgotOtp, updatePassword, verifyForgotOtp } from "../../../api";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 function ForgotPassword() {
   const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSendOtp = (e) => {
+  const navigate = useNavigate();
+
+  // Handle sending OTP
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    // Add logic to send OTP to the entered phone number
-    console.log("OTP sent to:", phone);
-    setStep(2);
+
+    try {
+      const data = { email: email }; 
+      const otpResponse = await sendForgotOtp(data); 
+      toast.success("OTP sent");
+
+      // Store email in local storage
+      localStorage.setItem("email", email);
+
+      if (otpResponse.status === 200) {
+        setStep(2); // Move to OTP verification step
+      } else {
+        alert("Failed to send OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in sending OTP:", error);
+      alert("There was an error while sending OTP.");
+    }
   };
 
-  const handleVerifyOtp = (e) => {
+  // Handle OTP verification
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    // Add logic to verify OTP
-    console.log("OTP entered:", otp);
-    setStep(3);
+
+    try {
+      // Get email from local storage
+      const emailFromStorage = localStorage.getItem("email");
+
+      const data = { otp: parseInt(otp), email: emailFromStorage };  // Send the OTP and email from local storage
+      const otpResponse = await verifyForgotOtp(data);
+      
+      toast.success("OTP Verified Successfully.");
+
+      if (otpResponse.status === 200) {
+        setStep(3); // Move to password reset step
+      } else {
+        alert("Invalid OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in verifying OTP:", error);
+      alert("There was an error while verifying the OTP.");
+    }
   };
 
-  const handleResetPassword = (e) => {
+  // Handle password reset
+  const handleResetPassword = async (e) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
-      return;
+      return; // If passwords don't match, stop the process
     }
-    // Add logic to reset password
-    console.log("Password reset successfully!");
-    alert("Password has been reset successfully!");
-    setStep(1); // Reset to first step after successful password reset
+
+    try {
+      // Get email from local storage
+      const emailFromStorage = localStorage.getItem("email");
+
+      const data = { password: password, email: emailFromStorage };  // Send the email and new password
+      const response = await updatePassword(data);
+
+      if (response.status === 200) {
+        toast.success("Password has been reset successfully!");
+        navigate('/login');  // Redirect to login page
+        setPassword("");  
+        setConfirmPassword("");  // Clear password fields
+      } else {
+        alert("Error in resetting the password.");
+      }
+    } catch (error) {
+      console.error("Error in password reset:", error);
+      alert("There was an error while resetting the password.");
+    }
   };
 
   return (
@@ -42,15 +98,14 @@ function ForgotPassword() {
 
         {step === 1 && (
           <form onSubmit={handleSendOtp} className="mt-4">
-            <label className="block text-gray-700">Mobile Number</label>
+            <label className="block text-gray-700">Email Id</label>
             <input
-              type="tel"
-              placeholder="Enter your phone number"
+              type="email"
+              placeholder="Enter your Email Address"
               className="w-full px-4 py-2 mt-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
-              maxLength="10"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <button
               type="submit"
@@ -71,7 +126,7 @@ function ForgotPassword() {
               required
               maxLength="6"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => setOtp(e.target.value)}  // Set the entered OTP in state
             />
             <button
               type="submit"

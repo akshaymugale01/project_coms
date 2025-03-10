@@ -60,7 +60,7 @@ const Login = () => {
       toast.error("Please fill in all fields.");
       return;
     }
-    toast.loading("Processing your data, please wait...");
+    
     try {
       const response = await login({
         user: {
@@ -152,6 +152,7 @@ const Login = () => {
           ? "/employee/dashboard"
           : "/mytickets";
 
+          // toast.loading("Processing your data, please wait...");
       setTimeout(() => {
         navigate(route);
       }, 100);
@@ -159,6 +160,7 @@ const Login = () => {
       toast.dismiss();
 
       toast.success("Login Successfully");
+      
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Login failed. Please check your credentials.");

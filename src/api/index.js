@@ -103,7 +103,7 @@ export const verifyForgotOtp = async (data) =>
 });
 
 export const updatePassword = async (data) =>
-  axiosInstance.put(`//users/reset.json`, data,{
+  axiosInstance.put(`/users/reset.json`, data,{
     params: {
       token: token,
     },
