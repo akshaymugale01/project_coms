@@ -94,6 +94,16 @@ const UserSetup = () => {
       sortable: true,
     },
     {
+      name: "App Downloaded",
+      selector: (row) => row.is_downloaded ? "Yes" : "No",
+      sortable: true,
+    },
+    // {
+    //   name: "Device Type",
+    //   selector: (row) => row.device_name[0],
+    //   sortable: true,
+    // },
+    {
       name: "Unit",
       selector: (row) => row.unit_name,
       sortable: true,
