@@ -14,13 +14,13 @@ const UserSetup = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const themeColor = useSelector((state) => state.theme.color);
+  
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const setupUsers = await getSetupUsers();
         setUsers(setupUsers.data);
         setFilteredData(setupUsers.data);
-        console.log(setupUsers.data);
       } catch (error) {
         console.log(error);
       }
@@ -28,114 +28,51 @@ const UserSetup = () => {
     fetchUsers();
   }, []);
 
-  const handleSendMail = async (userId, first, last) => {
-    try {
-      toast.loading(`Sending Mail to ${first} ${last}`);
-      const welcomeMail = await sendMailToUsers(userId);
-      console.log("mail sent", welcomeMail);
-      toast.dismiss();
-      toast.success("Welcome Mail Sent");
-    } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
-      toast.dismiss();
-    }
-  };
-
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
-
+    
     if (searchValue.trim() === "") {
       setFilteredData(users);
     } else {
       const filteredResults = users.filter(
         (item) =>
-          // item.name.toLowerCase().includes(searchValue.toLowerCase())
-          (item.firstname &&
-            item.firstname.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.lastname &&
-            item.lastname.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.unit_name &&
-            item.unit_name.toLowerCase().includes(searchValue.toLowerCase()))
+          (item.firstname && item.firstname.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.lastname && item.lastname.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.unit_name && item.unit_name.toLowerCase().includes(searchValue.toLowerCase()))
       );
       setFilteredData(filteredResults);
     }
   };
+
+  const totalUsers = users.length;
+  const appDownloadedCount = users.filter(user => user.is_downloaded).length;
+  const approvedUsers = users.filter(user => user.status === "approved").length;
+  const pendingUsers = users.filter(user => user.status === "pending").length;
+
   const userColumn = [
     {
       name: "View",
       cell: (row) => (
-        <div className="flex items-center gap-4">
-          <Link to={`/setup/users-details/${row.id}`}>
-            <BsEye size={15} />
-          </Link>
-        </div>
+        <Link to={`/setup/users-details/${row.id}`}>
+          <BsEye size={15} />
+        </Link>
       ),
     },
-    {
-      name: "First Name",
-      selector: (row) => row.firstname,
-      sortable: true,
-    },
-    {
-      name: "Last Name",
-      selector: (row) => row.lastname,
-      sortable: true,
-    },
-    {
-      name: "Email",
-      selector: (row) => row.email,
-      sortable: true,
-    },
-    {
-      name: "Mobile",
-      selector: (row) => row.mobile,
-      sortable: true,
-    },
-    {
-      name: "App Downloaded",
-      selector: (row) => row.is_downloaded ? "Yes" : "No",
-      sortable: true,
-    },
-    // {
-    //   name: "Device Type",
-    //   selector: (row) => row.device_name[0],
-    //   sortable: true,
-    // },
-    {
-      name: "Unit",
-      selector: (row) => row.unit_name,
-      sortable: true,
-    },
-    {
-      name: "Type",
-      selector: (row) =>
-        row.user_type === "pms_admin"
-          ? "Admin"
-          : row.user_type === "pms_occupant_admin"
-          ? "Unit Owner"
-          : row.user_type === "pms_technician"
-          ? "Technician"
-          : row.user_type,
-      sortable: true,
-    },
-    {
-      name: "Send Email",
-      cell: (row) => (
-        <button
-          style={{ background: "rgb(19 27 32)" }}
-          onClick={() => handleSendMail(row.id, row.firstname, row.lastname)}
-          className="text-white md:text-sm text-xs rounded-full  shadow-custom-all-sides p-1 px-4"
-        >
-          Send
-        </button>
-      ),
+    { name: "First Name", selector: (row) => row.firstname, sortable: true },
+    { name: "Last Name", selector: (row) => row.lastname, sortable: true },
+    { name: "Email", selector: (row) => row.email, sortable: true },
+    { name: "Mobile", selector: (row) => row.mobile, sortable: true },
+    { name: "App Downloaded", selector: (row) => row.is_downloaded ? "Yes" : "No", sortable: true },
+    { name: "Unit", selector: (row) => row.unit_name, sortable: true },
+    { 
+      name: "Type", 
+      selector: (row) => row.user_type === "pms_admin" ? "Admin" :
+        row.user_type === "pms_occupant_admin" ? "Unit Owner" :
+        row.user_type === "pms_technician" ? "Technician" : row.user_type,
       sortable: true,
     },
   ];
-
-  const siteId = getItemInLocalStorage("SITEID");
 
   return (
     <section className="flex">
@@ -145,21 +82,38 @@ const UserSetup = () => {
           <input
             type="text"
             placeholder="Search By Name or Unit"
-            className=" p-2 md:w-96 border border-gray-300 rounded-md placeholder:text-sm outline-none"
+            className="p-2 md:w-96 border border-gray-300 rounded-md placeholder:text-sm outline-none"
             value={searchText}
             onChange={handleSearch}
           />
-          {(siteId === 56 || siteId === 55) && (
-            <Link
-              to={"/setup/users-setup/add-new-user"}
-              style={{ background: "rgb(19 27 32)" }}
-              className="font-semibold duration-300 ease-in-out transition-all p-1 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-            >
-              <PiPlusCircle size={20} />
-              Add User
-            </Link>
-          )}
+          <Link
+            to="/setup/users-setup/add-new-user"
+            style={{ background: "rgb(19 27 32)" }}
+            className="font-semibold p-1 px-4 rounded-md text-white flex items-center gap-2"
+          >
+            <PiPlusCircle size={20} /> Add User
+          </Link>
         </div>
+        
+        <div className="grid md:grid-cols-4 grid-cols-2 gap-4">
+          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+            <h2 className="text-lg font-semibold">Total Users</h2>
+            <p className="text-xl font-bold">{totalUsers}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+            <h2 className="text-lg font-semibold">App Downloaded</h2>
+            <p className="text-xl font-bold">{appDownloadedCount}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+            <h2 className="text-lg font-semibold">Approved Users</h2>
+            <p className="text-xl font-bold">{approvedUsers}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+            <h2 className="text-lg font-semibold">Pending Users</h2>
+            <p className="text-xl font-bold">{pendingUsers}</p>
+          </div>
+        </div>
+        
         <Table columns={userColumn} data={filteredData} />
       </div>
     </section>

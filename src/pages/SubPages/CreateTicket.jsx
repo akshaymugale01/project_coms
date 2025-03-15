@@ -26,7 +26,6 @@ import { MdClose } from "react-icons/md";
 const CreateTicket = () => {
   const navigate = useNavigate();
 
-
   const [behalf, setBehalf] = useState("self");
   const [ticketType, setTicketType] = useState("");
   //   const [selectedOption, setSelectedOption] = useState("");
@@ -62,27 +61,22 @@ const CreateTicket = () => {
     issue_type_id: "",
     complaint_type: "",
     complaint_mode_id: "",
+    selected_user_id: "",
   });
-
 
   console.log(formData);
   // console.log(attachments);
 
-
   const categories = getItemInLocalStorage("categories");
   // console.log("Categories", categories)
 
-
   const userName = localStorage.getItem("Name");
-
 
   const siteID = getItemInLocalStorage("SITEID");
   // setSelectedSiteId(siteID)
 
-
   const building = getItemInLocalStorage("Building");
   // console.log("BB", building);
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,7 +85,6 @@ const CreateTicket = () => {
       const responce = await getComplaints();
       // console.log("complaints", responce)
     };
-
 
     const fetchAssignedTo = async () => {
       try {
@@ -102,7 +95,6 @@ const CreateTicket = () => {
         console.error("Error fetching assigned users:", error);
       }
     };
-
 
     const fetchFloor = async () => {
       try {
@@ -128,7 +120,7 @@ const CreateTicket = () => {
         const setupUsers = await getSetupUsers(); // API call to fetch users
         const formattedOptions = setupUsers.data.map((user) => ({
           value: user.id,
-          label: user.firstname,
+          label: `${user.firstname} ${user.lastname}`,
         }));
 
         setUsers(formattedOptions);
@@ -145,7 +137,6 @@ const CreateTicket = () => {
     fetchUsers();
     // fetchUnits();
   }, []);
-
 
   const handleOptionChange = (event, setState) => {
     setState(event.target.value);
@@ -211,7 +202,6 @@ const CreateTicket = () => {
       }
     }
 
-
     if (e.target.type === "select-one" && e.target.name === "categories") {
       const categoryId = Number(e.target.value);
       await fetchSubCategory(categoryId);
@@ -229,14 +219,12 @@ const CreateTicket = () => {
     }
   };
 
-
   const handleAssChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
-
 
   const buildingChange = async (e) => {
     async function fetchFloor(floorID) {
@@ -249,7 +237,6 @@ const CreateTicket = () => {
       }
     }
 
-
     async function getUnit(UnitID) {
       try {
         const unit = await getUnits(UnitID);
@@ -261,11 +248,9 @@ const CreateTicket = () => {
       }
     }
 
-
     if (e.target.type === "select-one" && e.target.name === "building_name") {
       const BuildID = Number(e.target.value);
       await fetchFloor(BuildID);
-
 
       setFormData({
         ...formData,
@@ -351,8 +336,6 @@ const CreateTicket = () => {
     console.log("Updated FormData: ", formData);
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -392,7 +375,11 @@ const CreateTicket = () => {
       sendData.append("complaints[floor_name]", formData.floor_name);
       sendData.append("complaints[issue_type_id]", formData.issue_type_id);
       sendData.append("complaints[complaint_type]", formData.complaint_type);
-      sendData.append("complaints[complaint_mode_id]", formData.complaint_mode_id);
+      sendData.append("complaints[selected_user_id]", formData.selected_user_id);
+      sendData.append(
+        "complaints[complaint_mode_id]",
+        formData.complaint_mode_id
+      );
 
       (formData.documents || []).forEach((file, index) => {
         sendData.append("documents[]", file);
@@ -410,7 +397,6 @@ const CreateTicket = () => {
     }
   };
 
-
   const handleReset = () => {
     setAttachments([]);
     setSelectedSubCategory("");
@@ -419,10 +405,8 @@ const CreateTicket = () => {
     setSelectedCategory("");
   };
 
-
   useEffect(() => {
     const footer = document.querySelector(".hideIt");
-
 
     const hideFooter = () => {
       if (window.innerWidth <= 786) {
@@ -430,13 +414,11 @@ const CreateTicket = () => {
       }
     };
 
-
     const handleMouseEnter = () => {
       if (window.innerWidth <= 786) {
         footer.classList.remove("hide-on-small-screen");
       }
     };
-
 
     const handleMouseLeave = () => {
       if (window.innerWidth <= 786) {
@@ -732,6 +714,30 @@ const CreateTicket = () => {
                     ))}
                   </select>
                 </div>
+                <div className="grid grid-cols-2">
+                  <label htmlFor="users" className="font-semibold">
+                    User
+                  </label>
+                  <select
+                    value={formData.selected_user_id || ""}
+                    name="users"
+                    onChange={(e) =>
+                      setFormData({ ...formData, selected_user_id: e.target.value })
+                    }
+                    className="border p-1 px-4 max-w-44 w-44 border-gray-500 rounded-md"
+                  >
+                    <option value="">Select User</option>
+                    {users?.length > 0 ? (
+                      users.map((user) => (
+                        <option key={user.value} value={user.value}>
+                          {user.label}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>No users available</option>
+                    )}
+                  </select>
+                </div>
               </div>
               <div>
                 {/* Category, Sub Category, Assigned To, Priority */}
@@ -786,7 +792,9 @@ const CreateTicket = () => {
                 /> */}
                 <input
                   type="file"
-                  onChange={(e) => handleFileChange(e.target.files, "documents")}
+                  onChange={(e) =>
+                    handleFileChange(e.target.files, "documents")
+                  }
                   multiple={true}
                 />
 
@@ -796,16 +804,17 @@ const CreateTicket = () => {
                       <img
                         src={URL.createObjectURL(file)}
                         alt={`Preview ${index}`}
-                        style={{ width: "150px", height: "auto", objectFit: "cover", marginBottom: "5px" }}
+                        style={{
+                          width: "150px",
+                          height: "auto",
+                          objectFit: "cover",
+                          marginBottom: "5px",
+                        }}
                       />
                       <p>{file.name}</p>
                     </div>
                   ))}
                 </div>
-
-
-
-
               </div>
 
               {/* Submit and Reset Buttons */}
@@ -1484,9 +1493,4 @@ const CreateTicket = () => {
   );
 };
 
-
 export default CreateTicket;
-
-
-
-
