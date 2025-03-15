@@ -47,6 +47,8 @@ const UserSetup = () => {
 
   const totalUsers = users.length;
   const appDownloadedCount = users.filter(user => user.is_downloaded).length;
+  const appDownloadTenant = users.filter(user => user.is_downloaded && user.user_sites.some(site => site.ownership === "tenant")).length;
+  const appDownloadOwner = users.filter(user => user.is_downloaded && user.user_sites.some(site => site.ownership === "owner")).length
   const approvedUsers = users.filter(user => user.status === "approved").length;
   const pendingUsers = users.filter(user => user.status === "pending").length;
 
@@ -103,6 +105,14 @@ const UserSetup = () => {
           <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
             <h2 className="text-lg font-semibold">App Downloaded</h2>
             <p className="text-xl font-bold">{appDownloadedCount}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+            <h2 className="text-lg font-semibold">Total No. Tenant Downloads </h2>
+            <p className="text-xl font-bold">{appDownloadTenant}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+            <h2 className="text-lg font-semibold">Total No. Owner Downloads </h2>
+            <p className="text-xl font-bold">{appDownloadOwner}</p>
           </div>
           <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
             <h2 className="text-lg font-semibold">Approved Users</h2>
