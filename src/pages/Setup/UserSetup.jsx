@@ -62,14 +62,14 @@ const UserSetup = () => {
     { name: "First Name", selector: (row) => row.firstname, sortable: true },
     { name: "Last Name", selector: (row) => row.lastname, sortable: true },
     { name: "Email", selector: (row) => row.email, sortable: true },
-    { name: "Mobile", selector: (row) => row.mobile, sortable: true },
+    { name: "Mobile", selector: (row) => row.mobile || "NA", sortable: true },
     { name: "App Downloaded", selector: (row) => row.is_downloaded ? "Yes" : "No", sortable: true },
-    { name: "Unit", selector: (row) => row.unit_name, sortable: true },
+    { name: "Unit", selector: (row) => row.unit?.name || "NA", sortable: true },
     { 
       name: "Type", 
       selector: (row) => row.user_type === "pms_admin" ? "Admin" :
         row.user_type === "pms_occupant_admin" ? "Unit Owner" :
-        row.user_type === "pms_technician" ? "Technician" : row.user_type,
+        row.user_type === "pms_technician" ? "Technician" : row.user_sites[0].ownership || "NA",
       sortable: true,
     },
   ];
