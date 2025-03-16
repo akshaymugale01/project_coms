@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { getBuildings, getSites, postBuilding } from "../../api";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import Navbar from "../../components/Navbar";
 
 const Building = () => {
   const [siteId, setSiteId] = useState("");
@@ -94,7 +95,10 @@ const [added, setAdded] = useState(false)
   }, [added]);
   const themeColor = useSelector((state) => state.theme.color);
   return (
+    <div className="flex">
+      <Navbar />
     <div className="w-full mt-1">
+      
       <Account />
       <div className="flex flex-col mx-10 my-10 gap-2">
         <div className="flex justify-end w-full">
@@ -232,6 +236,7 @@ const [added, setAdded] = useState(false)
         </div> */}
         <Table columns={buildingColumns} data={buildings} />
       </div>
+    </div>
     </div>
   );
 };

@@ -10,6 +10,8 @@ const SetupNavbar = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const [feat, setFeat] = useState([]);
   const siteId = getItemInLocalStorage("SITEID");
+  const userId = getItemInLocalStorage("UserId");
+
 
   const getAllowedFeatures = () => {
     const storedFeatures = getItemInLocalStorage("FEATURES");
@@ -26,11 +28,11 @@ const SetupNavbar = () => {
     <div className="flex mt-1 w-full bg-gray-900">
       <div className="w-full mx-4">
         <ul className="p-4 bg-gray-800 rounded-xl mx-2 md:flex grid grid-cols-2 max-w-screen items-center text-white text-sm text-center justify-center flex-wrap gap-4">
-          <Link to="/setup/account/floor" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
-            <FaUser /> Account
+          <Link to="/setup/account/building" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+            <FaUser /> Manage Flats
           </Link>
 
-          {siteId === 10 && (
+          {userId === 574 && (
             <Link to="/setup/User-role" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaBuilding /> User Roles
             </Link>
@@ -40,29 +42,29 @@ const SetupNavbar = () => {
             <FaUser /> Users
           </Link>
 
-          {feat.includes("assets") && (
+          {feat.includes("setup_assets") && (
             <Link to="/setup/asset-group" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaTools /> Asset/Stock Group
             </Link>
           )}
 
-          {feat.includes("tickets") && (
+          {feat.includes("setup_tickets") && (
             <Link to="/setup/ticket-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaTicketAlt /> Ticket
             </Link>
           )}
 
-          {feat.includes("space") && (
+          {feat.includes("setup_amenity") && (
             <Link to="/setup/facility" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaTimeline />Amenities
             </Link>
           )}
-          {feat.includes("space") && (
+          {feat.includes("setup_address") && (
             <Link to="/admin/addresses-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaRegAddressBook />Address
             </Link>
           )}
-          {feat.includes("communication") && (
+          {feat.includes("setup_communication") && (
             <Link
               to="/admin/communication-access-control"
               className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2"
@@ -76,42 +78,42 @@ const SetupNavbar = () => {
               Supplier
             </Link>
           )} */}
-          {feat.includes("gatepass") && (
+          {feat.includes("setup_gatepass") && (
             <Link to="/setup/visitor-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaVials /> Visitor
             </Link>
           )}
-          {feat.includes("assets") && (
+          {feat.includes("meter_cat_type") && (
             <Link to="/setup/meter-category-type" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaTachometerAlt /> Meter Category Type
             </Link>
           )}
 
-          {feat.includes("bills") && (
+          {feat.includes("setup_bills") && (
             <Link to="/admin/invoice-approval-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaFileInvoice /> Invoice Approval
             </Link>
           )}
 
-          {feat.includes("cam_bill") && (
+          {feat.includes("setup_cam_bill") && (
             <Link to="/admin/billing-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaMoneyBill1Wave /> Billing
             </Link>
           )}
 
-          {feat.includes("parking") && (
+          {feat.includes("setup_parking") && (
             <Link to="/admin/parking-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaCar /> Parking
             </Link>
           )}
 
-          {feat.includes("incidents") && (
+          {feat.includes("setup_incidents") && (
             <Link to="/admin/setup-incidents" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaTools /> Incidents Setup
             </Link>
           )}
 
-          {feat.includes("vendors") && (
+          {feat.includes("setup_vendors") && (
             <Link to="/setup/supplier-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaBuilding /> Supplier
             </Link>
