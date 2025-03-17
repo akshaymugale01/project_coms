@@ -44,7 +44,7 @@ const UserSetup = () => {
       setFilteredData(filteredResults);
     }
   };
-
+  
   const totalUsers = users.length;
   const appDownloadedCount = users.filter(user => user.is_downloaded).length;
   const appDownloadTenant = users.filter(user => user.is_downloaded && user.user_sites.some(site => site.ownership === "tenant")).length;
@@ -71,7 +71,7 @@ const UserSetup = () => {
       name: "Type", 
       selector: (row) => row.user_type === "pms_admin" ? "Admin" :
         row.user_type === "pms_occupant_admin" ? "Unit Owner" :
-        row.user_type === "pms_technician" ? "Technician" : row.user_sites[0].ownership || "NA",
+        row.user_type === "pms_technician" ? "Technician" : row.user_type || "NA",
       sortable: true,
     },
   ];

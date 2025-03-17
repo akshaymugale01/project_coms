@@ -7,6 +7,7 @@ import { getAllUnits, getSites, postSetupUsers } from "../../../api";
 import { useNavigate } from "react-router-dom";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
 import { RiDeleteBin5Line } from "react-icons/ri";
+import { color } from "highcharts";
 
 const AddUser = () => {
   const themeColor = useSelector((state) => state.theme.color);
@@ -72,6 +73,13 @@ const AddUser = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    if (name === "mobile") {
+      const mobileRegex = /^[0-9]{0,10}$/; // Allows only up to 10 digits
+      if (!mobileRegex.test(value)) {
+        return; // Prevent updating state if invalid
+      }
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -102,9 +110,12 @@ const AddUser = () => {
       !formData.firstname ||
       !formData.lastname ||
       !formData.email ||
-      !formData.password
+      !formData.password ||
+      formData.user_sites.length === 0
     ) {
-      return toast.error("All fields are required!");
+      return toast.error(
+        "All fields are required! including at least one user site!"
+      );
     }
     const postData = {
       user: {
@@ -149,21 +160,27 @@ const AddUser = () => {
         <div className="md:mx-20 my-5 md:mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg">
           {/* User Details */}
           <div className="grid md:grid-cols-2 gap-4">
-            {["First Name", "Last Name", "Email", "Mobile", "Password"].map(
-              (field, idx) => (
-                <div key={idx} className="flex flex-col gap-1">
-                  <label className="font-semibold">{field}:</label>
-                  <input
-                    type="text"
-                    name={field.toLowerCase().replace(" ", "")}
-                    value={formData[field.toLowerCase().replace(" ", "")]}
-                    onChange={handleChange}
-                    placeholder={`Enter ${field}`}
-                    className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
-                  />
-                </div>
-              )
-            )}
+            {[
+              { label: "First Name", type: "text" },
+              { label: "Last Name", type: "text" },
+              { label: "Email", type: "email" },
+              { label: "Mobile", type: "tel" },
+              { label: "Password", type: "password" },
+            ].map((field, idx) => (
+              <div key={idx} className="flex flex-col gap-1">
+              <label className="font-semibold">
+  {field.label}: <span style={{ color: "red" }}>*</span>
+</label>
+                <input
+                  type={field.type}
+                  name={field.label.toLowerCase().replace(" ", "")}
+                  value={formData[field.label.toLowerCase().replace(" ", "")]}
+                  onChange={handleChange}
+                  placeholder={`Enter ${field.label}`}
+                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
+                />
+              </div>
+            ))}
           </div>
 
           {/* <div className="grid mt-3 md:grid-cols-2">
@@ -214,7 +231,7 @@ const AddUser = () => {
                 { field: "lives_here", label: "Lives Here" },
               ].map(({ field, label }, idx) => (
                 <div key={idx} className="flex flex-col gap-1">
-                  <label className="font-semibold">{label}:</label>
+                  <label className="font-semibold">{label}:<span style={{color: "red"}}>*</span></label>
                   <select
                     value={site[field]}
                     onChange={(e) =>

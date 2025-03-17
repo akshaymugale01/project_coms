@@ -717,6 +717,7 @@ import SetupUserDetails from "./pages/Setup/users/UserDetails.jsx";
 import PrivacyPolicyMycitiLife from "./pages/Setup/AboutSetup/PrivacyPolicyMycitiLife.jsx";
 import EditPageUser from "./pages/Setup/users/EditPageUser.jsx";
 import ForgotPassword from "./pages/Setup/users/ForgotPassword.jsx";
+import AdaniPrivacyPolicy from "./pages/Setup/AboutSetup/AdaniPrivacyPolicy.jsx";
 // new admin hrms
 
 function App() {
@@ -1201,6 +1202,7 @@ function App() {
           <Route path="/capital-privacy-policy-contact_us" element={<PrivacyPolicyContact />} />
           <Route path="/bhoomi-privacy-policy-contact_us" element={<PrivacyPolicyBhoomi />} />
           <Route path="/privacy-policy-myciti-life" element={<PrivacyPolicyMycitiLife />} />
+          <Route path="/adani-policy-myciti-life" element={< AdaniPrivacyPolicy />}/>
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route
