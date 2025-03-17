@@ -55,34 +55,36 @@ const BroadcastDetails = () => {
               {broadcastDetails.notice_title}
             </h1>
           </div>
-          <div className="flex flex-col bg-gray-100 p-2 rounded-md">
-            <p className="font-medium ">Description: {broadcastDetails.notice_discription}</p>
-            <p className=""></p>
+          <div className="flex flex-col gap-2">
+            <p className="font-medium">Description:</p>
+            <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-line">
+              {broadcastDetails.notice_discription}
+            </p>
           </div>
 
           <div className="grid  md:grid-cols-3 gap-4 my-4">
             <div className="grid grid-cols-2">
               <p className="font-medium ">Created By : </p>
-              <p className="">{userFisrt}{userLast}</p>
+              <p className="">
+                {userFisrt}
+                {userLast}
+              </p>
             </div>
             {/* <div className="grid grid-cols-2">
               <p className="font-medium ">Status Type:</p>
               <p className=""></p>
             </div> */}
             <div className="grid grid-cols-2">
-              <p className="font-medium">
-              Share With:{" "}
-              </p>
+              <p className="font-medium">Share With: </p>
               <p>
                 {broadcastDetails.shared === "all"
                   ? "All"
                   : broadcastDetails.group_id
-                    ? `Group: ${broadcastDetails.group_name || "Unknown"}`
-                    : broadcastDetails.users && broadcastDetails.users.length > 0
-                      ? "Individual"
-                      : "Unknown"}
+                  ? `Group: ${broadcastDetails.group_name || "Unknown"}`
+                  : broadcastDetails.users && broadcastDetails.users.length > 0
+                  ? "Individual"
+                  : "Unknown"}
               </p>
-
 
               <p className=""></p>
             </div>
@@ -96,33 +98,48 @@ const BroadcastDetails = () => {
             </div>
             <div className="grid grid-cols-2">
               <p className="font-medium ">Important:</p>
-              <p className="">
-                {broadcastDetails.important ? 'Yes' : 'No'}
-              </p>
+              <p className="">{broadcastDetails.important ? "Yes" : "No"}</p>
             </div>
           </div>
           <div className="my-2 ">
-            <p className="font-bold border-b-2 border-black my-2">Attachments</p>
-            {broadcastDetails.notice_image && broadcastDetails.notice_image.length > 0 && (
-              <div className="rounded-md ">
-                {isImage(domainPrefix + broadcastDetails.notice_image[0].document) ? (
-                  <img
-                    src={domainPrefix + broadcastDetails.notice_image[0].document}
-                    alt="event image"
-                    className="rounded-md max-h-52"
-                    onClick={() => window.open(domainPrefix + broadcastDetails.notice_image[0].document, "_blank")}
-                  />
-                ) : (<a
-                  href={domainPrefix + broadcastDetails.notice_image[0].document}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className=" hover:text-blue-400 transition-all duration-300  text-center flex flex-col items-center"
-                >
-                  <FaRegFileAlt size={50} />
-                  {getFileName(broadcastDetails.notice_image[0].document)}
-                </a>)}
-              </div>
-            )}
+            <p className="font-bold border-b-2 border-black my-2">
+              Attachments
+            </p>
+            {broadcastDetails.notice_image &&
+              broadcastDetails.notice_image.length > 0 && (
+                <div className="rounded-md ">
+                  {isImage(
+                    domainPrefix + broadcastDetails.notice_image[0].document
+                  ) ? (
+                    <img
+                      src={
+                        domainPrefix + broadcastDetails.notice_image[0].document
+                      }
+                      alt="event image"
+                      className="rounded-md max-h-52"
+                      onClick={() =>
+                        window.open(
+                          domainPrefix +
+                            broadcastDetails.notice_image[0].document,
+                          "_blank"
+                        )
+                      }
+                    />
+                  ) : (
+                    <a
+                      href={
+                        domainPrefix + broadcastDetails.notice_image[0].document
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className=" hover:text-blue-400 transition-all duration-300  text-center flex flex-col items-center"
+                    >
+                      <FaRegFileAlt size={50} />
+                      {getFileName(broadcastDetails.notice_image[0].document)}
+                    </a>
+                  )}
+                </div>
+              )}
           </div>
           <div className="my-5">
             <p className="font-bold">Shared Members List</p>

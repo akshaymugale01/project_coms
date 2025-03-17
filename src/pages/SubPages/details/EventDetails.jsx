@@ -111,12 +111,12 @@ const EventDetails = () => {
             </div>
           </div>
           <div className="flex flex-col gap-4 mx-10 m-5">
-            <div className="flex flex-col gap-2">
-              <p className="font-medium">Description:</p>
-              <p className="border-dotted border-2 rounded-md border-gray-400 p-2">
-                {eventDetails.discription}
-              </p>
-            </div>
+          <div className="flex flex-col gap-2">
+  <p className="font-medium">Description:</p>
+  <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-line">
+    {eventDetails.discription}
+  </p>
+</div>
 
 
             <div>
