@@ -56,11 +56,11 @@ const BroadcastDetails = () => {
             </h1>
           </div>
           <div className="flex flex-col gap-2">
-            <p className="font-medium">Description:</p>
-            <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-line">
-              {broadcastDetails.notice_discription}
-            </p>
-          </div>
+  <p className="font-medium">Description:</p>
+  <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-wrap">
+    {broadcastDetails.notice_discription}
+  </p>
+</div>
 
           <div className="grid  md:grid-cols-3 gap-4 my-4">
             <div className="grid grid-cols-2">
