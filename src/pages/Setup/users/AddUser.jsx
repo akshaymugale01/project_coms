@@ -21,7 +21,7 @@ const AddUser = () => {
     email: "",
     password: "",
     mobile: "",
-    userType: "",
+    userType: "unit_resident",
     site_ids: [siteId],
     user_sites: [
       {
@@ -124,6 +124,7 @@ const AddUser = () => {
         mobile: formData.mobile,
         password: formData.password,
         email: formData.email,
+        user_type: formData.userType,
         user_sites: formData.user_sites.map((site) => ({
           unit_id: site.unit_id,
           site_id: site.site_id,
