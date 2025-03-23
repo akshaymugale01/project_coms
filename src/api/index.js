@@ -89,25 +89,25 @@ export const getSiteAssetDetails = async (id) =>
   });
 
 export const sendForgotOtp = async (data) =>
-    axiosInstance.post(`/users/forgot.json`, data,{
-      params: {
-        token: token,
-      },
-});
-
-export const verifyForgotOtp = async (data) =>
-    axiosInstance.post(`/users/verify_otp.json`, data,{
-      params: {
-        token: token,
-      },
-});
-
-export const updatePassword = async (data) =>
-  axiosInstance.put(`/users/reset.json`, data,{
+  axiosInstance.post(`/users/forgot.json`, data, {
     params: {
       token: token,
     },
-});
+  });
+
+export const verifyForgotOtp = async (data) =>
+  axiosInstance.post(`/users/verify_otp.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const updatePassword = async (data) =>
+  axiosInstance.put(`/users/reset.json`, data, {
+    params: {
+      token: token,
+    },
+  });
 export const postSiteAsset = async (data) =>
   axiosInstance.post(`/site_assets.json`, data, {
     params: {
@@ -281,6 +281,27 @@ export const getHelpDeskCategoriesSetup = async () =>
     },
   });
 
+  //FitOut Request
+  export const postFitoutRequest = async (data) =>
+    axiosInstance.post(`/fitout_request.json`, data, {
+      params: {
+        token: token,
+      },
+    });
+    export const getFitoutRequest = async () =>
+      axiosInstance.get(`/fitout_request.json`, {
+        params: {
+          token: token,
+        },
+      });
+
+export const getFitOutCategoriesSetup = async () =>
+  axiosInstance.get(`/fit_out_setup_categories.json`, {
+    params: {
+      token: token,
+    },
+  });
+
 // ticket download section
 export const getTicketStatusDownload = async () =>
   axiosInstance.get(`/pms/admin/complaints/export_complaints.xlsx?`, {
@@ -314,6 +335,12 @@ export const getHelpDeskCategoriesSetupDetails = async (id) =>
       token: token,
     },
   });
+export const getFitoutCategoriesSetupDetails = async (id) =>
+  axiosInstance.get(`/fit_out_setup_categories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
 export const editHelpDeskCategoriesSetupDetails = async (id, data) =>
   axiosInstance.put(`/pms/admin/helpdesk_categories/${id}.json`, data, {
     params: {
@@ -326,8 +353,20 @@ export const postHelpDeskCategoriesSetup = async (data) =>
       token: token,
     },
   });
+export const postFitoutCategoriesSetup = async (data) =>
+  axiosInstance.post(`/fit_out_setup_categories.json`, data, {
+    params: {
+      token: token,
+    },
+  });
 export const postHelpDeskSubCategoriesSetup = async (data) =>
   axiosInstance.post(`/pms/admin/create_helpdesk_sub_category.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+export const postFitOutSubCategoriesSetup = async (data) =>
+  axiosInstance.post(`/fitout_subcategories.json`, data, {
     params: {
       token: token,
     },
@@ -375,14 +414,32 @@ export const getHelpDeskSubCategoriesSetup = async () =>
       token: token,
     },
   });
+export const getFitoutSubCategoriesSetup = async () =>
+  axiosInstance.get(`/fitout_subcategories.json`, {
+    params: {
+      token: token,
+    },
+  });
 export const getHelpDeskSubCategoriesSetupDetails = async (id) =>
   axiosInstance.get(`/pms/admin/get_sub_categories/${id}.json`, {
     params: {
       token: token,
     },
   });
+export const getFitoutSubCategoriesSetupDetails = async (id) =>
+  axiosInstance.get(`/fitout_subcategories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
 export const getHelpDeskStatusSetup = async () =>
   axiosInstance.get(`/pms/admin/helpdesk_categories/complaint_statuses.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const getFitoutStatusSetup = async () =>
+  axiosInstance.get(`/fitout_statuses.json`, {
     params: {
       token: token,
     },
@@ -396,6 +453,22 @@ export const getHelpDeskStatusDetailsSetup = async (id) =>
       },
     }
   );
+
+  export const getFitOutStatus = async (id) =>
+    axiosInstance.get(`/fitout_statuses/${id}.json`, {
+      params: {
+        token: token,
+      },
+    });
+
+    export const editFitOutStatus = async (id, data) =>
+      axiosInstance.put(`/fitout_statuses/${id}.json`, data, {
+        params: {
+          token: token,
+        },
+      });
+
+      
 export const editHelpDeskStatusDetailsSetup = async (id, data) =>
   axiosInstance.put(
     `/pms/admin/helpdesk_categories/complaint_statuses/${id}.json`,
@@ -412,6 +485,15 @@ export const postHelpDeskStatusSetup = async (data) =>
       token: token,
     },
   });
+
+export const postFitOutStatus = async (data) =>
+  axiosInstance.post(`/fitout_statuses.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+
 export const getAdminComplaints = async () =>
   axiosInstance.get(`/pms/admin/complaints.json`, {
     params: {
@@ -1104,7 +1186,7 @@ export const getFacilitySlots = async (facilityId, selectedDate) =>
     params: {
       token: token,
       amenity_id: facilityId,
-      date: selectedDate
+      date: selectedDate,
     },
   });
 
@@ -1474,13 +1556,12 @@ export const postNewVisitor = async (data) =>
   });
 
 export const getVisitorByNumber = async (mobile) =>
-  axiosInstance.get("/visitors/get_visitor.json",{
+  axiosInstance.get("/visitors/get_visitor.json", {
     params: {
       mobile: mobile,
       token: token,
     },
   });
-
 
 export const getPatrollings = async () =>
   axiosInstance.get("/patrollings.json", {

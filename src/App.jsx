@@ -718,6 +718,11 @@ import PrivacyPolicyMycitiLife from "./pages/Setup/AboutSetup/PrivacyPolicyMycit
 import EditPageUser from "./pages/Setup/users/EditPageUser.jsx";
 import ForgotPassword from "./pages/Setup/users/ForgotPassword.jsx";
 import AdaniPrivacyPolicy from "./pages/Setup/AboutSetup/AdaniPrivacyPolicy.jsx";
+import FitOutList from "./pages/FitOut/FitOutList.jsx";
+import FitOutSetup from "./pages/FitOut/FitOutSetup.jsx";
+import FitOutRequestPage from "./pages/FitOut/FitOutRequestPage.jsx";
+import FitOutChecklistPage from "./pages/FitOut/FitOutChecklistPage.jsx";
+import RequestListPage from "./pages/FitOut/RequestListPage.jsx";
 // new admin hrms
 
 function App() {
@@ -2410,6 +2415,48 @@ function App() {
             }
           />
 
+          {/* Fit Out */}
+
+          <Route 
+          path="/fitout/list"
+          element={
+            <ProtectedRoute>
+              <FitOutList />
+            </ProtectedRoute>
+          }
+          />
+
+          <Route 
+          path="/fitout/setup"
+          element={
+            <FitOutSetup />
+          }
+          />
+          <Route 
+          path="/fitout/setup/page"
+          element={
+            <FitOutSetup />
+          }
+          />
+          <Route 
+          path="/fitout/request/create"
+          element={
+            <FitOutRequestPage />
+          }
+          />
+          <Route 
+          path="/fitout/request/list"
+          element={
+            <RequestListPage />
+          }
+          />
+          <Route 
+          path="/fitout/checklist/page"
+          element={
+            <FitOutChecklistPage />
+          }
+          />
+            
           {/* document */}
           <Route
             path="/documents"
