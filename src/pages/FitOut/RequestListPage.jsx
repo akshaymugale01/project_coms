@@ -6,9 +6,14 @@ import { IoAddCircleOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import { Navbar } from "@material-tailwind/react";
 import {
+    getAllFloors,
+  getAllUnits,
+  getAllVendors,
   getAmenitiesBooking,
+  getBuildings,
   getFacitilitySetup,
   getFitoutRequest,
+  getSetupUsers,
 } from "../../api";
 import { BsEye } from "react-icons/bs";
 import { useSelector } from "react-redux";
@@ -20,6 +25,11 @@ import FitOutList from "./FitOutList";
 const RequestListPage = () => {
   const [searchText, setSearchText] = useState("");
   const [modal, showModal] = useState(false);
+  const [buildings, setBuildings] = useState([]);
+    const [floors, setFloors] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [vendors, setVendors] = useState([]);
   const [page, setPage] = useState("meetingBooking");
   const [bookings, setBookings] = useState([]); // State to hold booking data
   const [loading, setLoading] = useState(false); // Loading state
@@ -66,36 +76,73 @@ const RequestListPage = () => {
     //   sortable: true,
     // },
     {
-      name: "Building Name",
-      selector: (row) => row.building_id,
-      sortable: true,
-    },
-    {
-      name: "Floor Name",
-      selector: (row) => row.floor_id,
-      sortable: true,
-    },
-    {
-      name: "Unit Name",
-      selector: (row) => row.unit_id || "NA",
-      sortable: true,
-    },
-    {
-      name: "User Name",
-      selector: (row) => row.user_id || "NA",
-      sortable: true,
-    },
-    {
-      name: "Date",
-      selector: (row) => row?.selected_date || "NA",
-      sortable: true,
-    },
-    {
-      name: "Vendor",
-      selector: (row) => row.supplier_id,
-      sortable: true,
-    },
+        name: "Building Name",
+        selector: (row) => {
+          const building = buildings.find((b) => b.id === row.building_id);
+          return building ? building.name : "NA";
+        },
+        sortable: true,
+      },
+      {
+        name: "Floor Name",
+        selector: (row) => {
+          const floor = floors.find((f) => f.id === row.floor_id);
+          return floor ? floor.name : "NA";
+        },
+        sortable: true,
+      },
+      {
+        name: "Unit Name",
+        selector: (row) => {
+          const unit = units.find((u) => u.id === row.unit_id);
+          return unit ? unit.name : "NA";
+        },
+        sortable: true,
+      },
+      {
+        name: "User Name",
+        selector: (row) => {
+          const user = users.find((u) => u.id === row.user_id);
+          return user ? `${user.firstname} ${user.lastname}` : "NA";
+        },
+        sortable: true,
+      },
+      {
+        name: "Date",
+        selector: (row) => row?.selected_date || "NA",
+        sortable: true,
+      },
+      {
+        name: "Vendor",
+        selector: (row) => {
+          const vendor = vendors.find((v) => v.id === row.supplier_id);
+          return vendor ? vendor.vendor_name : "NA";
+        },
+        sortable: true,
+      },
   ];
+
+  const fetchDetails = async () => {
+      try {
+        const buildingsRes = await getBuildings();
+        setBuildings(buildingsRes.data);
+  
+        const floorsRes = await getAllFloors();
+        setFloors(floorsRes.data);
+  
+        const unitsRes = await getAllUnits();
+        setUnits(unitsRes.data);
+  
+        const usersRes = await getSetupUsers();
+        setUsers(usersRes.data);
+        console.log("userResp", usersRes);
+        const vendorsRes = await getAllVendors();
+        setVendors(vendorsRes.data);
+        console.log("vendor", vendorsRes);
+      } catch (error) {
+        console.error("Error fetching details:", error);
+      }
+    };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,7 +167,10 @@ const RequestListPage = () => {
       }
     };
     fetchData();
+    fetchDetails();
   }, []);
+
+  
 
   return (
     <section className="flex">

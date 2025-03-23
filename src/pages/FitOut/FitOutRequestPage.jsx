@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import {
+  getAllFloors,
+  getAllUnits,
+  getAllVendors,
   getBuildings,
   getFloors,
   getSetupUsers,
@@ -74,17 +77,18 @@ const FitOutRequestPage = () => {
       const buildingsRes = await getBuildings();
       setBuildings(buildingsRes.data);
 
-      const floorsRes = await getFloors();
+      const floorsRes = await getAllFloors();
       setFloors(floorsRes.data);
 
-      const unitsRes = await getUnits();
+      const unitsRes = await getAllUnits();
       setUnits(unitsRes.data);
 
       const usersRes = await getSetupUsers();
       setUsers(usersRes.data);
       console.log("userResp", usersRes);
-      const vendorsRes = await getVendors();
+      const vendorsRes = await getAllVendors();
       setVendors(vendorsRes.data);
+      console.log("vendor", vendorsRes);
     } catch (error) {
       console.error("Error fetching details:", error);
     }
@@ -217,7 +221,7 @@ const FitOutRequestPage = () => {
               <option value="">Select Vendor</option>
               {vendors.map((vendor) => (
                 <option key={vendor.id} value={vendor.id}>
-                  {vendor.name}
+                  {vendor.vendor_name}
                 </option>
               ))}
             </select>

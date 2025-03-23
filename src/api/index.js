@@ -179,6 +179,13 @@ export const getVendors = async () =>
       token: token,
     },
   });
+
+  export const getAllVendors = async () =>
+    axiosInstance.get("/vendors/all_vendors.json", {
+      params: {
+        token: token,
+      },
+    });  
 export const getVendorCategory = async () =>
   axiosInstance.get("/vendor_categories.json", {
     params: {
