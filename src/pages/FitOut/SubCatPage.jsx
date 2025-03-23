@@ -23,6 +23,7 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
   const [isModalOpen1, setIsModalOpen1] = useState(false);
   const openModal1 = () => setIsModalOpen1(true);
   const closeModal1 = () => setIsModalOpen1(false);
+  // const [inputValue, setInputValue] = useState("");
 
   const [isOpen, setIsOpen] = useState({
     building: false,
@@ -183,7 +184,7 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
         ...prevFormData,
         name: [...prevFormData.name, inputValue.trim()],
       }));
-      setInputValue(""); // Clear input after adding
+      setTimeout(() => setInputValue(""), 0);
     }
   };
   console.log(formData);
@@ -229,7 +230,7 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
         </div>
         <input
           type="text"
-          value={inputValue || formData.name} // Fixed: Use inputValue instead of formData.name
+          value={inputValue} 
           name="name"
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={AddSubCat}
