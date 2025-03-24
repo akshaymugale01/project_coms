@@ -83,8 +83,6 @@ const CreateBroadcast = () => {
     fetchUsers();
   }, [share]);
 
-  
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -109,7 +107,6 @@ const CreateBroadcast = () => {
     fetchData();
   }, []);
 
-
   const handleFilter = () => {
     console.log(
       "Selected Building ID:",
@@ -122,8 +119,7 @@ const CreateBroadcast = () => {
     const filtered = members.filter((member) => {
       // Check if the user belongs to the selected building
       const buildingMatch =
-        !selectedUnit ||
-        Number(member.building_id) === Number(selectedUnit);
+        !selectedUnit || Number(member.building_id) === Number(selectedUnit);
 
       // Check if any of the user's sites match the selected ownership
       const ownershipMatch =
@@ -185,12 +181,24 @@ const CreateBroadcast = () => {
 
   const navigate = useNavigate();
 
+  // const handleSelectChange = (selectedOptions) => {
+  //   const selectedIds = selectedOptions
+  //     ? selectedOptions.map((option) => option.value)
+  //     : [];
+  //   const userIdsString = selectedIds.join(",");
+  //   setFormData({ ...formData, user_ids: userIdsString });
+  // };
+
   const handleSelectChange = (selectedOptions) => {
+    setSelectedMembers(selectedOptions);
     const selectedIds = selectedOptions
       ? selectedOptions.map((option) => option.value)
       : [];
     const userIdsString = selectedIds.join(",");
-    setFormData({ ...formData, user_ids: userIdsString });
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      user_ids: userIdsString,
+    }));
   };
 
   const handleCreateBroadCast = async () => {
@@ -210,7 +218,9 @@ const CreateBroadcast = () => {
       );
       formDataSend.append("notice[expiry_date]", formData.expiry_date);
       if (share === "all") {
+        const allUserIds = users.map((user) => user.value).join(",");
         formDataSend.append("notice[shared]", "all");
+        formDataSend.append("notice[user_ids]", allUserIds);
       } else if (share === "individual") {
         formDataSend.append("notice[shared]", "individual");
         formDataSend.append("notice[user_ids]", formData.user_ids);
@@ -391,17 +401,17 @@ const CreateBroadcast = () => {
                           Filter
                         </button>
                         <Select
-                          options={filteredMembers.map((member) => ({
-                            value: member.id,
-                            label: member.name,
-                          }))}
-                          className="w-full"
-                          title="Select Members"
-                          handleSelect={handleSelectEdit}
-                          selectedOptions={selectedMembers}
-                          setSelectedOptions={setSelectedMembers}
-                          compTitle="Select Group Members"
-                        />
+  options={filteredMembers.map((member) => ({
+    value: member.id,
+    label: member.name,
+  }))}
+  className="w-full"
+  title="Select Members"
+  onChange={handleSelectChange}
+  value={selectedMembers}
+  isMulti
+/>
+
                         {/* <MultiSelect
                         options={filteredMembers.map((member) => ({
                           value: member.id,

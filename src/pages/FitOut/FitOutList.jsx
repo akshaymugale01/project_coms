@@ -47,8 +47,8 @@ const FitOutList = () => {
           >
             {isOpen ? "Fitout Request" : "📋"}
           </NavLink>
-          {/* <NavLink
-            to="/fitout/checklist/page"
+          <NavLink
+            to="/fitout/checklist/list"
             className={({ isActive }) =>
               `p-3 rounded-md transition ${
                 isActive ? "bg-white text-black" : "hover:bg-white hover:text-black"
@@ -56,7 +56,7 @@ const FitOutList = () => {
             }
           >
             {isOpen ? "Fitout Checklist" : "✅"}
-          </NavLink> */}
+          </NavLink>
         </nav>
       </div>
 
@@ -65,7 +65,7 @@ const FitOutList = () => {
         <Routes>
           <Route path="/fitout/setup/page" element={<FitOutSetupPage />} />
           <Route path="/fitout/request/list" element={<FitOutRequestPage />} />
-          <Route path="/fitout/checklist/page" element={<FitOutChecklistPage />} />
+          <Route path="/fitout/checklist/list" element={<FitOutChecklistPage />} />
         </Routes>
       </div>
     </div>

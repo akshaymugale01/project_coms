@@ -4,7 +4,7 @@ import { useNavigate, NavLink, Link } from "react-router-dom";
 import { menus } from "../utils/menus";
 import { PiFiles, PiSignOutBold } from "react-icons/pi";
 import { getItemInLocalStorage } from "../utils/localStorage";
-import { FaMoneyBill1Wave, FaMoneyBillTrendUp } from "react-icons/fa6";
+import { FaFaceGrinTongueSquint, FaMoneyBill1Wave, FaMoneyBillTrendUp } from "react-icons/fa6";
 import image from "/profile.png";
 import {
   BsBroadcast,
@@ -63,6 +63,7 @@ import {
   FaTasks,
   FaUser,
   FaUserFriends,
+  FaWrench,
 } from "react-icons/fa";
 import { IoIosPeople, IoMdSettings } from "react-icons/io";
 import { useSelector } from "react-redux";
@@ -790,7 +791,7 @@ const Navbar = () => {
                     }
                   >
                     <div>
-                      {React.createElement(IoDocumentTextOutline, {
+                      {React.createElement(FaWrench, {
                         size: "20",
                       })}
                     </div>
