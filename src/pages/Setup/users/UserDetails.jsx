@@ -17,9 +17,9 @@ const SetupUserDetails = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       const response = await getFilterUsers(id);
+    console.log("response", response);
       setFormData(response?.data || {});
     };
-
     const fetchUnits = async () => {
       const unitsResp = await getAllUnits();
       setUnits(unitsResp?.data || []);
@@ -28,7 +28,7 @@ const SetupUserDetails = () => {
     fetchUsers();
     fetchUnits();
   }, [id]);
-
+  
   return (
     <section className="flex flex-col items-center p-5 bg-gray-700">
       {/* Page Title */}
@@ -38,7 +38,7 @@ const SetupUserDetails = () => {
 
       {/* User Details Card */}
       <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mt-5 border border-gray-900">
-        <div className="flex justify-between items-center">
+        {/* <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-800">User Information</h3>
           <Link
             to={`/setup/users-edit-page/${id}`}
@@ -46,7 +46,7 @@ const SetupUserDetails = () => {
           >
             <BiEdit className="mr-1" /> Edit Details
           </Link>
-        </div>
+        </div> */}
         <div className="grid grid-cols-2 gap-4 mt-4 text-gray-700">
           <p><span className="font-semibold">First Name:</span> {formData.firstname || "N/A"}</p>
           <p><span className="font-semibold">Last Name:</span> {formData.lastname || "N/A"}</p>
