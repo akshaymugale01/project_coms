@@ -723,6 +723,7 @@ import FitOutSetup from "./pages/FitOut/FitOutSetup.jsx";
 import FitOutRequestPage from "./pages/FitOut/FitOutRequestPage.jsx";
 import FitOutChecklistPage from "./pages/FitOut/FitOutChecklistPage.jsx";
 import RequestListPage from "./pages/FitOut/RequestListPage.jsx";
+import FitoutChecklistList from "./pages/FitOut/FitoutChecklistList.jsx";
 // new admin hrms
 
 function App() {
@@ -2451,9 +2452,15 @@ function App() {
           }
           />
           <Route 
-          path="/fitout/checklist/page"
+          path="/fitout/checklist/create"
           element={
             <FitOutChecklistPage />
+          }
+          />
+          <Route 
+          path="/fitout/checklist/list"
+          element={
+            <FitoutChecklistList />
           }
           />
             

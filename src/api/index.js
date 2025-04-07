@@ -288,6 +288,21 @@ export const getHelpDeskCategoriesSetup = async () =>
     },
   });
 
+  //FitOut Checklist
+  export const postFitoutChecklist = async (data) => 
+    axiosInstance.post(`/snag_checklists.json`, data, {
+    params: {
+      token: token,
+    },
+  }); 
+  
+  export const getFitoutChecklist = async () => 
+    axiosInstance.get(`/snag_checklists.json`, {
+    params: {
+      token: token,
+    },
+  }); 
+
   //FitOut Request
   export const postFitoutRequest = async (data) =>
     axiosInstance.post(`/fitout_request.json`, data, {
