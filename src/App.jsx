@@ -724,6 +724,7 @@ import FitOutRequestPage from "./pages/FitOut/FitOutRequestPage.jsx";
 import FitOutChecklistPage from "./pages/FitOut/FitOutChecklistPage.jsx";
 import RequestListPage from "./pages/FitOut/RequestListPage.jsx";
 import FitoutChecklistList from "./pages/FitOut/FitoutChecklistList.jsx";
+import PrivacyPolicyJiologicalLocation from "./pages/Setup/AboutSetup/PrivacyPolicyJiologicalLocation.jsx";
 // new admin hrms
 
 function App() {
@@ -1201,6 +1202,7 @@ function App() {
           {/* AboutUS Pages */}
           <Route path="/setup/about_us" element={<AboutUs />} />
           <Route path="/logicon-privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/logicon-jiological-location" element={<PrivacyPolicyJiologicalLocation />} />
           <Route path="/setup/other_projects" element={<OtherProject />} />
           <Route path="/extra" element={<Slideshow />} />
           <Route path="/capital-privacy-policy" element={<PrivacyPolicyCapital />} />
