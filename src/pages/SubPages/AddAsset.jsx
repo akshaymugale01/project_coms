@@ -73,7 +73,6 @@ const AddAsset = () => {
         console.log(e);
       }
     }
-
     async function getUnit(UnitID) {
       try {
         const unit = await getUnits(UnitID);
@@ -83,7 +82,6 @@ const AddAsset = () => {
         console.log(error);
       }
     }
-
     const fetchSubGroups = async (groupId) => {
       try {
         const subGroupResponse = await getAssetSubGroups(groupId);
@@ -99,13 +97,12 @@ const AddAsset = () => {
         console.log(error);
       }
     };
-
+    
     const fetchParentAsset = async (grpID) => {
       const parentAssetResp = await getParentAsset(grpID);
       console.log(parentAssetResp.data.site_assets);
       setParentAsset(parentAssetResp.data.site_assets);
     };
-
     if (e.target.type === "select-one" && e.target.name === "building_id") {
       const BuildID = Number(e.target.value);
       await fetchFloor(BuildID);
@@ -211,12 +208,12 @@ const AddAsset = () => {
     if (formData.purchase_cost === "") {
       return toast.error("Please Enter Purchase Cost");
     }
-    if (formData.asset_group_id === "") {
-      return toast.error("Please Select Group");
-    }
-    if (formData.asset_sub_group_id === "") {
-      return toast.error("Please Select Sub Group");
-    }
+    // if (formData.asset_group_id === "") {
+    //   return toast.error("Please Select Group");
+    // }
+    // if (formData.asset_sub_group_id === "") {
+    //   return toast.error("Please Select Sub Group");
+    // }
     if (
       formData.warranty_start &&
       formData.warranty_expiry &&
@@ -664,7 +661,7 @@ const AddAsset = () => {
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
                     Group
-                    <span className="text-red-500 font-medium">*</span>
+                    {/* <span className="text-red-500 font-medium">*</span> */}
                   </label>
                   <select
                     className="border p-1 px-4 border-gray-500 rounded-md"
@@ -683,7 +680,7 @@ const AddAsset = () => {
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
                     Sub Group
-                    <span className="text-red-500 font-medium">*</span>
+                    {/* <span className="text-red-500 font-medium">*</span> */}
                   </label>
                   <select
                     className="border p-1 px-4 border-gray-500 rounded-md"
