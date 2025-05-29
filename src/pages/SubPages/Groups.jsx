@@ -17,6 +17,7 @@ import { FaTrash } from "react-icons/fa";
 import { getGroups , domainPrefix } from "../../api";
 // import groupIcon from "/groupicon.jpg";
 import { dateFormatSTD } from "../../utils/dateUtils";
+import { dom } from "@fortawesome/fontawesome-svg-core";
 function Groups() {
   const themeColor = useSelector((state) => state.theme.color);
   const [createModal, setCreateModal] = useState(false);
@@ -33,9 +34,6 @@ function Groups() {
     }
   };
 
-  useEffect(() => {
-    fetchGroups();
-  }, []);
   function truncateWithEllipses(text, maxLength = 100) {
     if (!text) return "";
     return text.length > maxLength
@@ -71,6 +69,11 @@ function Groups() {
       setFilteredData(filteredResult);
     }
   };
+
+   useEffect(() => {
+    fetchGroups();
+  }, []);
+console.log("groupData", groupData);
   return (
     <section className="flex">
       <Navbar />
@@ -105,7 +108,7 @@ function Groups() {
                   {group.cover_image && group.cover_image.length > 0 && (
                        
                       <img
-                        src={domainPrefix + group.cover_image[0].document}
+                        src={domainPrefix + group.cover_image[0].document_url}
                         className=" w-min-98 h-48 object-cover  rounded-md"
                         alt="forum-content"
                       />
