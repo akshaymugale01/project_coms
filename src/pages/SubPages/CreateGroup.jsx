@@ -14,7 +14,7 @@ function CreateGroup({ onclose }) {
   const [formData, setFormData] = useState({
     groupName: "",
     groupDescription: "",
-    attachment:"",
+    attachment: "",
   });
 
   const handleFileChange = (event) => {
@@ -58,33 +58,50 @@ function CreateGroup({ onclose }) {
     };
     fetchAllMembers();
   }, []);
-  
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
   const user_id = getItemInLocalStorage("UserId");
   const handleCreateGroup = async () => {
+    // Validation
+    if (!formData.groupName.trim()) {
+      toast.error("Group name is required");
+      return;
+    }
+    if (!formData.groupDescription.trim()) {
+      toast.error("Group description is required");
+      return;
+    }
+    if (selectedOptions.length === 0) {
+      toast.error("Please select at least one member");
+      return;
+    }
+    if (!formData.attachment) {
+      toast.error("Group profile picture is required");
+      return;
+    }
+
     const postData = new FormData();
     postData.append("group[group_name]", formData.groupName);
     postData.append("group[group_description]", formData.groupDescription);
     postData.append("group[created_by_id]", user_id);
-    selectedOptions.forEach((member)=>{
+    selectedOptions.forEach((member) => {
       postData.append("group[member_ids][]", member);
-    
-    })
+    });
     if (formData.attachment) {
       postData.append("attachment", formData.attachment);
     }
     try {
       const res = await postGroups(postData);
-      toast.success("Group created successfully")
-      onclose()
+      toast.success("Group created successfully");
+      onclose();
       setFormData({
         groupName: "",
         groupDescription: "",
-        attachment:"",
+        attachment: "",
       });
-  
+
       setSelectedOptions([]);
     } catch (error) {
       console.log(error);
@@ -101,7 +118,9 @@ function CreateGroup({ onclose }) {
 
             <div className="md:grid grid-cols-2 gap-2 mt-2 mx-2">
               <div className="flex flex-col mt-2 ">
-                <label className=" font-medium ">Group name</label>
+                <label className="font-medium">
+                  Group name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Group name"
@@ -112,9 +131,11 @@ function CreateGroup({ onclose }) {
                 />
               </div>
               <div className="flex flex-col mt-2 ">
+                <label className="font-medium">
+                  Select members <span className="text-red-500">*</span>
+                </label>
                 <MultiSelect
                   options={members}
-                  title={"Select members"}
                   handleSelect={handleSelectEdit}
                   // handleSelectAll={handleSelectAll}
                   selectedOptions={selectedOptions}
@@ -124,11 +145,11 @@ function CreateGroup({ onclose }) {
                   compTitle="Select Group Members"
                 />
               </div>
-
-              
             </div>
             <div className="flex flex-col mx-2 ">
-              <label className=" font-medium ">Description</label>
+              <label className=" font-medium ">
+                Description <span className="text-red-500">*</span>{" "}
+              </label>
               <textarea
                 name="groupDescription"
                 id=""
@@ -141,7 +162,9 @@ function CreateGroup({ onclose }) {
               ></textarea>
             </div>
             <div className="flex flex-col m-2 ">
-              <label className=" font-medium ">Group profile picture</label>
+              <label className=" font-medium ">
+                Group profile picture <span className="text-red-500">*</span>{" "}
+              </label>
               <input
                 type="file"
                 accept="image/*"
