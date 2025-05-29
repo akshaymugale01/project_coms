@@ -84,7 +84,13 @@ const Events = () => {
     },
     {
       name: "Expired",
-      selector: (row) => row.bookingStatus,
+      selector: (row) => {
+        const now = new Date();
+        const endDate = new Date(row.end_date_time);
+        return endDate < now
+          ? dateFormat(row.end_date_time)
+          : "Not expired yet";
+      },
       sortable: true,
     },
     {

@@ -1,9 +1,149 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/Navbar";
 import { useSelector } from "react-redux";
-
+import {
+  getAddressSetupDetails,
+  updateAddressSetupCamBilling,
+} from "../../../api";
+import { useNavigate, useParams } from "react-router-dom";
+import { getItemInLocalStorage } from "../../../utils/localStorage";
+import toast from "react-hot-toast";
+import FileInputBox from "../../../containers/Inputs/FileInputBox";
 function EditBillingAddress() {
+  const siteId = getItemInLocalStorage("SITEID");
+  const buildings = getItemInLocalStorage("Building");
+  const { id } = useParams();
   const themeColor = useSelector((state) => state.theme.color);
+  const [formData, setFormData] = useState({
+    title: "",
+    buildingName: "",
+    address: "",
+    state: "",
+    phone: "",
+    fax: "",
+    email: "",
+    registrationNo: "",
+    pan: "",
+    gst: "",
+    chequeInFavourOf: "",
+    notes: "",
+    accountNumber: "",
+    accountName: "",
+    accountType: "",
+    bankBranchName: "",
+    ifsc: "",
+    signature: [], // For file input
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+  useEffect(() => {
+    const fetchAddressSetupDetails = async () => {
+      try {
+        const addressSetupCamBilling = await getAddressSetupDetails(id);
+        const data = addressSetupCamBilling.data;
+        console.log(data);
+
+        setFormData({
+          title: data.title || "",
+          buildingName: data.building_id || "",
+          address: data.address || "",
+          state: data.state || "",
+          phone: data.phone_number || "",
+          fax: data.fax_number || "",
+          email: data.email_address || "",
+          registrationNo: data.registration_no || "",
+          pan: data.pan_number || "",
+          gst: data.gst_number || "",
+          chequeInFavourOf: data.cheque_in_favour_of || "",
+          notes: data.notes || "",
+          accountNumber: data.account_number || "",
+          accountName: data.account_name || "",
+          accountType: data.account_type || "",
+          bankBranchName: data.bank_branch_name || "",
+          ifsc: data.ifsc_code || "",
+          signature: data.signature || [],
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchAddressSetupDetails();
+  }, []);
+
+  const navigate = useNavigate();
+  const handleAddressSetup = async () => {
+    if (!formData.title || formData.title.trim() === "") {
+      toast.error("Title is required");
+      return;
+    }
+    if (!formData.address || formData.address.trim() === "") {
+      toast.error("Address is required");
+      return;
+    }
+    if (!formData.phone) {
+      toast.error("Phone number is required");
+      return;
+    }
+    if (!/^\d{10}$/.test(formData.phone)) {
+      toast.error("Phone number must be 10 digits");
+      return;
+    }
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Valid email address is required");
+      return;
+    }
+    if (!formData.gst || formData.gst.trim() === "") {
+      toast.error("GST number is required");
+      return;
+    }
+    const sendData = new FormData();
+    sendData.append("address_setup[title]", formData.title);
+    sendData.append("address_setup[address]", formData.address);
+    sendData.append("address_setup[building_id]", formData.buildingName);
+    sendData.append("address_setup[state]", formData.state);
+    sendData.append("address_setup[phone_number]", formData.phone);
+    sendData.append("address_setup[fax_number]", formData.fax);
+    sendData.append("address_setup[registration_no]", formData.registrationNo);
+    sendData.append("address_setup[email_address]", formData.email);
+    sendData.append("address_setup[pan_number]", formData.pan);
+    sendData.append(
+      "address_setup[cheque_in_favour_of]",
+      formData.chequeInFavourOf
+    );
+    sendData.append("address_setup[gst_number]", formData.gst);
+    sendData.append("address_setup[account_number]", formData.accountNumber);
+    sendData.append("address_setup[account_type]", formData.accountType);
+    sendData.append("address_setup[ifsc_code]", formData.ifsc);
+    sendData.append("address_setup[account_name]", formData.accountName);
+    sendData.append("address_setup[bank_branch_name]", formData.bankBranchName);
+    formData.signature.forEach((file, index) => {
+      sendData.append(`attachments[]`, file);
+    });
+
+    try {
+      const addressSetupCamBilling = await updateAddressSetupCamBilling(
+        sendData,
+        id
+      );
+      toast.success("Updated Address Setup");
+      console.log(addressSetupCamBilling);
+      navigate("/admin/billing-setup");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleFileChange = (files, fieldName) => {
+    setFormData({
+      ...formData,
+      [fieldName]: files,
+    });
+    console.log(fieldName);
+  };
+
   return (
     <section className="flex">
       <div className="hidden md:block">
@@ -11,10 +151,10 @@ function EditBillingAddress() {
       </div>
       <div className="w-full flex  flex-col overflow-hidden">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(0 19 35)" }}
           className="text-center text-xl font-bold my-5 p-2 bg-black rounded-full text-white mx-10"
         >
-         Edit Invoice Address Setup
+          Edit Invoice Address Setup
         </h2>
         <div className="flex justify-center">
           <div className="sm:border border-gray-400 p-1 md:px-10 rounded-lg w-4/5 mb-14">
@@ -31,30 +171,44 @@ function EditBillingAddress() {
                   name="title"
                   placeholder="Enter Address Title"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.title}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
-                <label htmlFor="" className="font-semibold my-2">
+                <label htmlFor="buildingName" className="font-semibold my-2">
                   Building Name
                 </label>
-                <input
-                  type="text"
+                <select
                   name="buildingName"
-                  placeholder="Enter Building Name"
+                  id="buildingName"
                   className="border p-1 px-4 border-gray-500 rounded-md"
-                />
+                  value={formData.buildingName}
+                  onChange={handleChange}
+                >
+                  <option value="" disabled selected>
+                    Select building
+                  </option>
+                  {buildings?.map((building) => (
+                    <option key={building.id} value={building.id}>
+                      {building.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-col col-span-2">
                 <label htmlFor="" className="font-semibold my-2">
                   Address
                 </label>
                 <textarea
-                  name=""
+                  name="address"
                   id=""
                   cols="5"
                   rows="3"
                   placeholder="Enter Address"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.address}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col">
@@ -65,6 +219,8 @@ function EditBillingAddress() {
                   name="state"
                   id="state"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.state}
+                  onChange={handleChange}
                 >
                   <option value="" disabled selected>
                     Select State
@@ -120,6 +276,8 @@ function EditBillingAddress() {
                   name="phone"
                   placeholder="Enter Phone Number "
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.phone}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
@@ -128,8 +286,11 @@ function EditBillingAddress() {
                 </label>
                 <input
                   type="text"
+                  name="fax"
                   placeholder="Enter Fax Number "
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.fax}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
@@ -141,6 +302,8 @@ function EditBillingAddress() {
                   name="email"
                   placeholder="Enter Email Address"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.email}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
@@ -149,9 +312,11 @@ function EditBillingAddress() {
                 </label>
                 <input
                   type="text"
-                  name="registration_no:"
+                  name="registrationNo"
                   placeholder="Enter Registration No:"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.registrationNo}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
@@ -160,8 +325,11 @@ function EditBillingAddress() {
                 </label>
                 <input
                   type="text"
+                  name="pan"
                   placeholder="Enter PAN Number  "
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.pan}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
@@ -170,8 +338,11 @@ function EditBillingAddress() {
                 </label>
                 <input
                   type="test"
+                  name="gst"
                   placeholder="Enter GST Number"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.gst}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
@@ -180,8 +351,11 @@ function EditBillingAddress() {
                 </label>
                 <input
                   type="test"
+                  name="chequeInFavourOf"
                   placeholder="Enter Cheque In Favour Of"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.chequeInFavourOf}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -191,12 +365,14 @@ function EditBillingAddress() {
                   Notes
                 </label>
                 <textarea
-                  name=""
+                  name="notes"
                   id=""
                   cols="5"
                   rows="3"
                   placeholder="Notes "
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.notes}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -214,6 +390,8 @@ function EditBillingAddress() {
                   name="accountNumber"
                   placeholder="Enter Account Number"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.accountNumber}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
@@ -225,6 +403,8 @@ function EditBillingAddress() {
                   name="accountName"
                   placeholder="Enter Account Name"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.accountName}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col">
@@ -235,6 +415,8 @@ function EditBillingAddress() {
                   name="accountType"
                   id="accountType"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.accountType}
+                  onChange={handleChange}
                 >
                   <option value="" disabled selected>
                     Select Account type
@@ -249,24 +431,39 @@ function EditBillingAddress() {
                 </label>
                 <input
                   type="text"
-                  name=""
+                  name="bankBranchName"
                   placeholder="Enter Bank & Branch Name"
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.bankBranchName}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex flex-col ">
                 <label htmlFor="" className="font-semibold my-2">
-                IFSC Code:
+                  IFSC Code:
                 </label>
                 <input
                   type="text"
+                  name="ifsc"
                   placeholder="Enter IFSC Code: "
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  value={formData.ifsc}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="flex flex-col col-span-2 ">
+                <label htmlFor="" className="font-semibold my-2">
+                  Attach Signature:
+                </label>
+                <FileInputBox
+                  handleChange={(files) => handleFileChange(files, "signature")}
+                  fieldName={"signature"}
                 />
               </div>
             </div>
             <div className="flex justify-center my-8 gap-2 ">
               <button
+                onClick={handleAddressSetup}
                 style={{ background: themeColor }}
                 className="bg-black text-white p-2 px-4 rounded-md font-medium"
               >
@@ -280,4 +477,4 @@ function EditBillingAddress() {
   );
 }
 
-export default EditBillingAddress
+export default EditBillingAddress;

@@ -728,6 +728,11 @@ import PrivacyPolicyJiologicalLocation from "./pages/Setup/AboutSetup/PrivacyPol
 import HiddenForums from "./pages/SubPages/HideForum.jsx";
 import ReportForum from "./pages/SubPages/ReportForum.jsx";
 import SavedForums from "./pages/SubPages/SavedForums.jsx";
+import BillingAddress from "./pages/Setup/BillingSetup/BillingAddress.jsx";
+import EditBillingAddress from "./pages/Setup/BillingSetup/EditBillingAddress.jsx";
+import ReceiptInvoiceCam from "./pages/RecieptInvoiceCam.jsx";
+import AddReceiptInvoiceCamBilling from "./pages/SubPages/AddReceiptInvoiceCamBilling.jsx";
+import ReceiptInvoiceDetails from "./pages/SubPages/ReceiptInvoiceDetails.jsx";
 // new admin hrms
 
 function App() {
@@ -990,28 +995,14 @@ function App() {
           />
           <Route
             path="/setup/users-setup/delete-user"
-            element={
-                <DeleteUsers />
-            }
+            element={<DeleteUsers />}
           />
           <Route
             path="/setup/users-details/:id"
-            element={
-                <SetupUserDetails />
-            }
+            element={<SetupUserDetails />}
           />
-          <Route
-            path="/setup/users-edit-page/:id"
-            element={
-                <EditPageUser />
-            }
-          />
-          <Route
-            path="/setup/forgot-password"
-            element={
-                <ForgotPassword />
-            }
-          />
+          <Route path="/setup/users-edit-page/:id" element={<EditPageUser />} />
+          <Route path="/setup/forgot-password" element={<ForgotPassword />} />
           {/* <Route
             path="/setup/users-details"
             element={
@@ -1201,19 +1192,40 @@ function App() {
             }
           />
           {/* materials */}
-          
+
           {/* AboutUS Pages */}
           <Route path="/setup/about_us" element={<AboutUs />} />
           <Route path="/logicon-privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/logicon-jiological-location" element={<PrivacyPolicyJiologicalLocation />} />
+          <Route
+            path="/logicon-jiological-location"
+            element={<PrivacyPolicyJiologicalLocation />}
+          />
           <Route path="/setup/other_projects" element={<OtherProject />} />
           <Route path="/extra" element={<Slideshow />} />
-          <Route path="/capital-privacy-policy" element={<PrivacyPolicyCapital />} />
-          <Route path="/privacy-policy-bhoomi-celestia" element={<PrivacyPolicyBhoomiCelestia />} />
-          <Route path="/capital-privacy-policy-contact_us" element={<PrivacyPolicyContact />} />
-          <Route path="/bhoomi-privacy-policy-contact_us" element={<PrivacyPolicyBhoomi />} />
-          <Route path="/privacy-policy-myciti-life" element={<PrivacyPolicyMycitiLife />} />
-          <Route path="/adani-policy-myciti-life" element={< AdaniPrivacyPolicy />}/>
+          <Route
+            path="/capital-privacy-policy"
+            element={<PrivacyPolicyCapital />}
+          />
+          <Route
+            path="/privacy-policy-bhoomi-celestia"
+            element={<PrivacyPolicyBhoomiCelestia />}
+          />
+          <Route
+            path="/capital-privacy-policy-contact_us"
+            element={<PrivacyPolicyContact />}
+          />
+          <Route
+            path="/bhoomi-privacy-policy-contact_us"
+            element={<PrivacyPolicyBhoomi />}
+          />
+          <Route
+            path="/privacy-policy-myciti-life"
+            element={<PrivacyPolicyMycitiLife />}
+          />
+          <Route
+            path="/adani-policy-myciti-life"
+            element={<AdaniPrivacyPolicy />}
+          />
           {/* booking */}
           <Route path="/bookings" element={<Booking />} />
           <Route
@@ -1236,7 +1248,7 @@ function App() {
             path="/setup/facility-details/:id"
             element={<BookingFacilityDetails />}
           />
-          
+
           <Route
             path="/setup/facility-details/edit/:id"
             element={<EditAmenitySetup />}
@@ -1549,30 +1561,30 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-           <Route
-          path="/communication/forum/hidden_forum"
-          element={
-            <ProtectedAdminRoutes>
-              <HiddenForums />
-            </ProtectedAdminRoutes>
-          }
-        />
           <Route
-          path="/communication/forum/reported_forum"
-          element={
-            <ProtectedAdminRoutes>
-              <ReportForum />
-            </ProtectedAdminRoutes>
-          }
-        />
-         <Route
-          path="/communication/forum/saved_forum"
-          element={
-            <ProtectedAdminRoutes>
-              <SavedForums />
-            </ProtectedAdminRoutes>
-          }
-        />
+            path="/communication/forum/hidden_forum"
+            element={
+              <ProtectedAdminRoutes>
+                <HiddenForums />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/communication/forum/reported_forum"
+            element={
+              <ProtectedAdminRoutes>
+                <ReportForum />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/communication/forum/saved_forum"
+            element={
+              <ProtectedAdminRoutes>
+                <SavedForums />
+              </ProtectedAdminRoutes>
+            }
+          />
           <Route
             path="/admin/communication-charbot"
             element={
@@ -1597,14 +1609,14 @@ function App() {
               </ProtectedAdminRoutes>
             }
           /> */}
-           <Route
-          path="/admin/communication-group-details/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <GroupJoinDetails />
-            </ProtectedAdminRoutes>
-          }
-        />
+          <Route
+            path="/admin/communication-group-details/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <GroupJoinDetails />
+              </ProtectedAdminRoutes>
+            }
+          />
           {/* mail room */}
           <Route path="/mail-room" element={<MailRoom />} />
           <Route
@@ -1696,7 +1708,7 @@ function App() {
             path="/assets/add-asset"
             element={
               // <ProtectedAdminRoutes>
-                <AddAsset />
+              <AddAsset />
               // </ProtectedAdminRoutes>
             }
           />
@@ -2455,52 +2467,31 @@ function App() {
 
           {/* Fit Out */}
 
-          <Route 
-          path="/fitout/list"
-          element={
-            <ProtectedRoute>
-              <FitOutList />
-            </ProtectedRoute>
-          }
+          <Route
+            path="/fitout/list"
+            element={
+              <ProtectedRoute>
+                <FitOutList />
+              </ProtectedRoute>
+            }
           />
 
-          <Route 
-          path="/fitout/setup"
-          element={
-            <FitOutSetup />
-          }
+          <Route path="/fitout/setup" element={<FitOutSetup />} />
+          <Route path="/fitout/setup/page" element={<FitOutSetup />} />
+          <Route
+            path="/fitout/request/create"
+            element={<FitOutRequestPage />}
           />
-          <Route 
-          path="/fitout/setup/page"
-          element={
-            <FitOutSetup />
-          }
+          <Route path="/fitout/request/list" element={<RequestListPage />} />
+          <Route
+            path="/fitout/checklist/create"
+            element={<FitOutChecklistPage />}
           />
-          <Route 
-          path="/fitout/request/create"
-          element={
-            <FitOutRequestPage />
-          }
+          <Route
+            path="/fitout/checklist/list"
+            element={<FitoutChecklistList />}
           />
-          <Route 
-          path="/fitout/request/list"
-          element={
-            <RequestListPage />
-          }
-          />
-          <Route 
-          path="/fitout/checklist/create"
-          element={
-            <FitOutChecklistPage />
-          }
-          />
-          <Route 
-          path="/fitout/checklist/list"
-          element={
-            <FitoutChecklistList />
-          }
-          />
-            
+
           {/* document */}
           <Route
             path="/documents"
@@ -3660,7 +3651,7 @@ function App() {
             }
           />
           <Route
-            path="/admin/add-cam-billing"
+            path="/cam_bill/add"
             element={
               <ProtectedAdminRoutes>
                 <AddCAMBilling />
@@ -3668,13 +3659,64 @@ function App() {
             }
           />
           <Route
-            path="/admin/cam-billing-details/:id"
+            path="/cam_bill/billing"
+            element={
+              <ProtectedAdminRoutes>
+                <CAMBilling />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/cam_bill/details/:id"
             element={
               <ProtectedAdminRoutes>
                 <CAMBillingDetails />
               </ProtectedAdminRoutes>
             }
           />
+          <Route
+            path="/cam_bill/reciept-invoice"
+            element={
+              <ProtectedAdminRoutes>
+                <ReceiptInvoiceCam />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/billing-address"
+            element={
+              <ProtectedAdminRoutes>
+                <BillingAddress />
+              </ProtectedAdminRoutes>
+            }
+          />
+
+          <Route
+            path="/admin/edit-billing-address/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditBillingAddress />
+              </ProtectedAdminRoutes>
+            }
+          />
+
+          <Route
+            path="/cam_bill/receipt-invoice/add"
+            element={
+              <ProtectedAdminRoutes>
+                <AddReceiptInvoiceCamBilling />
+              </ProtectedAdminRoutes>
+            }
+          />
+
+          <Route
+          path="/cam_bill/receipt-invoice/details/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <ReceiptInvoiceDetails />
+            </ProtectedAdminRoutes>
+          }
+        />
 
           {/* Invoice Approvals */}
           <Route

@@ -60,8 +60,16 @@ function CreateGroup({ onclose }) {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "groupName") {
+      // Only allow letters, numbers, and spaces
+      const cleanedValue = value.replace(/[^a-zA-Z0-9 ]/g, "");
+      setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
+
   const user_id = getItemInLocalStorage("UserId");
   const handleCreateGroup = async () => {
     // Validation
