@@ -1758,6 +1758,21 @@ export const postCamBillings = async (data) =>
     },
   });
 
+ export const getAddressSetup = async () =>
+  axiosInstance.get("/address_setups.json", {
+    params: {
+      token: token,
+    },
+  });
+  
+  export const postCamBill = async (data) =>
+  axiosInstance.post(`/cam_bills.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+
 //broadcast
 export const getBroadCast = async () =>
   axiosInstance.get("/notices.json", {
