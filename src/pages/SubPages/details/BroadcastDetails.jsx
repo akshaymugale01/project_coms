@@ -9,6 +9,7 @@ const BroadcastDetails = () => {
   const [broadcastDetails, setBroadcastDetails] = useState([]);
   const userFisrt = getItemInLocalStorage("name");
   const userLast = getItemInLocalStorage("LASTNAME");
+  const baseUrl = domainPrefix
   const { id } = useParams();
   useEffect(() => {
     const fetchBroadcastDetails = async () => {
@@ -56,11 +57,11 @@ const BroadcastDetails = () => {
             </h1>
           </div>
           <div className="flex flex-col gap-2">
-  <p className="font-medium">Description:</p>
-  <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-wrap">
-    {broadcastDetails.notice_discription}
-  </p>
-</div>
+            <p className="font-medium">Description:</p>
+            <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-wrap">
+              {broadcastDetails.notice_discription}
+            </p>
+          </div>
 
           <div className="grid  md:grid-cols-3 gap-4 my-4">
             <div className="grid grid-cols-2">
@@ -105,41 +106,23 @@ const BroadcastDetails = () => {
             <p className="font-bold border-b-2 border-black my-2">
               Attachments
             </p>
-            {broadcastDetails.notice_image &&
-              broadcastDetails.notice_image.length > 0 && (
-                <div className="rounded-md ">
-                  {isImage(
-                    domainPrefix + broadcastDetails.notice_image[0].document
-                  ) ? (
+            <div className="flex flex-wrap gap-4">
+           {Array.isArray(broadcastDetails?.notice_image) &&
+              broadcastDetails?.notice_image.length > 0 ? (
+                broadcastDetails?.notice_image
+                  .filter((img) => img && typeof img === "object" && img.document_url)
+                  .map((img, idx) => (
                     <img
-                      src={
-                        domainPrefix + broadcastDetails.notice_image[0].document
-                      }
-                      alt="event image"
-                      className="rounded-md max-h-52"
-                      onClick={() =>
-                        window.open(
-                          domainPrefix +
-                            broadcastDetails.notice_image[0].document,
-                          "_blank"
-                        )
-                      }
+                      key={idx}
+                      src={baseUrl + img.document_url}
+                      alt={`attachment-${idx}`}
+                      className="w-40 h-44 object-cover rounded border"
                     />
-                  ) : (
-                    <a
-                      href={
-                        domainPrefix + broadcastDetails.notice_image[0].document
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className=" hover:text-blue-400 transition-all duration-300  text-center flex flex-col items-center"
-                    >
-                      <FaRegFileAlt size={50} />
-                      {getFileName(broadcastDetails.notice_image[0].document)}
-                    </a>
-                  )}
-                </div>
+                  ))
+              ) : (
+                <span className="text-gray-500">No images available</span>
               )}
+              </div>
           </div>
           <div className="my-5">
             <p className="font-bold">Shared Members List</p>

@@ -192,13 +192,13 @@ const CreateEvent = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await getAssignedTo();
+        const response = await getSetupUsers();
         const transformedUsers = response.data.map((user) => ({
           value: user.id,
           label: `${user.firstname} ${user.lastname}`,
         }));
         setUsers(transformedUsers);
-        console.log(response);
+        console.log("users Resp: ", response);
       } catch (error) {
         console.error("Error fetching assigned users:", error);
       }
@@ -232,6 +232,8 @@ const CreateEvent = () => {
       console.error("Error fetching groups:", error);
     }
   };
+
+  console.log("ggp", groups);
 
   const handleGroupChange = (event) => {
     const groupId = parseInt(event.target.value, 10) || 0; // Default to 0 if value is invalid
@@ -557,8 +559,6 @@ const CreateEvent = () => {
                         Filter
                       </button>
                     </div>
-
-                    {/* Second Row: User Selection Dropdown - Now Below */}
                     <div className="w-full">
                       <Select
                         options={filteredMembers.map((member) => ({
@@ -573,6 +573,26 @@ const CreateEvent = () => {
                         placeholder="Select Group Members"
                       />
                     </div>
+                  </div>
+                )}
+                {share === "groups" && (
+                  <div className="flex flex-col gap-2 mt-2 w-full">
+                    <label htmlFor="groupSelect" className="font-medium mb-1">
+                      Select Group
+                    </label>
+                    <select
+                      id="groupSelect"
+                      className="border p-3 border-gray-300 rounded-md"
+                      value={selectedGroup}
+                      onChange={handleGroupChange}
+                    >
+                      <option value="">Select Group</option>
+                      {groups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.group_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
               </div>

@@ -16,10 +16,14 @@ const Login = () => {
   const [password, showPassword] = useState(false);
   const [page, setPage] = useState("login");
   const onChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    if (name === "email") {
+      const lowercaseOnly = /^[a-z0-9@._-]*$/;
+      if (!lowercaseOnly.test(value)) {
+        return;
+      }
+    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // useEffect(() => {
@@ -60,7 +64,7 @@ const Login = () => {
       toast.error("Please fill in all fields.");
       return;
     }
-    
+
     try {
       const response = await login({
         user: {
@@ -152,7 +156,7 @@ const Login = () => {
           ? "/employee/dashboard"
           : "/mytickets";
 
-          // toast.loading("Processing your data, please wait...");
+      // toast.loading("Processing your data, please wait...");
       setTimeout(() => {
         navigate(route);
       }, 100);
@@ -160,7 +164,6 @@ const Login = () => {
       toast.dismiss();
 
       toast.success("Login Successfully");
-      
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Login failed. Please check your credentials.");

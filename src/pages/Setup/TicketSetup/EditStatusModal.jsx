@@ -3,11 +3,12 @@ import ModalWrapper from "../../../containers/modals/ModalWrapper";
 import { BiEditAlt } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { ColorPicker } from "antd";
-import { editHelpDeskStatusDetailsSetup, getHelpDeskStatusDetailsSetup } from "../../../api";
+import { editFitOutStatus, editHelpDeskStatusDetailsSetup, getFitOutStatus, getHelpDeskStatusDetailsSetup } from "../../../api";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
 import toast from "react-hot-toast";
 
 const EditStatusModal = ({ onClose, id, setStatusAdded }) => {
+  const token = getItemInLocalStorage("token")
   const themeColor = useSelector((state) => state.theme.color);
   const [formData, setFormData] = useState({
     status: "",
@@ -22,39 +23,43 @@ const EditStatusModal = ({ onClose, id, setStatusAdded }) => {
       [e.target.name]: e.target.value,
     });
   };
-
   useEffect(() => {
     const fetchStatusDetails = async () => {
       try {
-        const detailsResp = await getHelpDeskStatusDetailsSetup(id);
+        // const token = getItemInLocalStorage("token")
+        const detailsResp = await getFitOutStatus(id);
         const detail = detailsResp.data;
-        setFormData({
-          ...formData,
-          status: detail.name,
-          color: detail.color_code,
-          fixedState: detail.fixed_state,
-          order: detail.position,
+        setFormData({ 
+          status: detail.name || "",
+          color: detail.color_code || "",
+          fixedState: detail.fixed_state || "",
+          order: detail.position || "",
         });
       } catch (error) {
         console.log(error);
+        toast.error("Failed to load status data");
       }
     };
-    fetchStatusDetails();
-  },[id]);
+  
+    if (id) {
+      fetchStatusDetails();
+    }
+  }, [id]); 
+  
   const siteID = getItemInLocalStorage("SITEID");
   const handleEditStatus = async()=>{
     const postStatus = new FormData();
-    postStatus.append("complaint_status[of_phase]", "pms");
-    postStatus.append("complaint_status[society_id]", siteID);
-    postStatus.append("complaint_status[name]", formData.status);
-    postStatus.append("complaint_status[fixed_state]", formData.fixedState);
-    postStatus.append("complaint_status[color_code]", formData.color);
-    postStatus.append("complaint_status[position]", formData.order);
+    postStatus.append("fitout_status[of_phase]", "pms");
+    postStatus.append("fitout_status[society_id]", siteID);
+    postStatus.append("fitout_status[name]", formData.status);
+    postStatus.append("fitout_status[fixed_state]", formData.fixedState);
+    postStatus.append("fitout_status[color_code]", formData.color);
+    postStatus.append("fitout_status[position]", formData.order);
     try {
-      const resp = await editHelpDeskStatusDetailsSetup(id, postStatus)
+      const resp = await editFitOutStatus(id, postStatus)
       
       setStatusAdded(true);
-      toast.success("Status Edited Successfully");
+      toast.success("Status Updated Successfully");
       setFormData({
         ...formData,
         color: "",

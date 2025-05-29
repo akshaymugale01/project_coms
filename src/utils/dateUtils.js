@@ -24,6 +24,22 @@ export function ShowFormatedDueDateOnDateField(dateString) {
   return formattedDate;
 }
 
+export function formatDateTime(dateString) {
+  const date = new Date(dateString);
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const period = hours >= 12 ? 'PM' : 'AM';
+
+  hours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
+
+  return `${day}/${month}/${year} ${hours}:${minutes} ${period}`;
+}
+
 export function FormattedDateToShowProperly(inputDateTime) {
   const date = new Date(inputDateTime);
   const options = {
@@ -96,13 +112,38 @@ export const formatTime = (dateTimeString) => {
 
 
 export const convertTo12HourFormat = (time) => {
-  const [hour, minute] = time.split(':');
+  const [hour, minute] = time?.split(':');
   const hourInt = parseInt(hour, 10);
   const period = hourInt >= 12 ? 'PM' : 'AM';
   const formattedHour = hourInt % 12 || 12; 
   return `${formattedHour}:${minute} ${period}`;
 };
 
+
+export const  convertTo12HrFormat = (timeStr) =>{
+  if (!timeStr || timeStr.trim() === "" || timeStr === "__") return "No Data";
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return "No Data";
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${ampm}`;
+}
+   
 export const formatShiftTime = (shiftStartTime, shiftEndTime) => {
   return `${convertTo12HourFormat(shiftStartTime)} - ${convertTo12HourFormat(shiftEndTime)}`;
+};
+
+
+export const dateFormatSTD = (dateString) => {
+  const date = new Date(dateString);
+
+  // Extract day, month, and year
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+  const year = String(date.getFullYear()).slice(-2); // Get last 2 digits of the year
+
+  // Return formatted date
+  return `${day}/${month}/${year}`;
 };

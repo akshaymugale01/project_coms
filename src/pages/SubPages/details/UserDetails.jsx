@@ -151,7 +151,8 @@ const UserDetails = () => {
         ) : null,
     },
   ];
-  const domainPrefix = "https://app.myciti.life";
+  // const domainPrefix = "https://app.myciti.life";
+  const domainPrefix = "http://localhost:3000";
   
   return (
     <div className="">

@@ -79,7 +79,10 @@ const Events = () => {
     },
     {
       name: "Status",
-      selector: (row) => row.scheduledTime,
+      selector: (row) => {
+        console.log("row", row);
+        return row.status.toUpperCase();
+      },
       sortable: true,
     },
     {

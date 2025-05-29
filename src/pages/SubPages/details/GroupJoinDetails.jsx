@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
-import interview from "/01.jpg";
 import Navbar from "../../../components/Navbar";
-import pic1 from "/profile1.jpg";
-import pic2 from "/profile2.jpg";
-import pic3 from "/profile3.jpg";
-import pic4 from "/profile4.jpg";
 import owners from "/owners.jpg";
-import { BsThreeDots } from "react-icons/bs";
-import { IoMdShareAlt } from "react-icons/io";
-import { PiPlus, PiPlusCircleBold } from "react-icons/pi";
+import { Navigate, useParams, useNavigate } from "react-router-dom";
+import {
+  getGroupsDetails,
+  deleteGroup,
+  domainPrefix,
+} from "../../../api/index";
+import Table from "../../../components/table/Table";
+import MultiSelect from "../../AdminHrms/Components/MultiSelect";
+import { BiEdit, BiTrash } from "react-icons/bi";
+import toast from "react-hot-toast";
+import EditGroupDetails from "../EditGroupDetails";
+
 function GroupJoinDetails() {
   const [page, setPage] = useState("empolyeeEvent");
   const dropdownRef = useRef(null);
@@ -28,6 +32,98 @@ function GroupJoinDetails() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  const { id } = useParams();
+  const [details, setDetails] = useState({});
+  const [members, setMembers] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
+
+  // const fetchGroupDetails = async () => {
+  //   try {
+  //     const res = await getGroupsDetails(id);
+  //     setDetails(res.data);
+  //     console.log(res.data.group_members);
+  //     setFilteredMembers(res.data.group_members);
+  //     setMembers(res.data.group_members);
+  //   } catch (error) {
+  //     console.log(res);
+  //   }
+  // };
+  const fetchGroupDetails = async () => {
+    try {
+      const res = await getGroupsDetails(id);
+      setDetails(res.data);
+      console.log(res.data.group_members);
+      setFilteredMembers(res.data.group_members);
+      setMembers(res.data.group_members);
+    } catch (error) {
+      console.log("Error fetching group details:", error); // Fix here
+    }
+  };
+  useEffect(() => {
+    fetchGroupDetails();
+  }, []);
+  const colors = [
+    "bg-red-100",
+    "bg-blue-100",
+    "bg-green-100",
+    "bg-yellow-100",
+    "bg-purple-100",
+  ];
+
+  const columns = [
+    // {
+    //   name: "View",
+    //   selector: (row) => (
+    //     <div>
+    //       <Link to={`/admin/employee-directory-Employment/${row.record_id}`}>
+    //         <BsEye />
+    //       </Link>
+    //     </div>
+    //   ),
+    // },
+    {
+      name: "Id",
+      selector: (row) => row.user_id,
+      sortable: true,
+    },
+    {
+      name: "Name",
+      selector: (row) => row.user_name,
+      sortable: true,
+    },
+  ];
+
+  const [searchText, setSearchText] = useState("");
+  const handleSearch = (e) => {
+    const searchValue = e.target.value;
+    setSearchText(searchValue);
+    if (searchValue.trim === "") {
+      setFilteredMembers(members);
+    } else {
+      const filteredResult = members.filter((member) =>
+        member.user_name
+          .toLowerCase()
+          .includes(searchValue.trim().toLowerCase())
+      );
+      setFilteredMembers(filteredResult);
+    }
+  };
+  const navigate = useNavigate();
+  const handleDelete = async (id) => {
+    try {
+      await deleteGroup(id);
+      // setGroups((prevForums) => prevForums.filter((item) => item.id !== id));
+      toast.success("Forum deleted successfully");
+      navigate("/communication/groups");
+    } catch (error) {
+      console.error("Error deleting the post:", error);
+      toast.error("Failed to delete the post. Please try again.");
+    }
+  };
+
+  const [editGroup, setEditGroup] = useState(false);
+  //  console.log(domainPrefix + details.cover_image[0].document)
   return (
     <section className="flex">
       <Navbar />
@@ -38,108 +134,106 @@ function GroupJoinDetails() {
               <div className="flex flex-col">
                 <div className="flex md:flex-row flex-col justify-between gap-y-3 mx-5">
                   <div className="flex gap-2">
-                    <img
-                      src={owners}
-                      className="rounded-full w-28 h-28 object-cover"
-                      alt="forum-profile"
-                    />
-                    <div>
-                      <h2 className="font-semibold text-lg">Owners</h2>
-                      <p className="font-normal ">50 Members</p>
+                    {details.cover_image && details.cover_image.length > 0 && (
+                      <img
+                        src={domainPrefix + details.cover_image[0].document}
+                        // src={owners}
+                        className="rounded-full w-28 h-28 object-cover"
+                        alt="forum-profile"
+                      />
+                    )}
+                    <div className="flex flex-col gap-3">
+                      <h2 className="font-semibold text-lg">
+                        {details.group_name}
+                      </h2>
+                      <p className="font-normal ">
+                        {details?.group_members?.length} Members
+                      </p>
                       <p className="font-normal text-gray-500">
-                        The Owners Group is a dedicated community for all
-                        property owners within the building or complex. This
-                        group serves as a platform to discuss ownership matters,
-                        share important updates, address maintenance issues, and
-                        collaborate on decisions that impact our shared spaces.
+                        {details.group_description}
                       </p>
                     </div>
                   </div>
+                  {/* <div className="flex flex-col w-96 ">
+                    <MultiSelect
+                      options={members}
+                      // title={"Select members"}
+                      handleSelect={handleSelectEdit}
+                      // handleSelectAll={handleSelectAll}
+                      selectedOptions={selectedOptions}
+                      setSelectedOptions={setSelectedOptions}
+                      setOptions={setMembers}
+                      searchOptions={filteredMembers}
+                      compTitle="Select Group Members"
+                    />
+                  </div> */}
 
-                  <div className="w-72">
-                    <button className="border-2 border-black p-1 px-3 rounded-md w-full flex items-center gap-2">
-                      <PiPlusCircleBold /> Add Member
+                  <div className="">
+                    <button className="mx-2" onClick={() => setEditGroup(true)}>
+                      <BiEdit size={20} />
+                    </button>
+                    <button className="mx-2" onClick={() => handleDelete(id)}>
+                      <BiTrash size={20} />
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center my-8 mx-5">
-                  <div className="relative">
-                    <img src={pic1} className="w-10 h-10 rounded-full" alt="" />
-                  </div>
-                  <div className="relative right-4">
-                    <img src={pic2} className="w-10 h-10 rounded-full" alt="" />
-                  </div>
-                  <div className="relative right-8">
-                    <img src={pic3} className="w-10 h-10 rounded-full" alt="" />
-                  </div>
-                  <div className="relative right-12">
-                    <img src={pic4} className="w-10 h-10 rounded-full" alt="" />
-                  </div>
-                  <div className="mt-2 md:relative right-10">
-                    <h2 className="font-semibold md:inline-block block ">
-                      Carolyn Ortiz, Frances Guerrero, and 20 joined group
-                    </h2>
-                  </div>
+                <div className="flex items-center m-1">
+                  {details?.group_members?.slice(0, 5)?.map((member, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-md border-red-400"
+                      // className={`w-10 h-10 flex items-center justify-center border ${
+                      //   colors[index % colors.length]
+                      // } text-gray-800 font-medium text-lg`}
+                    >
+                      <div
+                        className={`w-10 h-10 flex items-center justify-center border border-red-400 rounded-md ${
+                          colors[index % colors.length]
+                        } text-gray-800 font-medium text-lg`}
+                      >
+                        {member.user_name
+                          ? member.user_name[0].toUpperCase()
+                          : "?"}
+                      </div>
+                    </div>
+                  ))}
+                  {details?.group_members?.length > 5 && (
+                    <div className="w-10 h-10 flex items-center justify-center border border-white bg-gray-200 text-gray-800 font-medium text-lg rounded-md">
+                      +{details.group_members.length - 5}
+                    </div>
+                  )}
                 </div>
                 <div className="border-t border-gray-400 ">
-                  {/* <div className="mt-5 flex flex-wrap justify-around">
-                    <h2
-                      className={`p-1 ${
-                        page === "empolyeePolls" &&
-                        "bg-white text-blue-500 shadow-custom-all-sides"
-                      } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
-                      onClick={() => setPage("empolyeePolls")}
-                    >
-                      Discussion
-                    </h2>
-                    <h2
-                      className={`p-1 ${
-                        page === "xyz" &&
-                        "bg-white text-blue-500 shadow-custom-all-sides"
-                      } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
-                      onClick={() => setPage("xyz")}
-                    >
-                      Post
-                    </h2>
-                    <h2
-                      className={`p-1 ${
-                        page === "abc" &&
-                        "bg-white text-blue-500 shadow-custom-all-sides"
-                      } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
-                      onClick={() => setPage("abc")}
-                    >
-                      People
-                    </h2>
-                    <h2
-                      className={`p-1 ${
-                        page === "qrs" &&
-                        "bg-white text-blue-500 shadow-custom-all-sides"
-                      } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
-                      onClick={() => setPage("qrs")}
-                    >
-                      About
-                    </h2>
-                    <h2
-                      className={`p-1 ${
-                        page === "Media" &&
-                        "bg-white text-blue-500 shadow-custom-all-sides"
-                      } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
-                      onClick={() => setPage("Media")}
-                    >
-                      Media
-                    </h2>
-                  </div> */}
                   <div className="p-2">
                     <h2 className="font-medium border-b">Members List</h2>
-                    <div>
-                      
+                    <div className="my-2 ">
+                      <input
+                        type="text"
+                        name=""
+                        value={searchText}
+                        id=""
+                        className="border border-gray-400 rounded-md p-2 w-full "
+                        placeholder="Search by name"
+                        onChange={handleSearch}
+                      />
                     </div>
+                    <Table
+                      columns={columns}
+                      data={filteredMembers}
+                      isPagination={true}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        {editGroup && (
+          <EditGroupDetails
+            onclose={() => setEditGroup(false)}
+            fetchGroupDetails={fetchGroupDetails}
+          />
+        )}
       </div>
     </section>
   );

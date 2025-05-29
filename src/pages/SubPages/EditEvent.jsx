@@ -10,6 +10,9 @@ import {
   getAssignedTo,
   getEventsDetails,
   editEventDetails,
+  domainPrefix,
+  getSetupUsers,
+  getGroups,
 } from "../../api";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
@@ -23,6 +26,8 @@ const EditEvent = () => {
   const siteId = getItemInLocalStorage("SITEID");
   const [share, setShare] = useState("all");
   const [users, setUsers] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [selectedOption, setSelectedOption] = useState([]);
   const [formData, setFormData] = useState({
     site_id: siteId,
@@ -36,8 +41,12 @@ const EditEvent = () => {
     end_date_time: "",
     user_ids: "",
     event_image: [],
+    group_id: "",
+    group_name: "",
   });
 
+  // const baseUrl = "http://localhost:3000"; // Replace with your actual base URL
+  const baseUrl = domainPrefix;
   console.log(formData);
   const fileInputRef = useRef(null);
   const themeColor = useSelector((state) => state.theme.color);
@@ -52,6 +61,16 @@ const EditEvent = () => {
     setFormData({ ...formData, end_date_time: date });
   };
 
+    const fetchGroups = async () => {
+      try {
+        const response = await getGroups(); // Assuming your API to get groups
+        setGroups(response.data || []); // Adjust based on actual API response structure
+        console.log("group", response);
+      } catch (error) {
+        console.error("Error fetching groups:", error);
+      }
+    };
+
   const formatDateTime = (date) => {
     return format(date, "yyyy-MM-dd HH:mm:ss");
   };
@@ -61,7 +80,7 @@ const EditEvent = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await getAssignedTo();
+        const response = await getSetupUsers();
         const transformedUsers = response.data.map((user) => ({
           value: user.id,
           label: `${user.firstname} ${user.lastname}`,
@@ -79,15 +98,17 @@ const EditEvent = () => {
         const response = res.data;
         setFormData({
           ...formData,
-          event_name: response.event_name || '',
-          description: response.discription || '',
+          event_name: response.event_name || "",
+          description: response.discription || "",
+          group_id: response.group_id || "",
+          group_name: response.group_name || "",
           end_date_time: response.end_date_time
             ? new Date(response.end_date_time)
             : null,
           start_date_time: response.start_date_time
             ? new Date(response.start_date_time)
             : null,
-          event_image: response.event_image || null,
+          event_image: response?.event_images || null,
           venue: response.venue || "",
           important: response.important || false,
           email_enabled: response.email_enabled || false,
@@ -99,7 +120,14 @@ const EditEvent = () => {
     };
     fetchUsers();
     fetchEvent();
+    fetchGroups();
   }, []);
+
+    const handleGroupChange = (event) => {
+    const groupId = parseInt(event.target.value, 10) || 0; // Default to 0 if value is invalid
+    setSelectedGroup(event.target.value);
+    setFormData({ ...formData, group_id: groupId });
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -127,6 +155,7 @@ const EditEvent = () => {
       );
       formDataSend.append("event[venue]", formData.venue);
       formDataSend.append("event[user_ids]", formData.user_ids);
+      formDataSend.append("event[group_id]", formData.group_id);
 
       // formData.user_ids.forEach((user_id) => {
       //   formDataSend.append("event[user_ids]", user_id);
@@ -183,11 +212,10 @@ const EditEvent = () => {
     }
   };
 
-
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    // const inputValue = type === 'checkbox' ? checked : type === 'radio' ? checked : value; 
+    // const inputValue = type === 'checkbox' ? checked : type === 'radio' ? checked : value;
 
     setFormData((prevData) => ({
       ...prevData,
@@ -201,7 +229,6 @@ const EditEvent = () => {
       rsvp_enabled: value,
     }));
   };
-
 
   const handleFileChange = (files, fieldName) => {
     setFormData({
@@ -301,11 +328,13 @@ const EditEvent = () => {
 
             <div className="flex gap-4 my-5">
               <div className="flex gap-2 items-center">
-                <input type="checkbox"
+                <input
+                  type="checkbox"
                   name="important"
                   checked={formData.important}
                   onChange={handleInputChange}
-                  id="imp" />
+                  id="imp"
+                />
                 <label htmlFor="imp" className="font-semibold">
                   Important
                 </label>
@@ -338,22 +367,25 @@ const EditEvent = () => {
               <div className="flex flex-col items-center justify-center">
                 <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                   <h2
-                    className={`p-1 ${share === "all" && "bg-black text-white"
-                      } rounded-full px-6 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "all" && "bg-black text-white"
+                    } rounded-full px-6 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("all")}
                   >
                     All
                   </h2>
                   <h2
-                    className={`p-1 ${share === "individual" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "individual" && "bg-black text-white"
+                    } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("individual")}
                   >
                     Individuals
                   </h2>
                   <h2
-                    className={`p-1 ${share === "groups" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "groups" && "bg-black text-white"
+                    } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("groups")}
                   >
                     Groups
@@ -373,7 +405,26 @@ const EditEvent = () => {
                       className="w-full"
                     />
                   )}
-                  {share === "groups" && <p>list of groups</p>}
+                  {share === "groups" && (
+                  <div className="flex flex-col gap-2 mt-2 w-full">
+                    <label htmlFor="groupSelect" className="font-medium mb-1">
+                      Select Group
+                    </label>
+                    <select
+                      id="groupSelect"
+                      className="border p-3 border-gray-300 rounded-md"
+                      value={selectedGroup}
+                      onChange={handleGroupChange}
+                    >
+                      <option value="">Select Group</option>
+                      {groups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.group_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 </div>
               </div>
             </div>
@@ -407,12 +458,40 @@ const EditEvent = () => {
                   </label>
                 </div>
               </div>
-
             </div>
+
+            {/* <div>
+              <h2 className="border-b text-xl border-black my-5 font-semibold">
+                Upload Attachments
+              </h2>
+              <FileInputBox
+                fieldName={"event_image"}
+                handleChange={(files) => handleFileChange(files, "event_image")}
+                fileType="image/*"
+              />
+            </div> */}
             <div>
               <h2 className="border-b text-xl border-black my-5 font-semibold">
                 Upload Attachments
               </h2>
+              {Array.isArray(formData.event_image) &&
+                formData.event_image.length > 0 && (
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    {formData.event_image
+                      .filter(
+                        (img) =>
+                          img && typeof img === "object" && img.document_url
+                      )
+                      .map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={baseUrl + img.document_url}
+                          alt={`attachment-${idx}`}
+                          className="w-24 h-24 object-cover rounded border"
+                        />
+                      ))}
+                  </div>
+                )}
               <FileInputBox
                 fieldName={"event_image"}
                 handleChange={(files) => handleFileChange(files, "event_image")}

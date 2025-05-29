@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
-import { editSetupUsers, getAllUnits, getSetupUsers, getSites } from '../../../api';
+import { editSetupUsers, getAllUnits, getFilterUsers, getSetupUsers, getSites } from '../../../api';
 import { RiDeleteBin5Line } from 'react-icons/ri';
 import { getItemInLocalStorage } from '../../../utils/localStorage';
 import toast from 'react-hot-toast';
@@ -35,7 +35,9 @@ const EditPageUser = () => {
         console.log("id", id);
         
           const fetchUsers = async () => {
-            const response = await getSetupUsers(id);
+            const response = await getFilterUsers(id);
+            console.log("Response", response);
+            setFormData(response?.data || {});
             const units = await getAllUnits();
             const unitsData = units.data
             setUnits(unitsData);
@@ -45,8 +47,7 @@ const EditPageUser = () => {
             const data = response.data;
             console.log("Units", units);
             console.log("Sites", sites);
-            const user = data.find((item) => item.id);
-            setFormData(user);
+            // const user = data.find((item) => item.id);
             // console.log("Response Id", user);
           };
           useEffect(() => {
@@ -152,6 +153,8 @@ const EditPageUser = () => {
       toast.error("Failed to Update user.");
     }
   };
+
+  console.log("fomrData", formData);
   return (
    <section className="flex">
       {/* <Navbar /> */}

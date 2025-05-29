@@ -725,6 +725,9 @@ import FitOutChecklistPage from "./pages/FitOut/FitOutChecklistPage.jsx";
 import RequestListPage from "./pages/FitOut/RequestListPage.jsx";
 import FitoutChecklistList from "./pages/FitOut/FitoutChecklistList.jsx";
 import PrivacyPolicyJiologicalLocation from "./pages/Setup/AboutSetup/PrivacyPolicyJiologicalLocation.jsx";
+import HiddenForums from "./pages/SubPages/HideForum.jsx";
+import ReportForum from "./pages/SubPages/ReportForum.jsx";
+import SavedForums from "./pages/SubPages/SavedForums.jsx";
 // new admin hrms
 
 function App() {
@@ -1546,6 +1549,30 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
+           <Route
+          path="/communication/forum/hidden_forum"
+          element={
+            <ProtectedAdminRoutes>
+              <HiddenForums />
+            </ProtectedAdminRoutes>
+          }
+        />
+          <Route
+          path="/communication/forum/reported_forum"
+          element={
+            <ProtectedAdminRoutes>
+              <ReportForum />
+            </ProtectedAdminRoutes>
+          }
+        />
+         <Route
+          path="/communication/forum/saved_forum"
+          element={
+            <ProtectedAdminRoutes>
+              <SavedForums />
+            </ProtectedAdminRoutes>
+          }
+        />
           <Route
             path="/admin/communication-charbot"
             element={
@@ -1562,14 +1589,22 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-          <Route
+          {/* <Route
             path="/admin/communication-group-details"
             element={
               <ProtectedAdminRoutes>
                 <GroupJoinDetails />
               </ProtectedAdminRoutes>
             }
-          />
+          /> */}
+           <Route
+          path="/admin/communication-group-details/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <GroupJoinDetails />
+            </ProtectedAdminRoutes>
+          }
+        />
           {/* mail room */}
           <Route path="/mail-room" element={<MailRoom />} />
           <Route
@@ -1660,9 +1695,9 @@ function App() {
           <Route
             path="/assets/add-asset"
             element={
-              <ProtectedAdminRoutes>
+              // <ProtectedAdminRoutes>
                 <AddAsset />
-              </ProtectedAdminRoutes>
+              // </ProtectedAdminRoutes>
             }
           />
           <Route

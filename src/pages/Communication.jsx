@@ -126,11 +126,11 @@ const Communication = () => {
           <Notification/>
         </Link> */}
         
-        <Link to={`/admin/communication-charbot`}>
+        {/* <Link to={`/admin/communication-charbot`}>
           <div  className="fixed bottom-10 right-5  z-20">
             <BsFillChatRightTextFill size={36} color={themeColor}/>
           </div>
-        </Link>
+        </Link> */}
         
         {/* {page === "event" && (
           <div>

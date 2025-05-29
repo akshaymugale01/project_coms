@@ -35,21 +35,71 @@ const RequestListPage = () => {
   const [loading, setLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
   const [bookingFacility, setBookingFacility] = useState([]);
+  const [originalBookings, setOriginalBookings] = useState([]); 
   const themeColor = useSelector((state) => state.theme.color);
 
   const userName = useState("Name");
   const LastName = useState("LASTNAME");
 
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch Bookings
+        const Response = await getFitoutRequest();
+        console.log("Fitout Response:", Response);
+        setBookings(Response?.data || []);
+        setOriginalBookings(Response?.data || []); 
+
+        // Fetch Facility Setup
+        //   const facilityResponse = await getFacitilitySetup();
+        //   console.log("Facility Setup Response:", facilityResponse);
+        //   setBookingFacility(facilityResponse?.data || []);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(`Failed to fetch data: ${error.message || error}`);
+        setLoading(false);
+      }
+    };
+    fetchData();
+    fetchDetails();
+  }, []);
+
   // Handle Search
   const handleSearch = (event) => {
-    const searchValue = event.target.value;
+    const searchValue = event.target.value.toLowerCase();
     setSearchText(searchValue);
-
-    //   const filteredResults = sortedData.filter((item) =>
-    //     item.fac_name.toLowerCase().includes(searchValue.toLowerCase())
-    //   );
-    //   setBookings(filteredResults);
+  
+    if (!searchValue) {
+      setBookings(originalBookings);
+      return;
+    }
+  
+    const filteredResults = originalBookings.filter((item) => {
+      const building = buildings.find((b) => b.id === item.building_id)?.name || "";
+      const floor = floors.find((f) => f.id === item.floor_id)?.name || "";
+      const unit = units.find((u) => u.id === item.unit_id)?.name || "";
+      const user = users.find((u) => u.id === item.user_id);
+      const userName = user ? `${user.firstname} ${user.lastname}` : "";
+      const vendor = vendors.find((v) => v.id === item.supplier_id)?.vendor_name || "";
+  
+      // Check if the search value matches any of the fields
+      return (
+        building.toLowerCase().includes(searchValue) ||
+        floor.toLowerCase().includes(searchValue) ||
+        unit.toLowerCase().includes(searchValue) ||
+        userName.toLowerCase().includes(searchValue) ||
+        vendor.toLowerCase().includes(searchValue)
+      );
+    });
+  
+    setBookings(filteredResults);
   };
+  
 
   // Columns for DataTable
   const columns = [
@@ -109,9 +159,9 @@ const RequestListPage = () => {
       },
       {
         name: "Date",
-        selector: (row) => row?.selected_date || "NA",
+        selector: (row) => row?.selected_date ? new Date(row.selected_date).toISOString().split("T")[0] : "NA",
         sortable: true,
-      },
+      },      
       {
         name: "Vendor",
         selector: (row) => {
@@ -144,32 +194,6 @@ const RequestListPage = () => {
       }
     };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch Bookings
-        const Response = await getFitoutRequest();
-        console.log("Fitout Response:", Response);
-        setBookings(Response?.data || []);
-
-        // Fetch Facility Setup
-        //   const facilityResponse = await getFacitilitySetup();
-        //   console.log("Facility Setup Response:", facilityResponse);
-        //   setBookingFacility(facilityResponse?.data || []);
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(`Failed to fetch data: ${error.message || error}`);
-        setLoading(false);
-      }
-    };
-    fetchData();
-    fetchDetails();
-  }, []);
-
   
 
   return (
@@ -178,15 +202,7 @@ const RequestListPage = () => {
       <div className="w-full flex m-3 flex-col overflow-hidden">
         <div className="flex justify-center">
           <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200">
-            <h2
-              className={`p-1 ${
-                page === "meetingBooking" &&
-                "bg-white text-blue-500 shadow-custom-all-sides"
-              } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
-              onClick={() => setPage("meetingBooking")}
-            >
-              Fitout Request
-            </h2>
+           
           </div>
         </div>
         {page === "meetingBooking" && (
@@ -194,7 +210,7 @@ const RequestListPage = () => {
             <div className="flex gap-2 items-center">
               <input
                 type="text"
-                placeholder="Search By Facility"
+                placeholder="Search By Name"
                 className="border p-2 w-full border-gray-300 rounded-lg"
                 value={searchText}
                 onChange={handleSearch}

@@ -14,14 +14,14 @@ export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 const token = getItemInLocalStorage("TOKEN");
 */
 export const API_URL = "https://app.myciti.life";
-// export const API_URL = "http://localhost:3002";
+// export const API_URL = "http://localhost:3000";
 export const vibeMedia = "https://app.myciti.life/api/media/";
 export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
 const token = getItemInLocalStorage("TOKEN");
 console.log(token);
 export const domainPrefix = "https://app.myciti.life";
-// export const domainPrefix = "http://localhost:3002";
+// export const domainPrefix = "http://localhost:3000";
 
 // export const domainPrefix = "http://13.215.74.38";
 export const login = async (data) => axiosInstance.post("/login.json", data);
@@ -1723,6 +1723,27 @@ export const getGroups = async (id) =>
     },
   });
 
+export const getGroupsDetails = async (id) => {
+  return axiosInstance.get(`/groups/${id}.json?token=${token}`, {});
+};
+
+export const editGroups = async (id, data) => {
+  // const token = getItemInLocalStorage("token"); // Ensure token retrieval is correct
+  return axiosInstance.put(`/groups/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+};
+
+export const deleteGroup = async (id) =>
+  axiosInstance.delete(`/groups/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
 // Cam Bilings
 export const getCamBillings = async (id) =>
   axiosInstance.get("/cam_bills.json", {
@@ -2567,7 +2588,7 @@ export const editAddress = async (id, data) =>
 
 // vibe
 
-export const vibeLogin = async (data) => vibeAuth.post("/api/login/", data);
+export const vibeLogin = async (data) => vibeAuth.post("/login/", data);
 
 // VIBE CALENDAR
 export const getVibeCalendar = async (vibeUserId) => {
@@ -7558,6 +7579,138 @@ export const getForum = async () =>
       token: token,
     },
   });
+
+export const hideForum = async (forumId) =>
+  axiosInstance.post(
+    `/forums/${forumId}/hide.json?token=${token}`
+    // {}
+  );
+
+  export const deleteForum = async (forumId) =>
+  axiosInstance.delete(`/forums/${forumId}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const PostSavedForum = async (forumId) =>
+  axiosInstance.post(`/forums/${forumId}/save_for_later.json?token=${token}`, {
+    // params: {
+    //   token: token,
+    // },
+  });
+
+  export const likeForum = async (forumId) => {
+  try {
+    const res = await axiosInstance.post(
+      `forums/${forumId}/toggle_like.json?token=${token}`
+    );
+    return res.data;
+  } catch (error) {
+    console.log("Error is occuring :", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getComments = async (forumId) => {
+  try {
+    const response = await axiosInstance.get(
+      `/forums/${forumId}/forum_comments.json/`,
+      {
+        params: {
+          token: token,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error :", error);
+    throw error;
+  }
+};
+
+export const addComment = async (forumId, commentText, userId) => {
+  try {
+    // Create FormData object with the correct parameter structure
+    const formData = new FormData();
+    formData.append("forum_comment[comment]", commentText);
+    // Changed from forum_comments to forum_comment
+    formData.append("forum_comment[user_id]", userId);
+    // Changed from forum_comments to forum_comment
+    const response = await axiosInstance.post(
+      `/forums/${forumId}/forum_comments.json`,
+      formData,
+      {
+        params: {
+          token: token,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error posting the comment:", error);
+    throw error;
+  }
+};
+
+export const deleteComment = async (forumId, id) =>
+  axiosInstance.delete(
+    `/forums/${forumId}/forum_comments/${id}.json?token=${token}`
+  );
+
+export const updateComment = async (forumId) =>
+  axiosInstance.put(`/forums/${forumId}/forum_comments.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
+  export const getHiddenForums = async () =>
+  axiosInstance.get(`/forums/visibility_status.json?token=${token}`);
+
+export const unhideForum = async (forumId) =>
+  axiosInstance.post(`forums/${forumId}/unhide.json?token=${token}`);
+
+
+export const unsaveForum = async (forumId) =>
+  axiosInstance.delete(`forums/${forumId}/unsave.json?token=${token}`, {
+    // params: {
+    //   token: token,
+    // },
+  });
+
+  export const getSavedForum = async (forumId) => {
+  try {
+    const response = await axiosInstance.get(
+      `/forums/saved_forums.json?token=${token}`
+    );
+    console.log("API Response:", response.data); // Log API data to verify structure
+
+    if (Array.isArray(response.data)) {
+      return response.data; // Return array directly
+    } else {
+      throw new Error("API response is not an array");
+    }
+  } catch (error) {
+    console.error("Error fetching saved forums:", error.message || error);
+    return [];
+  }
+};
+
+export const GetAllReportedForum = async () => {
+  try {
+    const response = await axiosInstance.get(`/admin/forum_reports.json`, {
+      params: {
+        token: token, // Ensure `token` is defined and valid
+      },
+    });
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error fetching reported forums:", error.message || error);
+    throw error; // Propagate the error to the calling function
+  }
+};
 
 export const downloadAsset = async () =>
   axiosInstance.get(`/site_assets/export.xlsx/`, {
