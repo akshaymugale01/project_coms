@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { getExpectedVisitor, getStaff, postGoods } from "../../api";
+import {
+    domainPrefix,
+  getExpectedVisitor,
+  getGoodsDetails,
+  getStaff,
+  postGoods,
+  putGoodsDetails,
+} from "../../api";
 import Navbar from "../../components/Navbar";
 import { useSelector } from "react-redux";
 import FileInputBox from "../../containers/Inputs/FileInputBox";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { useNavigate } from "react-router-dom";
-const AddGoods = () => {
+import { useNavigate, useParams } from "react-router-dom";
+import { Edit } from "lucide-react";
+const EditGoodsInOut = () => {
+  const { id } = useParams(); // get the record ID from the URL
   const [visitors, setVisitors] = useState([]);
   const [staff, setStaff] = useState([]);
   const themeColor = useSelector((state) => state.theme.color);
@@ -25,6 +34,8 @@ const AddGoods = () => {
     description: "",
     documents: [],
   });
+  const [prevFiles, setPrevFiles] = useState([]);
+
   useEffect(() => {
     const fetchVisitor = async () => {
       try {
@@ -38,6 +49,8 @@ const AddGoods = () => {
         console.log(error);
       }
     };
+
+    console.log("visitors", visitors);
     const fetchStaff = async () => {
       try {
         const staffRes = await getStaff();
@@ -50,9 +63,44 @@ const AddGoods = () => {
         console.log(error);
       }
     };
+    const fetchGoodsDetails = async () => {
+      try {
+        const res = await getGoodsDetails(id); // You need to implement this API call
+        const data = res.data;
+
+        setFormData({
+          visitorId: data.visitor_id || "",
+          noOfGoods: data.no_of_goods || "",
+          wardType: data.ward_type || "",
+          vehicleNumber: data.vehicle_no || "",
+          personName: data.person_name || "",
+          staffId: data.staff_id || "",
+          description: data.description || "",
+          documents: [], // You may want to handle existing docs differently
+        });
+
+        // Set selected visitor/staff for react-select
+        if (data.visitor_id) {
+          setSelectedVisitor({
+            value: data.visitor_id,
+            label: data.visitor_name,
+          });
+        }
+        if (data.staff_id) {
+          setSelectedStaff({ value: data.staff_id, label: data.staff_name });
+        }
+        setWard(data.ward_type || "in");
+        setType(data.visitor_id ? "visitor" : "staff");
+        setPrevFiles(data.goods_files || []);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchGoodsDetails();
     fetchStaff();
     fetchVisitor();
-  }, []);
+  }, [id]);
   const handleFileChange = (files, fieldName) => {
     // Changed to receive 'files' directly
     setFormData({
@@ -62,24 +110,31 @@ const AddGoods = () => {
     console.log(fieldName);
   };
 
+  useEffect(() => {
+    if (visitors.length && formData.visitorId) {
+      const match = visitors.find((v) => v.value === formData.visitorId);
+      setSelectedVisitor(match || null);
+    }
+  }, [visitors, formData.visitorId]);
+
   const handleVisitorSelection = (selectedOption) => {
-    console.log(selectedOption)
+    console.log(selectedOption);
     setSelectedVisitor(selectedOption);
   };
   const handleStaffSelection = (selectedOption) => {
     setSelectedStaff(selectedOption);
   };
   const userId = getItemInLocalStorage("UserId");
-  const navigate = useNavigate()
-  const handleAddGoodsInOut = async () => {
+  const navigate = useNavigate();
+
+  const handleEditGoodsInOut = async () => {
     if ((!selectedVisitor && !selectedStaff) || !formData.noOfGoods) {
       return toast.error("Please Provide all the data!");
     }
     const postData = new FormData();
-   
-        const visitorId = selectedVisitor.value;
-        postData.append("goods_in_out[visitor_id]", visitorId);
-    
+    const visitorId = selectedVisitor.value;
+    postData.append("goods_in_out[visitor_id]", visitorId);
+
     postData.append("goods_in_out[no_of_goods]", formData.noOfGoods);
     postData.append("goods_in_out[description]", formData.description);
     postData.append("goods_in_out[ward_type]", ward);
@@ -91,25 +146,23 @@ const AddGoods = () => {
     formData.documents.forEach((docs) => {
       postData.append("goods_files[]", docs);
     });
-   try {
-     const postRes = await postGoods(postData)
-     console.log(postRes)
-     toast.success("Goods added successfully")
-     navigate("/admin/passes/goods-in-out")
-   } catch (error) {
-    console.log(error)
-   }
-
+    try {
+      await putGoodsDetails(id, postData); // You need to implement this API call
+      toast.success("Goods updated successfully");
+      navigate("/admin/passes/goods-in-out");
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const handleChange =(e)=>{
-setFormData({...formData, [e.target.name]: e.target.value})
-  }
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   return (
     <section className="flex">
-        <div className="hidden md:block">
-      <Navbar />
-        </div>
+      <div className="hidden md:block">
+        <Navbar />
+      </div>
       <div className=" w-full flex md:mx-3 flex-col overflow-hidden">
         <div className="flex justify-center items-center my-2 w-full md:p-2">
           <div className="md:border border-gray-300 rounded-lg md:p-4 p-2 w-full md:mx-4">
@@ -171,8 +224,9 @@ setFormData({...formData, [e.target.name]: e.target.value})
                   </label>
                   <Select
                     options={visitors}
+                    value={selectedVisitor}
                     onChange={handleVisitorSelection}
-                    noOptionsMessage={() => "Visitors nor available..."}
+                    noOptionsMessage={() => "Visitors not available..."}
                   />
                 </div>
               ) : (
@@ -244,11 +298,41 @@ setFormData({...formData, [e.target.name]: e.target.value})
             </div>
 
             <div className="grid gap-2 items-center w-full mt-2">
-              <label htmlFor="" className="font-semibold">
-                Documents
-              </label>
+              <label className="font-semibold">Documents</label>
+
+              {/* Show previously uploaded files */}
+              {prevFiles.length > 0 && (
+                <div className="flex flex-wrap gap-3 mb-2">
+                  {prevFiles.map((file) => (
+                    <div key={file.id} className="flex items-center gap-2">
+                      <a
+                        href={domainPrefix + file.document}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        {/* {file.document.split("/").pop().split("?")[0]} */}
+                      </a>
+                      <img
+                        src={domainPrefix + file.document}
+                        alt="Uploaded"
+                        className="w-24 h-25 object-cover rounded border"
+                      />
+                      {/* Optional: Delete button */}
+                      {/* <button
+                        type="button"
+                        className="text-red-500"
+                        onClick={() => handleRemovePrevFile(file.id)}
+                      >
+                        Remove
+                      </button> */}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <FileInputBox
-                  handleChange={(files) => handleFileChange(files, "documents")}
+                handleChange={(files) => handleFileChange(files, "documents")}
                 fieldName={"documents"}
                 isMulti={true}
               />
@@ -257,7 +341,7 @@ setFormData({...formData, [e.target.name]: e.target.value})
             <div className="flex gap-5 justify-center items-center my-4">
               <button
                 type="submit"
-                  onClick={handleAddGoodsInOut}
+                onClick={handleEditGoodsInOut}
                 className="text-white bg-black hover:bg-white hover:text-black border-2 border-black font-semibold py-2 px-4 rounded transition-all duration-300"
               >
                 Submit
@@ -270,4 +354,4 @@ setFormData({...formData, [e.target.name]: e.target.value})
   );
 };
 
-export default AddGoods;
+export default EditGoodsInOut;

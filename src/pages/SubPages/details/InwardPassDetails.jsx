@@ -38,7 +38,7 @@ const InwardPassDetails = () => {
       <Navbar />
       <div className=" w-full flex mx-3 flex-col overflow-hidden">
         <div
-          style={{ background: themeColor }}
+          style={{ background: "rgb(3 19 37)" }}
           className="flex justify-center bg-black m-2 p-2 rounded-md"
         >
           <h2 className="text-xl font-semibold text-center text-white ">
@@ -53,7 +53,7 @@ const InwardPassDetails = () => {
             </div>
             <div className="grid grid-cols-2">
               <p className=" font-medium">Visitor :</p>
-              <p>{details.person_name?.name}</p>
+              <p>{details.visitor_name}</p>
             </div>
             <div className="grid grid-cols-2">
               <p className=" font-medium">No. of Goods :</p>
@@ -74,16 +74,20 @@ const InwardPassDetails = () => {
             {details.created_by_name && (
               <div className="grid grid-cols-2">
                 <p className=" font-medium">Created by :</p>
-                <p>{`${details.created_by_name.firstname} ${details.created_by_name.lastname}`}</p>
+                <p>{details.created_by_name}</p>
               </div>
             )}
             <div className="grid grid-cols-2">
               <p className=" font-medium">Created on :</p>
-              <p className="text-sm">{FormattedDateToShowProperly(details.created_at)}</p>
+              <p className="text-sm">
+                {FormattedDateToShowProperly(details.created_at)}
+              </p>
             </div>
             <div className="grid grid-cols-2">
               <p className=" font-medium">Updated on :</p>
-              <p className="text-sm">{FormattedDateToShowProperly(details.created_at)}</p>
+              <p className="text-sm">
+                {FormattedDateToShowProperly(details.created_at)}
+              </p>
             </div>
           </div>
           <div>
@@ -91,7 +95,10 @@ const InwardPassDetails = () => {
             <p className="bg-gray-50 p-2 rounded-md">{details.description}</p>
           </div>
           <div>
-            <p className="border-b border-black font-semibold my-5">Attachments</p>
+            <p className="border-b border-black font-semibold my-5">
+              Attachments
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {details.goods_files && details.goods_files.length > 0 ? (
               details.goods_files.map((doc, index) => (
                 <div key={doc.id} className="">
@@ -99,8 +106,10 @@ const InwardPassDetails = () => {
                     <img
                       src={domainPrefix + doc.document}
                       alt={`Attachment ${index + 1}`}
-                      className="w-40 h-28 object-cover rounded-md"
-                      onClick={() => window.open(domainPrefix + doc.document, "_blank")}
+                      className="w-30 h-28 object-cover rounded-md"
+                      onClick={() =>
+                        window.open(domainPrefix + doc.document, "_blank")
+                      }
                     />
                   ) : (
                     <a
@@ -118,6 +127,7 @@ const InwardPassDetails = () => {
             ) : (
               <p className="text-center w-full">No Attachments</p>
             )}
+            </div>
           </div>
         </div>
       </div>

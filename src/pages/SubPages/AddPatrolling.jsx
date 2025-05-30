@@ -175,7 +175,7 @@ const navigate = useNavigate()
     <div className="flex justify-center items-center my-5 w-full ">
       <div className="border border-gray-300 rounded-lg p-4 w-full mx-4">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(3 19 37)" }}
           className="text-center md:text-xl font-medium p-1 bg-black rounded-full text-white"
         >
           Edit Patrolling

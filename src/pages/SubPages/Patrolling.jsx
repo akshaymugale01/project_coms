@@ -367,7 +367,7 @@ const Patrolling = () => {
                 <div
                   onClick={openModal}
                   className="border-2 font-semibold text-white hover:text-white transition-all p-2 rounded-md cursor-pointer text-center flex items-center gap-2 justify-center"
-                  style={{ background: themeColor }}
+                  style={{ background: "rgb(3 19 37)" }}
                 >
                   <PiPlusCircle size={20} />
                   Add
@@ -405,7 +405,7 @@ const Patrolling = () => {
             <div className="flex justify-center items-center my-5 w-full ">
               <div className="border border-gray-300 rounded-lg p-4 w-full mx-4">
                 <h2
-                  style={{ background: themeColor }}
+                  style={{ background: "rgb(3 19 37)" }}
                   className="text-center md:text-xl font-medium p-1 bg-black rounded-full text-white"
                 >
                   Add Patrolling

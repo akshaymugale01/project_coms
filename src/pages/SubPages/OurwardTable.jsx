@@ -22,6 +22,9 @@ const OutwardsTable = ({ goodsOut }) => {
           <Link to={`/admin/inwards-details/${row.id}`}>
             <BsEye size={15} />
           </Link>
+           <Link to={`/admin/passes/edit/goods-in-out/${row.id}`}>
+          <BiEdit size={17} />
+        </Link>
         </div>
       ),
     },
