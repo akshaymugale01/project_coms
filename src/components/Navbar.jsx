@@ -782,7 +782,7 @@ const Navbar = () => {
                 )}
                  {feat.includes("fitout") && (
                   <NavLink
-                    to={"/fitout/list"}
+                    to={"/fitout/setup/page"}
                     className={({ isActive }) =>
                       ` ${isActive
                         ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"

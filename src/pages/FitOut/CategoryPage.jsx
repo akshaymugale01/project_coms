@@ -12,16 +12,27 @@ import { FaTimes } from "react-icons/fa";
 // import { getItemInLocalStorage } from "../../../utils/localStorage";
 // import TicketCategoryPage from "../Setup/TicketSetup/TicketCategoryPage";
 import Table from "../../components/table/Table";
-import { deleteHelpDeskCategorySetup, getFitOutCategoriesSetup, getFitoutCategoriesSetupDetails, getFitoutSubCategoriesSetup, getFitoutSubCategoriesSetupDetails, getSetupUsers } from "../../api";
+import {
+  deleteHelpDeskCategorySetup,
+  destroyFitoutCategory,
+  editHelpDeskCategoriesSetupDetails,
+  getFitOutCategoriesSetup,
+  getFitoutCategoriesSetupDetails,
+  getFitoutSubCategoriesSetup,
+  getFitoutSubCategoriesSetupDetails,
+  getSetupUsers,
+  putFitoutCategoriesSetup,
+} from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import FitoutCategory from "./FitoutCategory";
 import TicketSubCategory from "../Setup/TicketSetup/TicketSubCategory";
 import SubCatPage from "./SubCatPage";
 import DataTable from "react-data-table-component";
+import toast from "react-hot-toast";
 
 const CategoryPage = () => {
   const [page, setPage] = useState("Category");
-    const [engineers, setEngineers] = useState([]);
+  const [engineers, setEngineers] = useState([]);
 
   const [faqs, setFaqs] = useState([{ question: "", answer: "" }]);
   const [showCategoryPage, setShowCategoryPage] = useState(false);
@@ -31,6 +42,7 @@ const CategoryPage = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const [isCatEditModalOpen, setIsCatEditModalOpen] = useState(false);
   const [isSubCatEditModalOpen, setIsSubCatEditModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     category: "",
     minTat: "",
@@ -138,9 +150,9 @@ const CategoryPage = () => {
       try {
         const subCatResp = await getFitoutSubCategoriesSetup();
         console.log("subcat", subCatResp);
-    const sortedSubCat = subCatResp.data.sort((a,b)=> {
-      return new Date(b.created_at) - new Date(a.created_at)
-    })
+        const sortedSubCat = subCatResp.data.sort((a, b) => {
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
         setSubCategories(sortedSubCat);
       } catch (error) {
         console.log(error);
@@ -151,21 +163,19 @@ const CategoryPage = () => {
   }, [catAdded]);
 
   const handleCatDelete = async (id) => {
-    const formData = new FormData();
-    formData.append("helpdesk_category[active]", 0);
-    formData.append("id", id);
     try {
-      const res = deleteHelpDeskCategorySetup(id, formData);
+      await destroyFitoutCategory(id); // Call the DELETE API
       setCatAdded(true);
+      toast.success("Category deleted successfully");
     } catch (error) {
       console.log(error);
+      toast.error("Failed to delete category");
     } finally {
       setTimeout(() => {
         setCatAdded(false);
       }, 500);
     }
   };
-
 
   useEffect(() => {
     const fetchSetupUser = async () => {
@@ -182,7 +192,6 @@ const CategoryPage = () => {
     };
     fetchSetupUser();
   }, []);
-
 
   // console.log("res", engineers);
   // const handleSubCatDelete = async (id) => {
@@ -201,6 +210,7 @@ const CategoryPage = () => {
   //   }
   // };
 
+  console.log("formData", formData);
   const CatColumns = [
     {
       name: "Sr.no.",
@@ -217,17 +227,17 @@ const CategoryPage = () => {
       selector: (row) => {
         // console.log("Row Assigned ID:", row.assigned_id);
         if (!row.assigned_id) return "N/A"; // If assigned_id is null or undefined
-    
+
         // console.log("Engineers List:", engineers);
-    
+
         const assignee = engineers.find((tech) => tech.id === row.assigned_id);
-    
+
         // console.log("Found Assignee:", assignee);
-        
+
         return assignee ? assignee.firstname + assignee.lastname : "N/A";
       },
       sortable: true,
-    },    
+    },
     {
       name: "Response Time (Min)",
       selector: (row) => row.tat,
@@ -266,7 +276,7 @@ const CategoryPage = () => {
 
   const [isModalOpen1, setIsModalOpen1] = useState(false);
   const [catId, setCatId] = useState(null);
-const [subCatId, setSubCatId] = useState(null)
+  const [subCatId, setSubCatId] = useState(null);
   const openCatEditModal = async (id) => {
     const fetchCatDetails = await getFitoutCategoriesSetupDetails(id);
     setCatId(id);
@@ -274,19 +284,19 @@ const [subCatId, setSubCatId] = useState(null)
       ...formData,
       category: fetchCatDetails.data.name,
       minTat: fetchCatDetails.data.tat,
-      // engineer:
+      engineer: fetchCatDetails.data.assigned_id || "",
     });
     setIsCatEditModalOpen(true);
   };
   const openSubCatEditModal = async (id) => {
     const fetchCatDetails = await getFitoutSubCategoriesSetupDetails(id);
-    console.log("fetch", fetchCatDetails)
+    console.log("fetch", fetchCatDetails);
     setSubCatId(id);
     // setFormData({
     //   ...formData,
     //   category: fetchCatDetails.data.name,
     //   minTat: fetchCatDetails.data.tat,
-      
+
     // });
     setIsCatEditModalOpen(true);
   };
@@ -340,7 +350,7 @@ const [subCatId, setSubCatId] = useState(null)
       name: "Action",
       cell: (row) => (
         <div className="flex items-center gap-4">
-          <button onClick={()=>openSubCatEditModal(row.id)}>
+          <button onClick={() => openSubCatEditModal(row.id)}>
             <BiEdit size={15} />
           </button>
           {/* <button>
@@ -356,20 +366,24 @@ const [subCatId, setSubCatId] = useState(null)
   const siteId = getItemInLocalStorage("SITEID");
   const handleEditCategory = async () => {
     const sendData = new FormData();
-    sendData.append("helpdesk_category[society_id]", siteId);
-    sendData.append("helpdesk_category[of_phase]", "pms");
-    sendData.append("helpdesk_category[name]", formData.category);
-    sendData.append("helpdesk_category[tat]", formData.minTat);
+    sendData.append("fit_out_setup_category[society_id]", siteId);
+    sendData.append("fit_out_setup_category[of_phase]", "pms");
+    sendData.append("fit_out_setup_category[name]", formData.category);
+    sendData.append("fit_out_setup_category[assigned_id]", formData.engineer);
+
     try {
-      const resp = await editHelpDeskCategoriesSetupDetails(catId, sendData);
+      const resp = await putFitoutCategoriesSetup(catId, sendData);
       // console.log(resp);
+      toast.success("Category Updated Successfully");
+      setIsCatEditModalOpen(false);
+      setCatAdded(Date.now());
     } catch (error) {
       console.log(error);
     }
   };
   return (
     <div className=" w-full my-2 flex  overflow-hidden flex-col">
-     <div className="flex w-full">
+      <div className="flex w-full">
         <div className=" flex gap-2 p-2 pb-0 border-b-2 border-gray-200 w-full">
           <h2
             className={`p-1 ${
@@ -417,6 +431,8 @@ const [subCatId, setSubCatId] = useState(null)
               columns={CatColumns}
               data={categories}
               isPagination={true}
+              pagination
+              paginationPerPage={9}
             />
           </div>
         )}
@@ -443,6 +459,8 @@ const [subCatId, setSubCatId] = useState(null)
               columns={subCatColumns}
               data={subCategories}
               isPagination={true}
+              pagination
+              paginationPerPage={9}
             />
           </div>
         )}
@@ -565,7 +583,13 @@ const [subCatId, setSubCatId] = useState(null)
                   </div>
                   <div className="form-group">
                     <label className="block mb-2">Select Engineer</label>
-                    <select className="border p-2 w-full">
+                    <select
+                      className="border p-2 w-full"
+                      name="engineer"
+                      value={formData.engineer}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Engineer</option>
                       {engineers.map((engineer) => (
                         <option value={engineer.id} key={engineer.id}>
                           {engineer.firstname}

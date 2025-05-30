@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Route, Routes, Link, NavLink } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  NavLink,
+} from "react-router-dom";
 import FitOutSetupPage from "./FitOutSetupPage";
 import FitOutRequestPage from "./FitOutRequestPage";
 import FitOutChecklistPage from "./FitOutChecklistPage";
@@ -13,9 +19,8 @@ const FitOutList = () => {
       {/* Sidebar */}
       <Navbar />
       <div
-        className={`${
-          isOpen ? "w-64" : "w-16"
-        } bg-gray-900 text-white h-screen transition-all duration-300 flex flex-col`}
+        className= "w-56 bg-gray-900 text-white h-screen transition-all duration-300 flex flex-col"
+        
       >
         {/* Sidebar Toggle Button */}
         {/* <button
@@ -31,7 +36,9 @@ const FitOutList = () => {
             to="/fitout/setup/page"
             className={({ isActive }) =>
               `p-3 rounded-md transition ${
-                isActive ? "bg-white text-black" : "hover:bg-white hover:text-black"
+                isActive
+                  ? "bg-white text-black"
+                  : "hover:bg-white hover:text-black"
               }`
             }
           >
@@ -41,7 +48,9 @@ const FitOutList = () => {
             to="/fitout/request/list"
             className={({ isActive }) =>
               `p-3 rounded-md transition ${
-                isActive ? "bg-white text-black" : "hover:bg-white hover:text-black"
+                isActive
+                  ? "bg-white text-black"
+                  : "hover:bg-white hover:text-black"
               }`
             }
           >
@@ -51,7 +60,9 @@ const FitOutList = () => {
             to="/fitout/checklist/list"
             className={({ isActive }) =>
               `p-3 rounded-md transition ${
-                isActive ? "bg-white text-black" : "hover:bg-white hover:text-black"
+                isActive
+                  ? "bg-white text-black"
+                  : "hover:bg-white hover:text-black"
               }`
             }
           >
@@ -65,7 +76,10 @@ const FitOutList = () => {
         <Routes>
           <Route path="/fitout/setup/page" element={<FitOutSetupPage />} />
           <Route path="/fitout/request/list" element={<FitOutRequestPage />} />
-          <Route path="/fitout/checklist/list" element={<FitOutChecklistPage />} />
+          <Route
+            path="/fitout/checklist/list"
+            element={<FitOutChecklistPage />}
+          />
         </Routes>
       </div>
     </div>

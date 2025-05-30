@@ -381,6 +381,21 @@ export const postFitoutCategoriesSetup = async (data) =>
       token: token,
     },
   });
+
+export const putFitoutCategoriesSetup = async (catId,data) =>
+  axiosInstance.put(`/fit_out_setup_categories/${catId}.json`, data, {
+    params: {
+      token: token,
+    },
+  });  
+
+export const destroyFitoutCategory = async (catId) =>
+  axiosInstance.delete(`/fit_out_setup_categories/${catId}.json`, {
+    params: {
+      token: token,
+    },
+  });    
+
 export const postHelpDeskSubCategoriesSetup = async (data) =>
   axiosInstance.post(`/pms/admin/create_helpdesk_sub_category.json`, data, {
     params: {
@@ -411,8 +426,8 @@ export const postHelpDeskEscalationSetup = async (data) =>
       token: token,
     },
   });
-export const deleteHelpDeskCategorySetup = async (id, data) =>
-  axiosInstance.patch(`/pms/admin/modify_helpdesk_category/${id}.json`, data, {
+export const deleteHelpDeskCategorySetup = async (id) =>
+  axiosInstance.delete(`/pms/admin/modify_helpdesk_category/${id}.json`, {
     params: {
       token: token,
     },
@@ -1663,6 +1678,14 @@ export const getGoodsDetails = async (id) =>
       token: token,
     },
   });
+
+export const putGoodsDetails = async (id, postData) =>
+  axiosInstance.put(`/goods_in_outs/${id}.json`, postData, {
+    params: {
+      token: token,
+    },
+  });  
+
 export const postGoods = async (data) =>
   axiosInstance.post("/goods_in_outs.json", data, {
     params: {

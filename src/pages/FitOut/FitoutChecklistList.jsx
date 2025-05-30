@@ -59,27 +59,30 @@ const FitoutChecklistList = () => {
     const handleSearch = (event) => {
       const searchValue = event.target.value.toLowerCase();
       setSearchText(searchValue);
+
       if (!searchValue) {
         setBookings(originalBookings);
         return;
       }
-      // const filteredResults = originalBookings.filter((item) => {
-      //   const building = buildings.find((b) => b.id === item.building_id)?.name || "";
-      //   const floor = floors.find((f) => f.id === item.floor_id)?.name || "";
-      //   const unit = units.find((u) => u.id === item.unit_id)?.name || "";
-      //   const user = users.find((u) => u.id === item.user_id);
-      //   const userName = user ? `${user.firstname} ${user.lastname}` : "";
-      //   const vendor = vendors.find((v) => v.id === item.supplier_id)?.vendor_name || "";
-    
-      //   // Check if the search value matches any of the fields
-      //   return (
-      //     building.toLowerCase().includes(searchValue) ||
-      //     floor.toLowerCase().includes(searchValue) ||
-      //     unit.toLowerCase().includes(searchValue) ||
-      //     userName.toLowerCase().includes(searchValue) ||
-      //     vendor.toLowerCase().includes(searchValue)
-      //   );
-      // });
+
+      const filteredResults = originalBookings.filter((item) => {
+        // Find category and subcategory names
+        const categoryName = category.find((c) => c.id === item.snag_audit_category_id)?.name || "";
+        const subCatName = subCat.find((sub) => sub.id === item.snag_audit_sub_category_id)?.name || "";
+        const checklistName = item.name || "";
+        const date = item.created_at
+          ? new Date(item.created_at).toISOString().slice(2, 10).replace(/-/g, "-")
+          : "";
+
+        // Check if search value matches any field
+        return (
+          checklistName.toLowerCase().includes(searchValue) ||
+          categoryName.toLowerCase().includes(searchValue) ||
+          subCatName.toLowerCase().includes(searchValue) ||
+          date.includes(searchValue)
+        );
+      });
+
       setBookings(filteredResults);
     };
     // Columns for DataTable
@@ -171,10 +174,10 @@ const FitoutChecklistList = () => {
       <section className="flex">
         <FitOutList />
         <div className="w-full flex m-3 flex-col overflow-hidden">
-          <div className="flex justify-center">
+          {/* <div className="flex justify-center">
             <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200">
             </div>
-          </div>
+          </div> */}
           {page === "meetingBooking" && (
             <div>
               <div className="flex gap-2 items-center">
@@ -188,7 +191,7 @@ const FitoutChecklistList = () => {
                 <div className="flex justify-end">
                   <Link
                     to={"/fitout/checklist/create"}
-                    style={{ background: themeColor }}
+                    style={{ background: "rgb(3 19 37)" }}
                     className="flex items-center gap-1 px-4 py-2 rounded-lg font-semibold text-white shadow-md transition hover:shadow-lg whitespace-nowrap"
                   >
                     <IoAddCircleOutline size={20} />

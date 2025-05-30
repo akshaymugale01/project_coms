@@ -146,6 +146,7 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
 
     try {
       const resp = await postFitOutSubCategoriesSetup(sendData);
+      // await fetchSubCategories();
       console.log(resp);
       toast.success("Sub Category Added Successfully");
       setFormData({
@@ -161,6 +162,7 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
         },
         fitout_text: "",
       });
+       setCAtAdded(Date.now());
     } catch (error) {
       console.log(error);
     }

@@ -63,23 +63,23 @@ const AddGoods = () => {
   };
 
   const handleVisitorSelection = (selectedOption) => {
-    console.log(selectedOption)
+    console.log(selectedOption);
     setSelectedVisitor(selectedOption);
   };
   const handleStaffSelection = (selectedOption) => {
     setSelectedStaff(selectedOption);
   };
   const userId = getItemInLocalStorage("UserId");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const handleAddGoodsInOut = async () => {
     if ((!selectedVisitor && !selectedStaff) || !formData.noOfGoods) {
       return toast.error("Please Provide all the data!");
     }
     const postData = new FormData();
-   
-        const visitorId = selectedVisitor.value;
-        postData.append("goods_in_out[visitor_id]", visitorId);
-    
+
+    const visitorId = selectedVisitor.value;
+    postData.append("goods_in_out[visitor_id]", visitorId);
+
     postData.append("goods_in_out[no_of_goods]", formData.noOfGoods);
     postData.append("goods_in_out[description]", formData.description);
     postData.append("goods_in_out[ward_type]", ward);
@@ -91,25 +91,31 @@ const AddGoods = () => {
     formData.documents.forEach((docs) => {
       postData.append("goods_files[]", docs);
     });
-   try {
-     const postRes = await postGoods(postData)
-     console.log(postRes)
-     toast.success("Goods added successfully")
-     navigate("/admin/passes/goods-in-out")
-   } catch (error) {
-    console.log(error)
-   }
-
+    try {
+      const postRes = await postGoods(postData);
+      console.log(postRes);
+      toast.success("Goods added successfully");
+      navigate("/admin/passes/goods-in-out");
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const handleChange =(e)=>{
-setFormData({...formData, [e.target.name]: e.target.value})
+const handleChange = (e) => {
+  let { name, value } = e.target;
+
+  if (name === "vehicleNumber") {
+   
+    value = value.replace(/[^a-zA-Z0-9]/g, "");
   }
+
+  setFormData({ ...formData, [name]: value });
+};
 
   return (
     <section className="flex">
-        <div className="hidden md:block">
-      <Navbar />
-        </div>
+      <div className="hidden md:block">
+        <Navbar />
+      </div>
       <div className=" w-full flex md:mx-3 flex-col overflow-hidden">
         <div className="flex justify-center items-center my-2 w-full md:p-2">
           <div className="md:border border-gray-300 rounded-lg md:p-4 p-2 w-full md:mx-4">
@@ -248,7 +254,7 @@ setFormData({...formData, [e.target.name]: e.target.value})
                 Documents
               </label>
               <FileInputBox
-                  handleChange={(files) => handleFileChange(files, "documents")}
+                handleChange={(files) => handleFileChange(files, "documents")}
                 fieldName={"documents"}
                 isMulti={true}
               />
@@ -257,7 +263,7 @@ setFormData({...formData, [e.target.name]: e.target.value})
             <div className="flex gap-5 justify-center items-center my-4">
               <button
                 type="submit"
-                  onClick={handleAddGoodsInOut}
+                onClick={handleAddGoodsInOut}
                 className="text-white bg-black hover:bg-white hover:text-black border-2 border-black font-semibold py-2 px-4 rounded transition-all duration-300"
               >
                 Submit

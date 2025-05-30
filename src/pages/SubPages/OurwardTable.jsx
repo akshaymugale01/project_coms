@@ -98,7 +98,7 @@ const OutwardsTable = ({ goodsOut }) => {
           <Link
             to={"/admin/passes/add-goods-in-out"}
             className="p-1 font-medium px-4 text-white rounded-md flex items-center gap-2"
-            style={{ background: themeColor }}
+            style={{ background: "rgb(3 19 37)" }}
           >
             {" "}
             <PiPlusCircle /> Add

@@ -67,6 +67,7 @@ const EditStatusModal = ({ onClose, id, setStatusAdded }) => {
         fixedState: "",
         order: "",
       });
+      onClose();
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong");
@@ -125,7 +126,7 @@ const EditStatusModal = ({ onClose, id, setStatusAdded }) => {
           </div>
           <button
             className=" font-medium hover:text-white transition-all w-full p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-            style={{ background: themeColor }}
+            style={{ background: "rgb(3 19 37)" }}
             onClick={handleEditStatus}
           >
             Save
