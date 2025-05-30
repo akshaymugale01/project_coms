@@ -36,7 +36,7 @@ const VisitorPage = () => {
     []
   );
   const [formData, setFormData] = useState({
-    mobile: ""
+    mobile: "",
   });
   const [showPopup, setShowPopup] = useState(false);
   const [mobile, setMobile] = useState("");
@@ -46,6 +46,7 @@ const VisitorPage = () => {
   const [FilteredApproval, setFilteredApproval] = useState([]);
   const [approvals, setApprovals] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [filteredVisitorOut, setFilteredVisitorOut] = useState([]);
   const [histories, setHistories] = useState([]);
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -119,7 +120,9 @@ const VisitorPage = () => {
         setVisitorIn(filteredVisitorIn);
         console.log(filteredVisitorIn);
         setVisitorOut(filteredVisitorOut);
-        setFilteredData(sortedVisitor);
+        // setFilteredData(sortedVisitor);
+        setFilteredVisitorOut(filteredVisitorOut);
+        setFilteredData(filteredVisitorIn);
         setUnexpectedVisitor(filteredUnexpectedVisitor);
         setFilteredUnexpectedVisitor(filteredUnexpectedVisitor);
         setExpectedVisitor(filteredExpectedVisitor);
@@ -292,57 +295,59 @@ const VisitorPage = () => {
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
-
     if (searchValue.trim() === "") {
-      if (selectedVisitor === "expected") {
+      if (page === "Visitor In" && selectedVisitor === "expected") {
         setFilteredData(visitorIn);
-      } else {
+      } else if (page === "Visitor In" && selectedVisitor === "unexpected") {
         setFilteredUnexpectedVisitor(unexpectedVisitor);
+      } else if (page === "Visitor Out") {
+        setFilteredVisitorOut(visitorOut);
       }
     } else {
-      if (selectedVisitor === "expected") {
-        const filteredResults = visitorIn.filter(
-          (item) =>
-            item.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-            (item.vehicle_number &&
-              item.vehicle_number
-                .toLowerCase()
-                .includes(searchValue.toLowerCase()))
+      if (page === "Visitor In" && selectedVisitor === "expected") {
+        const filteredResults = visitorIn.filter((item) =>
+          rowMatchesSearch(item, searchValue)
         );
-
         setFilteredData(filteredResults);
-      } else {
-        const filteredResults = unexpectedVisitor.filter(
-          (item) =>
-            item.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-            (item.vehicle_number &&
-              item.vehicle_number
-                .toLowerCase()
-                .includes(searchValue.toLowerCase()))
+      } else if (page === "Visitor In" && selectedVisitor === "unexpected") {
+        const filteredResults = unexpectedVisitor.filter((item) =>
+          rowMatchesSearch(item, searchValue)
         );
-
         setFilteredUnexpectedVisitor(filteredResults);
+      } else if (page === "Visitor Out") {
+        const filteredResults = visitorOut.filter((item) =>
+          rowMatchesSearch(item, searchValue)
+        );
+        setFilteredVisitorOut(filteredResults);
       }
     }
   };
+
+  console.log("textsearch", searchText);
+  console.log("filterData", filteredData);
+  console.log("visitorIn", visitorIn);
+
   const [searchAll, setSearchAll] = useState([]);
   const handleSearchAll = (e) => {
     const searchValue = e.target.value;
     setSearchAll(searchValue);
     if (searchValue.trim() === "") {
       setAll(visitor);
+      setFilteredExpectedVisitor(expectedVisitor);
+      setFilteredUnexpectedVisitor(unexpectedVisitor);
     } else {
-      const filteredResults = visitor.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-          (item.vehicle_number &&
-            item.vehicle_number
-              .toLowerCase()
-              .includes(searchValue.toLowerCase()))
+      const filteredExpected = expectedVisitor.filter((item) =>
+        rowMatchesSearch(item, searchValue)
       );
-      setAll(filteredResults);
+      const filteredUnexpected = unexpectedVisitor.filter((item) =>
+        rowMatchesSearch(item, searchValue)
+      );
+      setFilteredExpectedVisitor(filteredExpected);
+      setFilteredUnexpectedVisitor(filteredUnexpected);
     }
   };
+  // console.log("all:", all);
+  // console.log("Search all:", searchAll);
 
   const [searchHIstoryText, setSearchHistoryText] = useState("");
   const handleSearchHistory = (e) => {
@@ -351,11 +356,8 @@ const VisitorPage = () => {
     if (searchValue.trim() === "") {
       setFilteredHistory(histories);
     } else {
-      const filteredResults = histories.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-          (item.contact_no &&
-            item.contact_no.toLowerCase().includes(searchValue.toLowerCase()))
+      const filteredResults = histories.filter((item) =>
+        rowMatchesSearch(item, searchValue)
       );
       setFilteredHistory(filteredResults);
     }
@@ -368,7 +370,7 @@ const VisitorPage = () => {
       setFilteredApproval(approvals);
     } else {
       const filteredResults = approvals.filter((item) =>
-        item.name.toLowerCase().includes(searchValue.toLowerCase())
+        rowMatchesSearch(item, searchValue)
       );
       setFilteredApproval(filteredResults);
     }
@@ -588,6 +590,17 @@ const VisitorPage = () => {
     }
   };
 
+  const rowMatchesSearch = (row, searchValue) => {
+    const lowerSearch = searchValue.toLowerCase();
+    return Object.values(row).some((val) => {
+      if (val === null || val === undefined) return false;
+      if (typeof val === "object") {
+        return rowMatchesSearch(val, searchValue);
+      }
+      return String(val).toLowerCase().includes(lowerSearch);
+    });
+  };
+
   return (
     <div className="visitors-page">
       <section className="flex">
@@ -700,6 +713,19 @@ const VisitorPage = () => {
                   Add New Visitor
                 </Link>
               </div> */}
+              <div className="flex justify-end">
+                <button
+                  style={{ background: "rgb(3 19 37)" }}
+                  className="font-semibold hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
+                  onClick={() => {
+                    console.log("Opening Popup");
+                    setShowPopup(true);
+                  }}
+                >
+                  <PiPlusCircle size={20} />
+                  Add New Visitor
+                </button>
+              </div>
             </div>
           )}
           {page === "Visitor In" && (
@@ -736,19 +762,6 @@ const VisitorPage = () => {
             </div>
           )}
 
-          <div className="flex justify-end">
-            <button
-              style={{ background: themeColor }}
-              className="font-semibold hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-              onClick={() => {
-                console.log("Opening Popup");
-                setShowPopup(true);
-              }}
-            >
-              <PiPlusCircle size={20} />
-              Add New Visitor
-            </button>
-          </div>
           {console.log("Popup state:", showPopup)}
           {showPopup && (
             <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -757,22 +770,28 @@ const VisitorPage = () => {
                   Enter Mobile Number
                 </h2>
                 <input
-                  type="number"
+                  type="text"
                   className="border border-gray-400 p-2 rounded-md w-full mb-4"
                   placeholder="Enter Mobile Number"
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
+                  maxLength={10}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/[^0-9]/g, "");
+                    if (val.length > 0 && val[0] === "0") val = val.slice(1);
+                    if (val.length > 10) val = val.slice(0, 10);
+                    setMobile(val);
+                  }}
                 />
                 <div className="flex justify-end gap-2">
                   <button
-                    className="bg-gray-500 text-white px-4 py-2 rounded-md"
+                    className="bg-red-500 text-white px-4 py-2 rounded-md"
                     onClick={() => setShowPopup(false)}
                   >
                     Cancel
                   </button>
                   <button
-                    style={{ background: themeColor }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                    style={{ background: "rgb(32 145 50)" }}
+                    className="bg-red-500 text-white px-4 py-2 rounded-md"
                     onClick={handleSubmit}
                   >
                     Submit
@@ -815,7 +834,7 @@ const VisitorPage = () => {
                   </span>
                 </div>
               </div>
-              <Table columns={VisitorColumns} data={visitorOut} />
+              <Table columns={VisitorColumns} data={filteredVisitorOut} />
             </div>
           )}
           {page === "History" && (
@@ -856,7 +875,7 @@ const VisitorPage = () => {
           )}
           <div className="my-4">
             {selectedVisitor === "expected" && page === "Visitor In" && (
-              <Table columns={VisitorColumns} data={visitorIn} />
+              <Table columns={VisitorColumns} data={filteredData} />
             )}
             {selectedVisitor === "unexpected" && page === "Visitor In" && (
               <Table

@@ -181,7 +181,7 @@ const handleSearch = (e)=>{
               to={"/admin/add-rvehicles"}
               
               className="border-2 font-semibold hover:bg-black hover:text-white transition-all  p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-              style={{background: themeColor }}
+              style={{background: "rgb(3 19 37)" }}
             >
               <PiPlusCircle size={20} />
               Add

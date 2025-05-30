@@ -1176,6 +1176,48 @@ export const getPaymentBookings = async (resourceId) =>
     },
   });
 
+
+//   Parking Api
+
+  export const postParking = async (data) =>
+  axiosInstance.post(`/booking_parkings.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getParkingSlots = async () =>
+  axiosInstance.get(`/parking_slots.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getAvailableParkingNumber = async () =>
+  axiosInstance.get(`/available_parking_configurations.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const getParkingConfigurationDetails = async (id) =>
+  axiosInstance.get(`/parking_configurations/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getParkingConfiguration = async () =>
+  axiosInstance.get(`/parking_configurations.json`, {
+    params: {
+      token: token,
+    },
+  });
+  export const postParkingConfiguration = async (data) =>
+  axiosInstance.post(`/parking_configurations.json`, data, {
+    params: {
+      token: token,
+    },
+  });
 // Facitility Setup
 // export const getFacitilitySetup = async () =>
 //   axiosInstance.get(`/amenities.json`, {

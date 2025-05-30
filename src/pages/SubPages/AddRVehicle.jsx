@@ -119,7 +119,7 @@ const AddRVehicles = () => {
     <div className="flex justify-center items-center  w-full p-4">
       <div className="border border-gray-300 rounded-lg p-2 w-full mx-4">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(3 19 37)" }}
           className="text-center md:text-xl font-bold p-2 bg-black rounded-md text-white mb-4"
         >
           Add Vehicles

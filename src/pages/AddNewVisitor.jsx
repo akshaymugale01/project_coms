@@ -53,8 +53,8 @@ const AddNewVisitor = () => {
   const handleOpenCamera = () => {
     setShowWebcam(true);
   };
-  console.log("floors", floors);
-  console.log("Units", units);
+  // console.log("floors", floors);
+  // console.log("Units", units);
   const handleCloseCamera = () => {
     setShowWebcam(false);
   };
@@ -113,6 +113,9 @@ const AddNewVisitor = () => {
     profile_picture: "",
   });
 
+
+console.log("Form Data", formData);
+
   const fetchDetails = async () => {
     if (!mobile) return;
     try {
@@ -121,26 +124,26 @@ const AddNewVisitor = () => {
         const data = details?.data;
         setFormData({
           ...formData,
-          visitorName: data.name,
-          mobile: data.contact_no,
-          purpose: data.purpose,
-          comingFrom: data.coming_from,
-          vehicleNumber: data.vehicle_number,
-          vhost_id: data.vhost_id,
-          expectedDate: data.expected_date,
-          expectedTime: data.expected_time,
-          hostApproval: data.skip_host_approval,
-          goodsInward: data.goods_inwards,
-          host: data.created_by_id,
-          supportCategory: data.support_category_id,
+          visitorName: data.name || "",
+          mobile: data.contact_no || "",
+          purpose: data.purpose || "",
+          comingFrom: data.coming_from || "",
+          vehicleNumber: data.vehicle_number || "",
+          vhost_id: data.vhost_id || "",
+          expectedDate: data.expected_date || new Date().toISOString().split("T")[0],
+          expectedTime: data.expected_time || getCurrentTime(),
+          hostApproval: data.skip_host_approval || false,
+          goodsInward: data.goods_inwards || false,
+          host: data.created_by_id || "",
+          supportCategory: data.support_category_id || "",
           additionalVisitors: visitors,
-          passNumber: data.pass_number,
-          building_id: data.building_id,
-          unit_id: data.unit_id,
-          floor_id: data.floor_id,
-          noOfGoods: data.no_of_goods,
-          goodsDescription: data.goods_description,
-          goodsAttachments: data.goods_attachments,
+          passNumber: data.pass_number || "",
+          building_id: data.building_id || "",
+          unit_id: data.unit_id || "",
+          floor_id: data.floor_id || "",
+          noOfGoods: data.no_of_goods || "",
+          goodsDescription: data.goods_description || "",
+          goodsAttachments: data.goods_attachments || [],
           profile_picture: data.profile_picture
             ? `${domainPrefix}${data.profile_picture}`
             : "", // Ensure full URL
@@ -159,13 +162,13 @@ const AddNewVisitor = () => {
     }
   };
 
-  console.log("User", visitors);
+  // console.log("User", visitors);
 
   useEffect(() => {
     fetchDetails();
   }, [mobile]);
-  console.log("By Mobile Number", formData);
-  console.log("By Visitor", visitors);
+  // console.log("By Mobile Number", formData);
+  // console.log("By Visitor", visitors);
   const handleFrequencyChange = (e) => {
     setSelectedFrequency(e.target.value);
   };
@@ -187,9 +190,9 @@ const AddNewVisitor = () => {
     { day: "Sat", index: 5, isActive: false },
     { day: "Sun", index: 6, isActive: false },
   ]);
-  console.log(selectedWeekdays);
+  // console.log(selectedWeekdays);
   const handleWeekdaySelection = (weekday) => {
-    console.log(`Selected day: ${weekday}`);
+    // console.log(`Selected day: ${weekday}`);
     const index = weekdaysMap.find((dayObj) => dayObj.day === weekday)?.index;
     if (index !== undefined) {
       const updatedWeekdaysMap = weekdaysMap.map((dayObj) =>
@@ -239,7 +242,24 @@ const AddNewVisitor = () => {
   };
   const themeColor = useSelector((state) => state.theme.color);
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+
+    if (name === "mobile") {
+      // Only allow digits, no leading zero, max 10 digits
+      value = value.replace(/[^0-9]/g, "");
+      if (value.length > 0 && value[0] === "0") value = value.slice(1);
+      if (value.length > 10) value = value.slice(0, 10);
+    }
+
+    if (name  === "vehicleNumber" || name === "passNumber"){
+      value = value.replace(/[^a-zA-Z0-9]/g, "");
+    }
+
+    if (name  === "comingFrom" || name === "visitorName") {
+      value = value.replace(/[^a-zA-Z\s]/g, "");
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -250,7 +270,7 @@ const AddNewVisitor = () => {
       ...formData,
       [fieldName]: files,
     });
-    console.log(fieldName);
+    // console.log(fieldName);
   };
   const navigate = useNavigate();
   const createNewVisitor = async () => {
@@ -270,31 +290,31 @@ const AddNewVisitor = () => {
       return;
     }
     const postData = new FormData();
-    postData.append("visitor[site_id]", siteId);
-    postData.append("visitor[created_by_id]", formData.host);
-    postData.append("visitor[name]", formData.visitorName);
+    postData.append("visitor[site_id]", siteId || "");
+    postData.append("visitor[created_by_id]", formData.host || "");
+    postData.append("visitor[name]", formData.visitorName || "");
     postData.append(
       "visitor[visitor_staff_category_id]",
-      formData.supportCategory
+      formData.supportCategory || ""
     );
-    postData.append("visitor[contact_no]", formData.mobile);
-    postData.append("visitor[purpose]", formData.purpose);
-    postData.append("visitor[start_pass]", passStartDate);
-    postData.append("visitor[end_pass]", passEndDate);
-    postData.append("visitor[coming_from]", formData.comingFrom);
-    postData.append("visitor[vehicle_number]", formData.vehicleNumber);
-    postData.append("visitor[expected_date]", formData.expectedDate);
-    postData.append("visitor[expected_time]", formData.expectedTime);
-    postData.append("visitor[skip_host_approval]", formData.hostApproval);
-    postData.append("visitor[goods_inwards]", formData.goodsInward);
-    postData.append("visitor[visit_type]", selectedVisitorType);
-    postData.append("visitor[pass_number]", formData.passNumber);
-    postData.append("visitor[frequency]", selectedFrequency);
-    postData.append("visitor[parking_slot]", formData.slotNumber);
-    postData.append("visitor[vhost_id]", formData.host);
-    postData.append("visitor[building_id]", formData.building_id);
-    postData.append("visitor[unit_id]", formData.unit_id);
-    postData.append("visitor[floor_id]", formData.floor_id);
+    postData.append("visitor[contact_no]", formData.mobile || "");
+    postData.append("visitor[purpose]", formData.purpose || "");
+    postData.append("visitor[start_pass]", passStartDate || "");
+    postData.append("visitor[end_pass]", passEndDate || "");
+    postData.append("visitor[coming_from]", formData.comingFrom || "");
+    postData.append("visitor[vehicle_number]", formData.vehicleNumber || "");
+    postData.append("visitor[expected_date]", formData.expectedDate || new Date().toISOString().split("T")[0]);
+    postData.append("visitor[expected_time]", formData.expectedTime || "");
+    postData.append("visitor[skip_host_approval]", formData.hostApproval || "");
+    postData.append("visitor[goods_inwards]", formData.goodsInward || "");
+    postData.append("visitor[visit_type]", selectedVisitorType || "");
+    postData.append("visitor[pass_number]", formData.passNumber || "");
+    postData.append("visitor[frequency]", selectedFrequency || "");
+    postData.append("visitor[parking_slot]", formData.slotNumber || "");
+    postData.append("visitor[vhost_id]", formData.host || "");
+    postData.append("visitor[building_id]", formData.building_id || "");
+    postData.append("visitor[unit_id]", formData.unit_id || "");
+    postData.append("visitor[floor_id]", formData.floor_id || "");
     if (capturedImage) {
       const response = await fetch(capturedImage);
       const blob = await response.blob();
@@ -345,11 +365,11 @@ const AddNewVisitor = () => {
       postGoods.append("goods_in_out[created_by_id]", userId);
       try {
         const goodsRes = await postNewGoods(postGoods);
-        console.log(goodsRes);
+        // console.log(goodsRes);
       } catch (error) {
         console.log(error);
       }
-      console.log(visitResp);
+      // console.log(visitResp);
       navigate("/admin/passes/visitors");
       toast.dismiss();
       toast.success("Visitor Added Successfully");
@@ -394,7 +414,7 @@ const AddNewVisitor = () => {
     fetchVisitorCategory();
     fetchParkingConfig();
   }, []);
-  console.log("buildings", buildings);
+  // console.log("buildings", buildings);
   useEffect(() => {
     if (selectedBuilding) {
       const filteredFloors = floors.filter(
@@ -646,13 +666,14 @@ const AddNewVisitor = () => {
                 <label className="text-red-500 font-semibold">*</label>
               </label>
               <input
-                type="number"
+                type="text"
                 value={formData.mobile}
                 onChange={handleChange}
                 name="mobile"
                 id="mobileNumber"
                 className="border border-gray-400 p-2 rounded-md"
                 placeholder="Enter Mobile Number"
+                maxLength={10}
               />
             </div>
           )}

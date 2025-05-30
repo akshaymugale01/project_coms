@@ -56,6 +56,7 @@ const EditVisitor = () => {
         setFormData({
           ...formData,
           visitorName: editDetail.name,
+          passNumber: editDetail.pass_number,
           mobile: editDetail.contact_no,
           purpose: editDetail.purpose,
           host: editDetail.created_by_id,
@@ -220,6 +221,11 @@ const EditVisitor = () => {
     postData.append("visitor[goods_inwards]", formData.goodsInward);
     postData.append("visitor[visit_type]", selectedVisitorType);
     postData.append("visitor[frequency]", selectedFrequency);
+
+    if (imageFile) {
+      postData.append("visitor[profile_picture]", imageFile, imageFile.name);
+    }
+
     selectedWeekdays.forEach((day) => {
       postData.append("visitor[working_days][]", day);
     });
@@ -249,7 +255,7 @@ const EditVisitor = () => {
       const visitResp = await editVisitorDetails(id, postData);
       console.log(visitResp);
       navigate(`/admin/passes/visitors/visitor-details/${visitResp.data.id}`);
-      toast.success("Visitor Edited Successfully")
+      toast.success("Visitor Edited Successfully");
     } catch (error) {
       console.log(error);
     }
@@ -455,7 +461,7 @@ const EditVisitor = () => {
                   value={formData.passNumber}
                   onChange={handleChange}
                   name="passNumber"
-                  type="number"
+                  type="text"
                   id="additionalVisitor"
                   className="border border-gray-400 p-2 rounded-md"
                   placeholder="Enter Pass number"
@@ -492,7 +498,7 @@ const EditVisitor = () => {
                 />
               </div>
 
-              <div className="grid gap-2 items-center w-full">
+              {/* <div className="grid gap-2 items-center w-full">
                 <label htmlFor="notes" className="font-semibold">
                   Notes:
                 </label>
@@ -505,7 +511,7 @@ const EditVisitor = () => {
                   className="border border-gray-400 p-2 rounded-md"
                   placeholder="Enter Notes"
                 />
-              </div>
+              </div> */}
 
               <div className="grid gap-2 items-center w-full">
                 <label htmlFor="expectedDate" className="font-semibold">

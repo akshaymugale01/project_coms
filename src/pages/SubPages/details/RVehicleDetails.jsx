@@ -142,7 +142,7 @@ const RVehicleDetails = () => {
       <div className="flex flex-col gap-2">
         <h2
           style={{
-            background: themeColor,
+            background: "rgb(3 19 37)",
           }}
           className="text-center w-full text-white font-semibold rounded-md text-lg p-2 px-4 "
         >

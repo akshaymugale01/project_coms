@@ -166,11 +166,11 @@ const Staff = () => {
             className="border border-gray-300 rounded-md w-full px-2 placeholder:text-sm"
             placeholder="Search by name, unit, mobile"
           />
-
+          
           <span className="flex gap-4">
             <Link
               to={"/admin/passes/add-staff"}
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
               className="border-2 font-semibold transition-all  p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
             >
               <PiPlusCircle size={20} />

@@ -4,7 +4,7 @@ import FileInputBox from "../../containers/Inputs/FileInputBox";
 import Navbar from "../../components/Navbar";
 import Webcam from "react-webcam";
 import image from "/profile.png";
-import { getAllUnits, getVendors, postStaff } from "../../api";
+import { getAllUnits, getAllVendors, getVendors, postStaff } from "../../api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { initialSchedule } from "../../utils/initialFormData";
@@ -22,7 +22,6 @@ const EmployeeAddStaff = () => {
   const handleCloseCamera = () => {
     setShowWebcam(false);
   };
-  
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -89,7 +88,21 @@ const EmployeeAddStaff = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let {name, value} = e.target;
+
+    if (name === "firstName" || name === "lastName") {
+      value = value.replace(/[^a-zA-Z]/g, "");
+    }
+
+    if (name === "email"){
+     value = value.replace(/\s/g, "");
+    }
+
+    if (name === "mobile") {
+      value = value.replace(/\D/g, "");
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   useEffect(() => {
@@ -103,7 +116,7 @@ const EmployeeAddStaff = () => {
     };
     const fetchVendors = async () => {
       try {
-        const vendorResp = await getVendors();
+        const vendorResp = await getAllVendors();
         setVendors(vendorResp.data);
       } catch (error) {
         console.log(error);
@@ -307,9 +320,10 @@ const EmployeeAddStaff = () => {
                   Mobile
                 </label>
                 <input
-                  type="tel"
+                  type="text"
                   id="mobile"
                   name="mobile"
+                  maxLength={10}
                   value={formData.mobile}
                   onChange={handleChange}
                   placeholder="Enter Mobile Number"

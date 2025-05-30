@@ -1,198 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import FileInputBox from "../../../containers/Inputs/FileInputBox";
-import { getBuildings, getFloors } from "../../../api";
+import axios from "axios";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
+import { getFloors, postParkingConfiguration } from "../../../api";
+import { useSelector } from "react-redux";
+import Navbar from "../../../components/Navbar";
+import toast from "react-hot-toast";
 
-const AddParkingConfig = () => { 
+const ParkingConfig = () => {
+  const [editIndex, setEditIndex] = useState(null); // Tracks which item is being edited
+  const [editName, setEditName] = useState(""); // Tracks the current editable name
+  const handleBlur = () => {
+    setEditIndex(null);
+    setEditName("");
+  };
+
+  const handleEditStart = (index, currentName, type) => {
+    setEditIndex(`${type}-${index}`); // Combine type and index for a unique identifier
+    setEditName(currentName); // Populate input with the current name
+  };
+
+  const handleEditSave = (type, vehicleType, index, isStack = false) => {
+    if (!editName.trim()) {
+      alert("Name cannot be empty.");
+      return;
+    }
+
+    let updatedList;
+    if (type === "Non Stack" && vehicleType === "2-wheeler") {
+      updatedList = [...twoWheelerNonStack];
+      updatedList[index].name = editName; // Update the name
+      setTwoWheelerNonStack(updatedList); // Update the state
+    } else if (type === "Reserved" && vehicleType === "2-wheeler") {
+      updatedList = [...twoWheelerReserved];
+      updatedList[index].name = editName;
+      setTwoWheelerReserved(updatedList);
+    } else if (type === "Non Stack" && vehicleType === "4-wheeler") {
+      updatedList = [...fourWheelerNonStack];
+      updatedList[index].name = editName; // Update name
+      setFourWheelerNonStack(updatedList); // Update state
+    } else if (type === "Stack" && vehicleType === "4-wheeler" && isStack) {
+      updatedList = [...fourWheelerStack];
+      updatedList[index].name = editName; // Update name in the array
+      setFourWheelerStack(updatedList); // Update the state
+    } else if (type === "Reserved" && vehicleType === "4-wheeler") {
+      updatedList = [...fourWheelerReserved];
+      updatedList[index].name = editName; // Update name
+      setFourWheelerReserved(updatedList); // Update state
+    }
+    // Add conditions for 4-wheelers or stack parking if needed
+
+    setEditIndex(null); // Exit edit mode
+    setEditName(""); // Clear the input
+  };
+
+  const [location, setLocation] = useState(null);
+  const [floor, setFloor] = useState(null);
+  const [floors, setFloors] = useState([]);
+  const userId = getItemInLocalStorage("UserId");
   const buildings = getItemInLocalStorage("Building");
-  const [floors, setFloors] = useState([])
   const themeColor = useSelector((state) => state.theme.color);
-  const [formData, setFormData] = useState({
-    building_id:"",
-    floor_id:""
-  })
-  const [itemCount, setItemCount] = useState(1);
-  // State for Two Wheeler Parking
-  const [nonStackItemsTwoWheeler, setNonStackItemsTwoWheeler] = useState([]);
-  const [stackItemsTwoWheeler, setStackItemsTwoWheeler] = useState([]);
-  const [reservedItemsTwoWheeler, setReservedItemsTwoWheeler] = useState([]);
-  const [nonStackCountTwoWheeler, setNonStackCountTwoWheeler] = useState(0);
-  const [stackCountTwoWheeler, setStackCountTwoWheeler] = useState(0);
-  const [reservedCountTwoWheeler, setReservedCountTwoWheeler] = useState(0);
-
-  // State for Car Parking
-  const [nonStackItemsCar, setNonStackItemsCar] = useState([]);
-  const [stackItemsCar, setStackItemsCar] = useState([]);
-  const [reservedItemsCar, setReservedItemsCar] = useState([]);
-  const [nonStackCountCar, setNonStackCountCar] = useState(0);
-  const [stackCountCar, setStackCountCar] = useState(0);
-  const [reservedCountCar, setReservedCountCar] = useState(0);
-
-  // UseEffect hooks for Two Wheeler Parking
-  useEffect(() => {
-    setNonStackCountTwoWheeler(nonStackItemsTwoWheeler.length);
-    setStackCountTwoWheeler(stackItemsTwoWheeler.length);
-    setReservedCountTwoWheeler(reservedItemsTwoWheeler.length);
-  }, [nonStackItemsTwoWheeler, stackItemsTwoWheeler, reservedItemsTwoWheeler]);
-
-  // UseEffect hooks for Car Parking
-  useEffect(() => {
-    setNonStackCountCar(nonStackItemsCar.length);
-    setStackCountCar(stackItemsCar.length);
-    setReservedCountCar(reservedItemsCar.length);
-  }, [nonStackItemsCar, stackItemsCar, reservedItemsCar]);
-
-  const addItem = (parkingArea, vehicleType) => {
-    let newItemsWithSuffix = [];
-    let nonStackItems, stackItems, reservedItems;
-
-    if (vehicleType === "TwoWheeler") {
-      nonStackItems = nonStackItemsTwoWheeler;
-      stackItems = stackItemsTwoWheeler;
-      reservedItems = reservedItemsTwoWheeler;
-    } else {
-      nonStackItems = nonStackItemsCar;
-      stackItems = stackItemsCar;
-      reservedItems = reservedItemsCar;
-    }
-
-    for (let i = 0; i < itemCount; i++) {
-      const newItem =
-        parkingArea === "P" || parkingArea === "p" || parkingArea === "R"
-          ? `P${
-              nonStackItems.length +
-              Math.floor(stackItems.length / 2) +
-              1 +
-              reservedItems.length +
-              i
-            }`
-          : "";
-
-      if (parkingArea === "p") {
-        newItemsWithSuffix.push(`${newItem}A`, `${newItem}B`);
-      } else {
-        newItemsWithSuffix.push(newItem);
-      }
-      setItemCount(0);
-    }
-
-    switch (parkingArea) {
-      case "P":
-        vehicleType === "TwoWheeler"
-          ? setNonStackItemsTwoWheeler([
-              ...nonStackItems,
-              ...newItemsWithSuffix,
-            ])
-          : setNonStackItemsCar([...nonStackItems, ...newItemsWithSuffix]);
-        break;
-      case "p":
-        vehicleType === "TwoWheeler"
-          ? setStackItemsTwoWheeler([...stackItems, ...newItemsWithSuffix])
-          : setStackItemsCar([...stackItems, ...newItemsWithSuffix]);
-        break;
-      case "R":
-        vehicleType === "TwoWheeler"
-          ? setReservedItemsTwoWheeler([
-              ...reservedItems,
-              ...newItemsWithSuffix,
-            ])
-          : setReservedItemsCar([...reservedItems, ...newItemsWithSuffix]);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const deleteItem = (parkingArea, index, vehicleType) => {
-    if (vehicleType === "TwoWheeler") {
-      switch (parkingArea) {
-        case "Non Stack":
-          setNonStackItemsTwoWheeler(
-            nonStackItemsTwoWheeler.filter((_, i) => i !== index)
-          );
-          break;
-        case "Stack":
-          setStackItemsTwoWheeler(
-            stackItemsTwoWheeler.filter((_, i) => i !== index)
-          );
-          break;
-        case "Reserved":
-          setReservedItemsTwoWheeler(
-            reservedItemsTwoWheeler.filter((_, i) => i !== index)
-          );
-          break;
-        default:
-          break;
-      }
-    } else {
-      switch (parkingArea) {
-        case "Non Stack":
-          setNonStackItemsCar(nonStackItemsCar.filter((_, i) => i !== index));
-          break;
-        case "Stack":
-          setStackItemsCar(stackItemsCar.filter((_, i) => i !== index));
-          break;
-        case "Reserved":
-          setReservedItemsCar(reservedItemsCar.filter((_, i) => i !== index));
-          break;
-        default:
-          break;
-      }
-    }
-  };
-
-  const handleItemchange1 = (parkingArea, index, newValue) => {
-    switch (parkingArea) {
-      case "Non Stack":
-        setNonStackItemsTwoWheeler(
-          nonStackItemsTwoWheeler.map((item, i) =>
-            i === index ? newValue : item
-          )
-        );
-        break;
-      case "Stack":
-        setStackItemsTwoWheeler(
-          stackItemsTwoWheeler.map((item, i) => (i === index ? newValue : item))
-        );
-        break;
-      case "Reserved":
-        setReservedItemsTwoWheeler(
-          reservedItemsTwoWheeler.map((item, i) =>
-            i === index ? newValue : item
-          )
-        );
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleItemchange2 = (parkingArea, index, newValue) => {
-    switch (parkingArea) {
-      case "Non Stack":
-        setNonStackItemsCar(
-          nonStackItemsCar.map((item, i) => (i === index ? newValue : item))
-        );
-        break;
-      case "Stack":
-        setStackItemsCar(
-          stackItemsCar.map((item, i) => (i === index ? newValue : item))
-        );
-        break;
-      case "Reserved":
-        setReservedItemsCar(
-          reservedItemsCar.map((item, i) => (i === index ? newValue : item))
-        );
-        break;
-      default:
-        break;
-    }
-  };
-
+  const [twoWheelerNonStackInput, setTwoWheelerNonStackInput] = useState("");
+  const [twoWheelerReservedInput, setTwoWheelerReservedInput] = useState("");
+  const [fourWheelerNonStackInput, setFourWheelerNonStackInput] = useState("");
+  const [fourWheelerReservedInput, setFourWheelerReservedInput] = useState("");
+  const [fourWheelerStackInput, setFourWheelerStackInput] = useState("");
   const handleChange = async (e) => {
     async function fetchFloor(floorID) {
-      console.log(floorID)
       try {
         const build = await getFloors(floorID);
         setFloors(build.data.map((item) => ({ name: item.name, id: item.id })));
@@ -200,490 +73,758 @@ const AddParkingConfig = () => {
         console.log(e);
       }
     }
+
     if (e.target.type === "select-one" && e.target.name === "building_id") {
       const BuildID = Number(e.target.value);
       await fetchFloor(BuildID);
 
-      setFormData({
-        ...formData,
-        building_id: BuildID,
-      });
-    }else {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
+      setLocation(BuildID);
     }
-  }
+  };
+  // State for parking configurations
+  const [twoWheelerNonStack, setTwoWheelerNonStack] = useState([]);
+  const [twoWheelerReserved, setTwoWheelerReserved] = useState([]);
+  const [fourWheelerNonStack, setFourWheelerNonStack] = useState([]);
+  const [fourWheelerStack, setFourWheelerStack] = useState([]);
+  const [fourWheelerReserved, setFourWheelerReserved] = useState([]);
+
+  const [itemCount, setItemCount] = useState(0);
+
+  // Fetch parking configurations on mount
+  useEffect(() => {
+    const fetchParkingData = async () => {
+      try {
+        const response = await axios.get("/api/parking-configurations");
+        const data = response.data.all_parking;
+        console.log(data);
+
+        // Filter data for two-wheeler and four-wheeler parking
+        setTwoWheelerNonStack(
+          data.filter(
+            (item) => item.vehicle_type === "2-wheeler" && !item.is_reserved
+          )
+        );
+        setTwoWheelerReserved(
+          data.filter(
+            (item) => item.vehicle_type === "2-wheeler" && item.is_reserved
+          )
+        );
+        setFourWheelerNonStack(
+          data.filter(
+            (item) =>
+              item.vehicle_type === "4-wheeler" &&
+              !item.is_reserved &&
+              !item.stack
+          )
+        );
+        setFourWheelerStack(
+          data.filter(
+            (item) =>
+              item.vehicle_type === "4-wheeler" &&
+              !item.is_reserved &&
+              item.stack
+          )
+        );
+        setFourWheelerReserved(
+          data.filter(
+            (item) => item.vehicle_type === "4-wheeler" && item.is_reserved
+          )
+        );
+      } catch (error) {
+        console.error("Error fetching parking data:", error);
+      }
+    };
+
+    fetchParkingData();
+  }, []);
+
+  // Add a parking slot
+  const addItem = (type, vehicleType, isStack = false, count) => {
+    if (!count || count <= 0) {
+      alert("Please enter a valid number greater than 0.");
+      return;
+    }
+
+    if (vehicleType === "2-wheeler") {
+      const existingCount =
+        twoWheelerNonStack.length + twoWheelerReserved.length;
+
+      const newItems = [];
+      for (let i = 0; i < count; i++) {
+        const newName = `P${existingCount + i + 1}`;
+        const newItem = {
+          name: newName,
+          building_id: location,
+          floor_id: floor,
+          vehicle_type: vehicleType,
+          is_reserved: type === "Reserved",
+          reserved_for_user_id: type === "Reserved" ? userId : null,
+        };
+        newItems.push(newItem);
+      }
+
+      if (type === "Reserved") {
+        setTwoWheelerReserved([...twoWheelerReserved, ...newItems]);
+      } else {
+        setTwoWheelerNonStack([...twoWheelerNonStack, ...newItems]);
+      }
+    } else if (vehicleType === "4-wheeler") {
+      if (isStack) {
+        const stackGroup =
+          Math.ceil(fourWheelerStack.length / 2) +
+          fourWheelerNonStack.length +
+          fourWheelerReserved.length +
+          1;
+
+        const newItems = [];
+        for (let i = 0; i < count; i++) {
+          const letterA = String.fromCharCode(65); // 'A'
+          const letterB = String.fromCharCode(66); // 'B'
+
+          const itemA = {
+            name: `P${stackGroup + i}${letterA}`,
+            building_id: location,
+            floor_id: floor,
+            vehicle_type: vehicleType,
+            is_reserved: false,
+            reserved_for_user_id: null,
+          };
+
+          const itemB = {
+            name: `P${stackGroup + i}${letterB}`,
+            building_id: location,
+            floor_id: floor,
+            vehicle_type: vehicleType,
+            is_reserved: false,
+            reserved_for_user_id: null,
+          };
+
+          newItems.push(itemA, itemB);
+        }
+        setFourWheelerStack([...fourWheelerStack, ...newItems]);
+      } else {
+        const existingCount =
+          fourWheelerNonStack.length +
+          fourWheelerReserved.length +
+          Math.ceil(fourWheelerStack.length / 2);
+
+        const newItems = [];
+        for (let i = 0; i < count; i++) {
+          const newName = `P${existingCount + i + 1}`;
+          const newItem = {
+            name: newName,
+            building_id: location,
+            floor_id: floor,
+            vehicle_type: vehicleType,
+            is_reserved: type === "Reserved",
+            reserved_for_user_id: type === "Reserved" ? userId : null,
+          };
+          newItems.push(newItem);
+        }
+
+        if (type === "Reserved") {
+          setFourWheelerReserved([...fourWheelerReserved, ...newItems]);
+        } else {
+          setFourWheelerNonStack([...fourWheelerNonStack, ...newItems]);
+        }
+      }
+    }
+  };
+
+  // Delete a parking slot
+  const deleteItem = (type, vehicleType, index, isStack = false) => {
+    if (vehicleType === "2-wheeler") {
+      if (type === "Reserved") {
+        const updated = [...twoWheelerReserved];
+        updated.splice(index, 1);
+        setTwoWheelerReserved(updated);
+      } else {
+        const updated = [...twoWheelerNonStack];
+        updated.splice(index, 1);
+        setTwoWheelerNonStack(updated);
+      }
+    } else if (vehicleType === "4-wheeler") {
+      if (type === "Reserved") {
+        const updated = [...fourWheelerReserved];
+        updated.splice(index, 1);
+        setFourWheelerReserved(updated);
+      } else if (isStack) {
+        const updated = [...fourWheelerStack];
+        updated.splice(index, 1);
+        setFourWheelerStack(updated);
+      } else {
+        const updated = [...fourWheelerNonStack];
+        updated.splice(index, 1);
+        setFourWheelerNonStack(updated);
+      }
+    }
+  };
+
+  // Save parking configurations to the backend
+  const saveParkingConfig = async () => {
+    const allParking = [
+      ...twoWheelerNonStack,
+      ...twoWheelerReserved,
+      ...fourWheelerNonStack,
+      ...fourWheelerStack,
+      ...fourWheelerReserved,
+    ];
+    try {
+      const response = await postParkingConfiguration({
+        all_parking: allParking,
+      });
+      toast.success("Parking configurations saved successfully!");
+    } catch (error) {
+      console.error("Error saving parking configurations:", error);
+      // alert("Failed to save parking configurations.");
+    }
+  };
+
   return (
-    <div>
-      <h2
-        style={{ background: themeColor }}
-        className="text-center text-xl font-bold p-2 rounded-md mx-2 text-white mt-2"
-      >
-        Parking Group Configuration
-      </h2>
-      <div className=" my-5 mb-10  border-gray-400 p-2 md:px-10 ">
-        <div className="w-full mx-3 my-2 ">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="col-span-1">
-              <label
-                className="block text-gray-700 font-bold mb-2"
-                htmlFor="location"
-              >
-                Location
-              </label>
-              <select
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="location"
-                name="building_id"
-                value={formData.building_id}
-onChange={handleChange}
-              >
-                <option value="">Select a location</option>
-                {buildings.map((build)=>(
-                  <option value={build.id} key={build.id}>{build.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-span-1">
-              <label
-                className="block text-gray-700 font-bold mb-2"
-                htmlFor="floor"
-              >
-                Floor
-              </label>
-              <select
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="floor"
-                placeholder="Floor"
-                value={formData.floor_id}
-                onChange={handleChange}
-                name="floor_id"
-              >
-                <option value="">Select Floor</option>
-                {floors.map((floor)=>(
-                  <option value={floor.id} key={floor.id}>{floor.name}</option>
-                ))}
-              </select>
-            </div>
+    <div className="flex">
+      <Navbar />
+      <div className="border border-gray-300 rounded-lg w-full md:mx-20 px-8 flex flex-col my-2 gap-5">
+        {/* <h1 className="text-xl font-bold mb-4">Parking Group Configuration</h1> */}
+        <h2
+          style={{ background: themeColor }}
+          className="text-center md:text-xl font-bold p-2 my-2 bg-black rounded-md text-white"
+        >
+          Parking Group Configuration
+        </h2>
+        <div className="grid md:grid-cols-2 gap-5">
+          <div className="grid gap-2 items-center w-full">
+            <label className="font-semibold">Location</label>
+            <select
+              name="building_id"
+              className="border p-1 px-4 border-gray-500 rounded-md"
+              value={location}
+              onChange={handleChange}
+            >
+              <option value="">Select a location</option>
+              {buildings?.map((building) => (
+                <option value={building.id} key={building.id}>
+                  {building.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-2 items-center w-full">
+            <label className="font-semibold">Floor</label>
+            <select
+              className="border p-1 px-4 border-gray-500 rounded-md"
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+            >
+              <option value="">Select Floor</option>
+              {floors?.map((floor) => (
+                <option value={floor.id} key={floor.id}>
+                  {floor.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Two Wheeler Configuration */}
-        <div className="w-full mx-3 my-5  ">
-          <h3 className="border-b text-center text-xl border-black mb-6 font-bold">
-            Parking Configuration
-          </h3>
-          <h1 className="text-lg  mb-6 font-medium border-b border-gray-300">
-            Two Wheeler
-          </h1>
-          <div className="flex flex-col justify-between lg:flex-row ">
-            {/* Non Stack Parking for Two Wheeler */}
+        <div className="mt-6">
+          <h2 className="text-lg font-bold mb-2">Two Wheeler</h2>
+          <div className="grid md:grid-cols-3 gap-2">
             <div>
-              <div class="mb-4">
-                {" "}
-                <b>Non Stack Parking</b>
-              </div>
-              <div className="w-80  border border-black rounded-md">
-                {/* <div className="w-[310px] h-[200px] border border-black rounded-md"> */}
+              <h3 className="mb-2 font-semibold">Non Stack Parking</h3>
+              <div className="w-[310px] h-[200px] border border-black">
                 <div className="p-4">
-                  <div className="table-responsive">
-                    <ul className="border border-gray-400 rounded-md list-none flex  items-start flex-wrap w-72 h-[170px] overflow-y-scroll scrollbar-thin">
-                      {nonStackItemsTwoWheeler.map((p, index) => (
-                        <li
-                          key={index}
-                          className="group w-[50px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px]"
-                        >
-                          <div className="flex flex-row mt-1 ml-1">
-                            <input
-                              type="text"
-                              value={p}
-                              onChange={(e) =>
-                                handleItemchange1(
-                                  "Non Stack",
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full bg-transparent border-none focus:ring-0"
-                            />
-                            <button
-                              className="close bg-close-button-bg text-red-500 px-1.5 py-[3px] w-[18px] h-[18px] flex justify-center items-center rounded-full font-normal opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              onClick={() =>
-                                deleteItem("Non Stack", index, "TwoWheeler")
-                              }
-                            >
-                              X
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-[280px] h-[170px] overflow-y-scroll scrollbar-thin">
+                    {twoWheelerNonStack.map((item, index) => (
+                      <li
+                        key={index}
+                        className="w-[70px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px] flex items-center justify-center"
+                      >
+                        <div className="flex items-center">
+                          {editIndex === `NonStack-${index}` ? (
+                            <div className="flex items-center">
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onBlur={() =>
+                                  handleEditSave(
+                                    "Non Stack",
+                                    "2-wheeler",
+                                    index
+                                  )
+                                }
+                                className="border px-1 py-0.5 rounded text-sm w-[40px] mr-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              />
+                              <button
+                                onClick={() =>
+                                  handleEditSave(
+                                    "Non Stack",
+                                    "2-wheeler",
+                                    index
+                                  )
+                                }
+                                className="text-green-500 text-sm ml-1 hover:text-green-700"
+                              >
+                                ✔
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full px-1">
+                              <span
+                                onClick={() =>
+                                  handleEditStart(index, item.name, "NonStack")
+                                }
+                                className="cursor-pointer text-gray-800 hover:text-blue-500 text-sm truncate"
+                              >
+                                {item.name}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  deleteItem("Non Stack", "2-wheeler", index)
+                                }
+                                className="text-red-800 text-sm hover:text-red-600"
+                              >
+                                X
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <div className="flex justify-center gap-2 my-2">
+
+              <div className="mt-4">
                 <input
                   type="number"
-                  value={itemCount}
-                  onChange={(e) => setItemCount(parseInt(e.target.value))}
-                  className="mb-4 bg-white border border-gray-400 px-2 w-20 h-10 mr-2 rounded"
+                  value={twoWheelerNonStackInput}
+                  onChange={(e) => setTwoWheelerNonStackInput(e.target.value)}
+                  placeholder="Enter "
+                  className="border border-gray-400 px-4 py-2 rounded w-32"
                 />
                 <button
-                  className="mb-4 bg-blue-500 text-white px-4 py-2 rounded "
-                  onClick={() => addItem("P", "TwoWheeler")}
+                  onClick={() =>
+                    addItem(
+                      "Non Stack",
+                      "2-wheeler",
+                      false,
+                      parseInt(twoWheelerNonStackInput)
+                    )
+                  }
+                  className="ml-2 bg-blue-500 text-white px-4 py-2 rounded"
                 >
                   Add
                 </button>
                 <input
                   type="number"
-                  value={nonStackCountTwoWheeler}
+                  value={twoWheelerNonStack.length}
                   readOnly
-                  className="mb-4 bg-white border border-gray-400 w-20 h-10 ml-2 px-2 py-1 rounded"
+                  className="mb-4 bg-white border border-gray-400 w-24  ml-2 px-4 py-2 rounded"
                 />
               </div>
             </div>
-
-            {/* Stack Parking for Two Wheeler */}
             <div>
-              <div className="mb-4">
-                <b>Stack Parking</b>
-              </div>
-              <div className="w-80  border border-black rounded-md">
+              <h3 className="font-semibold mb-2">Reserved Parking</h3>
+              <div className="w-[310px] h-[200px] border border-black">
                 <div className="p-4">
-                  <div className="table-responsive">
-                    <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-72 h-[170px] rounded-md overflow-y-scroll scrollbar-thin">
-                      {stackItemsTwoWheeler.map((p, index) => (
-                        <li
-                          key={index}
-                          className="group w-[53px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px]"
-                        >
-                          <div className="flex flex-row mt-1">
-                            <input
-                              type="text"
-                              value={p}
-                              onChange={(e) =>
-                                handleItemchange1(
-                                  "Stack",
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full bg-transparent border-none focus:ring-0"
-                            />
-                            <button
-                              className="close bg-close-button-bg text-red-500 px-1.5 py-[3px] w-[18px] h-[18px] flex justify-center items-center rounded-full font-normal opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              onClick={() =>
-                                deleteItem("Stack", index, "TwoWheeler")
-                              }
-                            >
-                              X
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-[280px] h-[170px] overflow-y-scroll scrollbar-thin">
+                    {twoWheelerReserved.map((item, index) => (
+                      <li
+                        key={index}
+                        className="w-[70px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px] flex items-center justify-center"
+                      >
+                        <div className="flex items-center">
+                          {editIndex === `Reserved-${index}` ? (
+                            <div className="flex items-center">
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                className="border px-1 py-0.5 rounded text-sm w-[40px] mr-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              />
+                              <button
+                                onClick={() =>
+                                  handleEditSave("Reserved", "2-wheeler", index)
+                                }
+                                className="text-green-500 text-sm ml-1 hover:text-green-700"
+                              >
+                                ✔
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full px-1">
+                              <span
+                                onClick={() =>
+                                  handleEditStart(index, item.name, "Reserved")
+                                }
+                                className="cursor-pointer text-gray-800 hover:text-blue-500 text-sm truncate"
+                              >
+                                {item.name}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  deleteItem("Reserved", "2-wheeler", index)
+                                }
+                                className="text-red-800 text-sm hover:text-red-600"
+                              >
+                                X
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <div className="flex justify-center my-2 gap-2">
+
+              <div className="mt-4">
                 <input
                   type="number"
-                  value={itemCount}
-                  onChange={(e) => setItemCount(parseInt(e.target.value))}
-                  className="mb-4 bg-white border border-gray-400 px-2 w-20 h-10 mr-2 rounded"
+                  value={twoWheelerReservedInput}
+                  onChange={(e) => setTwoWheelerReservedInput(e.target.value)}
+                  placeholder="Enter "
+                  className="border border-gray-400 px-4 py-2 rounded w-32"
                 />
                 <button
-                  className="mb-4 bg-blue-500 text-white px-4 py-2 rounded"
-                  onClick={() => addItem("p", "TwoWheeler")}
+                  onClick={() =>
+                    addItem(
+                      "Reserved",
+                      "2-wheeler",
+                      false,
+                      parseInt(twoWheelerReservedInput)
+                    )
+                  }
+                  className="ml-2 bg-blue-500 text-white px-4 py-2 rounded"
                 >
                   Add
                 </button>
                 <input
                   type="number"
-                  value={stackCountTwoWheeler}
+                  value={twoWheelerReserved.length}
                   readOnly
-                  className="mb-4 bg-white border border-gray-400 w-20 h-10 ml-2 px-2 py-1 rounded"
-                />
-              </div>
-            </div>
-
-            {/* Reserved Parking for Two Wheeler */}
-            <div>
-              <div className="mb-4">
-                <b>Reserved Parking</b>
-              </div>
-              <div className="w-80  border border-black rounded-md">
-                <div className="p-4">
-                  <div className="table-responsive">
-                    <ul className="border border-gray-400 list-none rounded-md flex pl-0 items-start flex-wrap w-72 h-[170px] overflow-y-scroll scrollbar-thin">
-                      {reservedItemsTwoWheeler.map((p, index) => (
-                        <li
-                          key={index}
-                          className="group w-[50px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px]"
-                        >
-                          <div className="flex flex-row mt-1 ml-1">
-                            <input
-                              type="text"
-                              value={p}
-                              onChange={(e) =>
-                                handleItemchange1(
-                                  "Reserved",
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full bg-transparent border-none focus:ring-0"
-                            />
-                            <button
-                              className="close bg-close-button-bg text-red-500 px-1.5 py-[3px] w-[18px] h-[18px] flex justify-center items-center rounded-full font-normal opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              onClick={() =>
-                                deleteItem("Reserved", index, "TwoWheeler")
-                              }
-                            >
-                              X
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-center gap-2 my-2">
-                <input
-                  type="number"
-                  value={itemCount}
-                  onChange={(e) => setItemCount(parseInt(e.target.value))}
-                  className="mb-4 bg-white border border-gray-400 px-2 w-20 h-10 mr-2 rounded"
-                />
-                <button
-                  className="mb-4 bg-blue-500 text-white px-4 py-2 rounded "
-                  onClick={() => addItem("R", "TwoWheeler")}
-                >
-                  Add
-                </button>
-                <input
-                  type="number"
-                  value={reservedCountTwoWheeler}
-                  readOnly
-                  className="mb-4 bg-white border border-gray-400 ml-2 w-20 h-10 px-2 rounded"
+                  className="mb-4 bg-white border border-gray-400 w-24  ml-2 px-4 py-2 rounded"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Car Configuration */}
-        <div className="w-full mx-3 my-5 ">
-          {/* <h3 className="border-b text-center text-xl border-black mb-6 font-bold">Parking Configuration</h3> */}
-          <h1 className="text-lg  mb-6 font-medium border-b border-gray-300">
-            Car
-          </h1>
-          <div className="flex flex-col justify-between md:flex-row ">
-            {/* Non Stack Parking for Car */}
+        <div className="mt-4">
+          <h2 className="text-lg font-bold mb-2">Four Wheeler</h2>
+          <div className="grid md:grid-cols-3 gap-2">
             <div>
-              <div className="mb-5">
-                <b>Non Stack Parking</b>
-              </div>
-              <div className="w-80 border border-black rounded-md">
+              <h3 className="font-semibold mb-2">Non-Stack Parking</h3>
+              <div className="w-[310px] h-[200px] border border-black">
                 <div className="p-4">
-                  <div className="table-responsive">
-                    <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-72 h-[170px] rounded-md overflow-y-scroll scrollbar-thin">
-                      {nonStackItemsCar.map((p, index) => (
-                        <li
-                          key={index}
-                          className="group w-[50px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px]"
-                        >
-                          <div className="flex flex-row mt-1 ml-2">
-                            <input
-                              type="text"
-                              value={p}
-                              onChange={(e) =>
-                                handleItemchange2(
-                                  "Non Stack",
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full bg-transparent border-none focus:ring-0"
-                            />
-                            <button
-                              className="close bg-close-button-bg text-red-500 px-1.5 py-[3px] w-[18px] h-[18px] flex justify-center items-center rounded-full font-normal opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              onClick={() =>
-                                deleteItem("Non Stack", index, "Car")
-                              }
-                            >
-                              X
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-[280px] h-[170px] overflow-y-scroll scrollbar-thin">
+                    {fourWheelerNonStack.map((item, index) => (
+                      <li
+                        key={index}
+                        className="w-[70px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px] flex items-center justify-center"
+                      >
+                        <div className="flex items-center">
+                          {editIndex === `FourWheelerNonStack-${index}` ? (
+                            <div className="flex items-center">
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onBlur={() =>
+                                  handleEditSave(
+                                    "Non Stack",
+                                    "4-wheeler",
+                                    index
+                                  )
+                                }
+                                className="border px-1 py-0.5 rounded text-sm w-[40px] mr-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              />
+                              <button
+                                onClick={() =>
+                                  handleEditSave(
+                                    "Non Stack",
+                                    "4-wheeler",
+                                    index
+                                  )
+                                }
+                                className="text-green-500 text-sm ml-1 hover:text-green-700"
+                              >
+                                ✔
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full px-1">
+                              <span
+                                onClick={() =>
+                                  handleEditStart(
+                                    index,
+                                    item.name,
+                                    "FourWheelerNonStack"
+                                  )
+                                }
+                                className="cursor-pointer text-gray-800 hover:text-blue-500 text-sm truncate"
+                              >
+                                {item.name}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  deleteItem("Non Stack", "4-wheeler", index)
+                                }
+                                className="text-red-800 text-sm hover:text-red-600"
+                              >
+                                X
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <div className="flex justify-center my-2 gap-2">
+
+              <div className="mt-4">
                 <input
                   type="number"
-                  value={itemCount}
-                  onChange={(e) => setItemCount(parseInt(e.target.value))}
-                  className="mb-4 bg-white border border-gray-400 px-2 w-20 h-10 mr-2 rounded"
+                  value={fourWheelerNonStackInput}
+                  onChange={(e) => setFourWheelerNonStackInput(e.target.value)}
+                  placeholder="Enter"
+                  className="border border-gray-400 px-4 py-2 w-32 rounded w-32"
                 />
                 <button
-                  className="mb-4 bg-blue-500 text-white px-4 py-2 rounded"
-                  onClick={() => addItem("P", "Car")}
+                  onClick={() =>
+                    addItem(
+                      "Non Stack",
+                      "4-wheeler",
+                      false,
+                      parseInt(fourWheelerNonStackInput)
+                    )
+                  }
+                  className="ml-2 mt-2 bg-blue-500 text-white px-4 py-2 rounded"
                 >
                   Add
                 </button>
                 <input
                   type="number"
-                  value={nonStackCountCar}
+                  value={fourWheelerNonStack.length}
                   readOnly
-                  className="mb-4 bg-white border border-gray-400 w-20 h-10 ml-2 px-2 py-1 rounded"
+                  className="mb-4 bg-white border border-gray-400 w-24 ml-2 px-4 py-2 rounded"
                 />
               </div>
             </div>
-
-            {/* Stack Parking for Car */}
             <div>
-              <div className="mb-5">
-                <b>Stack Parking</b>
-              </div>
-              <div className="w-80 border border-black rounded-md">
+              <h3 className="font-semibold mb-2">Stack Parking</h3>
+              <div className="w-[310px] h-[200px] border border-black">
                 <div className="p-4">
-                  <div className="table-responsive">
-                    <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-72 rounded-md h-[170px] overflow-y-scroll scrollbar-thin">
-                      {stackItemsCar.map((p, index) => (
-                        <li
-                          key={index}
-                          className="group w-[53px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px]"
-                        >
-                          <div className="flex flex-row mt-1">
-                            <input
-                              type="text"
-                              value={p}
-                              onChange={(e) =>
-                                handleItemchange2(
-                                  "Stack",
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full bg-transparent border-none focus:ring-0"
-                            />
-                            <button
-                              className="close bg-close-button-bg text-red-500 px-1.5 py-[3px] w-[18px] h-[18px] flex justify-center items-center rounded-full font-normal opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              onClick={() => deleteItem("Stack", index, "Car")}
-                            >
-                              X
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-[280px] h-[170px] overflow-y-scroll scrollbar-thin">
+                    {fourWheelerStack.map((item, index) => (
+                      <li
+                        key={index}
+                        className="w-[70px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px] flex items-center justify-center"
+                      >
+                        <div className="flex items-center">
+                          {editIndex === `FourWheelerStack-${index}` ? (
+                            <div className="flex items-center">
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onBlur={() =>
+                                  handleEditSave(
+                                    "Stack",
+                                    "4-wheeler",
+                                    index,
+                                    true
+                                  )
+                                }
+                                className="border px-1 py-0.5 rounded text-sm w-[40px] mr-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              />
+                              <button
+                                onClick={() =>
+                                  handleEditSave(
+                                    "Stack",
+                                    "4-wheeler",
+                                    index,
+                                    true
+                                  )
+                                }
+                                className="text-green-500 text-sm ml-1 hover:text-green-700"
+                              >
+                                ✔
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full px-1">
+                              <span
+                                onClick={() =>
+                                  handleEditStart(
+                                    index,
+                                    item.name,
+                                    "FourWheelerStack"
+                                  )
+                                }
+                                className="cursor-pointer text-gray-800 hover:text-blue-500 text-sm truncate"
+                              >
+                                {item.name}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  deleteItem("Stack", "4-wheeler", index, true)
+                                }
+                                className="text-red-800 text-sm hover:text-red-600"
+                              >
+                                X
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <div className="flex justify-center my-2 gap-2">
+
+              <div className="mt-4">
                 <input
                   type="number"
-                  value={itemCount}
-                  onChange={(e) => setItemCount(parseInt(e.target.value))}
-                  className="mb-4 bg-white border border-gray-400 px-2 w-20 h-10 mr-2 rounded"
+                  value={fourWheelerStackInput}
+                  onChange={(e) => setFourWheelerStackInput(e.target.value)}
+                  placeholder="Enter count"
+                  className="border border-gray-400 px-4 py-2 rounded w-32"
                 />
                 <button
-                  className="mb-4 bg-blue-500 text-white px-4 py-2 rounded"
-                  onClick={() => addItem("p", "Car")}
+                  onClick={() =>
+                    addItem(
+                      "Stack",
+                      "4-wheeler",
+                      true,
+                      parseInt(fourWheelerStackInput)
+                    )
+                  }
+                  className="mt-2 ml-2 bg-blue-500 text-white px-4 py-2 rounded"
                 >
                   Add
                 </button>
                 <input
                   type="number"
-                  value={stackCountCar}
+                  value={fourWheelerStack.length}
                   readOnly
-                  className="mb-4 bg-white border border-gray-400 w-20 h-10 ml-2 px-2 py-1 rounded"
+                  className="mb-4 bg-white border border-gray-400 w-24 ml-2 px-4 py-2 rounded"
                 />
               </div>
             </div>
-
-            {/* Reserved Parking for Car */}
             <div>
-              <div className="mb-5">
-                <b>Reserved Parking</b>
-              </div>
-              <div className="w-80 border border-black rounded-md">
-                <div className="p-4">
-                  <div className="table-responsive">
-                    <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-72 rounded-md h-[170px] overflow-y-scroll scrollbar-thin">
-                      {reservedItemsCar.map((p, index) => (
-                        <li
-                          key={index}
-                          className="group w-[50px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px]"
-                        >
-                          <div className="flex flex-row mt-1 ml-1">
-                            <input
-                              type="text"
-                              value={p}
-                              onChange={(e) =>
-                                handleItemchange2(
-                                  "Reserved",
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full bg-transparent border-none focus:ring-0 text-center"
-                            />
-                            <button
-                              className="close bg-close-button-bg text-red-500 px-1.5 py-[3px] w-[18px] h-[18px] flex justify-center items-center rounded-full font-normal opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                              onClick={() =>
-                                deleteItem("Reserved", index, "Car")
-                              }
-                            >
-                              X
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+              <h3 className="font-semibold mb-2">Reserved Parking</h3>
+              {/* <div className="w-[310px] h-[200px] border border-black">
+            <div className="p-4">
+            <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-[280px] h-[170px] overflow-y-scroll scrollbar-thin">
+              {fourWheelerReserved.map((item, index) => (
+                <li key={index} className=" w-[50px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px]">
+                  <div className="flex gap-2 items-center justify-center">
+
+                  {item.name}
+                  <button onClick={() => deleteItem("Reserved", "4-wheeler", index)}><p className="text-red-800">X</p></button>
                   </div>
+                </li>
+              ))}
+            </ul>
+            </div>
+            </div> */}
+              <div className="w-[310px] h-[200px] border border-black">
+                <div className="p-4">
+                  <ul className="border border-gray-400 list-none flex pl-0 items-start flex-wrap w-[280px] h-[170px] overflow-y-scroll scrollbar-thin">
+                    {fourWheelerReserved.map((item, index) => (
+                      <li
+                        key={index}
+                        className="w-[70px] h-[40px] bg-[#eeeeee9e] border border-gray-300 rounded-lg m-[7px] flex items-center justify-center"
+                      >
+                        <div className="flex items-center">
+                          {editIndex === `FourWheelerReserved-${index}` ? (
+                            <div className="flex items-center">
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onBlur={() =>
+                                  handleEditSave("Reserved", "4-wheeler", index)
+                                }
+                                className="border px-1 py-0.5 rounded text-sm w-[40px] mr-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              />
+                              <button
+                                onClick={() =>
+                                  handleEditSave("Reserved", "4-wheeler", index)
+                                }
+                                className="text-green-500 text-sm ml-1 hover:text-green-700"
+                              >
+                                ✔
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 w-full px-1">
+                              <span
+                                onClick={() =>
+                                  handleEditStart(
+                                    index,
+                                    item.name,
+                                    "FourWheelerReserved"
+                                  )
+                                }
+                                className="cursor-pointer text-gray-800 hover:text-blue-500 text-sm truncate"
+                              >
+                                {item.name}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  deleteItem("Reserved", "4-wheeler", index)
+                                }
+                                className="text-red-800 text-sm hover:text-red-600"
+                              >
+                                X
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <div className="mb-4">
+              <div className="mt-4">
                 <input
                   type="number"
-                  value={itemCount}
-                  onChange={(e) => setItemCount(parseInt(e.target.value))}
-                  className="mb-4 bg-white border border-gray-400 px-2 w-20 h-10 mr-2 rounded"
+                  value={fourWheelerReservedInput}
+                  onChange={(e) => setFourWheelerReservedInput(e.target.value)}
+                  placeholder="Enter"
+                  className="border border-gray-400 px-4 py-2 rounded w-32"
                 />
                 <button
-                  className="mb-4 bg-blue-500 text-white px-4 py-2 rounded mt-2"
-                  onClick={() => addItem("R", "Car")}
+                  onClick={() =>
+                    addItem(
+                      "Reserved",
+                      "4-wheeler",
+                      false,
+                      parseInt(fourWheelerReservedInput)
+                    )
+                  }
+                  className="mt-2 ml-2 bg-blue-500 text-white px-4 py-2 rounded"
                 >
                   Add
                 </button>
                 <input
                   type="number"
-                  value={reservedCountCar}
+                  value={fourWheelerReserved.length}
                   readOnly
-                  className="mb-4 bg-white border border-gray-400 ml-2 w-20 h-10 px-2 rounded"
+                  className="mb-4 bg-white border border-gray-400 w-24 ml-2 px-4 py-2 rounded"
                 />
               </div>
             </div>
           </div>
         </div>
-        <div className="w-full mx-3 my-5 ">
-          <h1 className="text-lg  mb-6 font-medium border-b border-gray-300">
-            Floor Map
-          </h1>
-
-          <FileInputBox />
-        </div>
-        <div className="sm:flex justify-center grid gap-2 my-5 ">
+        <div className="flex justify-center my-2">
           <button
-            className="bg-black text-white p-2 px-4 rounded-md font-medium"
-            //   onClick={handleSubmit}
+            onClick={saveParkingConfig}
+            style={{ background: themeColor }}
+            className="mt-6 bg-green-500 text-white px-4 py-2 rounded"
           >
             Submit
           </button>
@@ -693,4 +834,4 @@ onChange={handleChange}
   );
 };
 
-export default AddParkingConfig;
+export default ParkingConfig;

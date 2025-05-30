@@ -63,9 +63,9 @@ const EmployeeAddStaff = () => {
   const initializeWorkingSchedule = (apiSchedule) => {
     return daysOfWeek.reduce((acc, day) => {
       acc[day] = {
-        selected: !!apiSchedule[day], // true if the day exists in the API data
-        start_time: apiSchedule[day]?.start_time || "",
-        end_time: apiSchedule[day]?.end_time || "",
+        selected: !!apiSchedule[day],
+        start_time: convertTo24Hour(apiSchedule[day]?.start_time),
+        end_time: convertTo24Hour(apiSchedule[day]?.end_time),
       };
       return acc;
     }, {});
@@ -246,6 +246,19 @@ const EmployeeAddStaff = () => {
     }
   };
 
+  function convertTo24Hour(timeStr) {
+    if (!timeStr) return "";
+    const [time, modifier] = timeStr.split(" ");
+    let [hours, minutes] = time.split(":");
+    if (modifier === "PM" && hours !== "12") {
+      hours = String(Number(hours) + 12);
+    }
+    if (modifier === "AM" && hours === "12") {
+      hours = "00";
+    }
+    return `${hours.padStart(2, "0")}:${minutes}`;
+  }
+
   return (
     <section className="flex">
       <div className="hidden md:block">
@@ -256,7 +269,7 @@ const EmployeeAddStaff = () => {
           <div className="border border-gray-300 rounded-lg p-4 w-full mx-4">
             <h2
               className="text-center md:text-xl font-semibold p-2 bg-black rounded-lg mb-4 text-white"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 34)" }}
             >
               Edit Staff
             </h2>
@@ -507,7 +520,6 @@ const EmployeeAddStaff = () => {
                 isMulti={true}
               />
             </div>
-
             <div className="mt-4">
               <h2 className="border-b border-gray-300 font-medium">
                 Working Schedule
@@ -559,7 +571,6 @@ const EmployeeAddStaff = () => {
                 </tbody>
               </table>
             </div>
-
             <div className="flex gap-5 justify-center items-center my-4">
               <button
                 type="submit"
