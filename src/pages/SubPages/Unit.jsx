@@ -133,6 +133,7 @@ const Unit = () => {
     try {
       const resp = postNewUnit(formData);
       setUnitAdded(true);
+      setUnitAdded(Date.now());
       toast.success("Unit created successfully");
     } catch (error) {
       console.log(error);
@@ -158,8 +159,11 @@ const Unit = () => {
     setEntity(e.target.value);
   };
   const handleUnitChange = (e) => {
-    setUnit(e.target.value);
-  };
+  const { value } = e.target;
+  // Allow only alphabets and numbers, no spaces or special characters
+  const filteredValue = value.replace(/[^a-zA-Z0-9]/g, "");
+  setUnit(filteredValue);
+};
   const themeColor = useSelector((state) => state.theme.color);
   return (
     <div className="flex">
@@ -172,7 +176,7 @@ const Unit = () => {
               <h2
                 className=" font-semibold  hover:text-white duration-150 transition-all  p-2 rounded-md text-white cursor-pointer text-center flex items-center  gap-2"
                 onClick={() => setShowFields(!showFields)}
-                style={{ background: themeColor }}
+                style={{ background: "rgb(3 19 37)" }}
               >
                 <PiPlusCircle size={20} />
                 Add Unit

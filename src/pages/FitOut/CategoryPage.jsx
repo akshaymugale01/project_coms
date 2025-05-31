@@ -361,7 +361,13 @@ const CategoryPage = () => {
     },
   ];
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "category") {
+      const validated = value.replace(/[^a-zA-Z]/g, "");
+      setFormData({ ...formData, [name]: validated });
+      return;
+    }
+    setFormData({ ...formData, [name]: value });
   };
   const siteId = getItemInLocalStorage("SITEID");
   const handleEditCategory = async () => {

@@ -7,7 +7,7 @@ import { editFitOutStatus, editHelpDeskStatusDetailsSetup, getFitOutStatus, getH
 import { getItemInLocalStorage } from "../../../utils/localStorage";
 import toast from "react-hot-toast";
 
-const EditStatusModal = ({ onClose, id, setStatusAdded }) => {
+const   EditStatusModal = ({ onClose, id, setStatusAdded }) => {
   const token = getItemInLocalStorage("token")
   const themeColor = useSelector((state) => state.theme.color);
   const [formData, setFormData] = useState({

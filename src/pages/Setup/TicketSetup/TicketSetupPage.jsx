@@ -16,7 +16,7 @@ import EditStatusModal from "./EditStatusModal";
 const TicketSetupPage = () => {
   const [selectedRule, setSelectedRule] = useState("");
   const [statusAdded, setStatusAdded] = useState(false);
-const [showEditModal, setShowEditModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState({
     status: "",
     fixedState: "",
@@ -35,7 +35,7 @@ const [showEditModal, setShowEditModal] = useState(false)
   const [color, setColor] = useState("#ffffff");
   const [showPicker, setShowPicker] = useState(false);
   const [statuses, setStatuses] = useState([]);
-  const [id, setId] = useState("")
+  const [id, setId] = useState("");
   useEffect(() => {
     const fetchTicketStatus = async () => {
       try {
@@ -105,10 +105,10 @@ const [showEditModal, setShowEditModal] = useState(false)
     },
   ];
 
-  const handleEditStatusModal = (id)=>{
-setId(id)
-setShowEditModal(true)
-  }
+  const handleEditStatusModal = (id) => {
+    setId(id);
+    setShowEditModal(true);
+  };
   const statusColumns = [
     {
       name: "Order",
@@ -144,7 +144,11 @@ setShowEditModal(true)
       name: "Action",
       cell: (row) => (
         <div className="flex items-center gap-4">
-          <button onClick={()=>{handleEditStatusModal(row.id)}}>
+          <button
+            onClick={() => {
+              handleEditStatusModal(row.id);
+            }}
+          >
             <BiEdit size={15} />
           </button>
           {/* <Link>
@@ -361,7 +365,7 @@ setShowEditModal(true)
               Import
             </button> */}
             <table className="w-full">
-              <thead style={{background: themeColor}} className="text-white">
+              <thead style={{ background: themeColor }} className="text-white">
                 <tr>
                   <th class="px-4 py-2"></th>
                   <th class="px-4 py-2">Operational Days</th>
@@ -551,13 +555,13 @@ setShowEditModal(true)
               </tbody>
             </table>
             <div className="flex justify-center my-2 mb-5">
-            <button
-              className=" font-semibold  hover:bg-black hover:text-white transition-all border-black p-2 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-              style={{ background: themeColor }}
+              <button
+                className=" font-semibold  hover:bg-black hover:text-white transition-all border-black p-2 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
+                style={{ background: themeColor }}
               >
-              Submit
-            </button>
-              </div>
+                Submit
+              </button>
+            </div>
             {showModal && (
               <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-white p-5 rounded-lg w-2/3">
@@ -688,7 +692,13 @@ setShowEditModal(true)
             </div>
           </div>
         )}
-       {showEditModal && <EditStatusModal onClose={()=> setShowEditModal(false)} id={id} setStatusAdded={setStatusAdded}  />}
+        {showEditModal && (
+          <EditStatusModal
+            onClose={() => setShowEditModal(false)}
+            id={id}
+            setStatusAdded={setStatusAdded}
+          />
+        )}
       </div>
     </div>
   );

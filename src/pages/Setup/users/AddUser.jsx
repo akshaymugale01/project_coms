@@ -73,13 +73,27 @@ const AddUser = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+    if (name === "firstname" || name === "lastname") {
+      const validated = value.replace(/[^a-zA-Z]/g, "");
+      setFormData((prev) => ({ ...prev, [name]: validated }));
+      return;
+    }
+
     if (name === "mobile") {
-      const mobileRegex = /^[0-9]{0,10}$/; // Allows only up to 10 digits
+      const mobileRegex = /^[0-9]{0,10}$/;
       if (!mobileRegex.test(value)) {
-        return; // Prevent updating state if invalid
+        return; 
       }
     }
+
+      if (name === "email") {
+    // Remove all spaces from email input
+    const noSpaces = value.replace(/\s/g, "");
+    setFormData((prev) => ({ ...prev, [name]: noSpaces }));
+    return;
+  }
+
+  
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -169,9 +183,9 @@ const AddUser = () => {
               { label: "Password", type: "password" },
             ].map((field, idx) => (
               <div key={idx} className="flex flex-col gap-1">
-              <label className="font-semibold">
-  {field.label}: <span style={{ color: "red" }}>*</span>
-</label>
+                <label className="font-semibold">
+                  {field.label}: <span style={{ color: "red" }}>*</span>
+                </label>
                 <input
                   type={field.type}
                   name={field.label.toLowerCase().replace(" ", "")}
@@ -232,7 +246,9 @@ const AddUser = () => {
                 { field: "lives_here", label: "Lives Here" },
               ].map(({ field, label }, idx) => (
                 <div key={idx} className="flex flex-col gap-1">
-                  <label className="font-semibold">{label}:<span style={{color: "red"}}>*</span></label>
+                  <label className="font-semibold">
+                    {label}:<span style={{ color: "red" }}>*</span>
+                  </label>
                   <select
                     value={site[field]}
                     onChange={(e) =>

@@ -6,7 +6,7 @@ import Table from "../../components/table/Table";
 import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
 import { Link } from "react-router-dom";
-import { getBuildings, getSites, postBuilding } from "../../api";
+import { getBuildings, getSites, postBuilding, putBuilding } from "../../api";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Navbar from "../../components/Navbar";
@@ -14,11 +14,16 @@ import Navbar from "../../components/Navbar";
 const Building = () => {
   const [siteId, setSiteId] = useState("");
   const [building, setBuilding] = useState("");
+  const [floor_no, setFloor_No] = useState("");
   const [showFields, setShowFields] = useState(false);
-const [added, setAdded] = useState(false)
+  const [added, setAdded] = useState(false);
   const [submittedData, setSubmittedData] = useState([]);
   const [sites, setSites] = useState([]);
   const [buildings, setBuildings] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("edit"); // "edit" or "view"
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+
   const buildingColumns = [
     {
       name: "Site",
@@ -39,12 +44,12 @@ const [added, setAdded] = useState(false)
       name: "Action",
       cell: (row) => (
         <div className="flex items-center gap-4">
-          <Link>
+          <button onClick={() => handleView(row)}>
             <BsEye size={15} />
-          </Link>
-          <Link>
+          </button>
+          <button onClick={() => handleEdit(row)}>
             <BiEdit size={15} />
-          </Link>
+          </button>
         </div>
       ),
     },
@@ -58,14 +63,15 @@ const [added, setAdded] = useState(false)
     const formData = new FormData();
     formData.append("building[name]", building);
     formData.append("building[site_id]", siteId);
+    formData.append("building[floor_no]", floor_no);
     try {
       const buildResp = await postBuilding(formData);
       console.log(buildResp);
-      setAdded(true)
-      setShowFields(false)
-      setSiteId("")
-      setBuilding("")
-      toast.success("Building Added Successfully")
+      setAdded(true);
+      setShowFields(false);
+      setSiteId("");
+      setBuilding("");
+      toast.success("Building Added Successfully");
     } catch (error) {
       console.log(error);
     }
@@ -75,9 +81,16 @@ const [added, setAdded] = useState(false)
     setSiteId(e.target.value);
   };
 
-  const handleBuildingChange = (e) => {
-    setBuilding(e.target.value);
-  };
+const handleBuildingChange = (e) => {
+  const { name, value } = e.target;
+  if (name === "floor_no") {
+    const filteredValue = value.replace(/[^0-9]/g, "");
+    setFloor_No(filteredValue);
+  } else if (name === "building") {
+    const filteredValue = value.replace(/[^a-zA-Z0-9 ]/g, "");
+    setBuilding(filteredValue);
+  }
+};
 
   useEffect(() => {
     const fetchBuildings = async () => {
@@ -94,62 +107,98 @@ const [added, setAdded] = useState(false)
     fetchSite();
   }, [added]);
   const themeColor = useSelector((state) => state.theme.color);
+
+  const handleEdit = (building) => {
+    setSelectedBuilding(building);
+    setModalMode("edit");
+    setIsModalOpen(true);
+  };
+
+  const handleView = (building) => {
+    setSelectedBuilding(building);
+    setModalMode("view");
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateBuilding = async () => {
+    const formData = new FormData();
+    formData.append("building[name]", selectedBuilding.name);
+    formData.append("building[site_id]", selectedBuilding.site_id);
+    formData.append("building[floor_no]", selectedBuilding.floor_no);
+    try {
+      await putBuilding(selectedBuilding.id, formData);
+      toast.success("Building updated successfully");
+      setIsModalOpen(false);
+      setAdded(Date.now());
+    } catch (error) {
+      toast.error("Failed to update building");
+    }
+  };
+
   return (
     <div className="flex">
       <Navbar />
-    <div className="w-full mt-1">
-      
-      <Account />
-      <div className="flex flex-col mx-10 my-10 gap-2">
-        <div className="flex justify-end w-full">
-          <h2
-            className="font-semibold  hover:text-white duration-150 transition-all  p-2 rounded-md text-white cursor-pointer text-center flex items-center  gap-2"
-            onClick={() => setShowFields(!showFields)}
-            style={{ background: themeColor }}
-          >
-            <PiPlusCircle size={20} />
-            Add Building
-          </h2>
-        </div>
-        {showFields && (
-          <div>
-            <div className="flex md:flex-row flex-col justify-center gap-3">
-              <select
-                name="siteId"
-                id=""
-                value={siteId}
-                onChange={handleSiteChange}
-                className="border border-gray-500 rounded-md  p-2"
-              >
-                <option value={""}>Select Site</option>
-                {sites.map((site) => (
-                  <option value={site.id} key={site.id}>
-                    {site.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Enter Building Name"
-                className="border border-gray-500 rounded-md  p-2"
-                value={building}
-                onChange={handleBuildingChange}
-              />
-              <button
-                onClick={handleSubmit}
-                style={{ background: themeColor }}
-                className="bg-blue-500 text-white py-1 px-4 rounded-md  hover:bg-blue-600"
-              >
-                Submit
-              </button>
-              <button
-                onClick={() => setShowFields(!showFields)}
-                className="bg-red-400 text-white py-1 px-4 rounded-md  "
-              >
-                Cancel
-              </button>
-            </div>
-            {/* <div className="flex my-2 gap-4">
+      <div className="w-full mt-1">
+        <Account />
+        <div className="flex flex-col mx-5 gap-2">
+          <div className="flex justify-end w-full p-2">
+            <h2
+              className="font-semibold  hover:text-white duration-150 transition-all  p-2 rounded-md text-white cursor-pointer text-center flex items-center  gap-2"
+              onClick={() => setShowFields(!showFields)}
+              style={{ background: "rgb(3 19 37)" }}
+            >
+              <PiPlusCircle size={20} />
+              Add Building
+            </h2>
+          </div>
+          {showFields && (
+            <div>
+              <div className="flex md:flex-row flex-col justify-center gap-3">
+                <select
+                  name="siteId"
+                  id=""
+                  value={siteId}
+                  onChange={handleSiteChange}
+                  className="border border-gray-500 rounded-md  p-2"
+                >
+                  <option value={""}>Select Site</option>
+                  {sites.map((site) => (
+                    <option value={site.id} key={site.id}>
+                      {site.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  name="building"
+                  placeholder="Enter Building Name"
+                  className="border border-gray-500 rounded-md  p-2"
+                  value={building}
+                  onChange={handleBuildingChange}
+                />
+                <input
+                  type="text"
+                  name="floor_no"
+                  placeholder="Enter No. of Floors"
+                  className="border border-gray-500 rounded-md  p-2"
+                  value={floor_no}
+                  onChange={handleBuildingChange}
+                />
+                <button
+                  onClick={handleSubmit}
+                  style={{ background: "rgb(3 19 37)" }}
+                  className="bg-blue-500 text-white py-1 px-4 rounded-md  hover:bg-blue-600"
+                >
+                  Submit
+                </button>
+                <button
+                  onClick={() => setShowFields(!showFields)}
+                  className="bg-red-400 text-white py-1 px-4 rounded-md  "
+                >
+                  Cancel
+                </button>
+              </div>
+              {/* <div className="flex my-2 gap-4">
               <div className="flex  gap-2">
                 <input type="checkbox" name="wing" id="wing" />
                 <label htmlFor="wing">Wing</label>
@@ -167,10 +216,10 @@ const [added, setAdded] = useState(false)
                 <label htmlFor="room">Room</label>
               </div>
             </div> */}
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* <div className="flex justify-center items-center">
+          {/* <div className="flex justify-center items-center">
           <div className="mt-4 w-screen">
             <table className="border-collapse w-full">
               <thead>
@@ -234,9 +283,77 @@ const [added, setAdded] = useState(false)
             </table>
           </div>
         </div> */}
-        <Table columns={buildingColumns} data={buildings} />
+          <Table columns={buildingColumns} data={buildings} />
+        </div>
       </div>
-    </div>
+      {isModalOpen && selectedBuilding && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+          <div className="bg-white p-6 rounded shadow-lg min-w-[300px] relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500"
+              onClick={() => setIsModalOpen(false)}
+            >
+              ✕
+            </button>
+            <h2 className="text-lg font-semibold mb-4">
+              {modalMode === "view" ? "View Building" : "Edit Building"}
+            </h2>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Only allow submit in edit mode
+                if (modalMode === "edit") handleUpdateBuilding();
+              }}
+              className="flex flex-col gap-3"
+            >
+              <label>
+                Site:
+                <input
+                  type="text"
+                  value={selectedBuilding.site_name}
+                  disabled
+                  className="border p-2 rounded w-full"
+                />
+              </label>
+              <label>
+                Building Name:
+                <input
+                  type="text"
+                  value={selectedBuilding.name}
+                  disabled={modalMode === "view"}
+                  onChange={(e) =>
+                    setSelectedBuilding({ ...selectedBuilding, name: e.target.value })
+                  }
+                  className="border p-2 rounded w-full"
+                />
+              </label>
+              <label>
+                No. of Floors:
+                <input
+                  type="number"
+                  value={selectedBuilding.floor_no || ""}
+                  disabled={modalMode === "view"}
+                  onChange={(e) =>
+                    setSelectedBuilding({
+                      ...selectedBuilding,
+                      floor_no: e.target.value,
+                    })
+                  }
+                  className="border p-2 rounded w-full"
+                />
+              </label>
+              {modalMode === "edit" && (
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+                >
+                  Update
+                </button>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

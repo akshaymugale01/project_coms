@@ -21,6 +21,8 @@ import {
   getSetupUsers,
 } from "../../../api";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
+import toast from "react-hot-toast";
+// import { toast } from "react-toastify";
 
 const TicketCategorySetup = () => {
   const [page, setPage] = useState("Category");
@@ -221,9 +223,9 @@ const TicketCategorySetup = () => {
           <button onClick={() => openCatEditModal(row.id)}>
             <BiEdit size={15} />
           </button>
-          <button onClick={() => handleCatDelete(row.id)}>
+          {/* <button onClick={() => handleCatDelete(row.id)}>
             <FaTrash size={15} />
-          </button>
+          </button> */}
         </div>
       ),
     },
@@ -344,9 +346,12 @@ const [subCatId, setSubCatId] = useState(null)
     sendData.append("helpdesk_category[tat]", formData.minTat);
     try {
       const resp = await editHelpDeskCategoriesSetupDetails(catId, sendData);
-      console.log(resp);
+      toast.success("Category updated successfully!");
+      setIsCatEditModalOpen(false); // Close modal
+      setCatAdded(Date.now());      // Trigger immediate refresh
     } catch (error) {
       console.log(error);
+      toast.error("Failed to update category");
     }
   };
   return (
