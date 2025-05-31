@@ -2812,6 +2812,13 @@ export const postBuilding = async (data) =>
       token: token,
     },
   });
+export const putBuilding = async (id,data) =>
+  axiosInstance.put(`/buildings/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
 export const getAllFloors = async () =>
   axiosInstance.get(`/floors.json`, {
     params: {
