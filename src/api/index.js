@@ -1529,6 +1529,89 @@ export const editFB = async (id, data) =>
     },
   });
 
+  export const getFixedStatusSetup = async () =>
+  axiosInstance.get(`/generic_infos.json?q[info_type_eq]=FixedStatus`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getStatusSetupDetails = async (id) =>
+  axiosInstance.get(`/status_restaurants/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const editStatusSetup = async (id, data) =>
+  axiosInstance.put(`/status_restaurants/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getGenericCategoryRestaurtant = async () =>
+  axiosInstance.get(`/generic_infos.json?q[info_type_eq]=RestaurantCategory`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getFBSubCategories = async () =>
+  axiosInstance.get("/get_sub_categories.json", {
+    params: {
+      token: token,
+    },
+  });
+
+
+  export const editGenericSubCategoryDetails = async (id, data) =>
+  axiosInstance.put(`/generic_sub_infos/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getGenericSubCategoryDetails = async (id) =>
+  axiosInstance.get(`/generic_sub_infos/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getRestaurtantMenu = async (id) =>
+  axiosInstance.get(`/restaurant_menus.json?restaurant_id=${id}`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getRestaurtantTableBookings = async () =>
+  axiosInstance.get(`/table_bookings.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const getRestaurtantOrderBookings = async () =>
+  axiosInstance.get(`/restaurant_orders.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const postStatusSetup = async (data) =>
+  axiosInstance.post(`/status_restaurants.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getStatusSetup = async () =>
+  axiosInstance.get(`/status_restaurants.json`, {
+    params: {
+      token: token,
+    },
+  });
 export const downloadRestaurtantData = async () =>
   axiosInstance.get(`/food_and_beverages/export.xlsx`, {
     params: {

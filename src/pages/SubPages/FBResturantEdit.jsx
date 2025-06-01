@@ -3,12 +3,16 @@ import { useSelector } from "react-redux";
 import FileInputBox from "../../containers/Inputs/FileInputBox";
 import { FaTrash } from "react-icons/fa";
 import { Select } from "antd";
-import { editFB, getCuisinesFBSetup, getFBDetails } from "../../api";
+import {
+  domainPrefix,
+  editFB,
+  getCuisinesFBSetup,
+  getFBDetails,
+} from "../../api";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import { restaurantSchedule } from "../../utils/initialFormData";
-
 
 const FBRestaurtantEdit = () => {
   const { id } = useParams();
@@ -60,11 +64,15 @@ const FBRestaurtantEdit = () => {
   const [options, setOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
 
-
-  const [rows, setRows] = useState([{ id: "", order: false, booking: false, startDate: "", endDate: "" }]);
+  const [rows, setRows] = useState([
+    { id: "", order: false, booking: false, startDate: "", endDate: "" },
+  ]);
 
   const addRow = () => {
-    setRows([...rows, { id: "", order: false, booking: false, startDate: "", endDate: "" }]);
+    setRows([
+      ...rows,
+      { id: "", order: false, booking: false, startDate: "", endDate: "" },
+    ]);
   };
 
   const deleteRow = (index) => {
@@ -82,7 +90,7 @@ const FBRestaurtantEdit = () => {
     anotherMobileNumber: "",
     landlineNumber: "",
     deliveryTime: "",
-    cuisines: "",
+    cuisines: [],
     servesAlcohol: "",
     wheelchairAccessible: "",
     cashOnDelivery: "",
@@ -129,13 +137,13 @@ const FBRestaurtantEdit = () => {
           endDate: day.end_date || "",
         }));
         const apiBlockedDays = {
-          sunday: !!data.sun,     // Map 'sun' to 'sunday'
-          monday: !!data.mon,     // Map 'mon' to 'monday'
-          tuesday: !!data.tue,    // Map 'tue' to 'tuesday'
-          wednesday: !!data.wed,  // Map 'wed' to 'wednesday'
-          thursday: !!data.thu,   // Map 'thu' to 'thursday'
-          friday: !!data.fri,     // Map 'fri' to 'friday'
-          saturday: !!data.sat,   // Map 'sat' to 'saturday'
+          sunday: !!data.sun, // Map 'sun' to 'sunday'
+          monday: !!data.mon, // Map 'mon' to 'monday'
+          tuesday: !!data.tue, // Map 'tue' to 'tuesday'
+          wednesday: !!data.wed, // Map 'wed' to 'wednesday'
+          thursday: !!data.thu, // Map 'thu' to 'thursday'
+          friday: !!data.fri, // Map 'fri' to 'friday'
+          saturday: !!data.sat, // Map 'sat' to 'saturday'
         };
 
         setSelectedDays((prevState) => ({
@@ -190,7 +198,7 @@ const FBRestaurtantEdit = () => {
             : "",
           last_booking_time: data.last_booking_time
             ? new Date(data.last_booking_time).toTimeString().substring(0, 5) // Extract HH:mm
-            : ""
+            : "",
         });
         setSelectedOptions(
           (data.cuisines?.split(",") || []).map((cuisine) => ({
@@ -200,7 +208,6 @@ const FBRestaurtantEdit = () => {
         );
 
         setRows(blockedDays);
-
       } catch (error) {
         console.error("Error fetching site FB details:", error);
       }
@@ -230,7 +237,6 @@ const FBRestaurtantEdit = () => {
     }));
   };
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -238,7 +244,6 @@ const FBRestaurtantEdit = () => {
       [name]: value, // This handles both strings and booleans if passed correctly
     }));
   };
-
 
   const handleCheckboxChange = (day) => {
     setFormData((prevState) => ({
@@ -297,28 +302,36 @@ const FBRestaurtantEdit = () => {
     const fetchCuisines = async () => {
       try {
         const siteDetailsResp = await getCuisinesFBSetup();
-
         // Transform data to react-select format
         const formattedOptions = siteDetailsResp.data.map((item) => ({
           value: item.id, // id as the value
           label: item.name, // name as the label
         }));
-
         setOptions(formattedOptions);
+        console.log("formatted values", formattedOptions);
+
       } catch (error) {
         console.error("Error fetching cuisines:", error);
       }
     };
     fetchCuisines();
   }, []);
+// console.log("Selected Options", options);
 
   // Handle selection changes
-  const handleChange1 = (selected) => {
-    setSelectedOptions(selected);
-    console.log("Selected Cuisines:", selected);
-  };
+const handleChange1 = (selected) => {
+  const safeSelected = Array.isArray(selected) ? selected : [];
+  setSelectedOptions(safeSelected);
+  setFormData((prev) => ({
+    ...prev,
+    cuisines: safeSelected.map((opt) => ({
+      id: opt.value,
+      name: opt.label,
+    })),
+  }));
+};
   const userId = getItemInLocalStorage("UserId");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const handleSubmit = async () => {
     if (!formData.restaurantName) {
       return toast.error("Restaurant Name is required");
@@ -341,7 +354,9 @@ const FBRestaurtantEdit = () => {
       return toast.error("Another Mobile Number is required");
     }
     if (formData.anotherMobileNumber.length !== 10) {
-      return toast.error("Another Mobile Number must be exactly 10 characters long");
+      return toast.error(
+        "Another Mobile Number must be exactly 10 characters long"
+      );
     }
 
     if (!/^\d+$/.test(formData.anotherMobileNumber)) {
@@ -382,18 +397,12 @@ const FBRestaurtantEdit = () => {
       friday: "fri",
       saturday: "sat",
     };
-    postData.append(
-      "food_and_beverage[status]",
-      formData.status
-    );
+    postData.append("food_and_beverage[status]", formData.status);
     postData.append(
       "food_and_beverage[restaurant_name]",
       formData.restaurantName
     );
-    postData.append(
-      "food_and_beverage[restauranttype]",
-      option
-    );
+    postData.append("food_and_beverage[restauranttype]", option);
     postData.append("food_and_beverage[created_by_id]", userId);
     postData.append("food_and_beverage[cost_for_two]", formData.costForTwo);
     postData.append("food_and_beverage[mobile_number]", formData.mobileNumber);
@@ -406,8 +415,8 @@ const FBRestaurtantEdit = () => {
       formData.landlineNumber
     );
     postData.append("food_and_beverage[delivery_time]", formData.deliveryTime);
-    selectedOptions.forEach((option) => {
-      postData.append(`food_and_beverage[cuisines][]`, option.value);
+    (formData.cuisines || []).forEach((cuisine) => {
+      postData.append(`food_and_beverage[cuisines][]`, cuisine);
     });
     postData.append(
       "food_and_beverage[serves_alcohols]",
@@ -453,35 +462,73 @@ const FBRestaurtantEdit = () => {
       "food_and_beverage[cancel_before]",
       formData.canCancelBefore
     );
-    postData.append("food_and_beverage[booking_not_available_text]", formData.bookingNotAllowedText);
+    postData.append(
+      "food_and_beverage[booking_not_available_text]",
+      formData.bookingNotAllowedText
+    );
     postData.append("food_and_beverage[gst]", formData.gst);
     postData.append(
       "food_and_beverage[delivery_charges]",
       formData.deliveryCharge
     );
     postData.append("food_and_beverage[minimum_order]", formData.minimumOrder);
-    postData.append("food_and_beverage[order_not_allowed_text]", formData.orderNotAllowedText);
+    postData.append(
+      "food_and_beverage[order_not_allowed_text]",
+      formData.orderNotAllowedText
+    );
     postData.append(
       "food_and_beverage[serviceCharges]",
       formData.ServiceCharges
     );
     postData.append("food_and_beverage[start_time]", formData.start_time);
     postData.append("food_and_beverage[end_time]", formData.end_time);
-    postData.append("food_and_beverage[break_start_time]", formData.break_start_time);
-    postData.append("food_and_beverage[break_end_time]", formData.break_end_time);
-    postData.append("food_and_beverage[sun]", selectedDays['sunday'] ? "1" : "0");
+    postData.append(
+      "food_and_beverage[break_start_time]",
+      formData.break_start_time
+    );
+    postData.append(
+      "food_and_beverage[break_end_time]",
+      formData.break_end_time
+    );
+    postData.append(
+      "food_and_beverage[sun]",
+      selectedDays["sunday"] ? "1" : "0"
+    );
 
-    postData.append("food_and_beverage[mon]", selectedDays['monday'] ? "1" : "0");
-    postData.append("food_and_beverage[tue]", selectedDays['tuesday'] ? "1" : "0");
-    postData.append("food_and_beverage[wed]", selectedDays['wednesday'] ? "1" : "0");
-    postData.append("food_and_beverage[thu]", selectedDays['thursday'] ? "1" : "0");
-    postData.append("food_and_beverage[fri]", selectedDays['friday'] ? "1" : "0");
-    postData.append("food_and_beverage[sat]", selectedDays['saturday'] ? "1" : "0");
-    postData.append("food_and_beverage[booking_allowed]", formData.booking_allowed);
+    postData.append(
+      "food_and_beverage[mon]",
+      selectedDays["monday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[tue]",
+      selectedDays["tuesday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[wed]",
+      selectedDays["wednesday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[thu]",
+      selectedDays["thursday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[fri]",
+      selectedDays["friday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[sat]",
+      selectedDays["saturday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[booking_allowed]",
+      formData.booking_allowed
+    );
     postData.append("food_and_beverage[order_allowed]", formData.order_allowed);
-    postData.append("food_and_beverage[last_booking_time]", formData.last_booking_time);
+    postData.append(
+      "food_and_beverage[last_booking_time]",
+      formData.last_booking_time
+    );
     postData.append("food_and_beverage[table_number]", formData.table_number);
-
 
     formData.cover_image?.forEach((file, index) => {
       postData.append(`cover_images[]`, file);
@@ -506,7 +553,7 @@ const FBRestaurtantEdit = () => {
     <div className="flex flex-col overflow-hidden w-full">
       <div className="md:mx-20 mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg sm:shadow-xl">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(3 19 37)" }}
           className="text-center text-xl font-bold p-2 rounded-md text-white"
         >
           Edit F&B
@@ -568,10 +615,7 @@ const FBRestaurtantEdit = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label
-                className="block   mb-2"
-                htmlFor="restaurant-name"
-              >
+              <label className="block   mb-2" htmlFor="restaurant-name">
                 Restaurant Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -585,10 +629,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="cost-for-two"
-              >
+              <label className="block  mb-2" htmlFor="cost-for-two">
                 Cost For Two <span className="text-red-500">*</span>
               </label>
               <input
@@ -602,10 +643,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="mobile-number"
-              >
+              <label className="block  mb-2" htmlFor="mobile-number">
                 Mobile Number <span className="text-red-500">*</span>
               </label>
               <input
@@ -619,10 +657,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="another-mobile-number"
-              >
+              <label className="block  mb-2" htmlFor="another-mobile-number">
                 Another Mobile Number <span className="text-red-500">*</span>
               </label>
               <input
@@ -636,10 +671,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="landline-number"
-              >
+              <label className="block  mb-2" htmlFor="landline-number">
                 Landline Number
               </label>
               <input
@@ -653,10 +685,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="delivery-time"
-              >
+              <label className="block  mb-2" htmlFor="delivery-time">
                 Delivery Time
               </label>
               <input
@@ -670,10 +699,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="cuisines"
-              >
+              <label className="block  mb-2" htmlFor="cuisines">
                 Cuisines
               </label>
 
@@ -689,10 +715,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="serves-alcohol"
-              >
+              <label className="block  mb-2" htmlFor="serves-alcohol">
                 Serves Alcohol <span className="text-red-500">*</span>
               </label>
               <select
@@ -709,10 +732,7 @@ const FBRestaurtantEdit = () => {
               </select>
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="wheelchair-accessible"
-              >
+              <label className="block  mb-2" htmlFor="wheelchair-accessible">
                 Wheelchair Accessible <span className="text-red-500">*</span>
               </label>
               <select
@@ -729,10 +749,7 @@ const FBRestaurtantEdit = () => {
               </select>
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="cash-on-delivery"
-              >
+              <label className="block  mb-2" htmlFor="cash-on-delivery">
                 Cash on Delivery <span className="text-red-500">*</span>
               </label>
               <select
@@ -749,10 +766,7 @@ const FBRestaurtantEdit = () => {
               </select>
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="pure-veg"
-              >
+              <label className="block  mb-2" htmlFor="pure-veg">
                 Pure Veg <span className="text-red-500">*</span>
               </label>
               <select
@@ -769,10 +783,7 @@ const FBRestaurtantEdit = () => {
               </select>
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="pure-veg"
-              >
+              <label className="block  mb-2" htmlFor="pure-veg">
                 Status
               </label>
               <select
@@ -789,10 +800,7 @@ const FBRestaurtantEdit = () => {
               </select>
             </div>
             <div className="col-span-3">
-              <label
-                className="block  mb-2"
-                htmlFor="address"
-              >
+              <label className="block  mb-2" htmlFor="address">
                 Address
               </label>
               <textarea
@@ -806,10 +814,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-3">
-              <label
-                className="block  mb-2"
-                htmlFor="terms-conditions"
-              >
+              <label className="block  mb-2" htmlFor="terms-conditions">
                 Terms & Conditions
               </label>
               <textarea
@@ -823,10 +828,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-3">
-              <label
-                className="block  mb-2"
-                htmlFor="disclaimer"
-              >
+              <label className="block  mb-2" htmlFor="disclaimer">
                 Disclaimer
               </label>
               <textarea
@@ -840,10 +842,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-3">
-              <label
-                className="block mb-2"
-                htmlFor="closing-message"
-              >
+              <label className="block mb-2" htmlFor="closing-message">
                 Closing Message
               </label>
               <textarea
@@ -863,13 +862,9 @@ const FBRestaurtantEdit = () => {
             RESTAURTANT DETAILS
           </h3>
 
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="select-operational-days"
-              >
+              <label className="block  mb-2" htmlFor="select-operational-days">
                 Select Operational Days
               </label>
               <div className="flex flex-wrap gap-4">
@@ -910,20 +905,30 @@ const FBRestaurtantEdit = () => {
               </div>
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Start Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                Start Time
+              </label>
+              <input
+                type="time"
                 value={formData.start_time}
                 name="start_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Start time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="Start time"
+              />
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">End Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                End Time
+              </label>
+              <input
+                type="time"
                 value={formData.end_time}
                 name="end_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="End time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="End time"
+              />
             </div>
             <div className="flex  gap-10 col-span-1">
               <div className="flex items-center gap-2 ">
@@ -943,35 +948,35 @@ const FBRestaurtantEdit = () => {
                   className="h-4 w-4 border-gray-400 rounded"
                 />
 
-                <label
-                  htmlFor="booking-allowed"
-
-                >
-                  Booking Allowed
-                </label>
+                <label htmlFor="booking-allowed">Booking Allowed</label>
               </div>
-
-
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Break Start Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                Break Start Time
+              </label>
+              <input
+                type="time"
                 value={formData.break_start_time}
                 name="break_start_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Start time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="Start time"
+              />
             </div>
             <div className="col-span-1">
-              <label htmlFor=""
-
-                className="block  mb-2">Break End Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                Break End Time
+              </label>
+              <input
+                type="time"
                 value={formData.break_end_time}
                 name="break_end_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="End time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="End time"
+              />
             </div>
-
 
             <div className="flex items-center gap-2 ">
               <input
@@ -989,20 +994,20 @@ const FBRestaurtantEdit = () => {
                 }
                 className="h-4 w-4 border-gray-400 rounded"
               />
-              <label
-                htmlFor="order-allowed"
-
-              >
-                Order Allowed
-              </label>
+              <label htmlFor="order-allowed">Order Allowed</label>
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Last Booking & Order Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                Last Booking & Order Time
+              </label>
+              <input
+                type="time"
                 value={formData.last_booking_time}
                 name="last_booking_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="End time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="End time"
+              />
             </div>
           </div>
         </div>
@@ -1014,7 +1019,7 @@ const FBRestaurtantEdit = () => {
             <button
               onClick={addRow}
               className="px-4 py-2 border border-blue-500 rounded bg-blue-500 text-white hover:bg-blue-600"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
             >
               Add
             </button>
@@ -1031,7 +1036,7 @@ const FBRestaurtantEdit = () => {
                     }}
                   />
                   &nbsp;&nbsp;
-                  <label >Order</label>
+                  <label>Order</label>
                 </div>
                 &nbsp;&nbsp;
                 <div>
@@ -1045,10 +1050,10 @@ const FBRestaurtantEdit = () => {
                     }}
                   />
                   &nbsp;&nbsp;
-                  <label >Booking</label>
+                  <label>Booking</label>
                 </div>
                 &nbsp;&nbsp;
-                <label htmlFor="" >Start Date:</label>
+                <label htmlFor="">Start Date:</label>
                 <input
                   type="date"
                   className="border border-gray-400 p-1 rounded-md"
@@ -1060,7 +1065,7 @@ const FBRestaurtantEdit = () => {
                   }}
                 />
                 &nbsp;&nbsp;
-                <label htmlFor="" >End Date:</label>
+                <label htmlFor="">End Date:</label>
                 <input
                   type="date"
                   className="border border-gray-400 p-1 rounded-md"
@@ -1072,10 +1077,7 @@ const FBRestaurtantEdit = () => {
                   }}
                 />
                 &nbsp;
-                <button
-                  onClick={() => deleteRow(index)}
-                  className=""
-                >
+                <button onClick={() => deleteRow(index)} className="">
                   <FaTrash size={15} />
                 </button>
               </div>
@@ -1088,12 +1090,17 @@ const FBRestaurtantEdit = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Number of Tables</label>
-              <input type="text"
+              <label htmlFor="" className="block  mb-2">
+                Number of Tables
+              </label>
+              <input
+                type="text"
                 value={formData.table_number}
                 name="table_number"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Enter Tables" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="Enter Tables"
+              />
             </div>
             {/* <div className="col-span-1">
               <label htmlFor="" className="block text-gray-700 font-bold mb-2">Start Date</label>
@@ -1120,10 +1127,7 @@ const FBRestaurtantEdit = () => {
               <input type="text" className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Enter Waiting Capacity"/>
             </div> */}
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="minimum-person"
-              >
+              <label className="block  mb-2" htmlFor="minimum-person">
                 Minimum Person
               </label>
               <input
@@ -1137,10 +1141,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="maximum-person"
-              >
+              <label className="block  mb-2" htmlFor="maximum-person">
                 Maximum Person
               </label>
               <input
@@ -1154,10 +1155,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="can-cancel-before"
-              >
+              <label className="block  mb-2" htmlFor="can-cancel-before">
                 Can Cancel Before
               </label>
               <input
@@ -1171,10 +1169,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="booking-not-allowed-text"
-              >
+              <label className="block  mb-2" htmlFor="booking-not-allowed-text">
                 Booking Not Available Text
               </label>
               <input
@@ -1187,8 +1182,6 @@ const FBRestaurtantEdit = () => {
                 placeholder="Booking Not Allowed Text"
               />
             </div>
-
-
           </div>
         </div>
         <div className="w-full mx-3 my-5 p-5 shadow-lg rounded-lg border border-gray-300">
@@ -1197,10 +1190,7 @@ const FBRestaurtantEdit = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="GST"
-              >
+              <label className="block  mb-2" htmlFor="GST">
                 GST(%)
               </label>
               <input
@@ -1214,10 +1204,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="delivery-charge"
-              >
+              <label className="block  mb-2" htmlFor="delivery-charge">
                 Delivery Charge
               </label>
               <input
@@ -1231,10 +1218,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="delivery-charge"
-              >
+              <label className="block  mb-2" htmlFor="delivery-charge">
                 Service Charge(%)
               </label>
               <input
@@ -1248,10 +1232,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="minimum-order"
-              >
+              <label className="block  mb-2" htmlFor="minimum-order">
                 Minimum Order
               </label>
               <input
@@ -1265,10 +1246,7 @@ const FBRestaurtantEdit = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="order-not-allowed-text"
-              >
+              <label className="block  mb-2" htmlFor="order-not-allowed-text">
                 Order Not Allowed Text
               </label>
               <input
@@ -1290,15 +1268,39 @@ const FBRestaurtantEdit = () => {
           <label htmlFor="" className="font-medium my-1 ">
             Cover Image
           </label>
-
+          {/* Show previous cover images */}
+          <div className="flex gap-2 mb-2 flex-wrap">
+            {Array.isArray(formData.cover_image) &&
+              formData.cover_image.length > 0 &&
+              formData.cover_image.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={domainPrefix + img.image_url}
+                  alt="cover"
+                  className="w-24 h-24 object-cover rounded border"
+                />
+              ))}
+          </div>
           <FileInputBox
             handleChange={(files) => handleFileChange(files, "cover_image")}
             fieldName={"cover_image"}
-          // isMulti={true}
+            // isMulti={true}
           />
           <label htmlFor="" className="font-medium ">
             Menu
           </label>
+          <div className="flex gap-2 mb-2 flex-wrap">
+            {Array.isArray(formData.menu) &&
+              formData.menu.length > 0 &&
+              formData.menu.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={domainPrefix + img.image_url}
+                  alt="cover"
+                  className="w-24 h-24 object-cover rounded border"
+                />
+              ))}
+          </div>
           <FileInputBox
             handleChange={(files) => handleFileChange(files, "menu")}
             fieldName={"Menu"}
@@ -1307,6 +1309,18 @@ const FBRestaurtantEdit = () => {
           <label htmlFor="" className="font-medium my-1 ">
             Gallery
           </label>
+          <div className="flex gap-2 mb-2 flex-wrap">
+            {Array.isArray(formData.gallery) &&
+              formData.gallery.length > 0 &&
+              formData.gallery.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={domainPrefix + img.image_url}
+                  alt="cover"
+                  className="w-24 h-24 object-cover rounded border"
+                />
+              ))}
+          </div>
           <FileInputBox
             handleChange={(files) => handleFileChange(files, "gallery")}
             fieldName={"gallery"}
@@ -1318,7 +1332,7 @@ const FBRestaurtantEdit = () => {
           <button
             className="bg-black text-white p-2 px-4 rounded-md font-medium"
             onClick={handleSubmit}
-            style={{ background: themeColor }}
+            style={{ background: "rgb(3 19 37)" }}
           >
             Submit
           </button>
@@ -1328,4 +1342,4 @@ const FBRestaurtantEdit = () => {
   );
 };
 
-export default FBRestaurtantEdit
+export default FBRestaurtantEdit;

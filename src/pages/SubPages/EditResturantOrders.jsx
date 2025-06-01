@@ -1,15 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PiPlusCircle } from "react-icons/pi";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 //import Navbar from "../../../components/Navbar";
 import DataTable from "react-data-table-component";
 import { BsEye } from "react-icons/bs";
 import { useSelector } from "react-redux";
 import Table from "../../components/table/Table";
+import FBDetails from "./details/FBDetails";
+import { getRestaurtantOrderBookings } from "../../api";
 
 const EditRestaurtantOrders = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const themeColor = useSelector((state)=> state.theme.color)
+  const [orderplace,setorderplace]=useState([]);
+  const {id} = useParams();
 
   const columns = [
     {
@@ -24,72 +28,103 @@ const EditRestaurtantOrders = () => {
     },
     {
       name: "Order ID",
-      selector: (row) => row.Vehicle_Number,
+      selector: (row) => row.id,
       sortable: true,
     },
 
       {
-        name: "Restaurant",
-        selector: (row) => row.Name,
+        name: "Restaurant Name",
+        selector: (row) => row.restaurant_name,
         sortable: true,
       },
 
       {
-        name: "Created on",
-        selector: (row) => row.Booked_on,
+        name: "Order Date",
+        selector: (row) => row.ondate,
+        sortable: true,
+      },
+      {
+        name: "Order Time",
+        selector: (row) => new Date(row.ontime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sortable: true,
+      },
+      {
+        name: "Created On",
+        selector: (row) => {
+          const date = new Date(row.created_at);
+          const formattedDate = date.toISOString().split("T")[0]; // Extracts "YYYY-MM-DD"
+          const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Extracts "HH:mm"
+          return `${formattedDate} ${formattedTime}`; // Combines date and time
+        },
         sortable: true,
       },
       {
         name: "Created by",
-        selector: (row) => row.Schedule_on,
+        selector: (row) => row.created_by,
         sortable: true,
       },
 
       {
         name: "Status",
-        selector: (row) => row.Status,
+        selector: (row) => row.status,
         sortable: true,
       },
       {
         name: "Amount Paid",
-        selector: (row) => row.Additional_Request,
+        selector: (row) => row.total_amount,
         sortable: true,
       },
       {
         name: "No.of Items",
-        selector: (row) => row.Additional_Request,
+        selector: (row) => row.order_items?.length,
         sortable: true,
       },
       {
         name: "Payment Status",
+        selector: (row) => row.payment_status,
+        sortable: true,
+      },
+      {
+        name: "Additional Request",
         selector: (row) => row.Additional_Request,
         sortable: true,
       },
 
 
-    {
-      name: "Cancellation",
-      selector: (row) => (row.status === "Upcoming" && <button className="text-red-400 font-medium">Cancel</button>),
-      sortable: true,
-    },
+   
   ];
 
-  //custom style
-  const customStyle = {
-    headRow: {
-      style: {
-        backgroundColor: themeColor,
-        color: "white",
+  // useEffect(() => {
+  //   const fetchCategory = async () => {
+  //     try {
+  //       const siteDetailsResp = await getRestaurtantOrderBookings();
+        
+  //       setorderplace(siteDetailsResp.data);
+        
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+  //   fetchCategory();
+  // }, []);
+  useEffect(() => {
+    const fetchTableBookings = async () => {
+      try {
+        const tablebookResp = await getRestaurtantOrderBookings(); // Fetch all table bookings
 
-        fontSize: "10px",
-      },
-    },
-    headCells: {
-      style: {
-        textTransform: "upperCase",
-      },
-    },
-  };
+        // Filter bookings for the specific restaurant ID
+        const filteredBookings = tablebookResp.data.filter(
+          (booking) => booking.restaurant_id.toString() === id
+        );
+
+        setorderplace(filteredBookings); // Update state with filtered data
+      } catch (error) {
+        console.error("Error fetching table bookings:", error);
+      }
+    };
+
+    fetchTableBookings();
+  }, [id]);
   const data = [
     {
         id: 1,
@@ -99,7 +134,7 @@ const EditRestaurtantOrders = () => {
         Schedule_on:"23/4/2024",
         Guest:4,
         Status:"pending",
-        Additional_Request:"seat book",
+        Additional_Request:"",
 
 
     },
@@ -111,10 +146,10 @@ const EditRestaurtantOrders = () => {
 
   return (
     <section className="flex">
-
+<FBDetails/>
       <div className=" w-full flex mx-3 flex-col overflow-hidden">
-        <div className="flex md:flex-row flex-col gap-5 justify-between mt-10 my-2">
-          <div className="sm:flex grid grid-cols-2 items-center justify-center  gap-4 border border-gray-300 rounded-md px-3 p-2 w-auto">
+        <div className="flex md:flex-row flex-col gap-5 justify-end mt-10 my-2">
+          {/* <div className="sm:flex grid grid-cols-2 items-center justify-center  gap-4 border border-gray-300 rounded-md px-3 p-2 w-auto">
             <div className="flex items-center gap-2">
               <input
                 type="radio"
@@ -168,7 +203,7 @@ const EditRestaurtantOrders = () => {
                 Cancelled
               </label>
             </div>
-          </div>
+          </div> */}
           <span className="flex gap-4">
             {/* <Link
                 to={"/employee/addrvehicles"}
@@ -201,9 +236,9 @@ const EditRestaurtantOrders = () => {
         <Table
 
           columns={columns}
-          data={data}
+          data={orderplace}
 
-          isPagination={true}
+         
 
         />
       </div>

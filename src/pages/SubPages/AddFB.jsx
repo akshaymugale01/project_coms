@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
 import Select from "react-select";
 
-
 const AddFB = () => {
   const [option, setOption] = useState("bookable");
   const [selectedDays, setSelectedDays] = useState({
@@ -87,7 +86,10 @@ const AddFB = () => {
   const [rows, setRows] = useState([]);
 
   const addRow = () => {
-    setRows([...rows, { order: false, booking: false, startDate: "", endDate: "" }]);
+    setRows([
+      ...rows,
+      { order: false, booking: false, startDate: "", endDate: "" },
+    ]);
   };
 
   const deleteRow = (index) => {
@@ -161,15 +163,36 @@ const AddFB = () => {
     }));
   };
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "restaurantName") {
+      const validated = value.replace(/[^a-zA-Z ]/g, "");
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: validated,
+      }));
+      return;
+    }
+
+    if (
+    name === "mobileNumber" ||
+    name === "anotherMobileNumber" ||
+    name === "landlineNumber" || name === "deliveryTime" || name === "table_number" || name === "minimumPerson" || name === "maximumPerson" || name === "canCancelBefore" || name === "gst" || name === "deliveryCharge" || name === "minimumOrder" || name === "ServiceCharges" 
+  ) {
+    const validated = value.replace(/[^0-9]/g, "");
     setFormData((prevState) => ({
       ...prevState,
-      [name]: value, // This handles both strings and booleans if passed correctly
+      [name]: validated,
+    }));
+    return;
+  }
+
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
     }));
   };
-
 
   const handleCheckboxChange = (day) => {
     setFormData((prevState) => ({
@@ -225,9 +248,9 @@ const AddFB = () => {
   };
 
   const userId = getItemInLocalStorage("UserId");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const handleSubmit = async () => {
-    // const ids = selectedOptions.map(option => option.value);     
+    // const ids = selectedOptions.map(option => option.value);
     if (!formData.restaurantName) {
       return toast.error("Restaurant Name is required");
     }
@@ -249,7 +272,9 @@ const AddFB = () => {
       return toast.error("Another Mobile Number is required");
     }
     if (formData.anotherMobileNumber.length !== 10) {
-      return toast.error("Another Mobile Number must be exactly 10 characters long");
+      return toast.error(
+        "Another Mobile Number must be exactly 10 characters long"
+      );
     }
 
     if (!/^\d+$/.test(formData.anotherMobileNumber)) {
@@ -290,10 +315,7 @@ const AddFB = () => {
       friday: "fri",
       saturday: "sat",
     };
-    postData.append(
-      "food_and_beverage[restauranttype]",
-      option
-    );
+    postData.append("food_and_beverage[restauranttype]", option);
     postData.append(
       "food_and_beverage[restaurant_name]",
       formData.restaurantName
@@ -362,39 +384,75 @@ const AddFB = () => {
       "food_and_beverage[cancel_before]",
       formData.canCancelBefore
     );
-    postData.append("food_and_beverage[booking_not_available_text]", formData.bookingNotAllowedText);
+    postData.append(
+      "food_and_beverage[booking_not_available_text]",
+      formData.bookingNotAllowedText
+    );
     postData.append("food_and_beverage[gst]", formData.gst);
     postData.append(
       "food_and_beverage[delivery_charges]",
       formData.deliveryCharge
     );
     postData.append("food_and_beverage[minimum_order]", formData.minimumOrder);
-    postData.append("food_and_beverage[order_not_allowed_text]", formData.orderNotAllowedText);
+    postData.append(
+      "food_and_beverage[order_not_allowed_text]",
+      formData.orderNotAllowedText
+    );
     postData.append(
       "food_and_beverage[serviceCharges]",
       formData.ServiceCharges
     );
     postData.append("food_and_beverage[start_time]", formData.start_time);
     postData.append("food_and_beverage[end_time]", formData.end_time);
-    postData.append("food_and_beverage[break_start_time]", formData.break_start_time);
-    postData.append("food_and_beverage[break_end_time]", formData.break_end_time);
+    postData.append(
+      "food_and_beverage[break_start_time]",
+      formData.break_start_time
+    );
+    postData.append(
+      "food_and_beverage[break_end_time]",
+      formData.break_end_time
+    );
 
-    postData.append("food_and_beverage[sun]", selectedDays['sunday'] ? "1" : "0");
+    postData.append(
+      "food_and_beverage[sun]",
+      selectedDays["sunday"] ? "1" : "0"
+    );
 
-    postData.append("food_and_beverage[mon]", selectedDays['monday'] ? "1" : "0");
-    postData.append("food_and_beverage[tue]", selectedDays['tuesday'] ? "1" : "0");
-    postData.append("food_and_beverage[wed]", selectedDays['wednesday'] ? "1" : "0");
-    postData.append("food_and_beverage[thu]", selectedDays['thursday'] ? "1" : "0");
-    postData.append("food_and_beverage[fri]", selectedDays['friday'] ? "1" : "0");
-    postData.append("food_and_beverage[sat]", selectedDays['saturday'] ? "1" : "0");
-    postData.append("food_and_beverage[booking_allowed]", formData.booking_allowed);
+    postData.append(
+      "food_and_beverage[mon]",
+      selectedDays["monday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[tue]",
+      selectedDays["tuesday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[wed]",
+      selectedDays["wednesday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[thu]",
+      selectedDays["thursday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[fri]",
+      selectedDays["friday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[sat]",
+      selectedDays["saturday"] ? "1" : "0"
+    );
+    postData.append(
+      "food_and_beverage[booking_allowed]",
+      formData.booking_allowed
+    );
     postData.append("food_and_beverage[order_allowed]", formData.order_allowed);
-    postData.append("food_and_beverage[last_booking_time]", formData.last_booking_time);
+    postData.append(
+      "food_and_beverage[last_booking_time]",
+      formData.last_booking_time
+    );
 
     postData.append("food_and_beverage[table_number]", formData.table_number);
-
-
-
 
     formData.cover_image?.forEach((file, index) => {
       postData.append(`cover_images[]`, file);
@@ -481,10 +539,7 @@ const AddFB = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label
-                className="block   mb-2"
-                htmlFor="restaurant-name"
-              >
+              <label className="block   mb-2" htmlFor="restaurant-name">
                 Restaurant Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -498,10 +553,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="cost-for-two"
-              >
+              <label className="block  mb-2" htmlFor="cost-for-two">
                 Cost For Two <span className="text-red-500">*</span>
               </label>
               <input
@@ -515,10 +567,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="mobile-number"
-              >
+              <label className="block  mb-2" htmlFor="mobile-number">
                 Mobile Number <span className="text-red-500">*</span>
               </label>
               <input
@@ -526,16 +575,14 @@ const AddFB = () => {
                 id="mobile-number"
                 type="tel"
                 name="mobileNumber"
+                maxLength={10}
                 value={formData.mobileNumber}
                 onChange={handleChange}
                 placeholder="Enter Number"
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="another-mobile-number"
-              >
+              <label className="block  mb-2" htmlFor="another-mobile-number">
                 Another Mobile Number <span className="text-red-500">*</span>
               </label>
               <input
@@ -543,16 +590,14 @@ const AddFB = () => {
                 id="another-mobile-number"
                 type="tel"
                 name="anotherMobileNumber"
+                maxLength={10}
                 value={formData.anotherMobileNumber}
                 onChange={handleChange}
                 placeholder="Enter Number"
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="landline-number"
-              >
+              <label className="block  mb-2" htmlFor="landline-number">
                 Landline Number
               </label>
               <input
@@ -560,16 +605,14 @@ const AddFB = () => {
                 id="landline-number"
                 type="tel"
                 name="landlineNumber"
+                maxLength={13}
                 value={formData.landlineNumber}
                 onChange={handleChange}
                 placeholder="Enter Number"
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="delivery-time"
-              >
+              <label className="block  mb-2" htmlFor="delivery-time">
                 Delivery Time
               </label>
               <input
@@ -583,10 +626,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="cuisines"
-              >
+              <label className="block  mb-2" htmlFor="cuisines">
                 Cuisines
               </label>
               {/* <input
@@ -610,10 +650,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="serves-alcohol"
-              >
+              <label className="block  mb-2" htmlFor="serves-alcohol">
                 Serves Alcohol <span className="text-red-500">*</span>
               </label>
               <select
@@ -630,10 +667,7 @@ const AddFB = () => {
               </select>
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="wheelchair-accessible"
-              >
+              <label className="block  mb-2" htmlFor="wheelchair-accessible">
                 Wheelchair Accessible <span className="text-red-500">*</span>
               </label>
               <select
@@ -650,10 +684,7 @@ const AddFB = () => {
               </select>
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="cash-on-delivery"
-              >
+              <label className="block  mb-2" htmlFor="cash-on-delivery">
                 Cash on Delivery <span className="text-red-500">*</span>
               </label>
               <select
@@ -670,10 +701,7 @@ const AddFB = () => {
               </select>
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="pure-veg"
-              >
+              <label className="block  mb-2" htmlFor="pure-veg">
                 Pure Veg <span className="text-red-500">*</span>
               </label>
               <select
@@ -690,10 +718,7 @@ const AddFB = () => {
               </select>
             </div>
             <div className="col-span-3">
-              <label
-                className="block  mb-2"
-                htmlFor="address"
-              >
+              <label className="block  mb-2" htmlFor="address">
                 Address
               </label>
               <textarea
@@ -707,10 +732,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-3">
-              <label
-                className="block  mb-2"
-                htmlFor="terms-conditions"
-              >
+              <label className="block  mb-2" htmlFor="terms-conditions">
                 Terms & Conditions
               </label>
               <textarea
@@ -724,10 +746,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-3">
-              <label
-                className="block  mb-2"
-                htmlFor="disclaimer"
-              >
+              <label className="block  mb-2" htmlFor="disclaimer">
                 Disclaimer
               </label>
               <textarea
@@ -741,10 +760,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-3">
-              <label
-                className="block mb-2"
-                htmlFor="closing-message"
-              >
+              <label className="block mb-2" htmlFor="closing-message">
                 Closing Message
               </label>
               <textarea
@@ -764,13 +780,9 @@ const AddFB = () => {
             RESTAURTANT DETAILS
           </h3>
 
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="select-operational-days"
-              >
+              <label className="block  mb-2" htmlFor="select-operational-days">
                 Select Operational Days
               </label>
               <div className="flex flex-wrap gap-4">
@@ -811,20 +823,30 @@ const AddFB = () => {
               </div>
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Start Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                Start Time
+              </label>
+              <input
+                type="time"
                 value={formData.start_time}
                 name="start_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Start time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="Start time"
+              />
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">End Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                End Time
+              </label>
+              <input
+                type="time"
                 value={formData.end_time}
                 name="end_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="End time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="End time"
+              />
             </div>
             <div className="flex  gap-10 col-span-1">
               <div className="flex items-center gap-2 ">
@@ -844,35 +866,35 @@ const AddFB = () => {
                   className="h-4 w-4 border-gray-400 rounded"
                 />
 
-                <label
-                  htmlFor="booking-allowed"
-
-                >
-                  Booking Allowed
-                </label>
+                <label htmlFor="booking-allowed">Booking Allowed</label>
               </div>
-
-
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Break Start Time</label>
+              <label htmlFor="" className="block  mb-2">
+                Break Start Time
+              </label>
               <input
                 type="time"
                 value={formData.break_start_time}
                 name="break_start_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Start time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="Start time"
+              />
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Break End Time</label>
+              <label htmlFor="" className="block  mb-2">
+                Break End Time
+              </label>
               <input
                 type="time"
                 value={formData.break_end_time}
                 name="break_end_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="End time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="End time"
+              />
             </div>
-
 
             <div className="flex items-center gap-2 ">
               <input
@@ -890,20 +912,20 @@ const AddFB = () => {
                 }
                 className="h-4 w-4 border-gray-400 rounded"
               />
-              <label
-                htmlFor="order-allowed"
-
-              >
-                Order Allowed
-              </label>
+              <label htmlFor="order-allowed">Order Allowed</label>
             </div>
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Last Booking & Order Time</label>
-              <input type="time"
+              <label htmlFor="" className="block  mb-2">
+                Last Booking & Order Time
+              </label>
+              <input
+                type="time"
                 value={formData.last_booking_time}
                 name="last_booking_time"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="End time" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="End time"
+              />
             </div>
           </div>
         </div>
@@ -915,7 +937,7 @@ const AddFB = () => {
             <button
               onClick={addRow}
               className="px-4 py-2 border border-blue-500 rounded bg-blue-500 text-white hover:bg-blue-600"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
             >
               Add
             </button>
@@ -932,7 +954,7 @@ const AddFB = () => {
                     }}
                   />
                   &nbsp;&nbsp;
-                  <label >Order</label>
+                  <label>Order</label>
                 </div>
                 &nbsp;&nbsp;
                 <div>
@@ -946,10 +968,10 @@ const AddFB = () => {
                     }}
                   />
                   &nbsp;&nbsp;
-                  <label >Booking</label>
+                  <label>Booking</label>
                 </div>
                 &nbsp;&nbsp;
-                <label htmlFor="" >Start Date:</label>
+                <label htmlFor="">Start Date:</label>
                 <input
                   type="date"
                   className="border border-gray-400 p-1 rounded-md"
@@ -961,7 +983,7 @@ const AddFB = () => {
                   }}
                 />
                 &nbsp;&nbsp;
-                <label htmlFor="" >End Date:</label>
+                <label htmlFor="">End Date:</label>
                 <input
                   type="date"
                   className="border border-gray-400 p-1 rounded-md"
@@ -973,10 +995,7 @@ const AddFB = () => {
                   }}
                 />
                 &nbsp;
-                <button
-                  onClick={() => deleteRow(index)}
-                  className=""
-                >
+                <button onClick={() => deleteRow(index)} className="">
                   <FaTrash size={15} />
                 </button>
               </div>
@@ -989,12 +1008,17 @@ const AddFB = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label htmlFor="" className="block  mb-2">Number of Tables</label>
-              <input type="text"
+              <label htmlFor="" className="block  mb-2">
+                Number of Tables
+              </label>
+              <input
+                type="text"
                 value={formData.table_number}
                 name="table_number"
                 onChange={handleChange}
-                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Enter Tables" />
+                className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full"
+                placeholder="Enter Tables"
+              />
             </div>
             {/* <div className="col-span-1">
             <label htmlFor="" className="block text-gray-700 font-bold mb-2">Start Date</label>
@@ -1021,10 +1045,7 @@ const AddFB = () => {
             <input type="text" className="border border-gray-400 p-2 rounded-md placeholder:text-sm w-full" placeholder="Enter Waiting Capacity"/>
           </div> */}
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="minimum-person"
-              >
+              <label className="block  mb-2" htmlFor="minimum-person">
                 Minimum Person
               </label>
               <input
@@ -1038,10 +1059,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="maximum-person"
-              >
+              <label className="block  mb-2" htmlFor="maximum-person">
                 Maximum Person
               </label>
               <input
@@ -1055,10 +1073,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="can-cancel-before"
-              >
+              <label className="block  mb-2" htmlFor="can-cancel-before">
                 Can Cancel Before
               </label>
               <input
@@ -1072,10 +1087,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="booking-not-allowed-text"
-              >
+              <label className="block  mb-2" htmlFor="booking-not-allowed-text">
                 Booking Not Available Text
               </label>
               <input
@@ -1088,8 +1100,6 @@ const AddFB = () => {
                 placeholder="Booking Not Allowed Text"
               />
             </div>
-
-
           </div>
         </div>
         <div className="w-full mx-3 my-5 p-5 shadow-lg rounded-lg border border-gray-300">
@@ -1098,10 +1108,7 @@ const AddFB = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="GST"
-              >
+              <label className="block  mb-2" htmlFor="GST">
                 GST(%)
               </label>
               <input
@@ -1115,10 +1122,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="delivery-charge"
-              >
+              <label className="block  mb-2" htmlFor="delivery-charge">
                 Delivery Charge
               </label>
               <input
@@ -1132,10 +1136,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="delivery-charge"
-              >
+              <label className="block  mb-2" htmlFor="delivery-charge">
                 Service Charge(%)
               </label>
               <input
@@ -1149,10 +1150,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="minimum-order"
-              >
+              <label className="block  mb-2" htmlFor="minimum-order">
                 Minimum Order
               </label>
               <input
@@ -1166,10 +1164,7 @@ const AddFB = () => {
               />
             </div>
             <div className="col-span-1">
-              <label
-                className="block  mb-2"
-                htmlFor="order-not-allowed-text"
-              >
+              <label className="block  mb-2" htmlFor="order-not-allowed-text">
                 Order Not Allowed Text
               </label>
               <input
@@ -1195,7 +1190,7 @@ const AddFB = () => {
           <FileInputBox
             handleChange={(files) => handleFileChange(files, "cover_image")}
             fieldName={"cover_image"}
-          // isMulti={true}
+            // isMulti={true}
           />
           <label htmlFor="" className="font-medium my-2">
             Menu
@@ -1219,24 +1214,15 @@ const AddFB = () => {
           <button
             className="bg-black text-white p-2 px-4 rounded-md font-medium"
             onClick={handleSubmit}
-            style={{ background: themeColor }}
+            style={{ background: "rgb(3 19 37)" }}
           >
             Submit
           </button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-
-
-
-
-
-export default AddFB
-
-
-
-//////////////////////////////////////////////////
+export default AddFB;
 

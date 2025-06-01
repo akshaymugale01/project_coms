@@ -51,6 +51,7 @@ const AddPantry = () => {
       if (resp.status === 200 || resp.status === 201) {
         toast.success("Pantry Created Successfully");
         // Navigate("/admin");
+        navigate("/admin/fb");
       } else {
         toast.error("Failed to create pantry. Please try again.");
       }

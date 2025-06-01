@@ -733,6 +733,13 @@ import EditBillingAddress from "./pages/Setup/BillingSetup/EditBillingAddress.js
 import ReceiptInvoiceCam from "./pages/RecieptInvoiceCam.jsx";
 import AddReceiptInvoiceCamBilling from "./pages/SubPages/AddReceiptInvoiceCamBilling.jsx";
 import ReceiptInvoiceDetails from "./pages/SubPages/ReceiptInvoiceDetails.jsx";
+import EditGoodsInOut from "./pages/SubPages/EditGoodsInOut.jsx";
+import FBStatusSetup from "./pages/SubPages/details/FBStatusSetup.jsx";
+import EditCategorySetup from "./pages/SubPages/EditCategorySetup.jsx";
+import EditSubCategorySetup from "./pages/SubPages/EditSubCategorySetup.jsx";
+import FBRestaurtantMenu from "./pages/SubPages/details/FBSubDetails/FBResturantMenu.jsx";
+import EditRestaurtantBooking from "./pages/SubPages/EditResturantBooking.jsx";
+import EditRestaurtantOrders from "./pages/SubPages/EditResturantOrders.jsx";
 // new admin hrms
 
 function App() {
@@ -2843,6 +2850,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/passes/edit/goods-in-out/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditGoodsInOut />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
             path="/admin/add-new-visitor"
             element={
               <ProtectedAdminRoutes>
@@ -3468,6 +3483,54 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
+           <Route
+          path="/fnb/status-setup/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <FBStatusSetup />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/fnb/sub-category-setup/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <EditSubCategorySetup />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/admin/restaurtant-bookings/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <EditRestaurtantBooking />
+            </ProtectedAdminRoutes>
+          }
+        />
+         <Route
+          path="/admin/restaurtant-orders/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <EditRestaurtantOrders />
+            </ProtectedAdminRoutes>
+          }
+        />
+         <Route
+          path="/fnb/restaurtant-menu/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <FBRestaurtantMenu />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/fnb/category-setup/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <EditCategorySetup />
+            </ProtectedAdminRoutes>
+          }
+        />
           <Route
             path="/admin/restaurant/details/:id"
             element={

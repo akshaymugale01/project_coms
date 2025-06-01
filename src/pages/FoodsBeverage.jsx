@@ -237,7 +237,7 @@ const FoodsBeverage = () => {
         </div>
         {page === "F&B" && (
           <>
-            <div className="flex md:flex-row flex-col gap-5 justify-end mt-10 my-2">
+            <div className="flex md:flex-row flex-col gap-5 justify-end mt-5 my-2">
               {/* <div className="sm:flex grid grid-cols-2 items-center justify-center  gap-4 border border-gray-300 rounded-md px-3 p-2 w-auto">
                 <div className="flex items-center gap-2">
                   <input
@@ -296,15 +296,15 @@ const FoodsBeverage = () => {
               
                 <input
                   type="text"
-                  placeholder="Search  "
-                  className="border border-black w-full border-gray-400 w-96 placeholder:text-xs rounded-lg p-2"
+                  placeholder="Search"
+                  className="border border-black w-full border-gray-400 placeholder:text-xs rounded-lg"
                   value={searchText}
                   onChange={handleSearch}
                 />
                 <Link
                   to={"/admin/add-fb"}
-                  className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-black cursor-pointer text-center flex items-center gap-2 justify-center"
-                  style={{ height: "1cm" }}
+                  className="border-2 my-1 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-black cursor-pointer text-center flex items-center gap-2 justify-center"
+                  style={{ height: "1.2cm" }}
                 >
                   <PiPlusCircle size={20} />
                   Add

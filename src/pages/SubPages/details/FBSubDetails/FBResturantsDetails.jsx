@@ -220,7 +220,7 @@ const FBRestaurtantDetails = () => {
         </div>
 
 
-        <div className=" my-5 p-5">
+        <div className="my-5 p-5">
           <h3 className="border-b text-left text-xl border-black mb-6 font-bold">
             Cover Image
           </h3>
@@ -233,7 +233,7 @@ const FBRestaurtantDetails = () => {
                     key={i}
                     src={domainPrefix + attachment.image_url}
                     alt={`Attachment ${i + 1}`}
-                    // className="w-40 h-28 object-cover rounded-md"
+                    className="w-40 h-28 object-cover rounded-md"
                     onClick={() =>
                       window.open(
                         domainPrefix + attachment.image_url,
@@ -261,7 +261,7 @@ const FBRestaurtantDetails = () => {
                     key={i}
                     src={domainPrefix + attachment.image_url}
                     alt={`Attachment ${i + 1}`}
-                    // className="w-40 h-28 object-cover rounded-md"
+                    className="w-40 h-28 object-cover rounded-md"
                     onClick={() =>
                       window.open(
                         domainPrefix + attachment.image_url,
@@ -304,7 +304,7 @@ const FBRestaurtantDetails = () => {
                     key={i}
                     src={domainPrefix + attachment.image_url}
                     alt={`Attachment ${i + 1}`}
-                    // className="w-40 h-28 object-cover rounded-md"
+                    className="w-40 h-28 object-cover rounded-md"
                     onClick={() =>
                       window.open(
                         domainPrefix + attachment.image_url,
