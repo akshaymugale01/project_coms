@@ -56,6 +56,8 @@ const Patrolling = () => {
     timeInterval: "",
     // specificTimes:""
   });
+  const [loading, setLoading] = useState(false);
+
   const openModal = () => {
     setModalVisible(true);
   };
@@ -66,6 +68,7 @@ const Patrolling = () => {
 
   useEffect(() => {
     const fetchPatrolling = async () => {
+      setLoading(true);
       try {
         const patrollingResp = await getPatrollings();
         const sortedData = patrollingResp.data.sort(
@@ -75,9 +78,12 @@ const Patrolling = () => {
         setFilteredData(sortedData);
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     };
     const fetchPatrollingHistory = async () => {
+      setLoading(true);
       try {
         const patrollingHistoryResp = await getPatrollingHistory();
         const sortedData = patrollingHistoryResp.data.sort(
@@ -87,6 +93,8 @@ const Patrolling = () => {
         setFilteredHistories(sortedData)
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchPatrolling();
@@ -374,7 +382,14 @@ const Patrolling = () => {
                 </div>
               </span>
             </div>
-            <Table columns={columns} data={filteredData} />
+            {loading ? (
+              <div className="flex justify-center items-center py-10">
+                <span className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></span>
+                <span className="ml-2">Loading...</span>
+              </div>
+            ) : (
+              <Table columns={columns} data={filteredData} />
+            )}
           </div>
         )}
         {page === "logs" && (
@@ -389,7 +404,14 @@ const Patrolling = () => {
                 placeholder="Search by building, floor, unit"
               />
             </div>
-            <Table columns={HistoryColumns} data={filteredHistories} />
+            {loading ? (
+              <div className="flex justify-center items-center py-10">
+                <span className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></span>
+                <span className="ml-2">Loading...</span>
+              </div>
+            ) : (
+              <Table columns={HistoryColumns} data={filteredHistories} />
+            )}
           </div>
         )}
       </div>
