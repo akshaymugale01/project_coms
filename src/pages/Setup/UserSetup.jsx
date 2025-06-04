@@ -8,73 +8,132 @@ import { BsEye } from "react-icons/bs";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { getItemInLocalStorage } from "../../utils/localStorage";
+import { BiEdit } from "react-icons/bi";
+import { DNA } from "react-loader-spinner";
 
 const UserSetup = () => {
-  const [users, setUsers] = useState([]);
+  const [akshay, setUsers] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [loading, setLoading] = useState(true); // Add loading state
   const themeColor = useSelector((state) => state.theme.color);
-  
+
+  // console.log("akshay", akshay);
+  const users = akshay.users || [];
+  // console.log("Users:", users);
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        setLoading(true); // Start loading
         const setupUsers = await getSetupUsers();
-        setUsers(setupUsers.data);
-        setFilteredData(setupUsers.data);
+        const data = setupUsers.data || [];
+        setUsers(data);
+        setFilteredData(setupUsers.data.users);
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
     fetchUsers();
   }, []);
 
-  const handleSearch = (e) => {
-    const searchValue = e.target.value;
-    setSearchText(searchValue);
-    
-    if (searchValue.trim() === "") {
-      setFilteredData(users);
-    } else {
-      const filteredResults = users.filter(
-        (item) =>
-          (item.firstname && item.firstname.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.lastname && item.lastname.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.unit_name && item.unit_name.toLowerCase().includes(searchValue.toLowerCase()))
-      );
-      setFilteredData(filteredResults);
-    }
-  };
-  
+const handleSearch = (e) => {
+  const searchValue = e.target.value;
+  setSearchText(searchValue);
+
+  if (searchValue.trim() === "") {
+    setFilteredData(users);
+  } else {
+    const searchWords = searchValue.toLowerCase().split(" ").filter(Boolean);
+    const filteredResults = users.filter((item) => {
+      // Combine searchable fields into one string
+      const searchable = [
+        item.firstname,
+        item.lastname,
+        // item.unit_name,
+        item.email,
+        item.mobile,
+        item.user_type,
+        item.unit?.name || "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      // Check if every search word is present in the combined string
+      return searchWords.every((word) => searchable.includes(word));
+    });
+    setFilteredData(filteredResults);
+  }
+};
+
   const totalUsers = users.length;
-  const appDownloadedCount = users.filter(user => user.is_downloaded).length;
-  const appDownloadTenant = users.filter(user => user.is_downloaded && user.user_sites.some(site => site.ownership === "tenant")).length;
-  const appDownloadOwner = users.filter(user => user.is_downloaded && user.user_sites.some(site => site.ownership === "owner")).length
-  const approvedUsers = users.filter(user => user.status === "approved").length;
-  const pendingUsers = users.filter(user => user.status === "pending").length;
+  const appDownloadedCount = users.filter((user) => user.is_downloaded).length;
+  const appDownloadTenant = users.filter(
+    (user) =>
+      user.is_downloaded &&
+      user.user_sites.some((site) => site.ownership === "tenant")
+  ).length;
+  const appDownloadOwner = users.filter(
+    (user) =>
+      user.is_downloaded &&
+      user.user_sites.some((site) => site.ownership === "owner")
+  ).length;
+  const approvedUsers = users.filter(
+    (user) => user.status === "approved"
+  ).length;
+  const pendingUsers = users.filter((user) => user.status === "pending").length;
 
   const userColumn = [
     {
       name: "View",
       cell: (row) => (
-        <Link to={`/setup/users-details/${row.id}`}>
-          <BsEye size={15} />
-        </Link>
+        <div className="flex items-center">
+          <Link to={`/setup/users-details/${row.id}`}>
+            <BsEye size={15} />
+          </Link>
+          <Link to={`/setup/users-edit-page/${row.id}`} className="ml-2">
+            <BiEdit size={15} />
+          </Link>
+        </div>
       ),
     },
     { name: "First Name", selector: (row) => row.firstname, sortable: true },
     { name: "Last Name", selector: (row) => row.lastname, sortable: true },
     { name: "Email", selector: (row) => row.email, sortable: true },
     { name: "Mobile", selector: (row) => row.mobile || "NA", sortable: true },
-    { name: "App Downloaded", selector: (row) => row.is_downloaded ? "Yes" : "No", sortable: true },
+    {
+      name: "App Downloaded",
+      selector: (row) => (row.is_downloaded ? "Yes" : "No"),
+      sortable: true,
+    },
     { name: "Unit", selector: (row) => row.unit?.name || "NA", sortable: true },
-    { 
-      name: "Type", 
-      selector: (row) => row.user_type === "pms_admin" ? "Admin" :
-        row.user_type === "pms_occupant_admin" ? "Unit Owner" :
-        row.user_type === "pms_technician" ? "Technician" : row.user_type || "NA",
+    {
+      name: "Type",
+      selector: (row) =>
+        row.user_type === "pms_admin"
+          ? "Admin"
+          : row.user_type === "pms_occupant_admin"
+          ? "Unit Owner"
+          : row.user_type === "pms_technician"
+          ? "Technician"
+          : row.user_type === "pms_occupant"
+          ? "Unit Owner"
+          : row.user_type === "security_guard"
+          ? "Security Guard"
+          : row.user_type === "employee"
+          ? "Employee"
+          : row.user_type === "unit_resident"
+          ? "Tenant"
+          : row.user_type === "unit_owner"
+          ? "Unit Owner"
+          : "NA",
       sortable: true,
     },
   ];
+
+  console.log("Filtered Data:", users);
 
   return (
     <section className="flex">
@@ -83,48 +142,74 @@ const UserSetup = () => {
         <div className="mt-5 flex md:flex-row flex-col justify-between md:items-center gap-4">
           <input
             type="text"
-            placeholder="Search By Name or Unit"
-            className="p-2 md:w-96 border border-gray-300 rounded-md placeholder:text-sm outline-none"
+            placeholder="Search Anything (Name, Email and Mobile) along with Spaces"
+            className="p-2 w-full border border-gray-300 rounded-md placeholder:text-sm outline-none"
             value={searchText}
             onChange={handleSearch}
           />
           <Link
             to="/setup/users-setup/add-new-user"
             style={{ background: "rgb(19 27 32)" }}
-            className="font-semibold p-1 px-4 rounded-md text-white flex items-center gap-2"
+            className="font-semibold p-2 px-4 rounded-md text-white flex items-center gap-2"
           >
             <PiPlusCircle size={20} /> Add User
           </Link>
         </div>
-        
-        <div className="grid md:grid-cols-4 grid-cols-2 gap-4">
-          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-            <h2 className="text-lg font-semibold">Total Users</h2>
-            <p className="text-xl font-bold">{totalUsers}</p>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <DNA
+              visible={true}
+              height={85}
+              width={90}
+              ariaLabel="dna-loading"
+              wrapperStyle={{}}
+              wrapperClass="dna-wrapper"
+            />
           </div>
-          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-            <h2 className="text-lg font-semibold">App Downloaded</h2>
-            <p className="text-xl font-bold">{appDownloadedCount}</p>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-            <h2 className="text-lg font-semibold">Total No. Tenant Downloads </h2>
-            <p className="text-xl font-bold">{appDownloadTenant}</p>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-            <h2 className="text-lg font-semibold">Total No. Owner Downloads </h2>
-            <p className="text-xl font-bold">{appDownloadOwner}</p>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-            <h2 className="text-lg font-semibold">Approved Users</h2>
-            <p className="text-xl font-bold">{approvedUsers}</p>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-            <h2 className="text-lg font-semibold">Pending Users</h2>
-            <p className="text-xl font-bold">{pendingUsers}</p>
-          </div>
-        </div>
-        
-        <Table columns={userColumn} data={filteredData} />
+        ) : (
+          <>
+            <div className="grid md:grid-cols-4 grid-cols-2 gap-4">
+              <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+                <h2 className="text-lg font-semibold">Total Users</h2>
+                <p className="text-xl font-bold">{akshay.total_user}</p>
+              </div>
+              <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+                <h2 className="text-lg font-semibold">Total App Downloads</h2>
+                <p className="text-xl font-bold">{akshay.total_downloads}</p>
+              </div>
+              <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+                <h2 className="text-lg font-semibold">
+                  Total Users Device Register
+                </h2>
+                <p className="text-xl font-bold">
+                  {akshay.total_user_downloads}
+                </p>
+              </div>
+              <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+                <h2 className="text-lg font-semibold">Tenant Downloads </h2>
+                <p className="text-xl font-bold">
+                  {akshay.total_tenant_downloads}
+                </p>
+              </div>
+              <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+                <h2 className="text-lg font-semibold">Owner Downloads </h2>
+                <p className="text-xl font-bold">
+                  {akshay.total_owner_downloads}
+                </p>
+              </div>
+              {/* <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+                <h2 className="text-lg font-semibold">Approved Users</h2>
+                <p className="text-xl font-bold">{approvedUsers}</p>
+              </div> */}
+              {/* <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
+                <h2 className="text-lg font-semibold">Pending Users</h2>
+                <p className="text-xl font-bold">{pendingUsers}</p>
+              </div> */}
+            </div>
+            <Table columns={userColumn} data={filteredData} />
+          </>
+        )}
       </div>
     </section>
   );

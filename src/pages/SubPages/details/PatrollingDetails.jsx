@@ -38,7 +38,7 @@ const PatrollingDetails = () => {
   }, [id]);
   const handlePrintQRCode = async () => {
     const doc = new jsPDF();
-    const logoText = "Vibeconnect";
+    const logoText = "Myciti.life";
     try {
       const response = await axios.get(
         domainPrefix + details.qr_code_image_url,
