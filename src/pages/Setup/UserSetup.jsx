@@ -192,13 +192,13 @@ const handleSearch = (e) => {
                 </p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-                <h2 className="text-lg font-semibold">Tenant Downloads </h2>
+                <h2 className="text-lg font-semibold">Tenant Register </h2>
                 <p className="text-xl font-bold">
                   {count.total_owner_downloads}
                 </p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
-                <h2 className="text-lg font-semibold">Owner Downloads </h2>
+                <h2 className="text-lg font-semibold">Owner Register </h2>
                 <p className="text-xl font-bold">
                   {count.total_tenant_downloads}
                 </p>
