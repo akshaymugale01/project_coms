@@ -8,7 +8,7 @@ import Table from "../../../components/table/Table";
 
 const TicketCostApprovalSetup = () => {
   const [page, setPage] = useState("FM");
-  const themeColor = useSelector((state) => state.theme.color);
+ const themeColor = "rgb(3, 19, 37)";
   const [selectedOption, setSelectedOption] = useState('');
 
   const handleChange = (event) => {

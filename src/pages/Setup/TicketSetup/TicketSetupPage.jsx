@@ -31,7 +31,7 @@ const TicketSetupPage = () => {
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
   const [page, setPage] = useState("Category Type");
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3,19,37)";
   const [color, setColor] = useState("#ffffff");
   const [showPicker, setShowPicker] = useState(false);
   const [statuses, setStatuses] = useState([]);

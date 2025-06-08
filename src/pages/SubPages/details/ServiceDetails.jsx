@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BiEditAlt } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
-import { getSoftServicesDetails,getSoftServiceSchedule ,getSoftserviceActivityDetails} from "../../../api";
+import { getSoftServicesDetails,getSoftServiceSchedule ,getSoftserviceActivityDetails, domainPrefix} from "../../../api";
 import { FaQrcode, FaRegFileAlt } from "react-icons/fa";
 import AssetQrCode from "./assetSubDetails/AssetQrCode";
 import Table from "../../../components/table/Table";
@@ -46,7 +46,6 @@ const ServiceDetails = () => {
       }
     };
 
-
     const fetchLogsDetails = async () => {
       try {
         const logsDetailsResp = await getSoftserviceActivityDetails(id); // Assuming this fetches all logs
@@ -73,12 +72,10 @@ const ServiceDetails = () => {
     fetchLogsDetails(); // Fetch data based on the selected date and status 'complete'
   }, [selectedDate]);
 
-
   // Handle date input change
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
   };
-
 
   // Decrease date by 1 day
   const handlePrevDate = () => {
@@ -87,7 +84,6 @@ const ServiceDetails = () => {
     setSelectedDate(prevDate.toISOString().split('T')[0]); // Update selectedDate
   };
 
-
   // Increase date by 1 day
   const handleNextDate = () => {
     const nextDate = new Date(selectedDate);
@@ -95,13 +91,11 @@ const ServiceDetails = () => {
     setSelectedDate(nextDate.toISOString().split('T')[0]); // Update selectedDate
   };
 
-
   // Function to format the date from start_time
   // Function to format the date from start_time
 const formatDate = (isoString) => {
   return isoString.split('T')[0]; // Extract YYYY-MM-DD part directly from ISO string
 };
-
 
   const [searchText, setSearchText] = useState("");
   const handleSearch = (e) => {
@@ -121,7 +115,7 @@ const formatDate = (isoString) => {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
-  const domainPrefix = "https://admin.vibecopilot.ai";
+  // const domainPrefix = "https://admin.vibecopilot.ai";
   console.log(details.qr_code_image_url);
   const isImage = (filePath) => {
     const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "svg"];
@@ -190,7 +184,7 @@ const formatDate = (isoString) => {
     <section>
       <div className="m-2">
         <h2
-          style={{ background: themeColor }}
+          style={{ background: "rgb(3 19 37)" }}
           className="text-center text-xl font-bold p-2 rounded-full text-white"
         >
           Service Details

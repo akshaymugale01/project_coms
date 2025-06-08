@@ -9,7 +9,7 @@ const BroadcastDetails = () => {
   const [broadcastDetails, setBroadcastDetails] = useState([]);
   const userFisrt = getItemInLocalStorage("name");
   const userLast = getItemInLocalStorage("LASTNAME");
-  const baseUrl = domainPrefix
+  const baseUrl = domainPrefix;
   const { id } = useParams();
   useEffect(() => {
     const fetchBroadcastDetails = async () => {
@@ -28,7 +28,7 @@ const BroadcastDetails = () => {
     const date = new Date(dateSting);
     return date.toLocaleString();
   };
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3, 19 , 37)";
 
   const isImage = (filePath) => {
     const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "svg"];
@@ -58,17 +58,20 @@ const BroadcastDetails = () => {
           </div>
           <div className="flex flex-col gap-2">
             <p className="font-medium">Description:</p>
-            <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-wrap">
-              {broadcastDetails.notice_discription}
-            </p>
+
+            <div
+              className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-line"
+              dangerouslySetInnerHTML={{
+                __html: broadcastDetails.notice_discription || "",
+              }}
+            />
           </div>
 
           <div className="grid  md:grid-cols-3 gap-4 my-4">
             <div className="grid grid-cols-2">
               <p className="font-medium ">Created By : </p>
               <p className="">
-                {userFisrt}
-                {userLast}
+                {broadcastDetails.created_by}
               </p>
             </div>
             {/* <div className="grid grid-cols-2">
@@ -107,10 +110,12 @@ const BroadcastDetails = () => {
               Attachments
             </p>
             <div className="flex flex-wrap gap-4">
-           {Array.isArray(broadcastDetails?.notice_image) &&
+              {Array.isArray(broadcastDetails?.notice_image) &&
               broadcastDetails?.notice_image.length > 0 ? (
                 broadcastDetails?.notice_image
-                  .filter((img) => img && typeof img === "object" && img.document_url)
+                  .filter(
+                    (img) => img && typeof img === "object" && img.document_url
+                  )
                   .map((img, idx) => (
                     <img
                       key={idx}
@@ -122,7 +127,7 @@ const BroadcastDetails = () => {
               ) : (
                 <span className="text-gray-500">No images available</span>
               )}
-              </div>
+            </div>
           </div>
           <div className="my-5">
             <p className="font-bold">Shared Members List</p>

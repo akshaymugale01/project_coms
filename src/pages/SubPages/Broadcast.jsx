@@ -17,7 +17,7 @@ const Broadcast = () => {
   const [user, setUser] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [broadcast, setBroadcast] = useState([]);
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)";
   useEffect(() => {
     const userType = getItemInLocalStorage("USERTYPE");
     setUser(userType);
@@ -54,17 +54,17 @@ const Broadcast = () => {
       sortable: true,
     },
     { name: "Title", selector: (row) => row.notice_title, sortable: true },
-    {
-      name: "Type",
-      selector: (row) => row.type,
-      sortable: true,
-    },
-    {
-      name: "Notice Description",
-      selector: (row) => row.notice_discription,
-      sortable: true,
-    },
-    { name: "Created By", selector: (row) => row.CreatedBy, sortable: true },
+    // {
+    //   name: "Type",
+    //   selector: (row) => row.type,
+    //   sortable: true,
+    // },
+    // {
+    //   name: "Notice Description",
+    //   selector: (row) => row.notice_discription,
+    //   sortable: true,
+    // },
+    { name: "Created By", selector: (row) => row.created_by, sortable: true },
     {
       name: "Expiry Date",
       selector: (row) => dateFormat(row.expiry_date),
@@ -109,7 +109,7 @@ const Broadcast = () => {
             <Link
               to={"/communication/broadcast/create-broadcast"}
               style={{ background: themeColor }}
-              className="  rounded-md flex font-semibold items-center   gap-2 text-white p-2"
+              className="rounded-md flex justify-center font-semibold items-center gap-2 p-2 text-white"
             >
               <IoAddCircleOutline size={20} />
               Add

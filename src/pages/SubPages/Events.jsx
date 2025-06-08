@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import Communication from "../Communication";
 import Navbar from "../../components/Navbar";
 import { BiEdit } from "react-icons/bi";
+import { DNA } from "react-loader-spinner";
 
 const Events = () => {
   const [searchText, setSearchText] = useState("");
@@ -18,7 +19,8 @@ const Events = () => {
   const [user, setUser] = useState("");
   const [events, setEvents] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3, 19, 37)";
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const userType = getItemInLocalStorage("USERTYPE");
@@ -31,6 +33,7 @@ const Events = () => {
       console.log(eventsResponse);
       setEvents(sortedEvents);
       setFilteredData(sortedEvents);
+      setLoading(false);
     };
     fetchEvents();
   }, []);
@@ -56,11 +59,11 @@ const Events = () => {
     },
     { name: "Title", selector: (row) => row.event_name, sortable: true },
     { name: "Venue", selector: (row) => row.venue, sortable: true },
-    {
-      name: "Description",
-      selector: (row) => row.discription,
-      sortable: true,
-    },
+    // {
+    //   name: "Description",
+    //   selector: (row) => row.discription,
+    //   sortable: true,
+    // },
     { name: "Created By", selector: (row) => row.created_by, sortable: true },
     {
       name: "Start Date",
@@ -72,11 +75,11 @@ const Events = () => {
       selector: (row) => dateFormat(row.end_date_time),
       sortable: true,
     },
-    {
-      name: "Event Type",
-      selector: (row) => row.scheduledOn,
-      sortable: true,
-    },
+    // {
+    //   name: "Event Type",
+    //   selector: (row) => row.scheduledOn,
+    //   sortable: true,
+    // },
     {
       name: "Status",
       selector: (row) => (row.status ? row.status.toUpperCase() : "N/A"),
@@ -136,7 +139,20 @@ const Events = () => {
             {/* )} */}
           </div>
         </div>
-        <Table columns={column} data={filteredData} isPagination={true} />
+        {loading ? (
+          <div className="flex justify-center items-center mt-10 h-60">
+            <DNA
+              visible={true}
+              height={120}
+              width={130}
+              ariaLabel="dna-loading"
+              wrapperStyle={{}}
+              wrapperClass="dna-wrapper"
+            />
+          </div>
+        ) : (
+          <Table columns={column} data={filteredData} isPagination={true} />
+        )}
       </div>
     </div>
   );

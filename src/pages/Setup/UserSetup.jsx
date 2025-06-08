@@ -12,14 +12,14 @@ import { BiEdit } from "react-icons/bi";
 import { DNA } from "react-loader-spinner";
 
 const UserSetup = () => {
-  const [akshay, setUsers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true); // Add loading state
   const themeColor = useSelector((state) => state.theme.color);
 
   // console.log("akshay", akshay);
-  const users = akshay.users || [];
+  // const users = akshay.users || [];
   // console.log("Users:", users);
   useEffect(() => {
     const fetchUsers = async () => {
@@ -28,7 +28,7 @@ const UserSetup = () => {
         const setupUsers = await getSetupUsers();
         const data = setupUsers.data || [];
         setUsers(data);
-        setFilteredData(setupUsers.data.users);
+        setFilteredData(setupUsers.data);
       } catch (error) {
         console.log(error);
       } finally {
@@ -152,16 +152,16 @@ const handleSearch = (e) => {
             style={{ background: "rgb(19 27 32)" }}
             className="font-semibold p-2 px-4 rounded-md text-white flex items-center gap-2"
           >
-            <PiPlusCircle size={20} /> Add User
+            <PiPlusCircle size={20} /> Add
           </Link>
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex justify-center items-center h-80 mt-10">
             <DNA
               visible={true}
-              height={85}
-              width={90}
+              height={110}
+              width={120}
               ariaLabel="dna-loading"
               wrapperStyle={{}}
               wrapperClass="dna-wrapper"
@@ -172,30 +172,30 @@ const handleSearch = (e) => {
             <div className="grid md:grid-cols-4 grid-cols-2 gap-4">
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Total Users</h2>
-                <p className="text-xl font-bold">{akshay.total_user}</p>
+                <p className="text-xl font-bold">{users[0]?.total_user}</p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Total App Downloads</h2>
-                <p className="text-xl font-bold">{akshay.total_downloads}</p>
+                <p className="text-xl font-bold">{users[0]?.total_downloads}</p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">
                   Total Users Device Register
                 </h2>
                 <p className="text-xl font-bold">
-                  {akshay.total_user_downloads}
+                  {users[0]?.total_user_downloads}
                 </p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Tenant Downloads </h2>
                 <p className="text-xl font-bold">
-                  {akshay.total_tenant_downloads}
+                  {users[0]?.total_tenant_downloads}
                 </p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Owner Downloads </h2>
                 <p className="text-xl font-bold">
-                  {akshay.total_owner_downloads}
+                  {users[0]?.total_owner_downloads}
                 </p>
               </div>
               {/* <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">

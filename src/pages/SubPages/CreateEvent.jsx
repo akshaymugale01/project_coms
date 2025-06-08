@@ -21,6 +21,8 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
 import MultiSelect from "../AdminHrms/Components/MultiSelect";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const CreateEvent = () => {
   const siteId = getItemInLocalStorage("SITEID");
@@ -69,7 +71,7 @@ const CreateEvent = () => {
         const unitsRes = await getBuildings();
         console.log("userSites", unitsRes);
         setUnits(unitsRes.data);
-
+        console.log("usersRes", usersRes);
         const employeesList = usersRes.data.map((emp) => ({
           id: emp.id,
           name: `${emp.firstname} ${emp.lastname}`,
@@ -313,32 +315,33 @@ const CreateEvent = () => {
     setFormData({ ...formData, user_ids: userIdsString });
   };
 
-  const handleFileAttachment = (event) => {
-    if (event.target.files) {
-      // Convert the FileList to an array
-      const newAttachments = Array.from(event.target.files);
-
-      // Update state
-      setFormData({ ...formData, event_images: newAttachments });
+  const handleFileAttachment = (input) => {
+    let files = [];
+    // If called from an event, extract files from event.target
+    if (input && input.target && input.target.files) {
+      files = Array.from(input.target.files);
+    } else if (Array.isArray(input)) {
+      files = input;
+    } else if (input) {
+      files = [input];
     }
+    setFormData({ ...formData, event_images: files });
   };
 
   const filterTime = (time) => {
     const selectedDate = new Date(time);
     const currentDate = new Date();
 
-    // Compare selected date with current date
     if (selectedDate.getTime() > currentDate.getTime()) {
-      return true; // Future date
+      return true;
     } else if (selectedDate.getTime() === currentDate.getTime()) {
-      // If selected date is today, compare times
       const selectedTime =
         selectedDate.getHours() * 60 + selectedDate.getMinutes();
       const currentTime =
         currentDate.getHours() * 60 + currentDate.getMinutes();
-      return selectedTime >= currentTime; // Future time
+      return selectedTime >= currentTime;
     } else {
-      return false; // Past date
+      return false;
     }
   };
 
@@ -439,14 +442,15 @@ const CreateEvent = () => {
               <label htmlFor="" className="font-medium">
                 Description:
               </label>
-              <textarea
-                name="description"
+              <ReactQuill
+                theme="snow"
                 value={formData.description}
-                onChange={handleChange}
-                id=""
-                rows="3"
+                onChange={(value) =>
+                  setFormData({ ...formData, description: value })
+                }
                 placeholder="Enter Description"
-                className="border-gray-400 border px-2 p-1 rounded-md"
+                className="bg-white"
+                style={{ minHeight: "120px" }}
               />
             </div>
             <div className="flex gap-4 my-5">
@@ -559,7 +563,7 @@ const CreateEvent = () => {
                         Filter
                       </button>
                     </div>
-                    <div className="w-full">
+                    <div className="w-full mt-3 mb-3">
                       <Select
                         options={filteredMembers.map((member) => ({
                           value: member.id,
@@ -570,7 +574,7 @@ const CreateEvent = () => {
                         title="Select Members"
                         value={selectedMembers} // This should be the selected state
                         onChange={handleSelectEdit} // Correct event handler
-                        placeholder="Select Group Members"
+                        placeholder="Select Members"
                       />
                     </div>
                   </div>
@@ -597,7 +601,7 @@ const CreateEvent = () => {
                 )}
               </div>
             </div>
-            <div className="mb-4">
+            <div className="mb-4 mt-2">
               <h2 className="border-b text-xl border-black font-semibold">
                 RSVP
               </h2>

@@ -30,7 +30,7 @@ const TicketEscalationSetup = () => {
   const openModal3 = () => setShowModal3(true);
   const closeModal3 = () => setShowModal3(false);
   const [page, setPage] = useState("Response");
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3, 19, 37)";
   const [categories, setCategories] = useState([]);
   const [resEscalationAdded, setResEscalationAdded] = useState(false);
   const [resolutionEscalationAdded, setResolutionEscalationAdded] =
@@ -92,7 +92,7 @@ const TicketEscalationSetup = () => {
   const [responseEscalation, setResponseEscalation] = useState([]);
   const [resolutionEscalation, setResolutionEscalation] = useState([]);
   const [users, setUsers] = useState([]);
-
+  console.log("user", users);
   const convertToMinutes = ({ days, hrs, min }) => {
     const daysInMinutes = parseInt(days) * 24 * 60 || 0;
     const hrsInMinutes = parseInt(hrs) * 60 || 0;
@@ -116,6 +116,7 @@ const TicketEscalationSetup = () => {
     const fetchSetupUsers = async () => {
       try {
         const UsersResp = await getSetupUsers();
+        console.log("users-admin", UsersResp);
         const filteredUser = UsersResp.data.filter(
           (userAdmin) => userAdmin.user_type === "pms_admin"
         );

@@ -10,15 +10,14 @@ import { BiEdit } from "react-icons/bi";
 import FileInputBox from "../../../containers/Inputs/FileInputBox";
 import { FaTrash } from "react-icons/fa";
 import toast from "react-hot-toast";
+import Select from "react-select";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
 import { getSetupUsers, postHelpDeskCategoriesSetup } from "../../../api";
-
-
 
 const TicketCategoryPage = ({ handleToggleCategoryPage, setCatAdded }) => {
   const [isChecked, setIsChecked] = useState(false);
   const [engineers, setEngineers] = useState([]);
-  const [categoryAdded, setCategoryAdded] = useState(false)
+  const [categoryAdded, setCategoryAdded] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     engineer: [],
@@ -116,7 +115,7 @@ const TicketCategoryPage = ({ handleToggleCategoryPage, setCatAdded }) => {
       }));
     }
   };
-  console.log(formData)
+  console.log(formData);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -137,17 +136,23 @@ const TicketCategoryPage = ({ handleToggleCategoryPage, setCatAdded }) => {
     });
     try {
       const resp = await postHelpDeskCategoriesSetup(sendData);
-      setCatAdded(true)
+      setCatAdded(true);
       handleToggleCategoryPage();
-      setFormData({ ...formData, category: "", minTat: "", engineer:[] });
+      setFormData({ ...formData, category: "", minTat: "", engineer: [] });
     } catch (error) {
       console.log(error);
-    } finally{
+    } finally {
       setTimeout(() => {
-        setCatAdded(false)
+        setCatAdded(false);
       }, 500);
     }
   };
+
+  const engineerOptions = engineers.map((engineer) => ({
+    value: engineer.id,
+    label: `${engineer.firstname} ${engineer.lastname}`,
+  }));
+
   useEffect(() => {
     const fetchSetupUser = async () => {
       try {
@@ -180,19 +185,25 @@ const TicketCategoryPage = ({ handleToggleCategoryPage, setCatAdded }) => {
         </div>
         <div className="flex flex-col gap-2">
           <label className="font-medium">Select Engineer</label>
-          <select
-            className="border p-2 w-full rounded-md"
-            value={formData.engineer || []} 
-            onChange={handleChange}
-            name="engineer"
-          >
-            <option value="">Select Engineer</option>
-            {engineers.map((engineer) => (
-              <option value={engineer.id} key={engineer.id}>
-                {engineer.firstname} {engineer.lastname}
-              </option>
-            ))}
-          </select>
+          <Select
+            isMulti
+            options={engineerOptions}
+            value={engineerOptions.filter((opt) =>
+              formData.engineer.includes(opt.value)
+            )}
+            onChange={(selected) =>
+              setFormData({
+                ...formData,
+                engineer: selected ? selected.map((opt) => opt.value) : [],
+              })
+            }
+            placeholder="Select Engineer"
+            className="w-full"
+            menuPortalTarget={document.body}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            }}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <label className="font-medium">Response Time (min)</label>

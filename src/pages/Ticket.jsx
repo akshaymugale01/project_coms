@@ -279,31 +279,51 @@ const Ticket = () => {
     setSearchText(searchValue);
 
     if (searchValue.trim() === "") {
-      // If search input is empty, reset to show all data
       setFilteredData(complaints);
     } else {
-      const filteredResults = filterSearch.filter(
-        (item) =>
-          ((selectedStatus === "all" ||
-            item.issue_status.toLowerCase() === selectedStatus.toLowerCase()) &&
-            (item.ticket_number
-              .toLowerCase()
-              .includes(searchValue.toLowerCase()) ||
-              item.category_type
-                .toLowerCase()
-                .includes(searchValue.toLowerCase()))) ||
-          item.issue_type.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.heading.toLowerCase().includes(searchValue.toLowerCase()) ||
-          item.priority.toLowerCase().includes(searchValue.toLowerCase()) ||
-          (item.unit &&
-            item.unit.toLowerCase().includes(searchValue.toLowerCase()))
-        // ||
-        // item.assigned_to.toLowerCase().includes(searchValue.toLowerCase())
-      );
+      // Split search into words, ignore extra spaces
+      const searchWords = searchValue
+        .toLowerCase()
+        .split(" ")
+        .filter((w) => w.trim() !== "");
+
+      const filteredResults = filterSearch.filter((item) => {
+        // Gather all searchable fields as a single string
+        const searchable = [
+          item.ticket_number,
+          item.category_type,
+          item.building_name,
+          item.floor_name,
+          item.unit,
+          item.issue_type,
+          item.heading,
+          item.priority,
+          item.created_by,
+          item.issue_status,
+          item.sub_category,
+        ]
+          .map((v) => (v || "").toLowerCase())
+          .join(" ");
+
+        // All search words must be present in the searchable string
+        const allWordsMatch = searchWords.every((word) =>
+          searchable.includes(word)
+        );
+
+        // Status filter
+        const statusMatch =
+          selectedStatus === "all" ||
+          (item.issue_status || "").toLowerCase() === selectedStatus.toLowerCase();
+
+        return allWordsMatch && statusMatch;
+      });
+
       setFilteredData(filteredResults);
     }
   };
 
+  console.log("Data", searchText);
+  console.log("Filtered Data:", filteredData);
   const handleStatusChange = (status) => {
     setSelectedStatus(status);
 
@@ -504,7 +524,7 @@ const Ticket = () => {
           <div className="flex lg:flex-row flex-col w-full gap-2">
             <input
               type="text"
-              placeholder="Search by Title, Ticket number, Category, Ticket type, Priority or Unit "
+              placeholder="Search by Title, Ticket number, Category, Ticket type, Priority, Building, Floor or Unit"
               className="border border-gray-400 md:w-full placeholder:text-xs rounded-lg p-2"
               value={searchText}
               onChange={handleSearch}
@@ -512,7 +532,7 @@ const Ticket = () => {
 
             <Link
               to={"/tickets/create-ticket"}
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
               className=" font-semibold  text-white duration-300 transition-all  p-2 rounded-md  cursor-pointer text-center flex items-center gap-2 justify-center"
             // onClick={() => setShowCountry(!showCountry)}
             >
@@ -521,7 +541,7 @@ const Ticket = () => {
             </Link>
             <button
               className=" font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
               onClick={() => setFilterModal(!filterModal)}
             >
               <BiFilterAlt />
@@ -530,7 +550,7 @@ const Ticket = () => {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setHideColumn(!hideColumn)}
-                style={{ background: themeColor }}
+                style={{ background: "rgb(3 19 37)" }}
                 className="font-semibold text-white px-4 p-2 flex gap-2 items-center justify-center rounded-md whitespace-nowrap w-full"
               >
                 Hide Columns
@@ -556,7 +576,7 @@ const Ticket = () => {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={exportAllToExcel}
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
             >
               Export
             </button>

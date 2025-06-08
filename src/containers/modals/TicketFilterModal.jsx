@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ModalWrapper from "./ModalWrapper";
-import { getFloors, getUnits, getFilterData, getAssignedTo } from "../../api";
+import { getFloors, getUnits, getFilterData, getAssignedTo, domainPrefix } from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 const TicketFilterModal = ({
   onclose,
@@ -15,6 +15,7 @@ const TicketFilterModal = ({
   const categories = getItemInLocalStorage("categories");
   const statuses = getItemInLocalStorage("STATUS");
   const [assignedUser, setAssignedUser] = useState([]);
+  const Token = getItemInLocalStorage("TOKEN");
   const [formData, setFormData] = useState({
     category_id: "",
     issueStatusId: "",
@@ -27,23 +28,22 @@ const TicketFilterModal = ({
     startDate: "",
     endDate: "",
   });
+
   const buildingChange = async (e) => {
-    async function fetchFloor(floorID) {
+    async function fetchFloor(buildingID) {
       try {
-        const build = await getFloors(floorID);
-        // console.log("units n", build.data);
+        const build = await getFloors(buildingID);
+        console.log("Building Data:", build.data);
         setFloor(build.data.map((item) => ({ name: item.name, id: item.id })));
       } catch (e) {
         console.log(e);
       }
     }
 
-    async function getUnit(UnitID) {
+    async function getUnit(floorID) {
       try {
-        const unit = await getUnits(UnitID);
-        setUnitName(
-          unit.data.map((item) => ({ name: item.name, id: item.id }))
-        );
+        const unit = await getUnits(floorID);
+        setUnitName(unit.data.map((item) => ({ name: item.name, id: item.id })));
       } catch (error) {
         console.log(error);
       }
@@ -53,16 +53,29 @@ const TicketFilterModal = ({
       const BuildID = Number(e.target.value);
       await fetchFloor(BuildID);
 
+      // Reset floor and unit when building changes
       setFormData({
         ...formData,
         building_id: BuildID,
+        floor_id: "",
+        unit_id: "",
       });
+      setUnitName([]); // Clear units
     } else if (e.target.type === "select-one" && e.target.name === "floor_id") {
-      const UnitID = Number(e.target.value);
-      await getUnit(UnitID);
+      const FloorID = Number(e.target.value);
+      await getUnit(FloorID);
+
+      // Reset unit when floor changes
       setFormData({
         ...formData,
-        floor_id: UnitID,
+        floor_id: FloorID,
+        unit_id: "",
+      });
+    } else if (e.target.type === "select-one" && e.target.name === "unit_id") {
+      const UnitID = Number(e.target.value);
+      setFormData({
+        ...formData,
+        unit_id: UnitID,
       });
     } else {
       setFormData({
@@ -72,33 +85,80 @@ const TicketFilterModal = ({
     }
   };
 
-  const handleFilterData = async () => {
-    // Split created_by by space
-    try {
-      const [firstName = "", lastName = ""] = (formData.createBy || "").split(
-        " "
-      );
-      const response = await getFilterData(
-        formData.category_id,
-        formData.issueStatusId,
-        formData.priorityLevel,
-        formData.assign,
+  // const handleFilterData = async () => {
+  //   // Split created_by by space
+  //   try {
+  //     const [firstName = "", lastName = ""] = (formData.createBy || "").split(
+  //       " "
+  //     );
+  //     const response = await getFilterData(
+  //       formData.category_id,
+  //       formData.issueStatusId,
+  //       formData.priorityLevel,
+  //       formData.assign,
 
-        firstName,
-        lastName,
-        formData.building_id,
-        formData.floor_id,
-        formData.unit_id,
-        formData.startDate,
-        formData.endDate
-      );
-      console.log(response);
-      setFilteredData(response.data.complaints);
-      onclose();
-    } catch (error) {
-      console.error("Error filter Data:", error);
+  //       firstName,
+  //       lastName,
+  //       formData.building_id,
+  //       formData.floor_id,
+  //       formData.unit_id,
+  //       formData.startDate,
+  //       formData.endDate
+  //     );
+  //     console.log(response);
+  //     setFilteredData(response.data.complaints);
+  //     onclose();
+  //   } catch (error) {
+  //     console.error("Error filter Data:", error);
+  //   }
+  // };
+
+const handleFilterData = async () => {
+  try {
+    const [firstName = "", lastName = ""] = (formData.createBy || "").split(" ");
+
+    const query = {
+      "q[category_type_id_eq]": formData.category_id,
+      "q[issue_status_eq]": formData.issueStatusId,
+      "q[priority_cont]": formData.priorityLevel,
+      "q[assigned_to_eq]": formData.assign,
+      "q[unit_building_id_eq]": formData.building_id,
+      "q[unit_floor_id_eq]": formData.floor_id,
+      "q[unit_id_eq]": formData.unit_id,
+      "q[created_by_first_name_or_created_by_last_name_cont_all]": `${firstName} ${lastName}`,
+      "q[created_at_gteq]": formData.startDate,
+      "q[created_at_lteq]": formData.endDate,
+      token: Token,
+    };
+
+    const queryString = new URLSearchParams(query).toString();
+
+    const response = await fetch(`${domainPrefix}/pms/admin/complaints.json?${queryString}`, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    const contentType = response.headers.get("content-type");
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
     }
-  };
+
+    if (contentType && contentType.includes("application/json")) {
+      const data = await response.json();
+      setFilteredData(data.complaints);
+      onclose();
+    } else {
+      const text = await response.text();
+      throw new Error("Unexpected response: " + text.slice(0, 100));
+    }
+  } catch (error) {
+    console.error("Error filter Data:", error.message);
+  }
+};
+
+
 
   const handleReset = () => {
     fetchData(currentPage, perPage);

@@ -17,7 +17,7 @@ import { MdClose } from "react-icons/md";
 import MultiSelect from "../AdminHrms/Components/MultiSelect";
 
 function CreatePolls() {
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 , 19, 37)";
   const [share, setShare] = useState("all");
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -133,6 +133,7 @@ function CreatePolls() {
     shared: "",
     shared_with: "",
     group_name: "",
+    send_mail: "",
     target_groups: [], // Array to store selected target groups
     poll_options_attributes: {}, // Object to store poll options
   });
@@ -160,6 +161,7 @@ function CreatePolls() {
     sendData.append("poll[end_date]", formData.end_date);
     sendData.append("poll[start_time]", formData.start_time);
     sendData.append("poll[end_time]", formData.end_time);
+    sendData.append("poll[send_mail]", formData.send_mail);
     sendData.append("poll[visibility]", formData.visibility);
     if (share === "all") {
       sendData.append("poll[shared]", "all");
@@ -370,7 +372,38 @@ function CreatePolls() {
               />
             </div>
           </div>
-
+          <div className="flex gap-2">
+            {/* <div className="flex gap-2 items-center">
+              <input
+                type="checkbox"
+                name=""
+                id="imp"
+                checked={formData.important === true}
+                onChange={() =>
+                  setFormData({
+                    ...formData,
+                    important: !formData.important,
+                  })
+                }
+              />
+              <label htmlFor="imp">Mark as Important</label>
+            </div> */}
+            <div className="flex gap-2 items-center">
+              <input
+                type="checkbox"
+                name="send_mail"
+                id="imp"
+                checked={formData.send_mail === true}
+                onChange={() =>
+                  setFormData({
+                    ...formData,
+                    send_mail: !formData.send_mail,
+                  })
+                }
+              />
+              <label htmlFor="imp">Send Email</label>
+            </div>
+          </div>
           {/* Share Option */}
           <div className="">
             <h2 className="border-b t border-black my-5 text-lg font-semibold">
@@ -403,12 +436,13 @@ function CreatePolls() {
                   Groups
                 </h2>
               </div>
-              <div className="my-5 flex w-full">
-                {share === "individual" && (
-                  <div className="flex flex-wrap gap-4 mt-2 items-center">
+              {share === "individual" && (
+                <div className="flex flex-col gap-2 mt-2 w-full">
+                  {/* First Row: Unit Select, Ownership Select, and Filter Button */}
+                  <div className="flex gap-2 items-end">
                     {/* Unit Select Dropdown */}
                     <select
-                      className="border p-3 border-gray-300 rounded-md flex-1 min-w-[150px]"
+                      className="border p-3 border-gray-300 rounded-md flex-1"
                       value={selectedUnit || ""}
                       onChange={(e) => setSelectedUnit(Number(e.target.value))}
                     >
@@ -422,7 +456,7 @@ function CreatePolls() {
 
                     {/* Ownership Select Dropdown */}
                     <select
-                      className="border p-3 border-gray-300 rounded-md flex-1 min-w-[150px]"
+                      className="border p-3 border-gray-300 rounded-md flex-1"
                       value={selectedOwnership}
                       onChange={(e) => setSelectedOwnership(e.target.value)}
                     >
@@ -433,58 +467,54 @@ function CreatePolls() {
 
                     {/* Filter Button */}
                     <button
+                      style={{ background: themeColor }}
                       onClick={handleFilter}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-md min-w-[100px]"
+                      className="bg-blue-500 text-white px-4 py-2 rounded-md"
                     >
                       Filter
                     </button>
-
-                    {/* MultiSelect Dropdown */}
-                    <div className="w-full md:w-auto">
-                      <Select
-                        options={filteredMembers.map((member) => ({
-                          value: member.id,
-                          label: member.name,
-                        }))}
-                        className="w-full"
-                        title="Select Members"
-                        handleSelect={handleSelectEdit}
-                        selectedOptions={selectedMembers}
-                        setSelectedOptions={setSelectedMembers}
-                        compTitle="Select Group Members"
-                      />
-                    </div>
                   </div>
-                )}
-
-                {share === "groups" && (
-                  <div className="group-dropdown">
-                    <label
-                      htmlFor="group-select"
-                      className="block mb-2 font-medium"
-                    >
-                      Select a Group:
-                    </label>
-                    <select
-                      id="group-select"
-                      className="border border-gray-300 rounded px-4 py-2"
-                      value={selectedGroup}
-                      onChange={handleGroupChange}
-                    >
-                      <option value="">-- Select a Group --</option>
-                      {groups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.group_name}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="w-full mt-3 mb-3">
+                    <Select
+                      options={filteredMembers.map((member) => ({
+                        value: member.id,
+                        label: member.name,
+                      }))}
+                      className="w-full"
+                      title="Select Members"
+                      handleSelect={handleSelectEdit}
+                      selectedOptions={selectedMembers}
+                      setSelectedOptions={setSelectedMembers}
+                      compTitle="Select Group Members"
+                      isMulti
+                    />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+              {share === "groups" && (
+                <div className="flex flex-col gap-2 mt-2 w-full">
+                  <label htmlFor="groupSelect" className="font-medium mb-1">
+                    Select Group
+                  </label>
+                  <select
+                    id="groupSelect"
+                    className="border p-3 border-gray-300 rounded-md"
+                    value={selectedGroup}
+                    onChange={handleGroupChange}
+                  >
+                    <option value="">Select Group</option>
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.group_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex flex-col">
+          {/* <div className="flex flex-col">
             <label className="font-semibold my-2">Target Groups/Roles</label>
             <Select
               isMulti
@@ -494,7 +524,7 @@ function CreatePolls() {
               noOptionsMessage={() => "No Users Available"}
               placeholder="Select Users"
             />
-          </div>
+          </div> */}
           <div className="flex flex-col">
             <label className="font-semibold my-2">Poll Description</label>
             <textarea

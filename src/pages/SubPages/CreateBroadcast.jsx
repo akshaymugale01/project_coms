@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import { FaCheck } from "react-icons/fa";
+import ReactQuill from "react-quill";
 const CreateBroadcast = () => {
   const [share, setShare] = useState("all");
   const [groups, setGroups] = useState([]);
@@ -26,6 +27,7 @@ const CreateBroadcast = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const siteId = getItemInLocalStorage("SITEID");
+  const currentUser = getItemInLocalStorage("UserId");
   const [units, setUnits] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -43,6 +45,7 @@ const CreateBroadcast = () => {
     group_id: "",
     group_name: "",
     important: "",
+    send_email: "",
   });
   console.log(formData);
   const datePickerRef = useRef(null);
@@ -210,8 +213,11 @@ const CreateBroadcast = () => {
       const formDataSend = new FormData();
 
       // Common fields
+      formDataSend.append("notice[created_by_id]", currentUser);
       formDataSend.append("notice[site_id]", formData.site_id);
       formDataSend.append("notice[notice_title]", formData.notice_title);
+      formDataSend.append("notice[important]", formData.important);
+      formDataSend.append("notice[send_email]", formData.send_email);
       formDataSend.append(
         "notice[notice_discription]",
         formData.notice_discription
@@ -285,7 +291,22 @@ const CreateBroadcast = () => {
                   className="border p-2 rounded-md border-gray-400 placeholder:text-sm"
                 />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-2 my-2">
+                <label htmlFor="" className="font-medium">
+                  Description:
+                </label>
+                <ReactQuill
+                  theme="snow"
+                  value={formData.notice_discription}
+                  onChange={(value) =>
+                    setFormData({ ...formData, notice_discription: value })
+                  }
+                  placeholder="Enter Description"
+                  className="bg-white"
+                  style={{ minHeight: "120px", minWidth: "120px" }}
+                />
+              </div>
+              {/* <div className="flex flex-col">
                 <label htmlFor="" className="font-semibold">
                   Description :
                 </label>
@@ -298,7 +319,7 @@ const CreateBroadcast = () => {
                   rows="3"
                   className="border p-2 rounded-md border-gray-400 placeholder:text-sm"
                 />
-              </div>
+              </div> */}
               <div className="grid grid-cols-2 items-end gap-4">
                 {/* <div className="flex justify-between  flex-col gap-2"> */}
                 <div className="flex flex-col">
@@ -314,6 +335,9 @@ const CreateBroadcast = () => {
                     className="border border-gray-400 w-full p-2 rounded-md"
                   />
                 </div>
+              </div>
+
+              <div className="flex gap-2">
                 <div className="flex gap-2 items-center">
                   <input
                     type="checkbox"
@@ -329,19 +353,36 @@ const CreateBroadcast = () => {
                   />
                   <label htmlFor="imp">Mark as Important</label>
                 </div>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="checkbox"
+                    name=""
+                    id="imp"
+                    checked={formData.send_email === true}
+                    onChange={() =>
+                      setFormData({
+                        ...formData,
+                        send_email: !formData.send_email,
+                      })
+                    }
+                  />
+                  <label htmlFor="imp">Send Email</label>
+                </div>
               </div>
+
+              {/* <div className="flex flex-col items-center justify-center"> */}
 
               <div className="">
                 <h2 className="border-b t border-black my-5 text-lg font-semibold">
                   Share With
                 </h2>
                 <div className="flex flex-col items-center justify-center">
-                  <div className="flex flex-row gap-2 w-full font-semibold p-2">
+                  <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                     <h2
                       className={`p-1 ${
                         share === "all" && "bg-black text-white"
                       } rounded-full px-6 cursor-pointer border-2 border-black`}
-                      onClick={() => handleShareChange("all")}
+                      onClick={() => setShare("all")}
                     >
                       All
                     </h2>
@@ -349,7 +390,7 @@ const CreateBroadcast = () => {
                       className={`p-1 ${
                         share === "individual" && "bg-black text-white"
                       } rounded-full px-4 cursor-pointer border-2 border-black`}
-                      onClick={() => handleShareChange("individual")}
+                      onClick={() => setShare("individual")}
                     >
                       Individuals
                     </h2>
@@ -357,15 +398,15 @@ const CreateBroadcast = () => {
                       className={`p-1 ${
                         share === "groups" && "bg-black text-white"
                       } rounded-full px-4 cursor-pointer border-2 border-black`}
-                      onClick={() => handleShareChange("groups")}
+                      onClick={() => setShare("groups")}
                     >
                       Groups
                     </h2>
                   </div>
-
-                  <div className="my-2 flex w-full">
-                    {share === "individual" && (
-                      <div className="flex gap-2 mt-2 items-end">
+                  {share === "individual" && (
+                    <div className="flex flex-col gap-2 mt-2 w-full">
+                      {/* First Row: Unit Select, Ownership Select, and Filter Button */}
+                      <div className="flex gap-2 items-end">
                         {/* Unit Select Dropdown */}
                         <select
                           className="border p-3 border-gray-300 rounded-md flex-1"
@@ -395,77 +436,65 @@ const CreateBroadcast = () => {
 
                         {/* Filter Button */}
                         <button
+                          style={{ background: themeColor }}
                           onClick={handleFilter}
                           className="bg-blue-500 text-white px-4 py-2 rounded-md"
                         >
                           Filter
                         </button>
+                      </div>
+                      <div className="w-full mt-3 mb-3">
                         <Select
-  options={filteredMembers.map((member) => ({
-    value: member.id,
-    label: member.name,
-  }))}
-  className="w-full"
-  title="Select Members"
-  onChange={handleSelectChange}
-  value={selectedMembers}
-  isMulti
-/>
-
-                        {/* <MultiSelect
-                        options={filteredMembers.map((member) => ({
-                          value: member.id,
-                          label: member.name,
-                        }))}
-                        className="w-full"
-                        title="Select Members"
-                        handleSelect={handleSelectEdit}
-                        selectedOptions={selectedMembers}
-                        setSelectedOptions={setSelectedMembers}
-                        compTitle="Select Group Members"
-                      /> */}
+                          options={filteredMembers.map((member) => ({
+                            value: member.id,
+                            label: member.name,
+                          }))}
+                          className="w-full"
+                          title="Select Members"
+                          onChange={handleSelectChange}
+                          value={selectedMembers}
+                          isMulti
+                        />
                       </div>
-                    )}
-                    {share === "groups" && (
-                      <div className="group-dropdown">
-                        <label
-                          htmlFor="group-select"
-                          className="block mb-2 font-medium"
-                        >
-                          Select a Group:
-                        </label>
-                        <select
-                          id="group-select"
-                          className="border border-gray-300 rounded px-4 py-2"
-                          value={selectedGroup}
-                          onChange={handleGroupChange}
-                        >
-                          <option value="">-- Select a Group --</option>
-                          {groups.map((group) => (
-                            <option key={group.id} value={group.id}>
-                              {group.group_name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="my-5">
-                  <h2 className="border-b text-center text-xl border-black mb-6 font-bold">
-                    Attachments
-                  </h2>
-
-                  <FileInputBox
-                    fieldName={"notice_image"}
-                    isMulti={true}
-                    handleChange={(files) =>
-                      handleFileChange(files, "notice_image")
-                    }
-                  />
+                    </div>
+                  )}
+                  {share === "groups" && (
+                    <div className="flex flex-col gap-2 mt-2 w-full">
+                      <label htmlFor="groupSelect" className="font-medium mb-1">
+                        Select Group
+                      </label>
+                      <select
+                        id="groupSelect"
+                        className="border p-3 border-gray-300 rounded-md"
+                        value={selectedGroup}
+                        onChange={handleGroupChange}
+                      >
+                        <option value="">Select Group</option>
+                        {groups.map((group) => (
+                          <option key={group.id} value={group.id}>
+                            {group.group_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
+              {/* </div> */}
+              <div className="my-5">
+                <h2 className="border-b text-center text-xl border-black mb-6 font-bold">
+                  Attachments
+                </h2>
+
+                <FileInputBox
+                  fieldName={"notice_image"}
+                  isMulti={true}
+                  handleChange={(files) =>
+                    handleFileChange(files, "notice_image")
+                  }
+                />
+              </div>
+              {/* </div> */}
               <div className="flex justify-center mt-10 my-5">
                 <button
                   style={{ background: themeColor }}

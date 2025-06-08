@@ -76,7 +76,6 @@ const ServicePage = () => {
     },
   ];
 
-  useEffect(() => {
     const fetchService = async () => {
       try {
         const serviceResponse = await getSoftServices();
@@ -90,14 +89,15 @@ const ServicePage = () => {
         console.log(error);
       }
     };
-
+  useEffect(() => {
+  
+    fetchService();
     const timer = setTimeout(() => {
       setLoading(false);
     }, 3000);
 
     return () => clearTimeout(timer);
 
-    // fetchService();
   }, []);
   const handleSearch = (event) => {
     const searchValue = event.target.value;
@@ -233,13 +233,13 @@ const ServicePage = () => {
             <Link
               to={"/services/add-service"}
               className="bg-black  rounded-lg flex font-semibold  items-center gap-2 text-white p-2 "
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
             >
               <IoAddCircleOutline size={20} />
               Add
             </Link>
             <button
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
               className="px-4 py-2  font-medium text-white rounded-md flex gap-2 items-center justify-center"
               onClick={handleQrDownload}
             >
@@ -249,7 +249,7 @@ const ServicePage = () => {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
               onClick={exportToExcel}
-              style={{ background: themeColor }}
+              style={{ background: "rgb(3 19 37)" }}
             >
               Export
             </button>

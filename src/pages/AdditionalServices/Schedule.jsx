@@ -569,7 +569,7 @@ const Schedule = () => {
 
               <div className=" w-full my-2">
                 <table className=" w-full border-collapse">
-                  <thead style={{ background: themeColor }}>
+                  <thead style={{ background: "rgb(3 19 37)" }}>
                     <tr>
                       <th className="border border-gray-300  px-4 py-2 text-white">
                         Levels
@@ -606,7 +606,7 @@ const Schedule = () => {
                 <div className="flex justify-center">
                   <button
                     className="font-semibold hover:bg-black hover:text-white transition-all  p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                    style={{ background: themeColor }}
+                    style={{ background: "rgb(3 19 37)" }}
                     onClick={handleSaveResponseEscalation}
                   >
                     Submit
@@ -666,7 +666,7 @@ const Schedule = () => {
                     </div>
                     <table className="table-auto w-full border-collapse border border-gray-200 my-4 rounded-md overflow-x-auto">
                       <thead
-                        style={{ background: themeColor }}
+                        style={{ background: "rgb(3 19 37)" }}
                         className="bg-gray-100 rounded-md"
                       >
                         <tr>
@@ -752,14 +752,14 @@ const Schedule = () => {
               <div className="flex justify-center gap-2 mt-2">
                 <button
                   className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                  style={{ background: themeColor }}
+                  style={{ background: "rgb(3 19 37)" }}
                 >
                   Clone
                 </button>
                 <button
                   onClick={closeModal1}
                   className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                  style={{ background: themeColor }}
+                  style={{ background: "rgb(3 19 37)" }}
                 >
                   Close
                 </button>
@@ -883,14 +883,14 @@ const Schedule = () => {
                   <div className="flex gap-2 justify-center">
                     <button
                       className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                      style={{ background: themeColor, height: "1cm" }}
+                      style={{ background: "rgb(3 19 37)", height: "1cm" }}
                     >
                       Update
                     </button>
                     <button
                       onClick={closeModal}
                       className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                      style={{ background: themeColor, height: "1cm" }}
+                      style={{ background: "rgb(3 19 37)", height: "1cm" }}
                     >
                       Close
                     </button>
@@ -914,7 +914,7 @@ const Schedule = () => {
               />
               <div className=" w-full overflow-auto ">
                 <table className="border-collapse rounded-sm w-full my-2 ">
-                  <thead style={{ background: themeColor }}>
+                  <thead style={{ background: "rgb(3 19 37)" }}>
                     <tr>
                       {[
                         "Levels",
@@ -1057,7 +1057,7 @@ const Schedule = () => {
               <div className="flex justify-center my-2">
                 <button
                   className=" font-semibold hover:bg-black hover:text-white transition-all px-4 p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                  style={{ background: themeColor }}
+                  style={{ background: "rgb(3 19 37)" }}
                   onClick={handleSaveResolutionEscalation}
                 >
                   Submit
@@ -1699,14 +1699,14 @@ const Schedule = () => {
                     <div className="flex gap-2 justify-center">
                       <button
                         className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                        style={{ background: themeColor }}
+                        style={{ background: "rgb(3 19 37)" }}
                       >
                         Update
                       </button>
                       <button
                         onClick={closeModal3}
                         className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                        style={{ background: themeColor }}
+                        style={{ background: "rgb(3 19 37)" }}
                       >
                         Close
                       </button>
@@ -1768,7 +1768,7 @@ const Schedule = () => {
                     </div>
                     <table className="table-auto w-full border-collapse border border-gray-200 my-4 rounded-md overflow-x-auto ">
                       <thead
-                        style={{ background: themeColor }}
+                        style={{ background: "rgb(3 19 37)" }}
                         className="bg-gray-100 rounded-md"
                       >
                         <tr>

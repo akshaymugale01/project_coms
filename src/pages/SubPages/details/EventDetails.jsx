@@ -137,7 +137,9 @@ const EventDetails = () => {
               {Array.isArray(eventDetails?.event_images) &&
               eventDetails?.event_images.length > 0 ? (
                 eventDetails?.event_images
-                  .filter((img) => img && typeof img === "object" && img.document_url)
+                  .filter(
+                    (img) => img && typeof img === "object" && img.document_url
+                  )
                   .map((img, idx) => (
                     <img
                       key={idx}
@@ -154,11 +156,13 @@ const EventDetails = () => {
           <div className="flex flex-col gap-4 mx-10 m-5">
             <div className="flex flex-col gap-2">
               <p className="font-medium">Description:</p>
-              <p className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-line">
-                {eventDetails.discription}
-              </p>
+              <div
+                className="border-dotted border-2 rounded-md border-gray-400 p-3 text-left w-full break-words whitespace-pre-line"
+                dangerouslySetInnerHTML={{
+                  __html: eventDetails.discription || "",
+                }}
+              />
             </div>
-
             <div>
               <div>
                 <h1 className="text-xl font-semibold">Shared With (Member)</h1>
