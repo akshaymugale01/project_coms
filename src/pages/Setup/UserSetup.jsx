@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PiPlusCircle } from "react-icons/pi";
 import Navbar from "../../components/Navbar";
 import Table from "../../components/table/Table";
-import { getSetupUsers, sendMailToUsers } from "../../api";
+import { getSetupUsers, getUserCount, sendMailToUsers } from "../../api";
 import { Link } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { useSelector } from "react-redux";
@@ -15,6 +15,7 @@ const UserSetup = () => {
   const [users, setUsers] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [count, setCount] = useState("");
   const [loading, setLoading] = useState(true); // Add loading state
   const themeColor = useSelector((state) => state.theme.color);
 
@@ -26,8 +27,11 @@ const UserSetup = () => {
       try {
         setLoading(true); // Start loading
         const setupUsers = await getSetupUsers();
+        const userCount = await getUserCount();
+        setCount(userCount.data);
         const data = setupUsers.data || [];
         setUsers(data);
+
         setFilteredData(setupUsers.data);
       } catch (error) {
         console.log(error);
@@ -38,6 +42,7 @@ const UserSetup = () => {
     fetchUsers();
   }, []);
 
+console.log("count", count);  
 const handleSearch = (e) => {
   const searchValue = e.target.value;
   setSearchText(searchValue);
@@ -172,30 +177,30 @@ const handleSearch = (e) => {
             <div className="grid md:grid-cols-4 grid-cols-2 gap-4">
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Total Users</h2>
-                <p className="text-xl font-bold">{users[0]?.total_user}</p>
+                <p className="text-xl font-bold">{count.total_user}</p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Total App Downloads</h2>
-                <p className="text-xl font-bold">{users[0]?.total_downloads}</p>
+                <p className="text-xl font-bold">{count.total_downloads}</p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">
                   Total Users Device Register
                 </h2>
                 <p className="text-xl font-bold">
-                  {users[0]?.total_user_downloads}
+                  {count.total_user_downloads}
                 </p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Tenant Downloads </h2>
                 <p className="text-xl font-bold">
-                  {users[0]?.total_tenant_downloads}
+                  {count.total_owner_downloads}
                 </p>
               </div>
               <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">
                 <h2 className="text-lg font-semibold">Owner Downloads </h2>
                 <p className="text-xl font-bold">
-                  {users[0]?.total_owner_downloads}
+                  {count.total_tenant_downloads}
                 </p>
               </div>
               {/* <div className="bg-gray-100 p-4 rounded-md text-center shadow-md">

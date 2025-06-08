@@ -1471,6 +1471,18 @@ export const getSetupUsers = async () =>
       Expires: "0",
     },
   });
+ 
+ export const getUserCount = async () =>
+  axiosInstance.get("/users/index_count.json", {
+    params: {
+      token: token,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  }); 
 
 export const getFilterUsers = async (id) =>
   axiosInstance.get(`/users/${id}.json`, {
@@ -1480,7 +1492,7 @@ export const getFilterUsers = async (id) =>
   });
 
 export const editSetupUsers = async (id, data) =>
-  axiosInstance.post(`/users/update_user/${id}.json`, data, {
+  axiosInstance.put(`/users/${id}.json`, data, {
     params: {
       token: token,
     },
