@@ -131,6 +131,11 @@ const AddUser = () => {
         "All fields are required! including at least one user site!"
       );
     }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(formData.email)) {
+    return toast.error("Please enter a valid email address!");
+  }
     const postData = {
       user: {
         firstname: formData.firstname,
