@@ -35,6 +35,33 @@ export const getTicketDashboard = async () =>
       token: token,
     },
   });
+
+export const getAmenityBookNotification = async () =>
+  axiosInstance.get("/amenity_bookings/notification_amenity.json", {
+    params: {
+      token: token,
+    },
+  });
+
+// Update Notification As Read
+
+export const markNotificationAsRead = async (id) => 
+   axiosInstance.put(
+    "/amenity_bookings/mark_as_read",
+    {
+      amenity_booking: {
+        amenity_notifications: {
+          id: id,
+        },
+      },
+    },
+    {
+      params: {
+        token: token,
+      },
+    }
+  );
+
 //Assets
 export const getPerPageSiteAsset = async (page, perPage) =>
   axiosInstance.get(`/site_assets.json?per_page=${perPage}&page=${page}`, {
@@ -180,12 +207,12 @@ export const getVendors = async () =>
     },
   });
 
-  export const getAllVendors = async () =>
-    axiosInstance.get("/vendors/all_vendors.json", {
-      params: {
-        token: token,
-      },
-    });  
+export const getAllVendors = async () =>
+  axiosInstance.get("/vendors/all_vendors.json", {
+    params: {
+      token: token,
+    },
+  });
 export const getVendorCategory = async () =>
   axiosInstance.get("/vendor_categories.json", {
     params: {
@@ -288,34 +315,34 @@ export const getHelpDeskCategoriesSetup = async () =>
     },
   });
 
-  //FitOut Checklist
-  export const postFitoutChecklist = async (data) => 
-    axiosInstance.post(`/snag_checklists.json`, data, {
+//FitOut Checklist
+export const postFitoutChecklist = async (data) =>
+  axiosInstance.post(`/snag_checklists.json`, data, {
     params: {
       token: token,
     },
-  }); 
-  
-  export const getFitoutChecklist = async () => 
-    axiosInstance.get(`/snag_checklists.json`, {
-    params: {
-      token: token,
-    },
-  }); 
+  });
 
-  //FitOut Request
-  export const postFitoutRequest = async (data) =>
-    axiosInstance.post(`/fitout_request.json`, data, {
-      params: {
-        token: token,
-      },
-    });
-    export const getFitoutRequest = async () =>
-      axiosInstance.get(`/fitout_request.json`, {
-        params: {
-          token: token,
-        },
-      });
+export const getFitoutChecklist = async () =>
+  axiosInstance.get(`/snag_checklists.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+//FitOut Request
+export const postFitoutRequest = async (data) =>
+  axiosInstance.post(`/fitout_request.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+export const getFitoutRequest = async () =>
+  axiosInstance.get(`/fitout_request.json`, {
+    params: {
+      token: token,
+    },
+  });
 
 export const getFitOutCategoriesSetup = async () =>
   axiosInstance.get(`/fit_out_setup_categories.json`, {
@@ -382,19 +409,19 @@ export const postFitoutCategoriesSetup = async (data) =>
     },
   });
 
-export const putFitoutCategoriesSetup = async (catId,data) =>
+export const putFitoutCategoriesSetup = async (catId, data) =>
   axiosInstance.put(`/fit_out_setup_categories/${catId}.json`, data, {
     params: {
       token: token,
     },
-  });  
+  });
 
 export const destroyFitoutCategory = async (catId) =>
   axiosInstance.delete(`/fit_out_setup_categories/${catId}.json`, {
     params: {
       token: token,
     },
-  });    
+  });
 
 export const postHelpDeskSubCategoriesSetup = async (data) =>
   axiosInstance.post(`/pms/admin/create_helpdesk_sub_category.json`, data, {
@@ -491,21 +518,20 @@ export const getHelpDeskStatusDetailsSetup = async (id) =>
     }
   );
 
-  export const getFitOutStatus = async (id) =>
-    axiosInstance.get(`/fitout_statuses/${id}.json`, {
-      params: {
-        token: token,
-      },
-    });
+export const getFitOutStatus = async (id) =>
+  axiosInstance.get(`/fitout_statuses/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
 
-    export const editFitOutStatus = async (id, data) =>
-      axiosInstance.put(`/fitout_statuses/${id}.json`, data, {
-        params: {
-          token: token,
-        },
-      });
+export const editFitOutStatus = async (id, data) =>
+  axiosInstance.put(`/fitout_statuses/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
 
-      
 export const editHelpDeskStatusDetailsSetup = async (id, data) =>
   axiosInstance.put(
     `/pms/admin/helpdesk_categories/complaint_statuses/${id}.json`,
@@ -529,7 +555,6 @@ export const postFitOutStatus = async (data) =>
       token: token,
     },
   });
-
 
 export const getAdminComplaints = async () =>
   axiosInstance.get(`/pms/admin/complaints.json`, {
@@ -1191,24 +1216,23 @@ export const getPaymentBookings = async (resourceId) =>
     },
   });
 
-
 //   Parking Api
 
-  export const postParking = async (data) =>
+export const postParking = async (data) =>
   axiosInstance.post(`/booking_parkings.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const getParkingSlots = async () =>
+export const getParkingSlots = async () =>
   axiosInstance.get(`/parking_slots.json`, {
     params: {
       token: token,
     },
   });
 
-  export const getAvailableParkingNumber = async () =>
+export const getAvailableParkingNumber = async () =>
   axiosInstance.get(`/available_parking_configurations.json`, {
     params: {
       token: token,
@@ -1221,13 +1245,13 @@ export const getParkingConfigurationDetails = async (id) =>
     },
   });
 
-  export const getParkingConfiguration = async () =>
+export const getParkingConfiguration = async () =>
   axiosInstance.get(`/parking_configurations.json`, {
     params: {
       token: token,
     },
   });
-  export const postParkingConfiguration = async (data) =>
+export const postParkingConfiguration = async (data) =>
   axiosInstance.post(`/parking_configurations.json`, data, {
     params: {
       token: token,
@@ -1471,8 +1495,8 @@ export const getSetupUsers = async () =>
       Expires: "0",
     },
   });
- 
- export const getUserCount = async () =>
+
+export const getUserCount = async () =>
   axiosInstance.get("/users/index_count.json", {
     params: {
       token: token,
@@ -1482,7 +1506,7 @@ export const getSetupUsers = async () =>
       Pragma: "no-cache",
       Expires: "0",
     },
-  }); 
+  });
 
 export const getFilterUsers = async (id) =>
   axiosInstance.get(`/users/${id}.json`, {
@@ -1541,64 +1565,63 @@ export const editFB = async (id, data) =>
     },
   });
 
-  export const getFixedStatusSetup = async () =>
+export const getFixedStatusSetup = async () =>
   axiosInstance.get(`/generic_infos.json?q[info_type_eq]=FixedStatus`, {
     params: {
       token: token,
     },
   });
 
-  export const getStatusSetupDetails = async (id) =>
+export const getStatusSetupDetails = async (id) =>
   axiosInstance.get(`/status_restaurants/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const editStatusSetup = async (id, data) =>
+export const editStatusSetup = async (id, data) =>
   axiosInstance.put(`/status_restaurants/${id}.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const getGenericCategoryRestaurtant = async () =>
+export const getGenericCategoryRestaurtant = async () =>
   axiosInstance.get(`/generic_infos.json?q[info_type_eq]=RestaurantCategory`, {
     params: {
       token: token,
     },
   });
 
-  export const getFBSubCategories = async () =>
+export const getFBSubCategories = async () =>
   axiosInstance.get("/get_sub_categories.json", {
     params: {
       token: token,
     },
   });
 
-
-  export const editGenericSubCategoryDetails = async (id, data) =>
+export const editGenericSubCategoryDetails = async (id, data) =>
   axiosInstance.put(`/generic_sub_infos/${id}.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const getGenericSubCategoryDetails = async (id) =>
+export const getGenericSubCategoryDetails = async (id) =>
   axiosInstance.get(`/generic_sub_infos/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const getRestaurtantMenu = async (id) =>
+export const getRestaurtantMenu = async (id) =>
   axiosInstance.get(`/restaurant_menus.json?restaurant_id=${id}`, {
     params: {
       token: token,
     },
   });
 
-  export const getRestaurtantTableBookings = async () =>
+export const getRestaurtantTableBookings = async () =>
   axiosInstance.get(`/table_bookings.json`, {
     params: {
       token: token,
@@ -1611,7 +1634,7 @@ export const getRestaurtantOrderBookings = async () =>
     },
   });
 
-  export const postStatusSetup = async (data) =>
+export const postStatusSetup = async (data) =>
   axiosInstance.post(`/status_restaurants.json`, data, {
     params: {
       token: token,
@@ -1779,7 +1802,7 @@ export const putGoodsDetails = async (id, postData) =>
     params: {
       token: token,
     },
-  });  
+  });
 
 export const postGoods = async (data) =>
   axiosInstance.post("/goods_in_outs.json", data, {
@@ -1903,7 +1926,6 @@ export const deleteGroup = async (id) =>
     },
   });
 
-
 // Cam Bilings
 export const getCamBillings = async (id) =>
   axiosInstance.get("/cam_bills.json", {
@@ -1918,48 +1940,48 @@ export const postCamBillings = async (data) =>
     },
   });
 
- export const getAddressSetup = async () =>
+export const getAddressSetup = async () =>
   axiosInstance.get("/address_setups.json", {
     params: {
       token: token,
     },
   });
-  
-  export const postCamBill = async (data) =>
+
+export const postCamBill = async (data) =>
   axiosInstance.post(`/cam_bills.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const getInvoiceTypeSetup = async () =>
+export const getInvoiceTypeSetup = async () =>
   axiosInstance.get("/invoice_types.json", {
     params: {
       token: token,
     },
   });
 
-  export const postInvoiceNumber = async (data) =>
+export const postInvoiceNumber = async (data) =>
   axiosInstance.post(`/invoice_setups.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const deleteAddressSetup = async (id) =>
+export const deleteAddressSetup = async (id) =>
   axiosInstance.delete(`/address_setups/${id}.json`, {
     params: {
       token: token,
     },
   });
-  export const postReceiptNumber = async (data) =>
+export const postReceiptNumber = async (data) =>
   axiosInstance.post(`/receipt_setups.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const postLogoCamBillingSetup = async (data) =>
+export const postLogoCamBillingSetup = async (data) =>
   axiosInstance.post(`/upload_logo.json`, data, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -1970,43 +1992,43 @@ export const postCamBillings = async (data) =>
     },
   });
 
-  export const getAddressSetupDetails = async (id) =>
+export const getAddressSetupDetails = async (id) =>
   axiosInstance.get(`/address_setups/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const updateAddressSetupCamBilling = async (data, id) =>
+export const updateAddressSetupCamBilling = async (data, id) =>
   axiosInstance.put(`/address_setups/${id}.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const downloadCamBillImport = async () =>
+export const downloadCamBillImport = async () =>
   axiosInstance.get(`/cam_bills/download_sample.xlsx`, {
     params: {
-      token: token, 
+      token: token,
     },
     responseType: "blob",
   });
 
-  export const uploadCamBillingImport = async (data) =>
+export const uploadCamBillingImport = async (data) =>
   axiosInstance.post(`/cam_bills/import.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const getCamBillingData = async () =>
+export const getCamBillingData = async () =>
   axiosInstance.get("/cam_bills.json", {
     params: {
       token: token,
     },
   });
 
-  export const gatCamBillFilter = async (
+export const gatCamBillFilter = async (
   block,
   floor_name,
   flat,
@@ -2024,39 +2046,35 @@ export const postCamBillings = async (data) =>
     }
   );
 
-
-
-  export const getCamBillingDataDetails = async (id) =>
+export const getCamBillingDataDetails = async (id) =>
   axiosInstance.get(`/cam_bills/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const recallStatus = async (id, data) =>
+export const recallStatus = async (id, data) =>
   axiosInstance.put(`/cam_bills/${id}.json`, data, {
     params: {
       token: token,
     },
   });
 
-
-  export const receiptPayment = async (data) =>
+export const receiptPayment = async (data) =>
   axiosInstance.post(`/payments.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const camBillingStatus = async (id, data) =>
+export const camBillingStatus = async (id, data) =>
   axiosInstance.put(`/cam_bills/${id}.json`, data, {
     params: {
       token: token,
     },
   });
 
-
-  export const getCamBillingDownload = async (ids) =>
+export const getCamBillingDownload = async (ids) =>
   axiosInstance.get(`/cam_bills/export.xlsx`, {
     responseType: "blob",
     params: {
@@ -2065,22 +2083,22 @@ export const postCamBillings = async (data) =>
     },
   });
 
-  export const getCamLogo = async () =>
+export const getCamLogo = async () =>
   axiosInstance.get(`/get_logo.json?`, {
     params: {
       token: token,
     },
   });
 
-  export const downloadReceiptInvoiceSample = async () =>
+export const downloadReceiptInvoiceSample = async () =>
   axiosInstance.get(`/invoice_receipts/download_sample.json?`, {
     params: {
       token: token,
     },
-    responseType: "blob", 
+    responseType: "blob",
   });
 
-  export const getReceiptInvoiceCamDownload = async (ids) =>
+export const getReceiptInvoiceCamDownload = async (ids) =>
   axiosInstance.get(`/invoice_receipts/export.xlsx?`, {
     responseType: "blob",
     params: {
@@ -2088,7 +2106,7 @@ export const postCamBillings = async (data) =>
     },
   });
 
-  export const gatReceiptInvoiceFilter = async (
+export const gatReceiptInvoiceFilter = async (
   block,
   floor_name,
   flat,
@@ -2105,32 +2123,31 @@ export const postCamBillings = async (data) =>
     }
   );
 
-  export const postInvoiceReceipt = async (data) =>
+export const postInvoiceReceipt = async (data) =>
   axiosInstance.post(`/invoice_receipts.json`, data, {
     params: {
       token: token,
     },
   });
 
-  export const getInvoiceReceipt = async () =>
+export const getInvoiceReceipt = async () =>
   axiosInstance.get("/invoice_receipts.json", {
     params: {
       token: token,
     },
   });
 
-  export const getReceiveInvoiceData = async (id) =>
+export const getReceiveInvoiceData = async (id) =>
   axiosInstance.get(`/invoice_receipts/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const uploadCamReceiptImport = async (data) =>
+export const uploadCamReceiptImport = async (data) =>
   axiosInstance.post(`/invoice_receipts/import.json`, data, {});
 
-
-  export const downloadReceiptInvoice = async (ids) =>
+export const downloadReceiptInvoice = async (ids) =>
   axiosInstance.get(`cam_bills/invoice_pdf?id=${ids}`, {
     responseType: "blob",
     params: {
@@ -2138,7 +2155,7 @@ export const postCamBillings = async (data) =>
     },
   });
 
-  export const getCamBillInvoiceDownload = async (ids) =>
+export const getCamBillInvoiceDownload = async (ids) =>
   axiosInstance.get(`/cam_bills/pdf?id=${ids}`, {
     responseType: "blob",
   });
@@ -2149,8 +2166,6 @@ export const postCamBilling = async (data) =>
       token: token,
     },
   });
-
-
 
 //broadcast
 export const getBroadCast = async () =>
@@ -2907,7 +2922,7 @@ export const postBuilding = async (data) =>
       token: token,
     },
   });
-export const putBuilding = async (id,data) =>
+export const putBuilding = async (id, data) =>
   axiosInstance.put(`/buildings/${id}.json`, data, {
     params: {
       token: token,
@@ -7987,21 +8002,21 @@ export const hideForum = async (forumId) =>
     // {}
   );
 
-  export const deleteForum = async (forumId) =>
+export const deleteForum = async (forumId) =>
   axiosInstance.delete(`/forums/${forumId}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const PostSavedForum = async (forumId) =>
+export const PostSavedForum = async (forumId) =>
   axiosInstance.post(`/forums/${forumId}/save_for_later.json?token=${token}`, {
     // params: {
     //   token: token,
     // },
   });
 
-  export const likeForum = async (forumId) => {
+export const likeForum = async (forumId) => {
   try {
     const res = await axiosInstance.post(
       `forums/${forumId}/toggle_like.json?token=${token}`
@@ -8066,13 +8081,11 @@ export const updateComment = async (forumId) =>
     },
   });
 
-
-  export const getHiddenForums = async () =>
+export const getHiddenForums = async () =>
   axiosInstance.get(`/forums/visibility_status.json?token=${token}`);
 
 export const unhideForum = async (forumId) =>
   axiosInstance.post(`forums/${forumId}/unhide.json?token=${token}`);
-
 
 export const unsaveForum = async (forumId) =>
   axiosInstance.delete(`forums/${forumId}/unsave.json?token=${token}`, {
@@ -8081,7 +8094,7 @@ export const unsaveForum = async (forumId) =>
     // },
   });
 
-  export const getSavedForum = async (forumId) => {
+export const getSavedForum = async (forumId) => {
   try {
     const response = await axiosInstance.get(
       `/forums/saved_forums.json?token=${token}`

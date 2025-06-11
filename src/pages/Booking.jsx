@@ -19,7 +19,7 @@ const Booking = () => {
   const [loading, setLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
   const [bookingFacility, setBookingFacility] = useState([]);
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3, 19 37)";
 
   const userName = useState("Name");
   const LastName = useState("LASTNAME");
