@@ -7,6 +7,8 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Dashboard from "./pages/Dashboard.jsx";
 import Navbar from "./components/Navbar.jsx";
 import Attendance from "./pages/Attendance.jsx";
@@ -740,6 +742,7 @@ import EditSubCategorySetup from "./pages/SubPages/EditSubCategorySetup.jsx";
 import FBRestaurtantMenu from "./pages/SubPages/details/FBSubDetails/FBResturantMenu.jsx";
 import EditRestaurtantBooking from "./pages/SubPages/EditResturantBooking.jsx";
 import EditRestaurtantOrders from "./pages/SubPages/EditResturantOrders.jsx";
+
 // new admin hrms
 
 function App() {
@@ -7025,6 +7028,7 @@ function App() {
         </Routes>
         <Footer />
       </Router>
+      <ToastContainer position="top-right" autoClose={4000} hideProgressBar={false} />
     </>
   );
 }
