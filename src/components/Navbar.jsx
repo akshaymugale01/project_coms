@@ -96,6 +96,8 @@ const Navbar = () => {
   const [lastNotificationIds, setLastNotificationIds] = useState([]);
   const [newNotificationCount, setNewNotificationCount] = useState(0);
   const [lastFetchedCount, setLastFetchedCount] = useState(0);
+  const countNotification = getItemInLocalStorage("shownNotificationIds");
+  console.log("asfd", countNotification);
 
   // const fetchNotifications = async () => {
   //   try {
@@ -116,7 +118,16 @@ const Navbar = () => {
   //     console.error("Error fetching notifications:", error);
   //   }
   // };
-  // Optionally, poll for new notifications periodically
+
+  const SHOWN_NOTIFICATION_KEY = "shownNotificationIds";
+  const getShownNotificationIds = () => {
+    try {
+      const stored = localStorage.getItem(SHOWN_NOTIFICATION_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -126,35 +137,41 @@ const Navbar = () => {
       const unread = fetched.filter((n) => n.read === "0");
       setNotifications(fetched);
 
-      const fetchedIds = fetched.map((n) => n.id);
-
-      const newUnread = unread.filter(
-        (n) => !lastNotificationIds.includes(n.id)
-      );
+      const shownIds = getShownNotificationIds();
+      const newUnread = unread.filter((n) => !shownIds.includes(n.id));
 
       if (newUnread.length > 0) {
         newUnread.forEach((notif) => {
           toast.info(`🔔 ${notif.message}`);
         });
+
+        const updatedIds = [
+          ...new Set([...shownIds, ...newUnread.map((n) => n.id)]),
+        ];
+        localStorage.setItem(
+          SHOWN_NOTIFICATION_KEY,
+          JSON.stringify(updatedIds)
+        );
       }
 
-      setLastNotificationIds(fetchedIds);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching notifications:", err);
     }
   };
-  
 
-  console.log("notification", notifications);
+  // On Repeat
+  //   useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     fetchNotifications();
+  //   }, 30000); // every 30 seconds
+
+  //   return () => clearInterval(interval);
+  // }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchNotifications();
-    }, 30000); // every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [lastFetchedCount]);
+    fetchNotifications();
+  }, []);
 
   const handleBellClick = async () => {
     if (!popupOpen) {
@@ -186,6 +203,7 @@ const Navbar = () => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [popupOpen]);
 
+  // const unreadCount = countNotification?.length;
   const unreadCount = notifications.filter((n) => n.read === "0").length;
 
   const handleMouseEnter = () => {
@@ -228,6 +246,7 @@ const Navbar = () => {
     localStorage.removeItem("VIBEUSERID");
     localStorage.removeItem("VIBEORGID");
     localStorage.removeItem("FEATURES");
+    localStorage.removeItem("shownNotificationIds");
     persistor.purge(["board"]).then(() => {
       navigate("/login");
       // window.location.reload();
