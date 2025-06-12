@@ -7,7 +7,15 @@
 .fc-header-toolbar .fc-left {
   order: 1;
 }
+.past-event {
+  background-color: #ff9999 !important; /* Light red for past events */
+  color: white !important;
+}
 
+.future-event {
+  background-color: #99ff99 !important; /* Light green for future events */
+  color: white !important;
+}
 .fc-header-toolbar .fc-center {
   order: 2;
   flex-grow: 1;
@@ -83,7 +91,7 @@
 .fc-event {
   background: var(--calendar-Header);
   /* border-color: #007bff; */
-  color: #fff;
+  color: #fff  ;
   padding: 5px;
   /* border-radius: 3px; */
   /* font-size: 0.9em; */
@@ -114,3 +122,5 @@
   font-weight: bold;
   display: flex;
 }
+
+

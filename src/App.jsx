@@ -742,6 +742,7 @@ import EditSubCategorySetup from "./pages/SubPages/EditSubCategorySetup.jsx";
 import FBRestaurtantMenu from "./pages/SubPages/details/FBSubDetails/FBResturantMenu.jsx";
 import EditRestaurtantBooking from "./pages/SubPages/EditResturantBooking.jsx";
 import EditRestaurtantOrders from "./pages/SubPages/EditResturantOrders.jsx";
+import PPMCalendar from "./pages/SubPages/PPMCalendar.jsx";
 
 // new admin hrms
 
@@ -1054,14 +1055,7 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-          <Route
-            path="/assets/ppm-task"
-            element={
-              <ProtectedAdminRoutes>
-                <PPMTask />
-              </ProtectedAdminRoutes>
-            }
-          />
+
           <Route
             path="/asset/ppm-activity-details/:id"
             element={
@@ -1695,6 +1689,22 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <PPMActivity />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/assets/ppm-task"
+            element={
+              <ProtectedAdminRoutes>
+                <PPMTask />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/assets/ppm-calendar"
+            element={
+              <ProtectedAdminRoutes>
+                <PPMCalendar />
               </ProtectedAdminRoutes>
             }
           />
@@ -3486,54 +3496,54 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-           <Route
-          path="/fnb/status-setup/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <FBStatusSetup />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/fnb/sub-category-setup/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <EditSubCategorySetup />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/admin/restaurtant-bookings/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <EditRestaurtantBooking />
-            </ProtectedAdminRoutes>
-          }
-        />
-         <Route
-          path="/admin/restaurtant-orders/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <EditRestaurtantOrders />
-            </ProtectedAdminRoutes>
-          }
-        />
-         <Route
-          path="/fnb/restaurtant-menu/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <FBRestaurtantMenu />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/fnb/category-setup/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <EditCategorySetup />
-            </ProtectedAdminRoutes>
-          }
-        />
+          <Route
+            path="/fnb/status-setup/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <FBStatusSetup />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/fnb/sub-category-setup/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditSubCategorySetup />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/restaurtant-bookings/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditRestaurtantBooking />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/restaurtant-orders/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditRestaurtantOrders />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/fnb/restaurtant-menu/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <FBRestaurtantMenu />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/fnb/category-setup/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditCategorySetup />
+              </ProtectedAdminRoutes>
+            }
+          />
           <Route
             path="/admin/restaurant/details/:id"
             element={
@@ -3776,13 +3786,13 @@ function App() {
           />
 
           <Route
-          path="/cam_bill/receipt-invoice/details/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <ReceiptInvoiceDetails />
-            </ProtectedAdminRoutes>
-          }
-        />
+            path="/cam_bill/receipt-invoice/details/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <ReceiptInvoiceDetails />
+              </ProtectedAdminRoutes>
+            }
+          />
 
           {/* Invoice Approvals */}
           <Route
@@ -7028,7 +7038,11 @@ function App() {
         </Routes>
         <Footer />
       </Router>
-      <ToastContainer position="top-right" autoClose={4000} hideProgressBar={false} />
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+      />
     </>
   );
 }

@@ -18,8 +18,11 @@ const RoutineTask = () => {
 
   useEffect(() => {
     const fetchRoutineTask = async () => {
+      toast.loading("Please wait");
       try {
         const taskResponse = await getRoutineTask();
+        toast.dismiss()
+      toast.success("Routine task data fetched successfully");
         // const filteredServiceTask = taskResponse.data.activities.filter(
         //   (asset) => asset.asset_name
         // );
@@ -87,44 +90,44 @@ const RoutineTask = () => {
   let selectedImageIndex = defaultImage.index;
   const [selectedImage, setSelectedImage] = useState(defaultImage);
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const Get_Background = async () => {
-    try {
-      // const params = {
-      //   user_id: user_id,
-      // };
-      const user_id = getItemInLocalStorage("VIBEUSERID");
-      console.log(user_id);
-      const data = await getVibeBackground(user_id);
+  // const Get_Background = async () => {
+  //   try {
+  //     // const params = {
+  //     //   user_id: user_id,
+  //     // };
+  //     const user_id = getItemInLocalStorage("VIBEUSERID");
+  //     console.log(user_id);
+  //     const data = await getVibeBackground(user_id);
 
-      if (data.success) {
-        console.log("sucess");
+  //     if (data.success) {
+  //       console.log("sucess");
 
-        console.log(data.data);
-        selectedImageSrc = API_URL + data.data.image;
+  //       console.log(data.data);
+  //       selectedImageSrc = API_URL + data.data.image;
 
-        selectedImageIndex = data.data.index;
+  //       selectedImageIndex = data.data.index;
 
-        // Now, you can use selectedImageSrc and selectedImageIndex as needed
-        console.log("Received response:", data);
+  //       // Now, you can use selectedImageSrc and selectedImageIndex as needed
+  //       console.log("Received response:", data);
 
-        // For example, update state or perform any other actions
-        setSelectedImage(selectedImageSrc);
-        setSelectedIndex(selectedImageIndex);
-        console.log("Received selectedImageSrc:", selectedImageSrc);
-        console.log("Received selectedImageIndex:", selectedImageIndex);
-        console.log(selectedImage);
-        // dispatch(setBackground(selectedImageSrc));
-      } else {
-        console.log("Something went wrong");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-  useEffect(() => {
-    // Call the function to get the background image when the component mounts
-    Get_Background();
-  }, []);
+  //       // For example, update state or perform any other actions
+  //       setSelectedImage(selectedImageSrc);
+  //       setSelectedIndex(selectedImageIndex);
+  //       console.log("Received selectedImageSrc:", selectedImageSrc);
+  //       console.log("Received selectedImageIndex:", selectedImageIndex);
+  //       console.log(selectedImage);
+  //       // dispatch(setBackground(selectedImageSrc));
+  //     } else {
+  //       console.log("Something went wrong");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
+  // useEffect(() => {
+  //   // Call the function to get the background image when the component mounts
+  //   Get_Background();
+  // }, []);
 
   const handleSearch = (e) => {
     const searchValue = e.target.value;

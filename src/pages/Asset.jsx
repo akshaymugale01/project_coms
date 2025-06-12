@@ -53,8 +53,7 @@ const Asset = () => {
   const [selectedUnit, setSelectedUnit] = useState("");
   const [page, setPage] = useState("assets");
   const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)";
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -82,20 +81,13 @@ const Asset = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-
-    // const timer = setTimeout(() => {
-    //   setLoading(false);
-    // }, 3000);
-
-    // return () => clearTimeout(timer);
-
   }, []);
 
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
-  document.title = `Assets - My Citi Life`;
+  document.title = `Assets - Vibe Connect`;
   const column = [
     {
       name: "Action",
@@ -288,7 +280,7 @@ const Asset = () => {
     const fetchData = async () => {
       try {
         const response = await getPerPageSiteAsset(pageNo, perPage);
-
+        console.log(response);
         setFilteredData(response.data.site_assets);
 
         setAssets(response.data.site_assets);
@@ -300,6 +292,9 @@ const Asset = () => {
     };
     fetchData();
   }, [pageNo, perPage]);
+
+
+  // console.log("HeadOffice", assets);
 
   const handlePageChange = (page, pageSize) => {
     setPageNo(page);
@@ -413,44 +408,44 @@ const Asset = () => {
   let selectedImageIndex = defaultImage.index;
   const [selectedImage, setSelectedImage] = useState(defaultImage);
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const Get_Background = async () => {
-    try {
-      // const params = {
-      //   user_id: user_id,
-      // };
-      const user_id = getItemInLocalStorage("VIBEUSERID");
-      console.log(user_id);
-      const data = await getVibeBackground(user_id);
+  // const Get_Background = async () => {
+  //   try {
+  //     // const params = {
+  //     //   user_id: user_id,
+  //     // };
+  //     const user_id = getItemInLocalStorage("VIBEUSERID");
+  //     console.log(user_id);
+  //     // const data = await getVibeBackground(user_id);
 
-      if (data.success) {
-        console.log("sucess");
+  //     if (data.success) {
+  //       console.log("sucess");
 
-        console.log(data.data);
-        selectedImageSrc = API_URL + data.data.image;
+  //       console.log(data.data);
+  //       selectedImageSrc = API_URL + data.data.image;
 
-        selectedImageIndex = data.data.index;
+  //       selectedImageIndex = data.data.index;
 
-        // Now, you can use selectedImageSrc and selectedImageIndex as needed
-        console.log("Received response:", data);
+  //       // Now, you can use selectedImageSrc and selectedImageIndex as needed
+  //       console.log("Received response:", data);
 
-        // For example, update state or perform any other actions
-        setSelectedImage(selectedImageSrc);
-        setSelectedIndex(selectedImageIndex);
-        console.log("Received selectedImageSrc:", selectedImageSrc);
-        console.log("Received selectedImageIndex:", selectedImageIndex);
-        console.log(selectedImage);
-        // dispatch(setBackground(selectedImageSrc));
-      } else {
-        console.log("Something went wrong");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-  useEffect(() => {
-    // Call the function to get the background image when the component mounts
-    Get_Background();
-  }, []);
+  //       // For example, update state or perform any other actions
+  //       setSelectedImage(selectedImageSrc);
+  //       setSelectedIndex(selectedImageIndex);
+  //       console.log("Received selectedImageSrc:", selectedImageSrc);
+  //       console.log("Received selectedImageIndex:", selectedImageIndex);
+  //       console.log(selectedImage);
+  //       // dispatch(setBackground(selectedImageSrc));
+  //     } else {
+  //       console.log("Something went wrong");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
+  // useEffect(() => {
+  //   // Call the function to get the background image when the component mounts
+  //   Get_Background();
+  // }, []);
 
   console.log(uploadModal);
 
@@ -660,7 +655,9 @@ const Asset = () => {
           <>
             <Table
               selectableRows
-              columns={column.filter((col) => !selectedOptions.includes(col.name))}
+              columns={column.filter(
+                (col) => !selectedOptions.includes(col.name)
+              )}
               data={filteredData}
               fixedHeader
               pagination={false}
@@ -679,10 +676,6 @@ const Asset = () => {
               />
             </div>
           </>
-        ) : assets.length === 0 ? (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500 text-lg">No Records!</p>
-          </div>
         ) : (
           <div className="flex justify-center items-center h-full">
             <DNA
@@ -695,7 +688,6 @@ const Asset = () => {
             />
           </div>
         )}
-
         {/* </>
         )} */}
         {page === "AMC" && <AMC />}

@@ -77,6 +77,16 @@ const AssetNav = () => {
           PPM Activity
         </NavLink>
         <NavLink
+          to={"/assets/ppm-calendar"}
+          className={({ isActive }) =>
+            `  md:rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear ${
+              isActive && "bg-white text-blue-500 shadow-custom-all-sides"
+            }`
+          }
+        >
+          PPM Calendar
+        </NavLink>
+        <NavLink
           to={"/assets/stock-items"}
           className={({ isActive }) =>
             `  md:rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear ${
