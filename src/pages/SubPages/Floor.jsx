@@ -119,7 +119,7 @@ const Floor = () => {
       <div className=" w-full flex lg:mx-3 flex-col overflow-hidden">
         <Account />
         <div className="flex flex-col m-2 gap-2 p-1">
-          {siteId === 56 && (
+          {(siteId === 55 || siteId === 56) && (
             <div className="flex justify-end">
               <h2
                 className="font-semibold hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2"
