@@ -743,6 +743,7 @@ import FBRestaurtantMenu from "./pages/SubPages/details/FBSubDetails/FBResturant
 import EditRestaurtantBooking from "./pages/SubPages/EditResturantBooking.jsx";
 import EditRestaurtantOrders from "./pages/SubPages/EditResturantOrders.jsx";
 import PPMCalendar from "./pages/SubPages/PPMCalendar.jsx";
+import OtpAndQr from "./Extra/OtpQr.jsx";
 
 // new admin hrms
 
@@ -2794,6 +2795,7 @@ function App() {
           />
 
           {/* admin passess */}
+          <Route path="/otp-qr" element={<OtpAndQr />} />
           <Route
             path="/admin/passes"
             element={<Navigate to="/admin/passes/visitors" replace />}

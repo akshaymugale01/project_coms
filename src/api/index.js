@@ -45,8 +45,8 @@ export const getAmenityBookNotification = async () =>
 
 // Update Notification As Read
 
-export const markNotificationAsRead = async (id) => 
-   axiosInstance.put(
+export const markNotificationAsRead = async (id) =>
+  axiosInstance.put(
     "/amenity_bookings/mark_as_read",
     {
       amenity_booking: {
@@ -113,6 +113,13 @@ export const getSiteAssetDetails = async (id) =>
     params: {
       token: token,
     },
+  });
+
+export const getUserOtp = async (id) =>
+  axiosInstance.get(`/visitors/get_visitor_by_id.json?id=${id}`, {
+    // params: {
+    //   token: token,
+    // },
   });
 
 export const sendForgotOtp = async (data) =>
@@ -1166,11 +1173,11 @@ export const getAmenitiesBooking = async () => {
     params: {
       token: token,
     },
-    headers: {
-      "Cache-Control": "no-cache", // Disable caching on the client side
-      Pragma: "no-cache", // Older HTTP/1.0 caches
-      Expires: "0", // Immediately expires the cached response
-    },
+    // headers: {
+    //   "Cache-Control": "no-cache",
+    //   Pragma: "no-cache", // Older HTTP/1.0 caches
+    //   Expires: "0", // Immediately expires the cached response
+    // },
   });
 };
 
