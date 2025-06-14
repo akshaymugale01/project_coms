@@ -25,6 +25,7 @@ const Ticket = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedTicket, setSelectedTicket] = useState("all");
   const [ticketTypeCounts, setTicketTypeCounts] = useState({});
   const [ticketStatusCounts, setTicketStatusCounts] = useState({});
   const allTicketTypes = ["Complaint", "Request", "Suggestion"];
@@ -36,6 +37,7 @@ const Ticket = () => {
   const [filterModal, setFilterModal] = useState(false);
   const [hideColumn, setHideColumn] = useState(false);
   const dropdownRef = useRef(null);
+  const [selectedType, setSelectedType] = useState(null);
 
   const getTimeAgo = (timestamp) => {
     const createdTime = moment(timestamp);
@@ -313,7 +315,8 @@ const Ticket = () => {
         // Status filter
         const statusMatch =
           selectedStatus === "all" ||
-          (item.issue_status || "").toLowerCase() === selectedStatus.toLowerCase();
+          (item.issue_status || "").toLowerCase() ===
+            selectedStatus.toLowerCase();
 
         return allWordsMatch && statusMatch;
       });
@@ -336,6 +339,17 @@ const Ticket = () => {
 
       setFilteredData(filteredResults);
     }
+  };
+
+  const handleTicketTypeChange = (typeKey) => {
+    console.log("ticket Type:", typeKey);
+    setSelectedType(typeKey);
+
+    const filtered = complaints.filter(
+      (item) => item.issue_type.toLowerCase() === typeKey.toLowerCase()
+    );
+    console.log("Type Filter", filtered);
+    setFilteredData(filtered);
   };
 
   const [exportAllTickets, setExportAllTickets] = useState([]);
@@ -375,8 +389,9 @@ const Ticket = () => {
       // Format complaint logs as a single string
       const complaintLogs = ticket.complaint_logs
         .map((log) => {
-          return `Log By: ${log.log_by}, Status: ${log.log_status
-            }, Date: ${dateFormat(log.created_at)}`;
+          return `Log By: ${log.log_by}, Status: ${
+            log.log_status
+          }, Date: ${dateFormat(log.created_at)}`;
         })
         .join(" | ");
 
@@ -429,34 +444,61 @@ const Ticket = () => {
     return color;
   };
 
+  const handleCombinedFilter = (key) => {
+    setSelectedStatus(key);
+    setSelectedType(key);
+
+    const filtered = complaints.filter((item) => {
+      return (
+        item.issue_status?.toLowerCase() === key.toLowerCase() ||
+        item.issue_type?.toLowerCase() === key.toLowerCase()
+      );
+    });
+
+    setFilteredData(filtered);
+  };
+
+  const combinedKeys = [
+    ...new Set([...Object.keys(statusData), ...Object.keys(ticketTypes)]),
+  ];
+
   return (
     <section className="flex">
       <Navbar />
       <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden">
         <div className="sm:flex grid grid-cols-2 m-5 justify-start w-fit gap-5 sm:flex-row flex-col flex-shrink flex-wrap ">
-          {/* <div className="flex gap-2 mt-2"> */}
-          {Object.entries(statusData).map(([key, value]) => (
-            <div
-              key={key}
-              className="shadow-xl sm:rounded-full rounded-xl border-4 sm:w-48 sm:px-6 px-4 flex flex-col items-center flex-shrink"
-              style={{ border: `4px solid ${getRandomColor()}` }}
-            >
-              {key}{" "}
-              <span className="font-medium text-base text-black">{value}</span>
-            </div>
-          ))}
-          {Object.entries(ticketTypes).map(([key, value]) => (
-            <div
-              key={key}
-              className="shadow-xl sm:rounded-full rounded-xl border-4 sm:w-48 sm:px-6 px-4 flex flex-col items-center flex-shrink"
-              style={{ border: `4px solid ${getRandomColor()}` }}
-            >
-              {key}{" "}
-              <span className="font-medium text-base text-black">{value}</span>
-            </div>
-          ))}
-        </div>
+          <div
+            onClick={() => {
+              setSelectedStatus(null);
+              setSelectedType(null);
+              setFilteredData(complaints);
+            }}
+            className="cursor-pointer bg-gray-200 sm:rounded-full rounded-xl border-2 border-gray-400 sm:w-48 sm:px-6 px-4 flex flex-col items-center flex-shrink"
+            style={{ border: `4px solid ${getRandomColor()}` }}
+          >
+            All
+            <p>{filterSearch?.length}</p>
+          </div>
+          {combinedKeys.map((key) => {
+            const statusValue = statusData[key];
+            const typeValue = ticketTypes[key];
+            const displayValue = statusValue ?? typeValue;
 
+            return (
+              <div
+                key={key}
+                onClick={() => handleCombinedFilter(key)}
+                className="cursor-pointer shadow-xl sm:rounded-full rounded-xl border-4 sm:w-48 sm:px-6 px-4 flex flex-col items-center flex-shrink"
+                style={{ border: `4px solid ${getRandomColor()}` }}
+              >
+                {key}
+                <span className="font-medium text-base text-black">
+                  {displayValue}
+                </span>
+              </div>
+            );
+          })}
+        </div>
         <div className="flex sm:flex-row flex-col w-full  gap-2 my-5">
           <div className="md:flex justify-between grid grid-cols-2 items-center  gap-2 border border-gray-300 rounded-md px-3 p-2 w-auto">
             <div className="flex items-center gap-2">
@@ -534,7 +576,7 @@ const Ticket = () => {
               to={"/tickets/create-ticket"}
               style={{ background: "rgb(3 19 37)" }}
               className=" font-semibold  text-white duration-300 transition-all  p-2 rounded-md  cursor-pointer text-center flex items-center gap-2 justify-center"
-            // onClick={() => setShowCountry(!showCountry)}
+              // onClick={() => setShowCountry(!showCountry)}
             >
               <PiPlusCircle size={20} />
               Add
