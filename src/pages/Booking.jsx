@@ -21,11 +21,35 @@ const Booking = () => {
   const [bookingFacility, setBookingFacility] = useState([]);
   const themeColor = "rgb(3, 19 37)";
 
-  const userName = useState("Name");
-  const LastName = useState("LASTNAME");
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch Bookings
+        const bookingsResponse = await getAmenitiesBooking();
+        // console.log("Bookings Response:", bookingsResponse);
+        setBookings(bookingsResponse?.data || []);
+
+        // Fetch Facility Setup
+        const facilityResponse = await getFacitilitySetup();
+        // console.log("Facility Setup Response:", facilityResponse);
+        setBookingFacility(facilityResponse?.data || []);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(`Failed to fetch data: ${error.message || error}`);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const combinedData = bookings.map((booking) => {
-    const facility = bookingFacility.find((fac) => fac.id === booking.amenity_id);
+    const facility = bookingFacility.find(
+      (fac) => fac.id === booking.amenity_id
+    );
 
     // Find the relevant slot from amenity slots
     const amenitySlots = facility?.amenity_slots || [];
@@ -33,9 +57,13 @@ const Booking = () => {
 
     // Format the slot time if found
     const slotTime = slot
-    ? `${String(slot.start_hr || 0).padStart(2, "0")}:${String(slot.start_min || 0).padStart(2, "0")} - ${String(slot.end_hr || 0).padStart(2, "0")}:${String(slot.end_min || 0).padStart(2, "0")}`
-    : "N/A";
-  
+      ? `${String(slot.start_hr || 0).padStart(2, "0")}:${String(
+          slot.start_min || 0
+        ).padStart(2, "0")} - ${String(slot.end_hr || 0).padStart(
+          2,
+          "0"
+        )}:${String(slot.end_min || 0).padStart(2, "0")}`
+      : "N/A";
 
     return {
       ...booking,
@@ -111,9 +139,8 @@ const Booking = () => {
     {
       name: "Booked By",
       selector: (row) => {
-        const userName = localStorage.getItem("Name")?.replace(/"/g, ""); // Remove double quotes
-        const lastName = localStorage.getItem("LASTNAME")?.replace(/"/g, ""); // Remove double quotes
-        return `${userName || "Unknown"} ${lastName || ""}`.trim();
+        console.log("row", row.book_by_user);
+        return row?.book_by_user || "User Not Set!";
       },
       sortable: true,
     },
@@ -122,8 +149,8 @@ const Booking = () => {
       selector: (row) => {
         const date = new Date(row.created_at);
         const yy = date.getFullYear().toString(); // Get last 2 digits of the year
-        const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
-        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
         return `${dd}/${mm}/${yy}`;
       },
       sortable: true,
@@ -133,8 +160,8 @@ const Booking = () => {
       selector: (row) => {
         const date = new Date(row.booking_date);
         const yy = date.getFullYear().toString(); // Get last 2 digits of the year
-        const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
-        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
         return `${dd}/${mm}/${yy}`;
       },
       sortable: true,
@@ -161,32 +188,6 @@ const Booking = () => {
     },
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch Bookings
-        const bookingsResponse = await getAmenitiesBooking();
-        console.log("Bookings Response:", bookingsResponse);
-        setBookings(bookingsResponse?.data || []);
-
-
-        // Fetch Facility Setup
-        const facilityResponse = await getFacitilitySetup();
-        console.log("Facility Setup Response:", facilityResponse);
-        setBookingFacility(facilityResponse?.data || []);
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(`Failed to fetch data: ${error.message || error}`);
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
   return (
     <section className="flex">
       <Navbar />
@@ -194,9 +195,10 @@ const Booking = () => {
         <div className="flex justify-center">
           <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200">
             <h2
-              className={`p-1 ${page === "meetingBooking" &&
+              className={`p-1 ${
+                page === "meetingBooking" &&
                 "bg-white text-blue-500 shadow-custom-all-sides"
-                } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
+              } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
               onClick={() => setPage("meetingBooking")}
             >
               Amenities Bookings
