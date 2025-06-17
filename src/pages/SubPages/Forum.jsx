@@ -25,7 +25,7 @@ import { FormattedDateToShowProperly } from "../../utils/dateUtils";
 import { toast } from "react-hot-toast";
 
 function Forum() {
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)"
   const [modal, showModal] = useState(false);
   const [comments, setComments] = useState({});
   const [forums, setForums] = useState([]);

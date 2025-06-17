@@ -7,7 +7,7 @@ import { getPolls } from "../../api";
 import { PiPlusCircleBold } from "react-icons/pi";
 
 function Polls() {
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)"
   const [pollsData, setPollsData] = useState([]);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import DataTable from "react-data-table-component";
 import Navbar from "../components/Navbar";
@@ -7,16 +7,15 @@ import { Link } from "react-router-dom";
 import {
   getAdminComplaints,
   getAdminPerPageComplaints,
-  getComplaints,
   getTicketDashboard,
 } from "../api";
 import { BsEye } from "react-icons/bs";
 import { BiEdit, BiFilterAlt } from "react-icons/bi";
 import moment from "moment";
-import { getItemInLocalStorage } from "../utils/localStorage";
+// import { getItemInLocalStorage } from "../utils/localStorage";
 import * as XLSX from "xlsx";
-import { useSelector } from "react-redux";
-import Table from "../components/table/Table";
+// import { useSelector } from "react-redux";
+// import Table from "../components/table/Table";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { DNA } from "react-loader-spinner";
 import TicketFilterModal from "../containers/modals/TicketFilterModal";
@@ -25,19 +24,21 @@ const Ticket = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedTicket, setSelectedTicket] = useState("all");
   const [ticketTypeCounts, setTicketTypeCounts] = useState({});
   const [ticketStatusCounts, setTicketStatusCounts] = useState({});
   const allTicketTypes = ["Complaint", "Request", "Suggestion"];
   const [filterSearch, setFilter] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [allData, setAllData] = useState([]);
+  const [allCounts, setAllCounts] = useState({});
   const perPage = 10;
   const [totalRows, setTotalRows] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterModal, setFilterModal] = useState(false);
   const [hideColumn, setHideColumn] = useState(false);
   const dropdownRef = useRef(null);
-  const [selectedType, setSelectedType] = useState(null);
+  const [activeStatus, setActiveStatus] = useState(null);
+  const [activeType, setActiveType] = useState(null);
 
   const getTimeAgo = (timestamp) => {
     const createdTime = moment(timestamp);
@@ -182,7 +183,7 @@ const Ticket = () => {
   }, []);
 
   //custom style
-  const themeColor = useSelector((state) => state.theme.color);
+  // const themeColor = useSelector((state) => state.theme.color);
   const customStyle = {
     headRow: {
       style: {
@@ -209,6 +210,8 @@ const Ticket = () => {
       const response = await getAdminPerPageComplaints(page, perPage);
       console.log("Resp", response);
 
+      setAllData(response?.data || []);
+      console.log("All Data", allData);
       const complaints = response?.data?.complaints || [];
       setFilteredData(complaints);
       setComplaints(complaints);
@@ -236,11 +239,14 @@ const Ticket = () => {
   }, [currentPage]);
   const [ticketTypes, setTicketsTypes] = useState({});
   const [statusData, setStatusData] = useState({});
+  console.log("Ticket Types", ticketTypes);
+  console.log("Status Data", statusData);
 
   useEffect(() => {
     const fetchTicketInfo = async () => {
       try {
         const ticketInfoResp = await getTicketDashboard();
+        setAllCounts(ticketInfoResp.data);
         setTicketsTypes(ticketInfoResp.data.by_type);
         setStatusData(ticketInfoResp.data.by_status);
         console.log(ticketInfoResp);
@@ -272,9 +278,9 @@ const Ticket = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1)); // Ensure currentPage does not go below 1
   };
 
-  const handlePerRowsChange = async (newPerPage, page) => {
-    setCurrentPage(page);
-  };
+  // const handlePerRowsChange = async (newPerPage, page) => {
+  //   setCurrentPage(page);
+  // };
 
   const handleSearch = async (e) => {
     const searchValue = e.target.value;
@@ -341,15 +347,17 @@ const Ticket = () => {
     }
   };
 
-  const handleTicketTypeChange = (typeKey) => {
-    console.log("ticket Type:", typeKey);
-    setSelectedType(typeKey);
+  const handelTypeChange = (type) => {
+    setSelectedStatus(type);
 
-    const filtered = complaints.filter(
-      (item) => item.issue_type.toLowerCase() === typeKey.toLowerCase()
-    );
-    console.log("Type Filter", filtered);
-    setFilteredData(filtered);
+    if (type === "Complaint") {
+      setSelectedStatus("Complaint");
+    } else {
+      const filterType = filterSearch.filter(
+        (i) => i.issue_type.toLowerCase() === type.toLowerCase()
+      );
+      setFilteredData(filterType);
+    }
   };
 
   const [exportAllTickets, setExportAllTickets] = useState([]);
@@ -444,61 +452,63 @@ const Ticket = () => {
     return color;
   };
 
-  const handleCombinedFilter = (key) => {
-    setSelectedStatus(key);
-    setSelectedType(key);
+  const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A6", "#FFC300"];
 
-    const filtered = complaints.filter((item) => {
-      return (
-        item.issue_status?.toLowerCase() === key.toLowerCase() ||
-        item.issue_type?.toLowerCase() === key.toLowerCase()
-      );
-    });
-
-    setFilteredData(filtered);
+  const getFixedColor = (index) => {
+    return colors[index % colors.length];
   };
-
-  const combinedKeys = [
-    ...new Set([...Object.keys(statusData), ...Object.keys(ticketTypes)]),
-  ];
 
   return (
     <section className="flex">
       <Navbar />
       <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden">
-        <div className="sm:flex grid grid-cols-2 m-5 justify-start w-fit gap-5 sm:flex-row flex-col flex-shrink flex-wrap ">
-          <div
-            onClick={() => {
-              setSelectedStatus(null);
-              setSelectedType(null);
-              setFilteredData(complaints);
-            }}
-            className="cursor-pointer bg-gray-200 sm:rounded-full rounded-xl border-2 border-gray-400 sm:w-48 sm:px-6 px-4 flex flex-col items-center flex-shrink"
-            style={{ border: `4px solid ${getRandomColor()}` }}
+        <div className="sm:flex grid grid-cols-2 m-5 justify-start w-fit gap-5 sm:flex-row flex-col flex-shrink flex-wrap">
+          <button
+            key={"Total Tickets"}
+            className="transition duration-300 transform hover:scale-105 drop-shadow-md shadow-lg rounded-full w-40 h-20 px-3 py-3 flex flex-col items-center justify-center bg-gradient-to-r from-blue-300 to-indigo-300 text-black font-semibold"
+            onClick={() => handleStatusChange("all")}
           >
-            All
-            <p>{filterSearch?.length}</p>
-          </div>
-          {combinedKeys.map((key) => {
-            const statusValue = statusData[key];
-            const typeValue = ticketTypes[key];
-            const displayValue = statusValue ?? typeValue;
+            Total Tickets
+            <span className="font-medium text-base text-black drop-shadow-md">
+              {allCounts?.total}
+            </span>
+          </button>
 
-            return (
-              <div
-                key={key}
-                onClick={() => handleCombinedFilter(key)}
-                className="cursor-pointer shadow-xl sm:rounded-full rounded-xl border-4 sm:w-48 sm:px-6 px-4 flex flex-col items-center flex-shrink"
-                style={{ border: `4px solid ${getRandomColor()}` }}
-              >
-                {key}
-                <span className="font-medium text-base text-black">
-                  {displayValue}
-                </span>
-              </div>
-            );
-          })}
+          {Object.entries(statusData).map(([key, value], index) => (
+            <button
+              key={key}
+              className="transition duration-300 transform hover:scale-105 shadow-lg drop-shadow-md rounded-full w-40 h-20 px-6 py-4 flex flex-col items-center justify-center font-semibold text-black"
+              style={{
+                background: `linear-gradient(135deg, ${getFixedColor(
+                  index
+                )}30, #ffffff)`,
+                border: `2px solid ${getFixedColor(index)}`,
+              }}
+              onClick={() => handleStatusChange(key.toLowerCase())}
+            >
+              {key}
+              <span className="font-medium text-base text-black drop-shadow-md">{value}</span>
+            </button>
+          ))}
+
+          {Object.entries(ticketTypes).map(([key, value], index) => (
+            <button
+              key={key}
+              className="transition duration-300 transform hover:scale-105 shadow-lg drop-shadow-md rounded-full w-40 h-20 px-6 py-4 flex flex-col items-center justify-center font-semibold text-black"
+              style={{
+                background: `linear-gradient(135deg, ${getFixedColor(
+                  index
+                )}30, #ffffff)`,
+                border: `2px solid ${getFixedColor(index)}`,
+              }}
+              onClick={() => handelTypeChange(key.toLowerCase())}
+            >
+              {key}
+              <span className="font-medium text-base text-black drop-shadow-md">{value}</span>
+            </button>
+          ))}
         </div>
+
         <div className="flex sm:flex-row flex-col w-full  gap-2 my-5">
           <div className="md:flex justify-between grid grid-cols-2 items-center  gap-2 border border-gray-300 rounded-md px-3 p-2 w-auto">
             <div className="flex items-center gap-2">
@@ -547,6 +557,18 @@ const Ticket = () => {
               />
               <label htmlFor="pending" className="text-sm">
                 Pending
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                id="hold"
+                name="status"
+                checked={selectedStatus === "hold"}
+                onChange={() => handleStatusChange("hold")}
+              />
+              <label htmlFor="hold" className="text-sm">
+                On Hold
               </label>
             </div>
             <div className="flex items-center gap-2">

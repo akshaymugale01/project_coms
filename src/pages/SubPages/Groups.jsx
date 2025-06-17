@@ -19,7 +19,7 @@ import { getGroups , domainPrefix } from "../../api";
 import { dateFormatSTD } from "../../utils/dateUtils";
 import { dom } from "@fortawesome/fontawesome-svg-core";
 function Groups() {
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)"
   const [createModal, setCreateModal] = useState(false);
   const [groupData, setGroupData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
