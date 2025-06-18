@@ -34,6 +34,7 @@ const CreateBroadcast = () => {
   const [selectedOwnership, setSelectedOwnership] = useState("");
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [members, setMembers] = useState([]);
+  const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
     site_id: siteId,
     notice_title: "",
@@ -259,11 +260,64 @@ const CreateBroadcast = () => {
     });
   };
 
+  const handlePreview = () => {
+    // before preview you can add validations if needed
+    setShowPreview(true);
+  };
+
   return (
     <section className="flex">
       <div className="hidden md:block">
         <Navbar />
       </div>
+      {showPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <div className="bg-green-600 text-white p-4 text-center">
+                <h1>You're Invited!</h1>
+              </div>
+              <div className="p-5">
+                <h2 className="text-2xl text-green-600">
+                  {formData.notice_title}
+                </h2>
+                <p>
+                  <strong>Description:</strong>
+                </p>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: formData.notice_discription,
+                  }}
+                  className="text-gray-700"
+                ></div>
+                <p className="mt-4">
+                  <strong>Expiry Date:</strong>{" "}
+                  {new Date(formData.expiry_date).toLocaleString()}
+                </p>
+              </div>
+              <div className="bg-gray-100 text-center text-sm text-gray-600 py-2">
+                &copy; 2025 MyCiti.life. All rights reserved.
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-5 gap-4">
+              <button
+                className="px-4 py-2 bg-gray-400 text-white rounded"
+                onClick={() => setShowPreview(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-green-800 text-white rounded"
+                onClick={handleCreateBroadCast}
+              >
+                Confirm & Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <div className="flex justify-center">
           <div className="md:mx-20 my-5 mb-10 md:border p-2 md:px-2 rounded-lg w-full">
@@ -495,11 +549,20 @@ const CreateBroadcast = () => {
                 />
               </div>
               {/* </div> */}
-              <div className="flex justify-center mt-10 my-5">
+              {/* <div className="flex justify-center mt-10 my-5">
                 <button
                   style={{ background: themeColor }}
                   onClick={handleCreateBroadCast}
                   className="px-4 text-white p-2 rounded-md  flex items-center gap-2"
+                >
+                  <FaCheck /> Submit
+                </button>
+              </div> */}
+              <div className="flex justify-center mt-10 my-5">
+                <button
+                  style={{ background: themeColor }}
+                  onClick={handlePreview}
+                  className="px-4 text-white p-2 rounded-md flex items-center gap-2"
                 >
                   <FaCheck /> Submit
                 </button>

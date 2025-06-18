@@ -49,6 +49,10 @@ const SetupFacility = () => {
       cancel_before: "",
       terms: "",
       gst_no: "",
+      fixed_amount: "",
+      is_fixed: "",
+      prepaid: false,
+      postpaid: false,
       advance_booking: "",
       deposit: "",
       description: "",
@@ -363,6 +367,20 @@ const SetupFacility = () => {
       },
     });
   };
+
+  const handelPayemntRadioChange = (e) => {
+    const value = e.target.value;
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      amenity: {
+        ...prevFormData.amenity,
+        prepaid: value === "prepaid",
+        postpaid: value === "postpaid",
+      },
+    }));
+  };
+
   const handleSlotTimeChange = (index, timeType, timeValue) => {
     const [hours, minutes] = timeValue.split(":");
 
@@ -497,6 +515,32 @@ const SetupFacility = () => {
           </div>
         </div>
         <div className="my-4">
+          <div className="flex gap-4 border-b border-black items-center mt-4">
+            <span className="text-lg text-gray-800 ml-2">
+              Prepaid
+              <input
+                type="radio"
+                className="ml-2"
+                name="payment_type"
+                value="prepaid"
+                checked={formData.amenity.prepaid} // Bind state for prepaid
+                onChange={handelPayemntRadioChange}
+              />
+            </span>
+            <span className="text-lg text-gray-800 ml-2">
+              Postpaid
+              <input
+                type="radio"
+                className="ml-2"
+                name="payment_type"
+                value="postpaid"
+                checked={formData.amenity.postpaid} // Bind state for postpaid
+                onChange={handelPayemntRadioChange}
+              />
+            </span>
+          </div>
+        </div>
+        <div className="my-4">
           <h2 className="border-b border-black font-medium text-lg">
             Fee Setup
           </h2>
@@ -505,6 +549,7 @@ const SetupFacility = () => {
               <p className="text-center font-medium">Member Type</p>
               <p className="text-center font-medium">Adult</p>
               <p className="text-center font-medium"> Child</p>
+              <p className="text-center font-medium"> Flat Amount</p>
             </div>
             {/* Member Section */}
             <div className="grid grid-cols-4 items-center border-b">
@@ -537,6 +582,23 @@ const SetupFacility = () => {
                   value={formData.amenity.member_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("member_price_child", e.target.value)
+                  }
+                  className="border border-gray-400 rounded p-2 outline-none"
+                  placeholder="₹100"
+                />
+              </div>
+              <div className="flex justify-center my-2">
+                <input
+                  type="text"
+                  disabled={
+                    !(
+                      formData.amenity.fac_type === "request" &&
+                      formData.amenity.postpaid === true
+                    )
+                  }
+                  value={formData.amenity.fixed_amount || ""}
+                  onChange={(e) =>
+                    handlePriceChange("fixed_amount", e.target.value)
                   }
                   className="border border-gray-400 rounded p-2 outline-none"
                   placeholder="₹100"
@@ -673,14 +735,14 @@ const SetupFacility = () => {
 
               {/* SGST Input */}
               <div className="flex items-center space-x-2">
-                <label className="font-medium" htmlFor="sgst">SGST:</label>
+                <label className="font-medium" htmlFor="sgst">
+                  SGST:
+                </label>
                 <input
                   type="number"
                   id="sgst"
                   value={formData.amenity.sgst || ""}
-                  onChange={(e) =>
-                    handlePriceChange("sgst", e.target.value)
-                  }
+                  onChange={(e) => handlePriceChange("sgst", e.target.value)}
                   name="sgst"
                   step="0.01"
                   placeholder="Enter SGST"
@@ -717,7 +779,6 @@ const SetupFacility = () => {
                   onChange={handleInputChange}
                 />
               </div>
-              
             </div>
           </div>
         </div>

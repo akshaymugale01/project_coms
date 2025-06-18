@@ -46,6 +46,8 @@ const CreateTicket = () => {
   const [users, setUsers] = useState([]);
   const [files, setFiles] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+
   const [formData, setFormData] = useState({
     category_type_id: "",
     sub_category_id: "",
@@ -117,18 +119,19 @@ const CreateTicket = () => {
 
     const fetchUsers = async () => {
       try {
-        const setupUsers = await getSetupUsers(); // API call to fetch users
+        const setupUsers = await getSetupUsers();
         const formattedOptions = setupUsers.data.map((user) => ({
           value: user.id,
           label: `${user.firstname} ${user.lastname}`,
+          unit_id: user?.unit?.id,
         }));
-
         setUsers(formattedOptions);
-        console.log(formattedOptions);
       } catch (error) {
         console.log(error);
       }
     };
+
+    console.log("Users:", users);
 
     fetchData();
     fetchAssignedTo();
@@ -226,51 +229,55 @@ const CreateTicket = () => {
     });
   };
 
+  const fetchFloor = async (floorID) => {
+    try {
+      const build = await getFloors(floorID);
+      setFloor(build.data.map((item) => ({ name: item.name, id: item.id })));
+    } catch (error) {
+      console.error("Error fetching floors:", error);
+    }
+  };
+
+  const getUnit = async (unitID) => {
+    try {
+      const unit = await getUnits(unitID);
+      setUnitName(unit.data.map((item) => ({ name: item.name, id: item.id })));
+    } catch (error) {
+      console.error("Error fetching units:", error);
+    }
+  };
+
   const buildingChange = async (e) => {
-    async function fetchFloor(floorID) {
-      try {
-        const build = await getFloors(floorID);
-        // console.log("units n", build.data);
-        setFloor(build.data.map((item) => ({ name: item.name, id: item.id })));
-      } catch (e) {
-        console.log(e);
-      }
-    }
+    const { name, value, type } = e.target;
+    const selectedValue = Number(value);
 
-    async function getUnit(UnitID) {
-      try {
-        const unit = await getUnits(UnitID);
-        setUnitName(
-          unit.data.map((item) => ({ name: item.name, id: item.id }))
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    }
+    if (type === "select-one" && name === "building_name") {
+      await fetchFloor(selectedValue);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        building_name: selectedValue,
+      }));
+    } else if (type === "select-one" && name === "floor_name") {
+      await getUnit(selectedValue);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        floor_name: selectedValue,
+      }));
+    } else if (type === "select-one" && name === "unit_id") {
+      await setFormData((prevFormData) => ({
+        ...prevFormData,
+        unit_id: selectedValue,
+        selected_user_id: "", // reset user when unit changes
+      }));
 
-    if (e.target.type === "select-one" && e.target.name === "building_name") {
-      const BuildID = Number(e.target.value);
-      await fetchFloor(BuildID);
-
-      setFormData({
-        ...formData,
-        building_name: BuildID,
-      });
-    } else if (
-      e.target.type === "select-one" &&
-      e.target.name === "floor_name"
-    ) {
-      const UnitID = Number(e.target.value);
-      await getUnit(UnitID);
-      setFormData({
-        ...formData,
-        floor_name: UnitID,
-      });
+      // filter users based on unit_id
+      const filtered = users.filter((user) => user.unit_id === selectedValue);
+      setFilteredUsers(filtered);
     } else {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: value,
+      }));
     }
   };
 
@@ -375,7 +382,10 @@ const CreateTicket = () => {
       sendData.append("complaints[floor_name]", formData.floor_name);
       sendData.append("complaints[issue_type_id]", formData.issue_type_id);
       sendData.append("complaints[complaint_type]", formData.complaint_type);
-      sendData.append("complaints[selected_user_id]", formData.selected_user_id);
+      sendData.append(
+        "complaints[selected_user_id]",
+        formData.selected_user_id
+      );
       sendData.append(
         "complaints[complaint_mode_id]",
         formData.complaint_mode_id
@@ -516,7 +526,7 @@ const CreateTicket = () => {
 
                 <div className="grid grid-cols-2  items-center w-full">
                   <label htmlFor="" className="font-semibold ">
-                    Type of
+                    Type of <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="complaintType"
@@ -610,18 +620,18 @@ const CreateTicket = () => {
 
                 {/* <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-0 justify-between "> */}
                 <div className="grid grid-cols-2 items-center w-full">
-                  <label htmlFor="" className="font-semibold ">
-                    Unit Name
+                  <label htmlFor="unit_id" className="font-semibold">
+                    Unit Name <span className="text-red-500">*</span>
                   </label>
 
                   <select
-                    id="six"
+                    id="unit_id"
                     value={formData.unit_id}
                     name="unit_id"
                     onChange={buildingChange}
                     className="border p-1 px-4 max-w-44 w-44 border-gray-500 rounded-md"
                   >
-                    <option value="">Select Unit </option>
+                    <option value="">Select Unit</option>
                     {unitName?.map((floor) => (
                       <option key={floor.id} value={floor.id}>
                         {floor.name}
@@ -720,15 +730,18 @@ const CreateTicket = () => {
                   </label>
                   <select
                     value={formData.selected_user_id || ""}
-                    name="users"
+                    name="selected_user_id"
                     onChange={(e) =>
-                      setFormData({ ...formData, selected_user_id: e.target.value })
+                      setFormData({
+                        ...formData,
+                        selected_user_id: e.target.value,
+                      })
                     }
                     className="border p-1 px-4 max-w-44 w-44 border-gray-500 rounded-md"
                   >
                     <option value="">Select User</option>
-                    {users?.length > 0 ? (
-                      users.map((user) => (
+                    {filteredUsers.length > 0 ? (
+                      filteredUsers.map((user) => (
                         <option key={user.value} value={user.value}>
                           {user.label}
                         </option>
@@ -986,7 +999,7 @@ const CreateTicket = () => {
                     onChange={buildingChange}
                     className="border p-1 px-4 max-w-44 w-44 border-gray-500 rounded-md"
                   >
-                    <option value="">Select Unit </option>
+                    <option value="">Select Unit</option>
                     {unitName?.map((floor) => (
                       <option key={floor.id} value={floor.id}>
                         {floor.name}

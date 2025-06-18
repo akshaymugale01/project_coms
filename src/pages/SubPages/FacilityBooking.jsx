@@ -38,6 +38,7 @@ const FacilityBooking = () => {
   const [facilities, setFacilities] = useState([]);
   const [terms, setTerms] = useState("No terms available.");
   const [gstNo, setGstNo] = useState(null);
+  const [amountt, setAmountt] = useState("");
   const [cancellationPolicy, setCancellationPolicy] = useState(
     "No cancellation policy available."
   );
@@ -89,6 +90,28 @@ const FacilityBooking = () => {
     }
   };
 
+  // const getBookingAmount = (facility, amountt, formData) => {
+  //   if (facility?.fac_type === "request" && facility?.postpaid === true) {
+  //     return amountt !== undefined && amountt !== null ? amountt : "";
+  //   } else {
+  //     return formData?.amount !== undefined && formData?.amount !== null ? formData.amount : "";
+  //   }
+  // };
+
+const calculateBookingAmount = (facility, formData) => {
+  if (facility?.fac_type === "request" && facility?.postpaid === true) {
+    const fixedAmount = Number(facility?.fixed_amount) || 0;
+    const taxPercentage = Number(facility?.gst_no) || 0;
+    console.log("taxPercentage Amount:", taxPercentage);
+    const taxAmount = (fixedAmount * taxPercentage) / 100;
+    const totalAmount = fixedAmount + taxAmount;
+    console.log("Fixed Amount:", totalAmount);
+    return totalAmount;
+  } else {
+    return formData?.amount ?? "";
+  }
+};
+
   useEffect(() => {
     fetchFacilities();
     if (!formData.booking_date) {
@@ -105,6 +128,12 @@ const FacilityBooking = () => {
     setPaymentMode(mode);
     setFormData({ ...formData, payment_mode: mode });
   };
+
+  useEffect(() => {
+    const bookingAmount = calculateBookingAmount(facility, formData);
+    console.log("Booking Amount:", bookingAmount);
+    setAmountt(bookingAmount);
+  }, [facility, formData]);
 
   // Calculate GST based on total amount before tax
   const calculateGST = (amount, gstNo) => {
@@ -132,14 +161,14 @@ const FacilityBooking = () => {
   const fetchSlotsForFacility = async (facilityId, selectedDate) => {
     try {
       const response = await getFacilitySlots(facilityId, selectedDate); // API Call
-  
+
       if (response?.data?.slots) {
         const now = new Date();
         const currentHr = now.getHours();
         const currentMin = now.getMinutes();
         const selectedDt = new Date(selectedDate);
         const isToday = selectedDt.toDateString() === now.toDateString();
-  
+
         const formattedSlots = response.data.slots
           .filter((slot) => {
             if (isToday) {
@@ -152,9 +181,12 @@ const FacilityBooking = () => {
           })
           .map((slot) => ({
             ...slot,
-            slot_str: `${formatTime(slot.start_hr, slot.start_min)} to ${formatTime(slot.end_hr, slot.end_min)}`
+            slot_str: `${formatTime(
+              slot.start_hr,
+              slot.start_min
+            )} to ${formatTime(slot.end_hr, slot.end_min)}`,
           }));
-  
+
         setSlots(formattedSlots); // Update slots state
       } else {
         console.log("No Slots Found");
@@ -165,8 +197,6 @@ const FacilityBooking = () => {
       setSlots([]); // Reset slots if there's an error
     }
   };
-  
-  
 
   //fetch terms ,cancel, gst, member price
   const fetchTermsPolicy = async (facilityId) => {
@@ -261,15 +291,14 @@ const FacilityBooking = () => {
   const handleDateChange = (e) => {
     const selectedDate = e.target.value;
     setDate(selectedDate); // Update date state
-  
+
     setFormData((prevData) => ({
       ...prevData,
-      booking_date: selectedDate
+      booking_date: selectedDate,
     }));
-  
+
     fetchSlotsForFacility(facility?.id, selectedDate); // Fetch slots
   };
-  
 
   // const handleButtonClick = (selectedTime) => {
   //   setSelectedTimes((prevState) => {
@@ -300,6 +329,9 @@ const FacilityBooking = () => {
 
     try {
       // Append all necessary fields dynamically
+
+      // const bookingAmount = getBookingAmount(facility, amountt, formData);
+      // console.log("Booking Amount:", bookingAmount);
       postData.append("amenity_booking[site_id]", formData.site_id || "");
       postData.append("amenity_booking[user_id]", formData.user_id || "");
       postData.append("amenity_booking[amenity_id]", formData.amenity_id || "");
@@ -315,7 +347,7 @@ const FacilityBooking = () => {
         "amenity_booking[payment_mode]",
         formData.payment_mode || ""
       );
-      postData.append("amenity_booking[amount]", formData.amount || "");
+      postData.append("amenity_booking[amount]", amountt || "");
       postData.append(
         "amenity_booking[guest_adult]",
         formData.guest_adult || ""
@@ -403,20 +435,22 @@ const FacilityBooking = () => {
   const handleFacilityChange = (e) => {
     const selectedFacilityId = e.target.value;
     setSelectedSlot(""); // Reset selected slot
-  
+
     fetchSlotsForFacility(selectedFacilityId, date); // Fetch slots
-  
+
     fetchTermsPolicy(selectedFacilityId); // Fetch Terms
-  
-    const selectedFacility = facilities.find(facility => facility.id === parseInt(selectedFacilityId));
+
+    const selectedFacility = facilities.find(
+      (facility) => facility.id === parseInt(selectedFacilityId)
+    );
     setFacility(selectedFacility);
-  
+
     setFormData((prevData) => ({
       ...prevData,
-      amenity_id: selectedFacilityId
+      amenity_id: selectedFacilityId,
     }));
   };
-  
+
   const handleSelectChange = (e) => {
     const selectedUserId = e.target.value;
     setFormData((prevData) => ({
@@ -805,7 +839,7 @@ const FacilityBooking = () => {
                   type="text"
                   id="amount"
                   name="amount"
-                  value={formData.amount || 0} // Display total in input field
+                  value={amountt ? amountt : formData.amount || 0} // Conditional display
                   disabled
                   className="flex p-2 border border-grey-300 rounded"
                 />

@@ -487,7 +487,9 @@ const Ticket = () => {
               onClick={() => handleStatusChange(key.toLowerCase())}
             >
               {key}
-              <span className="font-medium text-base text-black drop-shadow-md">{value}</span>
+              <span className="font-medium text-base text-black drop-shadow-md">
+                {value}
+              </span>
             </button>
           ))}
 
@@ -504,7 +506,9 @@ const Ticket = () => {
               onClick={() => handelTypeChange(key.toLowerCase())}
             >
               {key}
-              <span className="font-medium text-base text-black drop-shadow-md">{value}</span>
+              <span className="font-medium text-base text-black drop-shadow-md">
+                {value}
+              </span>
             </button>
           ))}
         </div>
@@ -559,7 +563,7 @@ const Ticket = () => {
                 Pending
               </label>
             </div>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <input
                 type="radio"
                 id="hold"
@@ -570,7 +574,7 @@ const Ticket = () => {
               <label htmlFor="hold" className="text-sm">
                 On Hold
               </label>
-            </div>
+            </div> */}
             <div className="flex items-center gap-2">
               <input
                 type="radio"
