@@ -14,7 +14,7 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
     name: "",
     assigned_id: "",
     tat: "",
-    document: []
+    document: [],
   });
 
   const [catFile, setCatFile] = useState([]);
@@ -80,7 +80,7 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
   };
 
   const handleFileChange = (fileList, fieldName) => {
-    const newFiles = Array.from(fileList); // Convert FileList to array
+    const newFiles = Array.from(fileList);
     setFormData((prevFormData) => ({
       ...prevFormData,
       [fieldName]: [...(prevFormData[fieldName] || []), ...newFiles],
@@ -184,24 +184,26 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
         </div> */}
         <input
           type="file"
+          className="mt-6 p-3 px-4 border border-red-400"
           onChange={(e) => handleFileChange(e.target.files, "documents")}
           multiple={true}
         />
-      </div>
-      <div className="flex justify-center my-2 gap-4">
-        <button
-          className=" font-semibold hover:bg-black hover:text-white transition-all  p-2 px-4 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-          style={{ background: themeColor }}
-          onClick={handleAddCategory}
-        >
-          Add
-        </button>
-        <button
-          onClick={handleToggleCategoryPage}
-          className="  px-4 py-2 bg-red-500 text-white rounded-md"
-        >
-          Cancel
-        </button>
+
+        <div className=" mt-4 p-3 justify-center ml-5 gap-5">
+          <button
+            onClick={handleAddCategory}
+            className="px-4 py-2 gap-2 mr-2 rounded-md text-sm font-medium text-white transition-all hover:bg-black"
+            style={{ background: themeColor }}
+          >
+            Add
+          </button>
+          <button
+            onClick={handleToggleCategoryPage}
+            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-600"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
 
       {/* <Table

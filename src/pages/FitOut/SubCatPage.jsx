@@ -118,8 +118,18 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
     fetchCategory();
   }, []);
   const handleAddSubCat = async () => {
-    if (!formData.fitout_category_id ) {
-      return toast.error("Please select a category and enter a subcategory!");
+    if (!formData.fitout_category_id) {
+      return toast.error("Please select a category!");
+    }
+
+    if (formData.name.length === 0 && !inputValue.trim()) {
+      return toast.error("Please add at least one subcategory!");
+    }
+
+    // If there's text in input, add it to the list first
+    let finalSubcategories = [...formData.name];
+    if (inputValue.trim()) {
+      finalSubcategories = [...formData.name, inputValue.trim()];
     }
 
     const sendData = new FormData();
@@ -136,12 +146,12 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
     //   JSON.stringify(formData.bhk_prices)
     // );
     // Convert name array into comma-separated string
-    if (Array.isArray(formData.name)) {
-        formData.name.forEach((tag) => {
+    if (Array.isArray(finalSubcategories)) {
+        finalSubcategories.forEach((tag) => {
           sendData.append("name_tags[]", tag);
         });
       } else {
-        console.error("formData.name is not an array:", formData.name);
+        console.error("finalSubcategories is not an array:", finalSubcategories);
       }
 
     try {
@@ -162,6 +172,7 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
         },
         fitout_text: "",
       });
+      setInputValue(""); // Clear input after successful submission
        setCAtAdded(Date.now());
     } catch (error) {
       console.log(error);
@@ -234,7 +245,16 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
           value={inputValue} 
           name="name"
           onChange={(e) => setInputValue(e.target.value)}
-          // onKeyDown={AddSubCat}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && inputValue.trim()) {
+              e.preventDefault();
+              setFormData((prevFormData) => ({
+                ...prevFormData,
+                name: [...prevFormData.name, inputValue.trim()],
+              }));
+              setInputValue("");
+            }
+          }}
           placeholder="Enter Sub Category"
           className="border p-2 rounded-md"
         />
@@ -284,6 +304,24 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
         /> */}
       </div>
       <div className="flex item-center justify-center py-3 gap-2">
+        <button
+          style={{ background: themeColor }}
+          type="button"
+          className="px-4 py-2 bg-green-500 text-white rounded-md"
+          onClick={() => {
+            if (inputValue.trim()) {
+              setFormData((prevFormData) => ({
+                ...prevFormData,
+                name: [...prevFormData.name, inputValue.trim()],
+              }));
+              setInputValue("");
+            } else {
+              toast.error("Please enter a subcategory name!");
+            }
+          }}
+        >
+          Add to List
+        </button>
         <button
           style={{ background: themeColor }}
           type="submit"
