@@ -252,9 +252,9 @@ const CategoryPage = () => {
       name: "Action",
       cell: (row) => (
         <div className="flex items-center gap-4">
-          <button onClick={() => openCatEditModal(row.id)}>
+          {/* <button onClick={() => openCatEditModal(row.id)}>
             <BiEdit size={15} />
-          </button>
+          </button> */}
           <button onClick={() => handleCatDelete(row.id)}>
             <FaTrash size={15} />
           </button>
@@ -339,19 +339,19 @@ const CategoryPage = () => {
     //   selector: (row) => row.Icon,
     //   sortable: true,
     // },
-    {
-      name: "Action",
-      cell: (row) => (
-        <div className="flex items-center gap-4">
-          <button onClick={() => openSubCatEditModal(row.id)}>
-            <BiEdit size={15} />
-          </button>
-          {/* <button>
-            <FaTrash size={15} />
-          </button> */}
-        </div>
-      ),
-    },
+    // {
+    //   name: "Action",
+    //   cell: (row) => (
+    //     <div className="flex items-center gap-4">
+    //       <button onClick={() => openSubCatEditModal(row.id)}>
+    //         <BiEdit size={15} />
+    //       </button>
+    //        <button>
+    //         <FaTrash size={15} />
+    //       </button> 
+    //     </div>
+    //   ),
+    // },
   ];
   const handleChange = (e) => {
     const { name, value } = e.target;
