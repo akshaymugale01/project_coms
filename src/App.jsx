@@ -744,6 +744,7 @@ import EditRestaurtantBooking from "./pages/SubPages/EditResturantBooking.jsx";
 import EditRestaurtantOrders from "./pages/SubPages/EditResturantOrders.jsx";
 import PPMCalendar from "./pages/SubPages/PPMCalendar.jsx";
 import OtpAndQr from "./Extra/OtpQr.jsx";
+import FitOutRequestDetails from "./pages/FitOut/FitOutRequestDetails.jsx";
 
 // new admin hrms
 
@@ -5243,6 +5244,7 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
+          <Route path="/fitout/request/details/:id" element={<FitOutRequestDetails />} />
           <Route
             path="/hrms/calendar"
             element={

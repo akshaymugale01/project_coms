@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PiPlusCircle } from "react-icons/pi";
 import Navbar from "../../components/Navbar";
 import Table from "../../components/table/Table";
-import { getSetupUsers, getUserCount, sendMailToUsers } from "../../api";
+import { getSetupUsers, getUserCount } from "../../api";
 import { Link } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
-import { useSelector } from "react-redux";
-import toast from "react-hot-toast";
-import { getItemInLocalStorage } from "../../utils/localStorage";
+// import { useSelector } from "react-redux";
+// import toast from "react-hot-toast";
+// import { getItemInLocalStorage } from "../../utils/localStorage";
 import { BiEdit } from "react-icons/bi";
 import { DNA } from "react-loader-spinner";
 
@@ -17,7 +17,7 @@ const UserSetup = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [count, setCount] = useState("");
   const [loading, setLoading] = useState(true); // Add loading state
-  const themeColor = useSelector((state) => state.theme.color);
+  // const themeColor = useSelector((state) => state.theme.color);
 
   // console.log("akshay", akshay);
   // const users = akshay.users || [];
@@ -73,22 +73,22 @@ const handleSearch = (e) => {
   }
 };
 
-  const totalUsers = users.length;
-  const appDownloadedCount = users.filter((user) => user.is_downloaded).length;
-  const appDownloadTenant = users.filter(
-    (user) =>
-      user.is_downloaded &&
-      user.user_sites.some((site) => site.ownership === "tenant")
-  ).length;
-  const appDownloadOwner = users.filter(
-    (user) =>
-      user.is_downloaded &&
-      user.user_sites.some((site) => site.ownership === "owner")
-  ).length;
-  const approvedUsers = users.filter(
-    (user) => user.status === "approved"
-  ).length;
-  const pendingUsers = users.filter((user) => user.status === "pending").length;
+  // const totalUsers = users.length;
+  // const appDownloadedCount = users.filter((user) => user.is_downloaded).length;
+  // const appDownloadTenant = users.filter(
+  //   (user) =>
+  //     user.is_downloaded &&
+  //     user.user_sites.some((site) => site.ownership === "tenant")
+  // ).length;
+  // const appDownloadOwner = users.filter(
+  //   (user) =>
+  //     user.is_downloaded &&
+  //     user.user_sites.some((site) => site.ownership === "owner")
+  // ).length;
+  // const approvedUsers = users.filter(
+  //   (user) => user.status === "approved"
+  // ).length;
+  // const pendingUsers = users.filter((user) => user.status === "pending").length;
 
   const userColumn = [
     {

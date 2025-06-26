@@ -4,7 +4,6 @@ import axiosInstance from "./axiosInstance";
 import HrmsAuth from "./HrmsAuth";
 import vibeAuth from "./vibeAuth";
 import DigestFetch from "digest-fetch";
-import axios from "axios";
 
 /*
 export const API_URL = "https://app.myciti.life";
@@ -85,7 +84,7 @@ export const softServiceDownloadQrCode = async (ids) =>
     },
   });
 
-export const getSiteAsset = async (page) =>
+export const getSiteAsset = async () =>
   axiosInstance.get(`/site_assets.json`, {
     params: {
       token: token,
@@ -346,6 +345,20 @@ export const postFitoutRequest = async (data) =>
   });
 export const getFitoutRequest = async () =>
   axiosInstance.get(`/fitout_request.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getFitoutRequestById = async (id) =>
+  axiosInstance.get(`/fitout_request/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const updateStatusFitoutRequest = async (id, data) =>
+  axiosInstance.put(`/fitout_request/${id}.json`, data, {
     params: {
       token: token,
     },
@@ -651,7 +664,7 @@ export const updateComplaintsDetails = async (id, data) =>
     },
   });
 
-export const getAssignedTo = async (data) =>
+export const getAssignedTo = async () =>
   axiosInstance.get(`/users/pms_admins.json`, {
     params: {
       token: token,
@@ -674,6 +687,7 @@ export const getfloorsType = async (buildId) =>
   });
 
 export const postComplaintsDetails = async (data) => {
+  // eslint-disable-next-line no-useless-catch
   try {
     const response = await axiosInstance.post(
       `/pms/complaints.json?token=${token}`,
@@ -691,6 +705,7 @@ export const postComplaintsDetails = async (data) => {
 };
 
 export const editComplaintsDetails = async (data) => {
+  // eslint-disable-next-line no-useless-catch
   try {
     const response = await axiosInstance.post(
       `/complaint_logs.json?token=${token}`,
@@ -1216,7 +1231,7 @@ export const postPaymentBookings = async (data) =>
     },
   });
 
-export const getPaymentBookings = async (resourceId) =>
+export const getPaymentBookings = async () =>
   axiosInstance.get(`/payments.json`, {
     params: {
       token: token,
@@ -1906,7 +1921,7 @@ export const postGroups = async (data) =>
     },
   });
 
-export const getGroups = async (id) =>
+export const getGroups = async () =>
   axiosInstance.get("/groups.json", {
     params: {
       token: token,
@@ -1934,7 +1949,7 @@ export const deleteGroup = async (id) =>
   });
 
 // Cam Bilings
-export const getCamBillings = async (id) =>
+export const getCamBillings = async () =>
   axiosInstance.get("/cam_bills.json", {
     params: {
       token: token,
@@ -3459,6 +3474,7 @@ export const postVibeBackground = async (data) => {
 };
 
 export const getVibeBackground = async (userId) => {
+  // eslint-disable-next-line no-useless-catch
   try {
     const response = await vibeAuth.get(
       `/api/employee/get_bg_image/?user_id=${userId}`,

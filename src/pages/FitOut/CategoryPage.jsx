@@ -15,6 +15,7 @@ import Table from "../../components/table/Table";
 import {
   deleteHelpDeskCategorySetup,
   destroyFitoutCategory,
+  domainPrefix,
   editHelpDeskCategoriesSetupDetails,
   getFitOutCategoriesSetup,
   getFitoutCategoriesSetupDetails,
@@ -223,38 +224,30 @@ const CategoryPage = () => {
       sortable: true,
     },
     {
-      name: "Assignee",
-      selector: (row) => {
-        // console.log("Row Assigned ID:", row.assigned_id);
-        if (!row.assigned_id) return "N/A"; // If assigned_id is null or undefined
-
-        // console.log("Engineers List:", engineers);
-
-        const assignee = engineers.find((tech) => tech.id === row.assigned_id);
-
-        // console.log("Found Assignee:", assignee);
-
-        return assignee ? assignee.firstname + assignee.lastname : "N/A";
-      },
-      sortable: true,
+      name: "File",
+      cell: (row) =>
+        row.attachfile && row.attachfile.document_url ? (
+          <div className="flex flex-col gap-1">
+            <a
+              href={domainPrefix + row.attachfile.document_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              View
+            </a>
+            <a
+              href={domainPrefix + row.attachfile.document_url}
+              download
+              className="text-green-600 underline"
+            >
+              Download
+            </a>
+          </div>
+        ) : (
+          "No File"
+        ),
     },
-    {
-      name: "Response Time (Min)",
-      selector: (row) => row.tat,
-      sortable: true,
-    },
-
-    // {
-    //   name: "Vendor Email",
-    //   selector: (row) => row.Vendor_Email,
-    //   sortable: true,
-    // },
-
-    // {
-    //   name: "Icon",
-    //   selector: (row) => row.Icon,
-    //   sortable: true,
-    // },
     {
       name: "Action",
       cell: (row) => (
@@ -433,7 +426,6 @@ const CategoryPage = () => {
 
             <DataTable
               responsive
-              //   selectableRows
               columns={CatColumns}
               data={categories}
               isPagination={true}

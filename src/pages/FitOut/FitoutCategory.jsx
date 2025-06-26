@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { getSetupUsers, postFitoutCategoriesSetup, postHelpDeskCategoriesSetup } from "../../api";
+import {
+  getSetupUsers,
+  postFitoutCategoriesSetup,
+  postHelpDeskCategoriesSetup,
+} from "../../api";
 
 const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
   const [engineers, setEngineers] = useState([]);
@@ -10,8 +14,12 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
     name: "",
     assigned_id: "",
     tat: "",
+    document: []
   });
 
+  const [catFile, setCatFile] = useState([]);
+
+  console.log("file", catFile);
 
   const themeColor = useSelector((state) => state.theme.color);
 
@@ -70,7 +78,16 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
       }));
     }
   };
-  console.log(formData)
+
+  const handleFileChange = (fileList, fieldName) => {
+    const newFiles = Array.from(fileList); // Convert FileList to array
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [fieldName]: [...(prevFormData[fieldName] || []), ...newFiles],
+    }));
+    console.log("Updated FormData: ", formData);
+  };
+  console.log(formData);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -85,18 +102,26 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
     // sendData.append("fit_out_setup_category[of_phase]", "pms");
     sendData.append("fit_out_setup_category[name]", formData.name);
     sendData.append("fit_out_setup_category[tat]", formData.minTat);
-    sendData.append("fit_out_setup_category[assigned_id]", formData.assigned_id);
+
+    sendData.append(
+      "fit_out_setup_category[assigned_id]",
+      formData.assigned_id
+    );
+    (formData.documents || []).forEach((file, index) => {
+      sendData.append("attachfiles[]", file);
+      // console.log(documents)
+    });
     try {
       const resp = await postFitoutCategoriesSetup(sendData);
-      setCatAdded(true)
+      setCatAdded(true);
       handleToggleCategoryPage();
-      setFormData({ ...formData, category: "", minTat: "", engineer:[] });
-      toast.success("Added Sucessfully!")
+      setFormData({ ...formData, category: "", minTat: "", engineer: [] });
+      toast.success("Added Sucessfully!");
     } catch (error) {
       console.log(error);
-    } finally{
+    } finally {
       setTimeout(() => {
-        setCatAdded(false)
+        setCatAdded(false);
       }, 500);
     }
   };
@@ -130,7 +155,7 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
             name="name"
           />
         </div>
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <label className="font-medium">Select Engineer</label>
           <select
             className="border p-2 w-full rounded-md"
@@ -156,7 +181,12 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
             onChange={handleChange}
             name="minTat"
           />
-        </div>
+        </div> */}
+        <input
+          type="file"
+          onChange={(e) => handleFileChange(e.target.files, "documents")}
+          multiple={true}
+        />
       </div>
       <div className="flex justify-center my-2 gap-4">
         <button

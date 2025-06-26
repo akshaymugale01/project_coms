@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import {
+  domainPrefix,
   getAllFloors,
   getAllUnits,
   getAllVendors,
   getBuildings,
+  getFitOutCategoriesSetup,
   getFloors,
   getSetupUsers,
   getUnits,
@@ -24,6 +26,8 @@ const FitOutRequestPage = () => {
   const [categoryFiles, setCategoryFiles] = useState({});
   const navigate = useNavigate();
   console.log("categories", categories);
+  const [fitOutSetup, setFitOutCat] = useState([]);
+  console.log("categories", fitOutSetup)
   const [formData, setFormData] = useState({
     building_id: "",
     floor_id: "",
@@ -46,6 +50,10 @@ const FitOutRequestPage = () => {
       });
     }
   };
+
+
+
+
 
   const handleCategoryChange = (event, categoryId) => {
     const { value } = event.target;
@@ -89,6 +97,9 @@ const FitOutRequestPage = () => {
       const vendorsRes = await getAllVendors();
       setVendors(vendorsRes.data);
       console.log("vendor", vendorsRes);
+      const setupCategorie = await getFitOutCategoriesSetup();
+      // Check if setupCategorie.data exists and is an array
+      setFitOutCat(Array.isArray(setupCategorie.data) ? setupCategorie.data : []);
     } catch (error) {
       console.error("Error fetching details:", error);
     }
@@ -262,36 +273,68 @@ const FitOutRequestPage = () => {
                 📎 CATEGORY AND ATTACHMENT
               </h2>
 
-              {categories.map((category) => (
-                <div
-                  key={category.id}
-                  className="flex flex-wrap items-center gap-4 mt-4 p-4 bg-gray-100 rounded-md"
-                >
-                  <select
-                    className="border p-2 rounded w-full md:w-auto flex-1"
-                    value={category.category_type}
-                    onChange={(e) => handleCategoryChange(e, category.id)}
-                  >
-                    <option value="">Select Category *</option>
-                    <option value="Electrical">Electrical</option>
-                    <option value="Plumbing">Plumbing</option>
-                  </select>
+              {categories.map((category) => {
+                // Find the selected category object from fitOutSetup
+                const selectedCatObj = fitOutSetup.find(
+                  (cat) => String(cat.id) === String(category.category_type)
+                );
+                const attachfile = selectedCatObj?.attachfile;
 
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileUpload(e, category.id)}
-                    className="border p-2 rounded w-full md:w-auto flex-1"
-                  />
-
-                  <button
-                    onClick={() => removeCategory(category.id)}
-                    type="button"
-                    className="bg-red-600 text-white p-2 rounded text-sm"
+                return (
+                  <div
+                    key={category.id}
+                    className="flex flex-wrap items-center gap-4 mt-4 p-4 bg-gray-100 rounded-md"
                   >
-                    x Remove
-                  </button>
-                </div>
-              ))}
+                    <select
+                      className="border p-2 rounded w-full md:w-auto flex-1"
+                      value={category.category_type}
+                      onChange={(e) => handleCategoryChange(e, category.id)}
+                    >
+                      <option value="">Select Category</option>
+                      {fitOutSetup.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="file"
+                      onChange={(e) => handleFileUpload(e, category.id)}
+                      className="border p-2 rounded w-full md:w-auto flex-1"
+                    />
+
+                    {/* Show attachfile if present */}
+                    {attachfile && attachfile.document_url && (
+                      <div className="flex flex-col gap-1">
+                        <a
+                          href={domainPrefix + attachfile.document_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          View File
+                        </a>
+                        <a
+                          href={domainPrefix + attachfile.document_url}
+                          download
+                          className="text-green-600 underline"
+                        >
+                          Download File
+                        </a>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => removeCategory(category.id)}
+                      type="button"
+                      className="bg-red-600 text-white p-2 rounded text-sm"
+                    >
+                      x Remove
+                    </button>
+                  </div>
+                );
+              })}
 
               <button
                 onClick={addCategory}

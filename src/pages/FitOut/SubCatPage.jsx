@@ -180,15 +180,15 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
     }));
   };
 
-  const AddSubCat = (e) => {
-    if (e.key === "Enter" && inputValue.trim()) {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        name: [...prevFormData.name, inputValue.trim()],
-      }));
-      setTimeout(() => setInputValue(""), 0);
-    }
-  };
+  // const AddSubCat = (e) => {
+  //   if (e.key === "Enter" && inputValue.trim()) {
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       name: [...prevFormData.name, inputValue.trim()],
+  //     }));
+  //     setTimeout(() => setInputValue(""), 0);
+  //   }
+  // };
   console.log(formData);
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -198,7 +198,6 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
       const selectedCategory = categories.find(
         (cat) => String(cat.id) === value
       );
-
       setFormData((prevFormData) => ({
         ...prevFormData,
         fitout_category_id: value, // Store ID
@@ -235,8 +234,8 @@ const SubCatPage = ({ handleToggleCategoryPage1, setCAtAdded }) => {
           value={inputValue} 
           name="name"
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={AddSubCat}
-          placeholder="Enter Sub Category and press Enter"
+          // onKeyDown={AddSubCat}
+          placeholder="Enter Sub Category"
           className="border p-2 rounded-md"
         />
         {/* <div className="grid grid-cols-3 gap-2">
