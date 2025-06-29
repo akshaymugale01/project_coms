@@ -745,6 +745,8 @@ import EditRestaurtantOrders from "./pages/SubPages/EditResturantOrders.jsx";
 import PPMCalendar from "./pages/SubPages/PPMCalendar.jsx";
 import OtpAndQr from "./Extra/OtpQr.jsx";
 import FitOutRequestDetails from "./pages/FitOut/FitOutRequestDetails.jsx";
+import ChecklistForm from "./pages/FitOut/ChecklistForm.jsx";
+import SnagAnsweDetails from "./pages/FitOut/SnagAnswer.jsx";
 
 // new admin hrms
 
@@ -2509,6 +2511,19 @@ function App() {
             path="/fitout/checklist/create"
             element={<FitOutChecklistPage />}
           />
+          <Route
+            path="/fitout/checklist/form/:id"
+            element={<ChecklistForm />}
+          />
+          <Route
+            path="/fitout/checklist/answer-details/:id"
+            element={<SnagAnsweDetails />}
+          />
+          <Route
+            path="/fitout/snag-answer-details/:id"
+            element={<SnagAnsweDetails />}
+          />
+          
           <Route
             path="/fitout/checklist/list"
             element={<FitoutChecklistList />}
