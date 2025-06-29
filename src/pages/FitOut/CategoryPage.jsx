@@ -393,7 +393,7 @@ const CategoryPage = () => {
           >
             Category
           </h2>
-          <h2
+          {/* <h2
             className={`p-1 ${
               page === "Sub Category" &&
               "bg-white font-medium text-blue-500 shadow-custom-all-sides"
@@ -401,7 +401,7 @@ const CategoryPage = () => {
             onClick={() => setPage("Sub Category")}
           >
             Sub Category
-          </h2>
+          </h2> */}
         </div>
       </div>
 

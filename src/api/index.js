@@ -307,6 +307,47 @@ export const EditVendors = async (id, data) =>
     },
   });
 
+export const getSnagChecklistByCategory = async (categoryId) => {
+  return axiosInstance.get("/snag_checklists.json", {
+    params: {
+      token: token,
+      "q[snag_audit_category_id_eq]": categoryId,
+    },
+  });
+};
+
+export const getSnagChecklistID = async (data) =>
+  axiosInstance.post(`/snag_checklists.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const postSnagAnswer = async (data) =>
+  axiosInstance.post(`/snag_answers.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getSnagAnswer = async (data) =>
+  axiosInstance.get(`/snag_answers.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getSnagAnswersByResource = async (categoryTypeId) => {
+  return axiosInstance.get("/snag_answers.json", {
+    params: {
+      token: token,
+      "q[resource_id_eq]": categoryTypeId,
+    },
+  });
+};
+
+
+
 //
 export const getComplaints = async () =>
   axiosInstance.get(`/pms/complaints.json`, {

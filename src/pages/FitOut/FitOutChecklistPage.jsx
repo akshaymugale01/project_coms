@@ -250,7 +250,7 @@ const FitOutChecklistPage = () => {
                 </option>
               ))}
             </select>
-            <select
+            {/* <select
               name="snag_audit_sub_category_id"
               value={formData.snag_audit_sub_category_id}
               onChange={handleChange}
@@ -263,7 +263,7 @@ const FitOutChecklistPage = () => {
                   {subCat.name}
                 </option>
               ))}
-            </select>
+            </select> */}
           </div>
           {/* Title */}
           <input
