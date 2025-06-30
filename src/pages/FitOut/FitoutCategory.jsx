@@ -182,12 +182,17 @@ const FitoutCategory = ({ handleToggleCategoryPage, setCatAdded }) => {
             name="minTat"
           />
         </div> */}
+        <div className="flex flex-col gap-2">
+        <label className="font-medium">
+          Fitout Guide
+        </label>
         <input
           type="file"
-          className="mt-6 p-3 px-4 border border-red-400"
+          className="p-2 px-4 border border-red-400"
           onChange={(e) => handleFileChange(e.target.files, "documents")}
           multiple={true}
         />
+        </div>
 
         <div className=" mt-4 p-3 justify-center ml-5 gap-5">
           <button
