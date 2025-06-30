@@ -37,8 +37,6 @@ const FitOutRequestDetails = () => {
   const [categories, setCategories] = useState([]);
   const [openDialog, setOpenDialog] = useState(null);
   const [updating, setUpdating] = useState(false);
-  const [loadingAnswers, setLoadingAnswers] = useState(true);
-  const [answers, setAnswers] = useState("");
   const [formData, setFormData] = useState({
     status: "approved",
     comments: "",
@@ -61,15 +59,18 @@ const FitOutRequestDetails = () => {
 
     for (const category of categories) {
       try {
-        const response = await getSnagAnswer(category.id);
+        // Use category_type.id instead of category.id for consistency with buttons
+        const categoryTypeId = category.category_type.id;
+        const response = await getSnagAnswer(categoryTypeId);
         if (response.data && response.data.length > 0) {
-          newSubmissionStatus[category.id] = true;
-          console.log(`Category ${category.id} has existing submission`);
+          newSubmissionStatus[categoryTypeId] = true;
+          console.log(`Category ${categoryTypeId} has existing submission`);
         }
       } catch (error) {
         // If error (likely 404), it means no submission exists
-        console.log(`No submission found for category ${category.id}`);
-        newSubmissionStatus[category.id] = false;
+        const categoryTypeId = category.category_type.id;
+        console.log(`No submission found for category ${categoryTypeId}`);
+        newSubmissionStatus[categoryTypeId] = false;
       }
     }
 
@@ -181,13 +182,11 @@ const FitOutRequestDetails = () => {
 
   const handleViewSubmission = async (categoryTypeId) => {
     try {
-      setLoadingAnswers(true);
       const response = await getSnagAnswersByResource(categoryTypeId);
       const data = response.data || [];
 
       console.log("Fetched answers:", data);
 
-      setAnswers(data);
       setChecklistModal({
         open: true,
         categoryId: categoryTypeId,
@@ -197,8 +196,6 @@ const FitOutRequestDetails = () => {
     } catch (error) {
       toast.error("Failed to load answers");
       console.error("View Submission Error:", error);
-    } finally {
-      setLoadingAnswers(false);
     }
   };
 

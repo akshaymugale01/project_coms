@@ -8,6 +8,7 @@ import {
   X,
   Image,
   Send,
+  FileX,
 } from "lucide-react";
 import {
   Card,
