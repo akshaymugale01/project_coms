@@ -131,7 +131,7 @@ const OtpAndQr = () => {
           {/* Company details */}
           <div className="text-center mb-6">
             <p className="text-sm text-gray-500">Company Details</p>
-            <h2 className="text-xl font-bold">The Capital</h2>
+            <h2 className="text-xl font-bold">Bhoomi Celestia</h2>
             <p className="text-xs text-gray-500">+1 Companies</p>
           </div>
 
