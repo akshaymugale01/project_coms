@@ -20,7 +20,7 @@ const OtpAndQr = () => {
       if (!id) return; // Prevent API call if id is null
       try {
         const response = await getUserOtp(id);
-        
+
         setUserData(response.data);
         setOtpDigits(response.data.otp.toString().split(""));
         setQrCodeImageUrl(response.data.qr_code_image_url);
@@ -36,8 +36,8 @@ const OtpAndQr = () => {
 
   console.log("Visitor Details", userData);
 
-  const QR_Code = domainPrefix +  userData.qr_code || ""
-  const Profile_Picture = domainPrefix + userData.profile_picture || ""
+  const QR_Code = domainPrefix + userData.qr_code || "";
+  const Profile_Picture = domainPrefix + userData.profile_picture || "";
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-100 pt-3 pb-8">
@@ -67,7 +67,7 @@ const OtpAndQr = () => {
               /> */}
               <div className="relative h-12 w-12 rounded-full overflow-hidden mr-3">
                 <img
-                  src={ Profile_Picture }
+                  src={Profile_Picture}
                   alt="Profile Picture"
                   width={48}
                   height={48}
@@ -75,7 +75,7 @@ const OtpAndQr = () => {
                 />
               </div>
             </div>
-            <div className="flex-1 space-y-1">
+            <div className="flex flex-col space-y-1">
               <h2 className="font-bold text-lg">
                 {" "}
                 Name : <span>{userData.name}</span>
@@ -99,40 +99,64 @@ const OtpAndQr = () => {
                 </span>
               </p>
             </div>
+            <div className="flex flex-col px-2 space-y-1">
+              <h2 className="font-bold text-lg">
+                {" "}
+                <span></span>
+              </h2>
+              <p className="font-medium text-xs">
+                Building Name:
+                <span className="font-normal text-gray-600 mx-1">
+                  {userData.hosts?.[0].building_name?.[0]}
+                </span>
+              </p>
+              <p className="font-medium text-xs">
+                Unit:{" "}
+                <span className="font-normal text-gray-600 mx-1">
+                  {userData?.hosts?.[0]?.unit_name}
+                </span>
+              </p>
+            </div>
             <div className="text-xs text-gray-500">
               {userData.wing} {userData.floor}
             </div>
           </div>
 
-          {/* Date section */}
-          <div className="flex justify-between mb-6">
-            <div className="bg-yellow-100 rounded-lg p-2 text-center w-[45%]">
-              <p className="text-xs font-medium">Start Date</p>
-              <p className="text-sm font-bold">
-                {userData.pass_start_date || ""}
-              </p>
-            </div>
-
-            {/* Company logo */}
-            {/* <div className="flex items-center justify-center">
+          {/* Company logo */}
+          {/* <div className="flex items-center justify-center">
               <div className="h-12 w-12 rounded-full border-2 border-gray-300 flex items-center justify-center">
                 <span className="font-serif text-xl">V</span>
               </div>
             </div> */}
 
-            <div className="bg-yellow-100 rounded-lg p-2 text-center w-[45%]">
-              <p className="text-xs font-medium">End Date</p>
-              <p className="text-sm font-bold">
-                {userData.pass_end_date || ""}
-              </p>
+          {/* Date section */}
+          {userData.pass_start_date && userData.pass_end_date ? (
+            <div className="flex justify-between mb-6">
+              <div className="bg-yellow-100 rounded-lg p-2 text-center w-[45%]">
+                <p className="text-xs font-medium">Start Date</p>
+                <p className="text-sm font-bold">{userData.pass_start_date}</p>
+              </div>
+
+              <div className="bg-yellow-100 rounded-lg p-2 text-center w-[45%]">
+                <p className="text-xs font-medium">End Date</p>
+                <p className="text-sm font-bold">{userData.pass_end_date}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex justify-center mb-6">
+              <div className="bg-yellow-100 rounded-lg p-2 text-center w-[70%]">
+                <p className="text-xs font-medium">Expected Date</p>
+                <p className="text-sm font-bold">
+                  {userData.expected_date + " " + userData.expected_time || ""}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Company details */}
           <div className="text-center mb-6">
             <p className="text-sm text-gray-500">Company Details</p>
             <h2 className="text-xl font-bold">Bhoomi Celestia</h2>
-            <p className="text-xs text-gray-500">+1 Companies</p>
           </div>
 
           {/* QR code section */}
