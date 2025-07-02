@@ -964,7 +964,7 @@ const Navbar = () => {
                     </h2>
                   </NavLink>
                 )}
-                {feat.includes("insurances") && (
+                {feat.includes("additional-service-OSR") && (
                   <NavLink
                     to={"/ors-dashboard"}
                     className={({ isActive }) =>
