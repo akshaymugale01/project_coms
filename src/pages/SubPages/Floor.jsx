@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Account from "./Account";
 import { PiPlusCircle } from "react-icons/pi";
-import Switch from "../../Buttons/Switch";
-import { useSelector } from "react-redux";
 import Table from "../../components/table/Table";
-import { Link } from "react-router-dom";
-import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
 import { getAllFloors, getBuildings, postNewFloor } from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
@@ -14,23 +10,21 @@ import EditFloorModal from "../../containers/modals/EditFloorModal";
 import Navbar from "../../components/Navbar";
 
 const Floor = () => {
-  const [wing, setWing] = useState("");
   const [building, setBuilding] = useState("");
-  const [area, setArea] = useState("");
   const [floors, setFloors] = useState([]);
-  const [floor, setFloor] = useState([]);
+  const [floor, setFloor] = useState("");
   const [floorAdded, setFloorAdded] = useState(false);
   const [showFields, setShowFields] = useState(false);
-  const [showRows, setShowRows] = useState(false);
-  const [submittedData, setSubmittedData] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [editModal, setEditModal] = useState(false);
-  const UserId = getItemInLocalStorage("UserId");
-  console.log("User", UserId);
   const [id, setId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
   useEffect(() => {
     const fetchAllFloors = async () => {
       try {
+        setLoading(true);
         const floorsResp = await getAllFloors();
 
         const sortedFloor = floorsResp.data.sort((a, b) => {
@@ -39,12 +33,20 @@ const Floor = () => {
         setFloors(sortedFloor);
       } catch (error) {
         console.log(error);
+        toast.error("Failed to load floors");
+      } finally {
+        setLoading(false);
       }
     };
     const fetchBuilding = async () => {
-      const buildingResp = await getBuildings();
-      console.log(buildingResp);
-      setBuildings(buildingResp.data);
+      try {
+        const buildingResp = await getBuildings();
+        console.log(buildingResp);
+        setBuildings(buildingResp.data);
+      } catch (error) {
+        console.log(error);
+        toast.error("Failed to load buildings");
+      }
     };
     fetchBuilding();
     fetchAllFloors();
@@ -85,34 +87,38 @@ const Floor = () => {
     e.preventDefault();
 
     if (!building || !floor) {
+      toast.error("Please fill in all required fields");
       return;
     }
+    
+    setSubmitting(true);
     const formData = new FormData();
     formData.append("floor[name]", floor);
     formData.append("floor[site_id]", siteId);
     formData.append("floor[building_id]", building);
+    
     try {
-      const resp = await postNewFloor(formData);
+      await postNewFloor(formData);
+      // Reset form fields
+      setBuilding("");
+      setFloor("");
+      setShowFields(false); // Hide the form
+      // Trigger refresh by updating the dependency
+      setFloorAdded(Date.now());
       toast.success("Floor created successfully");
-      setFloorAdded(true);
     } catch (error) {
       console.log(error);
+      toast.error("Failed to create floor");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handlewingChange = (e) => {
-    setWing(e.target.value);
-  };
-
-  const handleAreaChange = (e) => {
-    setArea(e.target.value);
-  };
   const handleFloorChange = (e) => {
     const { value } = e.target;
     const validate = value.replace(/[^a-zA-Z0-9 ]/g, "");
     setFloor(validate);
   };
-  const themeColor = useSelector((state) => state.theme.color);
   return (
     <div className="flex">
       <Navbar />
@@ -171,9 +177,21 @@ const Floor = () => {
                 />
                 <button
                   onClick={handleSubmit}
-                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                  disabled={submitting}
+                  className={`py-2 px-4 rounded-md text-white ${
+                    submitting 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  }`}
                 >
-                  Submit
+                  {submitting ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Creating...
+                    </div>
+                  ) : (
+                    'Submit'
+                  )}
                 </button>
                 <button
                   onClick={() => setShowFields(!showFields)}
@@ -187,64 +205,16 @@ const Floor = () => {
 
           <div className="flex justify-center items-center">
             <div className=" w-screen">
-              {/* <table className="border-collapse w-full">
-              <thead>
-                <tr>
-                  <th className="border-md p-2 bg-black border-r-2 text-white rounded-l-xl">
-                    Site
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Building
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Wing
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Area
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Floor
-                  </th>
-
-                  <th className=" p-2 bg-black  text-white rounded-r-xl ">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              {showRows && (
-                <tbody>
-                  {submittedData.map((data, index) => (
-                    <tr
-                      key={index}
-                      className="border-md border-black border-b-2"
-                    >
-                      <td className="text-center p-2 border-r-2 border-black">
-                        Kalyan
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.building}
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.wing}
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.area}
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.floor}
-                      </td>
-                      <td className="text-center p-2 rounded-r-xl">
-                     <Switch/>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                  <span className="ml-3 text-gray-600">Loading floors...</span>
+                </div>
+              ) : (
+                <div>
+                  <Table columns={floorColumns} data={floors} />
+                </div>
               )}
-            </table> */}
-
-              <div>
-                <Table columns={floorColumns} data={floors} />
-              </div>
             </div>
           </div>
         </div>

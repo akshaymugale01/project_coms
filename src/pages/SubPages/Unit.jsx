@@ -1,67 +1,62 @@
 import React, { useEffect, useState } from "react";
 import Account from "./Account";
 import { PiPlusCircle } from "react-icons/pi";
-import Switch from "../../Buttons/Switch";
-import { Link } from "react-router-dom";
-import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
 import {
-  getAllFloors,
   getAllUnits,
   getBuildings,
   getFloors,
   postNewUnit,
 } from "../../api";
 import Table from "../../components/table/Table";
-import { useSelector } from "react-redux";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
 import EditUnitModal from "../../containers/modals/EditUnitModal";
 import Navbar from "../../components/Navbar";
 
 const Unit = () => {
-  const [wing, setWing] = useState("");
   const [building, setBuilding] = useState("");
-  const [area, setArea] = useState("");
   const [floor, setFloor] = useState("");
   const [units, setUnits] = useState([]);
-  const [entity, setEntity] = useState("");
   const [unit, setUnit] = useState("");
   const [showFields, setShowFields] = useState(false);
-  const [showRows, setShowRows] = useState(false);
-  const [submittedData, setSubmittedData] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
   const [unitAdded, setUnitAdded] = useState(false);
   const [editModal, setEditModal] = useState(false);
-  const UserId = getItemInLocalStorage("UserId");
   const [id, setId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
   useEffect(() => {
-    // const fetchAllFloors = async () => {
-    //   try {
-    //     const floorsResp = await getAllFloors();
-
-    //     setFloors(floorsResp.data);
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    // };
     const fetchBuilding = async () => {
-      const buildingResp = await getBuildings();
-      console.log(buildingResp);
-      setBuildings(buildingResp.data);
+      try {
+        const buildingResp = await getBuildings();
+        console.log(buildingResp);
+        setBuildings(buildingResp.data);
+      } catch (error) {
+        console.log(error);
+        toast.error("Failed to load buildings");
+      }
     };
     fetchBuilding();
-    // fetchAllFloors();
   }, []);
 
   useEffect(() => {
     const fetchAllUnits = async () => {
-      const unitsResp = await getAllUnits();
-      const sortedUnits = unitsResp.data.sort((a, b) => {
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
-      setUnits(sortedUnits);
+      try {
+        setLoading(true);
+        const unitsResp = await getAllUnits();
+        const sortedUnits = unitsResp.data.sort((a, b) => {
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+        setUnits(sortedUnits);
+      } catch (error) {
+        console.log(error);
+        toast.error("Failed to load units");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchAllUnits();
   }, [unitAdded]);
@@ -119,52 +114,46 @@ const Unit = () => {
     },
   ];
   const siteId = getItemInLocalStorage("SITEID");
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!building || !floor || !unit) {
+      toast.error("Please fill in all required fields");
       return;
     }
+    
+    setSubmitting(true);
     const formData = new FormData();
     formData.append("unit[site_id]", siteId);
     formData.append("unit[building_id]", building);
     formData.append("unit[floor_id]", floor);
     formData.append("unit[name]", unit);
+    
     try {
-      const resp = postNewUnit(formData);
-      setUnitAdded(true);
+      await postNewUnit(formData);
+      // Reset form fields
+      setBuilding("");
+      setFloor("");
+      setUnit("");
+      setFloors([]); // Clear floors since building is reset
+      setShowFields(false); // Hide the form
+      // Trigger refresh by updating the dependency
       setUnitAdded(Date.now());
       toast.success("Unit created successfully");
     } catch (error) {
       console.log(error);
+      toast.error("Failed to create unit");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handlewingChange = (e) => {
-    setWing(e.target.value);
-  };
-
-  // const handleBuildingChange = (e) => {
-  //   setBuilding(e.target.value);
-  // };
-
-  const handleAreaChange = (e) => {
-    setArea(e.target.value);
-  };
-
-  const handleFloorChange = (e) => {
-    setFloor(e.target.value);
-  };
-  const handleEntityChange = (e) => {
-    setEntity(e.target.value);
-  };
   const handleUnitChange = (e) => {
-  const { value } = e.target;
-  // Allow only alphabets and numbers, no spaces or special characters
-  const filteredValue = value.replace(/[^a-zA-Z0-9]/g, "");
-  setUnit(filteredValue);
-};
-  const themeColor = useSelector((state) => state.theme.color);
+    const { value } = e.target;
+    // Allow only alphabets and numbers, no spaces or special characters
+    const filteredValue = value.replace(/[^a-zA-Z0-9]/g, "");
+    setUnit(filteredValue);
+  };
   return (
     <div className="flex">
       <Navbar />
@@ -251,9 +240,21 @@ const Unit = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={handleSubmit}
-                    className="bg-blue-500 text-white py-2 px-4 rounded-md  hover:bg-blue-600"
+                    disabled={submitting}
+                    className={`py-2 px-4 rounded-md text-white ${
+                      submitting 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-blue-500 hover:bg-blue-600'
+                    }`}
                   >
-                    Submit
+                    {submitting ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Creating...
+                      </div>
+                    ) : (
+                      'Submit'
+                    )}
                   </button>
                   <button
                     onClick={() => setShowFields(!showFields)}
@@ -265,84 +266,19 @@ const Unit = () => {
               </div>
             </div>
           )}
-          
+
           <div className="flex justify-center items-center">
             <div className=" w-screen">
-              {/* <table className="border-collapse w-full">
-              <thead>
-                <tr>
-                  <th className="border-md p-2 bg-black border-r-2 text-white rounded-l-xl">
-                    Actions
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Active/Inactive
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Site
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Building
-                  </th>
-                  <th className="border-md p-2 bg-black border-r-2 text-white ">
-                    Wing
-                  </th>
-
-                  <th className=" p-2 bg-black  text-white border-r-2 border-md">
-                    Area
-                  </th>
-                  <th className=" p-2 bg-black  text-white border-r-2 border-md ">
-                    Floor
-                  </th>
-                  <th className=" p-2 bg-black  text-white border-r-2 border-md ">
-                    Unit
-                  </th>
-                  <th className=" p-2 bg-black  text-white rounded-r-xl ">
-                    Entity
-                  </th>
-                </tr>
-              </thead>
-              {showRows && (
-                <tbody>
-                  {submittedData.map((data, index) => (
-                    <tr
-                      key={index}
-                      className="border-md border-black border-b-2"
-                    >
-                      <td className="text-center p-2 border-r-2 border-black">
-                        edit
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                     <Switch/>
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        Kalyan
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.building}
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.wing}
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.area}
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.floor}
-                      </td>
-                      <td className="text-center p-2 border-r-2 border-black">
-                        {data.unit}
-                      </td>
-                      <td className="text-center p-2 rounded-r-xl">
-                        {data.entity}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                  <span className="ml-3 text-gray-600">Loading units...</span>
+                </div>
+              ) : (
+                <div>
+                  <Table columns={unitColumns} data={units} />
+                </div>
               )}
-            </table> */}
-              <div>
-                <Table columns={unitColumns} data={units} />
-              </div>
             </div>
           </div>
         </div>
