@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Account from "./Account";
 import { PiPlusCircle } from "react-icons/pi";
 import { BiEdit } from "react-icons/bi";
-import {
-  getAllUnits,
-  getBuildings,
-  getFloors,
-  postNewUnit,
-} from "../../api";
+import { FaCalendarPlus } from "react-icons/fa";
+import { getAllUnits, getBuildings, getFloors, postNewUnit } from "../../api";
+import { unitConfigurationService } from "../OSR/additionalServices";
 import Table from "../../components/table/Table";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
@@ -19,15 +17,17 @@ const Unit = () => {
   const [floor, setFloor] = useState("");
   const [units, setUnits] = useState([]);
   const [unit, setUnit] = useState("");
+  const [unitConfiguration, setUnitConfiguration] = useState("");
   const [showFields, setShowFields] = useState(false);
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
+  const [unitConfigurations, setUnitConfigurations] = useState([]);
   const [unitAdded, setUnitAdded] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [id, setId] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
+
   useEffect(() => {
     const fetchBuilding = async () => {
       try {
@@ -39,7 +39,21 @@ const Unit = () => {
         toast.error("Failed to load buildings");
       }
     };
+
+    const fetchUnitConfigurations = async () => {
+      try {
+        const configResp = await unitConfigurationService.getAll();
+        console.log("Unit configurations:", configResp);
+        setUnitConfigurations(Array.isArray(configResp.data) ? configResp.data : []);
+      } catch (error) {
+        console.log("Error loading unit configurations:", error);
+        toast.error("Failed to load unit configurations");
+        setUnitConfigurations([]);
+      }
+    };
+
     fetchBuilding();
+    fetchUnitConfigurations();
   }, []);
 
   useEffect(() => {
@@ -47,9 +61,11 @@ const Unit = () => {
       try {
         setLoading(true);
         const unitsResp = await getAllUnits();
+        console.log("Units API response:", unitsResp.data); // Debug log
         const sortedUnits = unitsResp.data.sort((a, b) => {
           return new Date(b.created_at) - new Date(a.created_at);
         });
+        console.log("Sorted units:", sortedUnits); // Debug log
         setUnits(sortedUnits);
       } catch (error) {
         console.log(error);
@@ -84,22 +100,39 @@ const Unit = () => {
   const unitColumns = [
     {
       name: "Site",
-      selector: (row) => row.site_name,
+      selector: (row) => {
+        console.log("Site data for row:", row); // Debug log
+        return row.site_name || row.site?.name || "Unknown Site";
+      },
       sortable: true,
     },
     {
-      name: "Building ",
-      selector: (row) => row.building_name,
+      name: "Building",
+      selector: (row) => {
+        console.log("Building data for row:", row); // Debug log
+        return row.building_name || row.building?.name || "Unknown Building";
+      },
       sortable: true,
     },
     {
-      name: "Floors ",
-      selector: (row) => row.floor_name,
+      name: "Floor",
+      selector: (row) => {
+        console.log("Floor data for row:", row); // Debug log
+        return row.floor_name || row.floor?.name || "Unknown Floor";
+      },
       sortable: true,
     },
     {
-      name: "Units ",
-      selector: (row) => row.name,
+      name: "Unit",
+      selector: (row) => row.name || "Unknown Unit",
+      sortable: true,
+    },
+    {
+      name: "Unit Configuration",
+      selector: (row) => {
+        console.log("Unit config data for row:", row); // Debug log
+        return row.unit_configuration_name || row.unit_configuration?.name || "Not Set";
+      },
       sortable: true,
     },
     {
@@ -117,24 +150,26 @@ const Unit = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!building || !floor || !unit) {
-      toast.error("Please fill in all required fields");
+    if (!building || !floor || !unit || !unitConfiguration) {
+      toast.error("Please fill in all required fields including unit configuration");
       return;
     }
-    
+
     setSubmitting(true);
     const formData = new FormData();
     formData.append("unit[site_id]", siteId);
     formData.append("unit[building_id]", building);
     formData.append("unit[floor_id]", floor);
     formData.append("unit[name]", unit);
-    
+    formData.append("unit[unit_configuration_id]", unitConfiguration);
+
     try {
       await postNewUnit(formData);
       // Reset form fields
       setBuilding("");
       setFloor("");
       setUnit("");
+      setUnitConfiguration("");
       setFloors([]); // Clear floors since building is reset
       setShowFields(false); // Hide the form
       // Trigger refresh by updating the dependency
@@ -232,6 +267,21 @@ const Unit = () => {
                   value={unit}
                   onChange={handleUnitChange}
                 />
+                
+                <select
+                  name="unitConfiguration"
+                  value={unitConfiguration}
+                  onChange={(e) => setUnitConfiguration(e.target.value)}
+                  className="border border-gray-500 rounded-md p-2 md:w-48"
+                  required
+                >
+                  <option value="">Select Unit Configuration</option>
+                  {unitConfigurations.map((config) => (
+                    <option value={config.id} key={config.id}>
+                      {config.name}
+                    </option>
+                  ))}
+                </select>
                 {/* <input
                 type="text"
                 placeholder="Enter Area(sq.Mtr)"
@@ -242,9 +292,9 @@ const Unit = () => {
                     onClick={handleSubmit}
                     disabled={submitting}
                     className={`py-2 px-4 rounded-md text-white ${
-                      submitting 
-                        ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-blue-500 hover:bg-blue-600'
+                      submitting
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-500 hover:bg-blue-600"
                     }`}
                   >
                     {submitting ? (
@@ -253,7 +303,7 @@ const Unit = () => {
                         Creating...
                       </div>
                     ) : (
-                      'Submit'
+                      "Submit"
                     )}
                   </button>
                   <button

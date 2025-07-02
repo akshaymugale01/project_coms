@@ -747,6 +747,13 @@ import OtpAndQr from "./Extra/OtpQr.jsx";
 import FitOutRequestDetails from "./pages/FitOut/FitOutRequestDetails.jsx";
 import ChecklistForm from "./pages/FitOut/ChecklistForm.jsx";
 import SnagAnsweDetails from "./pages/FitOut/SnagAnswer.jsx";
+import Osr from "./pages/OSR/Osr.jsx";
+import OSRDashboard from "./pages/OSR/OSRDashboard.jsx";
+import OrsSetup from "./pages/OSR/OsrSetup.jsx";
+import UnitConfigurations from "./pages/OSR/UnitConfig.jsx";
+import AdminBookings from "./pages/OSR/OsrBookings.jsx";
+import MyBookings from "./pages/OSR/ResidentialBookings.jsx";
+import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
 
 // new admin hrms
 
@@ -2500,6 +2507,22 @@ function App() {
             }
           />
 
+          <Route path="/additional-service" element={<Osr />} />
+          <Route path="/ors-dashboard" element={<OSRDashboard />} />
+          <Route path="/ors-setups" element={<OrsSetup />} />
+          <Route path="/service-booking" element={<ServiceBooking />} />
+          <Route
+            path="/admin/unit-configurations"
+            element={<UnitConfigurations />}
+          />
+          <Route
+            path="/admin/bookings"
+            element={<AdminBookings />}
+          />
+           <Route
+            path="/residential/bookings"
+            element={<MyBookings />}
+          />
           <Route path="/fitout/setup" element={<FitOutSetup />} />
           <Route path="/fitout/setup/page" element={<FitOutSetup />} />
           <Route
@@ -2523,7 +2546,7 @@ function App() {
             path="/fitout/snag-answer-details/:id"
             element={<SnagAnsweDetails />}
           />
-          
+
           <Route
             path="/fitout/checklist/list"
             element={<FitoutChecklistList />}
@@ -5259,7 +5282,10 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-          <Route path="/fitout/request/details/:id" element={<FitOutRequestDetails />} />
+          <Route
+            path="/fitout/request/details/:id"
+            element={<FitOutRequestDetails />}
+          />
           <Route
             path="/hrms/calendar"
             element={
