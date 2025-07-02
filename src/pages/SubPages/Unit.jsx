@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Account from "./Account";
 import { PiPlusCircle } from "react-icons/pi";
 import { BiEdit } from "react-icons/bi";
-import { FaCalendarPlus } from "react-icons/fa";
 import { getAllUnits, getBuildings, getFloors, postNewUnit } from "../../api";
 import { unitConfigurationService } from "../OSR/additionalServices";
 import Table from "../../components/table/Table";
@@ -36,7 +34,11 @@ const Unit = () => {
         setBuildings(buildingResp.data);
       } catch (error) {
         console.log(error);
-        toast.error("Failed to load buildings");
+        const errorMessage = error?.response?.data?.message || 
+                            error?.response?.data?.error || 
+                            error?.message || 
+                            "Failed to load buildings";
+        toast.error(errorMessage);
       }
     };
 
@@ -47,7 +49,11 @@ const Unit = () => {
         setUnitConfigurations(Array.isArray(configResp.data) ? configResp.data : []);
       } catch (error) {
         console.log("Error loading unit configurations:", error);
-        toast.error("Failed to load unit configurations");
+        const errorMessage = error?.response?.data?.message || 
+                            error?.response?.data?.error || 
+                            error?.message || 
+                            "Failed to load unit configurations";
+        toast.error(errorMessage);
         setUnitConfigurations([]);
       }
     };
@@ -69,7 +75,11 @@ const Unit = () => {
         setUnits(sortedUnits);
       } catch (error) {
         console.log(error);
-        toast.error("Failed to load units");
+        const errorMessage = error?.response?.data?.message || 
+                            error?.response?.data?.error || 
+                            error?.message || 
+                            "Failed to load units";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -82,8 +92,14 @@ const Unit = () => {
       try {
         const build = await getFloors(floorID);
         setFloors(build.data.map((item) => ({ name: item.name, id: item.id })));
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.log(error);
+        const errorMessage = error?.response?.data?.message || 
+                            error?.response?.data?.error || 
+                            error?.message || 
+                            "Failed to load floors";
+        toast.error(errorMessage);
+        setFloors([]);
       }
     }
     if (e.target.type === "select-one" && e.target.name === "building") {
@@ -151,7 +167,7 @@ const Unit = () => {
     e.preventDefault();
 
     if (!building || !floor || !unit || !unitConfiguration) {
-      toast.error("Please fill in all required fields including unit configuration");
+      toast.error("Building, Floor, Unit Name and Unit Configuration are required");
       return;
     }
 
@@ -177,7 +193,12 @@ const Unit = () => {
       toast.success("Unit created successfully");
     } catch (error) {
       console.log(error);
-      toast.error("Failed to create unit");
+      // Show API error message if available
+      const errorMessage = "Name " + error?.response?.data?.name[0] || 
+                          error?.response?.data?.error || 
+                          error?.message || 
+                          "Failed to create unit";
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -210,108 +231,107 @@ const Unit = () => {
           {showFields && (
             <div>
               <div className="flex gap-3 md:flex-row flex-col">
-                <select
-                  name="building"
-                  value={building}
-                  // onChange={(e) => setBuilding(e.target.value)}
-                  onChange={handleBuildingChange}
-                  id=""
-                  className="border border-gray-500 rounded-md  p-2 md:w-48"
-                >
-                  <option value="">Select Building</option>
-                  {buildings.map((build) => (
-                    <option value={build.id} key={build.id}>
-                      {build.name}
-                    </option>
-                  ))}
-                </select>
-                {/* <input
-                type="text"
-                placeholder="Enter Wing"
-                className="border border-gray-500 rounded-md mt-5 p-2"
-                value={wing}
-                onChange={handlewingChange}
-              />
-              <input
-                type="text"
-                placeholder="Enter Area Name"
-                className="border border-gray-500 rounded-md mt-5 p-2"
-                value={area}
-                onChange={handleAreaChange}
-              /> */}
-                <select
-                  name="building"
-                  value={floor}
-                  onChange={(e) => setFloor(e.target.value)}
-                  id=""
-                  className="border border-gray-500 rounded-md  p-2 md:w-48"
-                >
-                  <option value="">Select Floor</option>
-                  {floors.map((fl) => (
-                    <option value={fl.id} key={fl.id}>
-                      {fl.name}
-                    </option>
-                  ))}
-                </select>
-                {/* <input
-                type="text"
-                placeholder="Enter Entity"
-                className="border border-gray-500 rounded-md mt-5 p-2"
-                value={entity}
-                onChange={handleEntityChange}
-              /> */}
-                <input
-                  type="text"
-                  placeholder="Enter Unit Name"
-                  className="border border-gray-500 rounded-md  p-2"
-                  value={unit}
-                  onChange={handleUnitChange}
-                />
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium mb-1">
+                    Select Building <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="building"
+                    value={building}
+                    onChange={handleBuildingChange}
+                    className="border border-gray-500 rounded-md p-2 md:w-48"
+                    required
+                  >
+                    <option value="">Select Building</option>
+                    {buildings.map((build) => (
+                      <option value={build.id} key={build.id}>
+                        {build.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 
-                <select
-                  name="unitConfiguration"
-                  value={unitConfiguration}
-                  onChange={(e) => setUnitConfiguration(e.target.value)}
-                  className="border border-gray-500 rounded-md p-2 md:w-48"
-                  required
-                >
-                  <option value="">Select Unit Configuration</option>
-                  {unitConfigurations.map((config) => (
-                    <option value={config.id} key={config.id}>
-                      {config.name}
-                    </option>
-                  ))}
-                </select>
-                {/* <input
-                type="text"
-                placeholder="Enter Area(sq.Mtr)"
-                className="border border-gray-500 rounded-md mt-5 p-2"
-              /> */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className={`py-2 px-4 rounded-md text-white ${
-                      submitting
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-blue-500 hover:bg-blue-600"
-                    }`}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium mb-1">
+                    Select Floor <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="floor"
+                    value={floor}
+                    onChange={(e) => setFloor(e.target.value)}
+                    className="border border-gray-500 rounded-md p-2 md:w-48"
+                    required
                   >
-                    {submitting ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Creating...
-                      </div>
-                    ) : (
-                      "Submit"
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowFields(!showFields)}
-                    className="bg-red-500 text-white py-2 px-4 rounded-md  "
+                    <option value="">Select Floor</option>
+                    {floors.map((fl) => (
+                      <option value={fl.id} key={fl.id}>
+                        {fl.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium mb-1">
+                    Unit Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter Unit Name"
+                    className="border border-gray-500 rounded-md p-2"
+                    value={unit}
+                    onChange={handleUnitChange}
+                    required
+                  />
+                </div>
+                
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium mb-1">
+                    Unit Configuration <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="unitConfiguration"
+                    value={unitConfiguration}
+                    onChange={(e) => setUnitConfiguration(e.target.value)}
+                    className="border border-gray-500 rounded-md p-2 md:w-48"
+                    required
                   >
-                    Cancel
-                  </button>
+                    <option value="">Select Unit Configuration</option>
+                    {unitConfigurations.map((config) => (
+                      <option value={config.id} key={config.id}>
+                        {config.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="flex flex-col justify-end">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSubmit}
+                      disabled={submitting}
+                      className={`py-2 px-4 rounded-md text-white ${
+                        submitting
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      }`}
+                    >
+                      {submitting ? (
+                        <div className="flex items-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Creating...
+                        </div>
+                      ) : (
+                        "Submit"
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowFields(!showFields)}
+                      className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

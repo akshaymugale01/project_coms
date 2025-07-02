@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Account from "./Account";
 import { PiPlusCircle } from "react-icons/pi";
-import Switch from "../../Buttons/Switch";
 import Table from "../../components/table/Table";
 import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
-import { Link } from "react-router-dom";
 import { getBuildings, getSites, postBuilding, putBuilding } from "../../api";
-import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Navbar from "../../components/Navbar";
 
@@ -17,7 +14,6 @@ const Building = () => {
   const [floor_no, setFloor_No] = useState("");
   const [showFields, setShowFields] = useState(false);
   const [added, setAdded] = useState(false);
-  const [submittedData, setSubmittedData] = useState([]);
   const [sites, setSites] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,7 +54,8 @@ const Building = () => {
     e.preventDefault();
 
     if (siteId === "" || building === "") {
-      toast.error("All fields are required");
+      toast.error("Site and Building Name are required");
+      return;
     }
     const formData = new FormData();
     formData.append("building[name]", building);
@@ -71,9 +68,13 @@ const Building = () => {
       setShowFields(false);
       setSiteId("");
       setBuilding("");
+      setFloor_No("");
       toast.success("Building Added Successfully");
     } catch (error) {
       console.log(error);
+      // Show API error message if available
+      const errorMessage = "Name " + error?.response?.data?.name[0] || "Name has already taken" 
+      toast.error(errorMessage);
     }
   };
 
@@ -94,19 +95,36 @@ const handleBuildingChange = (e) => {
 
   useEffect(() => {
     const fetchBuildings = async () => {
-      const buildingResp = await getBuildings();
-      setBuildings(buildingResp.data);
-      console.log(buildingResp);
+      try {
+        const buildingResp = await getBuildings();
+        setBuildings(buildingResp.data);
+        console.log(buildingResp);
+      } catch (error) {
+        console.log(error);
+        const errorMessage = error?.response?.data?.message || 
+                            error?.response?.data?.error || 
+                            error?.message || 
+                            "Failed to fetch buildings";
+        toast.error(errorMessage);
+      }
     };
     const fetchSite = async () => {
-      const siteResp = await getSites();
-      setSites(siteResp.data);
-      console.log(siteResp.data);
+      try {
+        const siteResp = await getSites();
+        setSites(siteResp.data);
+        console.log(siteResp.data);
+      } catch (error) {
+        console.log(error);
+        const errorMessage = error?.response?.data?.message || 
+                            error?.response?.data?.error || 
+                            error?.message || 
+                            "Failed to fetch sites";
+        toast.error(errorMessage);
+      }
     };
     fetchBuildings();
     fetchSite();
   }, [added]);
-  const themeColor = useSelector((state) => state.theme.color);
 
   const handleEdit = (building) => {
     setSelectedBuilding(building);
@@ -121,6 +139,12 @@ const handleBuildingChange = (e) => {
   };
 
   const handleUpdateBuilding = async () => {
+    // Validate required fields
+    if (!selectedBuilding.name || !selectedBuilding.site_id) {
+      toast.error("Site and Building Name are required");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("building[name]", selectedBuilding.name);
     formData.append("building[site_id]", selectedBuilding.site_id);
@@ -131,7 +155,13 @@ const handleBuildingChange = (e) => {
       setIsModalOpen(false);
       setAdded(Date.now());
     } catch (error) {
-      toast.error("Failed to update building");
+      console.log(error);
+      // Show API error message if available
+      const errorMessage = error?.response?.data?.message || 
+                          error?.response?.data?.error || 
+                          error?.message || 
+                          "Failed to update building";
+      toast.error(errorMessage);
     }
   };
 
@@ -154,49 +184,70 @@ const handleBuildingChange = (e) => {
           {showFields && (
             <div>
               <div className="flex md:flex-row flex-col justify-center gap-3">
-                <select
-                  name="siteId"
-                  id=""
-                  value={siteId}
-                  onChange={handleSiteChange}
-                  className="border border-gray-500 rounded-md  p-2"
-                >
-                  <option value={""}>Select Site</option>
-                  {sites.map((site) => (
-                    <option value={site.id} key={site.id}>
-                      {site.name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  name="building"
-                  placeholder="Enter Building Name"
-                  className="border border-gray-500 rounded-md  p-2"
-                  value={building}
-                  onChange={handleBuildingChange}
-                />
-                <input
-                  type="text"
-                  name="floor_no"
-                  placeholder="Enter No. of Floors"
-                  className="border border-gray-500 rounded-md  p-2"
-                  value={floor_no}
-                  onChange={handleBuildingChange}
-                />
-                <button
-                  onClick={handleSubmit}
-                  style={{ background: "rgb(3 19 37)" }}
-                  className="bg-blue-500 text-white py-1 px-4 rounded-md  hover:bg-blue-600"
-                >
-                  Submit
-                </button>
-                <button
-                  onClick={() => setShowFields(!showFields)}
-                  className="bg-red-400 text-white py-1 px-4 rounded-md  "
-                >
-                  Cancel
-                </button>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium mb-1">
+                    Select Site <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="siteId"
+                    id=""
+                    value={siteId}
+                    onChange={handleSiteChange}
+                    className="border border-gray-500 rounded-md p-2"
+                    required
+                  >
+                    <option value={""}>Select Site</option>
+                    {sites.map((site) => (
+                      <option value={site.id} key={site.id}>
+                        {site.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium mb-1">
+                    Building Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="building"
+                    placeholder="Enter Building Name"
+                    className="border border-gray-500 rounded-md p-2"
+                    value={building}
+                    onChange={handleBuildingChange}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium mb-1">
+                    No. of Floors
+                  </label>
+                  <input
+                    type="text"
+                    name="floor_no"
+                    placeholder="Enter No. of Floors"
+                    className="border border-gray-500 rounded-md p-2"
+                    value={floor_no}
+                    onChange={handleBuildingChange}
+                  />
+                </div>
+                <div className="flex flex-col justify-end">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSubmit}
+                      style={{ background: "rgb(3 19 37)" }}
+                      className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    >
+                      Submit
+                    </button>
+                    <button
+                      onClick={() => setShowFields(!showFields)}
+                      className="bg-red-400 text-white py-2 px-4 rounded-md hover:bg-red-500"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
               {/* <div className="flex my-2 gap-4">
               <div className="flex  gap-2">
@@ -307,16 +358,16 @@ const handleBuildingChange = (e) => {
               className="flex flex-col gap-3"
             >
               <label>
-                Site:
+                Site <span className="text-red-500">*</span>:
                 <input
                   type="text"
                   value={selectedBuilding.site_name}
                   disabled
-                  className="border p-2 rounded w-full"
+                  className="border p-2 rounded w-full bg-gray-100"
                 />
               </label>
               <label>
-                Building Name:
+                Building Name <span className="text-red-500">*</span>:
                 <input
                   type="text"
                   value={selectedBuilding.name}
@@ -325,6 +376,7 @@ const handleBuildingChange = (e) => {
                     setSelectedBuilding({ ...selectedBuilding, name: e.target.value })
                   }
                   className="border p-2 rounded w-full"
+                  required
                 />
               </label>
               <label>
@@ -345,7 +397,7 @@ const handleBuildingChange = (e) => {
               {modalMode === "edit" && (
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+                  className="bg-blue-600 text-white px-4 py-2 rounded mt-2 hover:bg-blue-700"
                 >
                   Update
                 </button>
