@@ -166,7 +166,7 @@ const Unit = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!building || !floor || !unit || !unitConfiguration) {
+    if (!building || !floor || !unit ) {
       toast.error("Building, Floor, Unit Name and Unit Configuration are required");
       return;
     }
