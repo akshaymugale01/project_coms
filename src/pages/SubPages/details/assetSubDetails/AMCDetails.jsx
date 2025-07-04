@@ -18,6 +18,7 @@ const AMCDetails = () => {
   const formattedDate = `${year}-${month}-${day}`;
   const { id } = useParams();
   const [vendors, setVendors] = useState([]);
+  console.log("vendor", vendors);
   const [amcDetails, setAmcDetails] = useState([]);
   const [update, setUpdate] = useState(false);
   const initialFormData = {
@@ -54,7 +55,6 @@ const AMCDetails = () => {
       toast.error(" Start Date must be before End Date.");
       return;
     }
-   
 
     if (!formData.vendor_id) {
       return toast.error("Please select supplier");
@@ -161,7 +161,7 @@ const AMCDetails = () => {
                 <option value="">Select Vendor</option>
                 {vendors.map((vendor) => (
                   <option value={vendor.id} key={vendor.id}>
-                    {vendor.company_name}
+                    {vendor.vendor_name}
                   </option>
                 ))}
               </select>

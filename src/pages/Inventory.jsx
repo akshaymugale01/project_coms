@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
-import {
-  API_URL,
-  getInventory,
-  getMasters,
-  getVibeBackground,
-  ImportMasters,
-} from "../api";
+import { API_URL, getInventory, getMasters, getVibeBackground, ImportMasters } from "../api";
 import Table from "../components/table/Table";
 import { BiEdit } from "react-icons/bi";
 import { FiDelete } from "react-icons/fi";
@@ -25,45 +19,46 @@ import FileInputBox from "../containers/Inputs/FileInputBox";
 const Inventory = () => {
   const [stocks, setStocks] = useState([]);
   const [masters, setMasters] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
+  const [searchText, setSearchText] = useState("")
+  const [filteredData, setFilteredData] = useState([])
   const [page, setPage] = useState("Masters");
   useEffect(() => {
     const fetchInventory = async () => {
-      try {
-        const invResp = await getInventory();
-        const sortedInvData = invResp.data.sort((a, b) => {
-          return new Date(b.created_at) - new Date(a.created_at);
-        });
-        setStocks(sortedInvData);
-        setFilteredData(sortedInvData);
-        console.log(invResp);
-      } catch (error) {
-        console.log(error);
-      }
+     try {
+       const invResp = await getInventory();
+       const sortedInvData = invResp.data.sort((a, b) => {
+         
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+       setStocks(sortedInvData);
+       setFilteredData(sortedInvData)
+       console.log(invResp);
+     } catch (error) {
+      console.log(error)
+     }
     };
     fetchInventory();
   }, []);
   useEffect(() => {
     const fetchInventory = async () => {
-      try {
-        const invResp = await getMasters();
-        const sortedInvData = invResp.data.sort((a, b) => {
-          return new Date(b.created_at) - new Date(a.created_at);
-        });
-        setMasters(sortedInvData);
-        console.log(invResp);
-      } catch (error) {
-        console.log(error);
-      }
+     try {
+       const invResp = await getMasters();
+       const sortedInvData = invResp.data.sort((a, b) => {
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+       setMasters(sortedInvData);
+       console.log(invResp);
+     } catch (error) {
+      console.log(error)
+     }
     };
     fetchInventory();
   }, []);
 
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${year}-${month}-${day}`; // Return date in yyyy-mm-dd format
   };
@@ -114,49 +109,21 @@ const Inventory = () => {
         </div>
       ),
     },
-
+    
     { name: "Name", selector: (row) => row.name, sortable: true },
     { name: "Code", selector: (row) => row.code, sortable: true },
-    {
-      name: "Serial number",
-      selector: (row) => row.serial_number,
-      sortable: true,
-    },
-    {
-      name: "Type",
-      selector: (row) => (row.inventory_type == 1 ? "Spares" : "Consumable"),
-      sortable: true,
-    },
+    { name: "Serial number", selector: (row) => row.serial_number, sortable: true },
+    { name: "Type", selector: (row) => row.inventory_type==1?"Spares":"Consumable", sortable: true },
     { name: "Group", selector: (row) => row.asset_group, sortable: true },
-    {
-      name: "Sub Group",
-      selector: (row) => row.asset_sub_group,
-      sortable: true,
-    },
+    { name: "Sub Group", selector: (row) => row.asset_sub_group, sortable: true },
     { name: "Category", selector: (row) => row.category, sortable: true },
-    {
-      name: "Manufacturer",
-      selector: (row) => row.Manufacturer,
-      sortable: true,
-    },
-    {
-      name: "Criticality",
-      selector: (row) => (row.criticality == 1 ? "Critical" : "Non-Critical"),
-      sortable: true,
-    },
+    { name: "Manufacturer", selector: (row) => row.Manufacturer, sortable: true },
+    { name: "Criticality", selector: (row) => row.criticality==1?"Critical":"Non-Critical", sortable: true },
     { name: "Unit", selector: (row) => row.unit, sortable: true },
     { name: "Cost", selector: (row) => row.cost, sortable: true },
     { name: "SAC/HSN Code", selector: (row) => row.hsn_id, sortable: true },
-    {
-      name: "Min Stock Level",
-      selector: (row) => row.min_stock_level,
-      sortable: true,
-    },
-    {
-      name: "Min Order Level",
-      selector: (row) => row.min_order_level,
-      sortable: true,
-    },
+    { name: "Min Stock Level", selector: (row) => row.min_stock_level, sortable: true },
+    { name: "Min Order Level", selector: (row) => row.min_order_level, sortable: true },
     // { name: "Description", selector: (row) => row.description, sortable: true },
     {
       name: " Quantity",
@@ -165,18 +132,12 @@ const Inventory = () => {
     },
     // { name: "Rate", selector: (row) => row.rate, sortable: true },
     { name: "Asset", selector: (row) => row.asset_id, sortable: true },
-    {
-      name: "Status",
-      selector: (row) => (row.active == true ? "Active" : "Inactive"),
-      sortable: true,
-    },
-    {
-      name: "Expiry Date",
-      selector: (row) => dateFormat(row.expiry_date),
-      sortable: true,
-    },
+    { name: "Status", selector: (row) => (row.active==true)?"Active":"Inactive", sortable: true },
+    { name: "Expiry Date", selector: (row) => dateFormat(row.expiry_date), sortable: true },
 
+   
     // { name: "Added On", selector: (row) => dateFormat(row.created_at), sortable: true },
+   
   ];
   // const data=[
   //   {
@@ -274,7 +235,7 @@ const Inventory = () => {
         </div>
       ),
     },
-
+    
     { name: "Name", selector: (row) => row.name, sortable: true },
     { name: "Description", selector: (row) => row.description, sortable: true },
     {
@@ -284,26 +245,11 @@ const Inventory = () => {
     },
     { name: "Rate", selector: (row) => row.rate, sortable: true },
     { name: "Group", selector: (row) => row.group_name, sortable: true },
-    {
-      name: "Sub Group",
-      selector: (row) => row.sub_group_name,
-      sortable: true,
-    },
-    {
-      name: "Min Order Level",
-      selector: (row) => row.min_stock,
-      sortable: true,
-    },
-    {
-      name: "Max Order Level",
-      selector: (row) => row.max_stock,
-      sortable: true,
-    },
-    {
-      name: "Added On",
-      selector: (row) => dateFormat(row.created_at),
-      sortable: true,
-    },
+    { name: "Sub Group", selector: (row) => row.sub_group_name, sortable: true },
+    { name: "Min Order Level", selector: (row) => row.min_stock, sortable: true },
+    { name: "Max Order Level", selector: (row) => row.max_stock, sortable: true },
+    { name: "Added On", selector: (row) => dateFormat(row.created_at), sortable: true },
+   
   ];
 
   const defaultImage = { index: 0, src: "" };
@@ -311,44 +257,44 @@ const Inventory = () => {
   let selectedImageIndex = defaultImage.index;
   const [selectedImage, setSelectedImage] = useState(defaultImage);
   const [selectedIndex, setSelectedIndex] = useState(null);
-  // const Get_Background = async () => {
-  //   try {
-  //     // const params = {
-  //     //   user_id: user_id,
-  //     // };
-  //     const user_id = getItemInLocalStorage("VIBEUSERID");
-  //     console.log(user_id);
-  //     const data = await getVibeBackground(user_id);
+  const Get_Background = async () => {
+    try {
+      // const params = {
+      //   user_id: user_id,
+      // };
+      const user_id = getItemInLocalStorage("VIBEUSERID");
+      console.log(user_id);
+      const data = await getVibeBackground(user_id);
 
-  //     if (data.success) {
-  //       console.log("sucess");
+      if (data.success) {
+        console.log("sucess");
 
-  //       console.log(data.data);
-  //       selectedImageSrc = API_URL + data.data.image;
+        console.log(data.data);
+        selectedImageSrc = API_URL + data.data.image;
 
-  //       selectedImageIndex = data.data.index;
+        selectedImageIndex = data.data.index;
 
-  //       // Now, you can use selectedImageSrc and selectedImageIndex as needed
-  //       console.log("Received response:", data);
+        // Now, you can use selectedImageSrc and selectedImageIndex as needed
+        console.log("Received response:", data);
 
-  //       // For example, update state or perform any other actions
-  //       setSelectedImage(selectedImageSrc);
-  //       setSelectedIndex(selectedImageIndex);
-  //       console.log("Received selectedImageSrc:", selectedImageSrc);
-  //       console.log("Received selectedImageIndex:", selectedImageIndex);
-  //       console.log(selectedImage);
-  //       // dispatch(setBackground(selectedImageSrc));
-  //     } else {
-  //       console.log("Something went wrong");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //   }
-  // };
-  // useEffect(() => {
-  //   // Call the function to get the background image when the component mounts
-  //   Get_Background();
-  // }, []);
+        // For example, update state or perform any other actions
+        setSelectedImage(selectedImageSrc);
+        setSelectedIndex(selectedImageIndex);
+        console.log("Received selectedImageSrc:", selectedImageSrc);
+        console.log("Received selectedImageIndex:", selectedImageIndex);
+        console.log(selectedImage);
+        // dispatch(setBackground(selectedImageSrc));
+      } else {
+        console.log("Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+  useEffect(() => {
+    // Call the function to get the background image when the component mounts
+    Get_Background();
+  }, []);
 
   const handleSearch = (event) => {
     const searchValue = event.target.value;
@@ -361,6 +307,7 @@ const Inventory = () => {
       );
       setFilteredData(filteredResults);
       console.log(filteredResults);
+      
     }
   };
 
@@ -378,7 +325,7 @@ const Inventory = () => {
     link.download = fileName;
     link.click();
   };
-  const themeColor = "rgb(3 19 37)";
+const themeColor = useSelector((state)=> state.theme.color)
   return (
     <section
       className="flex"
@@ -392,7 +339,7 @@ const Inventory = () => {
         <div className=" w-full my-2 flex  overflow-hidden flex-col">
           <div className="flex w-full">
             <div className=" flex gap-2 p-2 pb-0 border-b-2 border-gray-200 w-full">
-              <h2
+            <h2
                 className={`p-1 ${
                   page === "Masters" &&
                   `bg-white font-medium text-blue-500 shadow-custom-all-sides`
@@ -443,12 +390,12 @@ const Inventory = () => {
                 type="text"
                 placeholder="Search "
                 className="border-2 p-2 md:w-96 border-gray-300 rounded-lg placeholder:text-sm"
-                value={searchText}
-                onChange={handleSearch}
+                  value={searchText}
+                  onChange={handleSearch}
               />
               <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
                 <Link
-                  style={{ background: themeColor }}
+                style={{ background: themeColor }}
                   to={"/admin/add-masters"}
                   className="bg-black  text-sm rounded-lg flex justify-center font-semibold items-center gap-2 text-white py-2 px-4  transition-all duration-300 "
                 >
@@ -475,39 +422,34 @@ const Inventory = () => {
     >
       Download QR Code
     </button> */}
-                {setshowImport && (
-                  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex z-10 justify-center items-center">
-                    <div className="bg-white p-6 rounded shadow-lg w-1/2">
-                      <h2 className="text-xl mb-4">Bulk Upload</h2>
-                      {/* Advanced Filter Fields */}
-                      <FileInputBox
-                        handleChange={handleFileChange}
-                        fieldName="checklist"
-                        isMulti={true}
-                      />
-
-                      <div className="mt-4 flex justify-end space-x-4">
-                        <button
-                          onClick={closeModalImport}
-                          className="bg-red-500 text-white px-4 py-2 rounded"
-                          style={{ background: themeColor }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          className="bg-green-500 text-white px-4 py-2 rounded"
-                          style={{ background: themeColor }}
-                          onClick={handleImportMasters}
-                        >
-                          Import
-                        </button>
-                      </div>
-                      {importStatus && (
-                        <p className="mt-4 text-center">{importStatus}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
+     {setshowImport && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex z-10 justify-center items-center">
+          <div className="bg-white p-6 rounded shadow-lg w-1/2">
+            <h2 className="text-xl mb-4">Bulk Upload</h2>
+            {/* Advanced Filter Fields */}
+         <FileInputBox handleChange={handleFileChange} fieldName="checklist" isMulti={true}/>
+         
+            <div className="mt-4 flex justify-end space-x-4">
+              <button
+                onClick={closeModalImport}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+                style={{ background: themeColor }}
+              >
+                Cancel
+              </button>
+              <button
+                
+                className="bg-green-500 text-white px-4 py-2 rounded"
+                style={{ background: themeColor }}
+                onClick={handleImportMasters}
+              >
+                Import
+              </button>
+            </div>
+            {importStatus && <p className="mt-4 text-center">{importStatus}</p>}
+        </div>
+        </div>
+      )}
               </div>
             </div>
             <Table columns={columnsmaster} data={masters} />
@@ -520,12 +462,12 @@ const Inventory = () => {
                 type="text"
                 placeholder="Search By Stock name"
                 className="border-2 p-2 md:w-96 border-gray-300 rounded-lg placeholder:text-sm"
-                value={searchText}
-                onChange={handleSearch}
+                  value={searchText}
+                  onChange={handleSearch}
               />
               <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
                 <Link
-                  style={{ background: themeColor }}
+                style={{ background: themeColor }}
                   to={"/admin/add-stock"}
                   className="bg-black  text-sm rounded-lg flex justify-center font-semibold items-center gap-2 text-white py-2 px-4  transition-all duration-300 "
                 >

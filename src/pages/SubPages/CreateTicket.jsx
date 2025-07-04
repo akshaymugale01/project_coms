@@ -272,6 +272,7 @@ const CreateTicket = () => {
 
       // filter users based on unit_id
       const filtered = users.filter((user) => user.unit_id === selectedValue);
+      console.log("filtered Dtaa", filtered);
       setFilteredUsers(filtered);
     } else {
       setFormData((prevFormData) => ({

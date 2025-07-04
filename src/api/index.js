@@ -68,6 +68,30 @@ export const getPerPageSiteAsset = async (page, perPage) =>
       token: token,
     },
   });
+
+  export const getRoutineTaskStatus = async (status = null, startDate = null, endDate = null) => {
+  const token = localStorage.getItem("token");
+
+  const params = {
+    token,
+  };
+
+  if (status) {
+    params["q[status_eq]"] = status;
+  }
+
+  if (startDate) {
+    params["q[start_time_gteq]"] = startDate;
+  }
+
+  if (endDate) {
+    params["q[start_time_lteq]"] = endDate;
+  }
+
+  const response = await axiosInstance.get("/activities/routine_task_counts.json", { params });
+
+  return response.data;
+};
 export const downloadQrCode = async (ids) =>
   axiosInstance.get(`/site_assets/print_qr_codes?asset_ids=${ids}`, {
     responseType: "blob",

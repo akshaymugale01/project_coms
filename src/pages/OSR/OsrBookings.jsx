@@ -8,6 +8,8 @@ import {
   unitConfigurationService,
 } from "./additionalServices";
 import Loading from "../../utils/Loading";
+import { debugUnitConfigurations } from "../../utils/debugUnitConfigs";
+import { sampleUnitConfigurations } from "../../utils/sampleUnitConfigs";
 import OsrModal from "./OsrModal";
 import Osr from "./Osr";
 import { FaPlus } from "react-icons/fa";
@@ -82,6 +84,11 @@ const AdminBookings = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      
+      // Debug unit configurations first
+      console.log("=== Starting Debug ===");
+      await debugUnitConfigurations();
+      
       const [bookingsRes, subcategoriesRes, categoriesRes, unitConfigsRes] =
         await Promise.all([
           serviceBookingService.getAll(),
@@ -89,14 +96,50 @@ const AdminBookings = () => {
           serviceCategoryService.getAll(),
           unitConfigurationService.getAll(),
         ]);
+      
+      console.log("Raw API responses:");
+      console.log("Bookings:", bookingsRes.data);
+      console.log("Unit Configs:", unitConfigsRes.data);
+      
       setBookings(bookingsRes.data);
       setSubcategories(subcategoriesRes.data);
       setCategories(categoriesRes.data);
-      setUnitConfigs(unitConfigsRes.data);
+      
+      // Use sample data if API returns empty or has issues
+      if (Array.isArray(unitConfigsRes.data) && unitConfigsRes.data.length > 0) {
+        setUnitConfigs(unitConfigsRes.data);
+      } else {
+        console.log("Using sample unit configurations for testing");
+        setUnitConfigs(sampleUnitConfigurations);
+      }
       
       // Debug: Log booking data structure
       if (bookingsRes.data && bookingsRes.data.length > 0) {
+        console.log("=== Booking Data Analysis ===");
         console.log("First booking data structure:", bookingsRes.data[0]);
+        console.log("Unit configuration ID in first booking:", bookingsRes.data[0].unit_configuration_id);
+        console.log("Type of unit_configuration_id:", typeof bookingsRes.data[0].unit_configuration_id);
+        
+        // Check all bookings for unit_configuration_id patterns
+        const unitConfigIds = bookingsRes.data.map(booking => ({
+          booking_id: booking.id,
+          unit_config_id: booking.unit_configuration_id,
+          type: typeof booking.unit_configuration_id,
+          has_unit_config_name: !!booking.unit_configuration_name,
+          unit_config_name: booking.unit_configuration_name,
+          has_nested_unit_config: !!booking.unit_configuration,
+          nested_name: booking.unit_configuration?.name
+        }));
+        console.log("All booking unit config IDs:", unitConfigIds);
+        console.log("=== End Booking Analysis ===");
+      }
+      
+      // Debug: Log unit configs structure
+      if (unitConfigsRes.data && unitConfigsRes.data.length > 0) {
+        console.log("First unit config data structure:", unitConfigsRes.data[0]);
+        console.log("Available unit config IDs:", unitConfigsRes.data.map(u => u.id));
+      } else {
+        console.log("No unit configurations found!");
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -165,9 +208,57 @@ const AdminBookings = () => {
     return category ? category.name : "Unknown";
   };
 
-  const getUnitConfigName = (unitConfigId) => {
-    const unitConfig = unitConfigs.find((u) => u.id === unitConfigId);
-    return unitConfig ? unitConfig.name : "Unknown";
+  const getUnitConfigName = (unitConfigId, booking = null) => {
+    // Handle null, undefined, or empty values
+    if (!unitConfigId && unitConfigId !== 0) {
+      console.log("No unit config ID provided:", unitConfigId);
+      return "Not Specified";
+    }
+    
+    // If booking object is provided, try to get name directly first
+    if (booking) {
+      if (booking.unit_configuration_name) {
+        console.log("Found unit config name directly in booking:", booking.unit_configuration_name);
+        return booking.unit_configuration_name;
+      }
+      if (booking.unit_configuration && booking.unit_configuration.name) {
+        console.log("Found unit config name in nested object:", booking.unit_configuration.name);
+        return booking.unit_configuration.name;
+      }
+      console.log("No direct unit config name found in booking object");
+    }
+    
+    console.log("=== Unit Config Debug ===");
+    console.log("Looking for unit config ID:", unitConfigId, "Type:", typeof unitConfigId);
+    console.log("Available unit configs count:", unitConfigs.length);
+    console.log("Unit configs data:", unitConfigs);
+    
+    // Handle empty array
+    if (!Array.isArray(unitConfigs) || unitConfigs.length === 0) {
+      console.log("No unit configurations available");
+      return `No Config (ID: ${unitConfigId})`;
+    }
+    
+    // Log all available IDs for comparison
+    const availableIds = unitConfigs.map(u => ({ id: u.id, type: typeof u.id, name: u.name }));
+    console.log("Available unit config IDs and types:", availableIds);
+    
+    const unitConfig = unitConfigs.find((u) => {
+      const match = u.id == unitConfigId; // Using == for loose comparison
+      console.log(`Comparing config ID ${u.id} (${typeof u.id}) with ${unitConfigId} (${typeof unitConfigId}): ${match}`);
+      return match;
+    });
+    
+    console.log("Found unit config:", unitConfig);
+    console.log("=== End Debug ===");
+    
+    if (unitConfig) {
+      return unitConfig.name;
+    } else {
+      // Enhanced fallback with better debugging
+      console.log(`Unit configuration not found for ID: ${unitConfigId}`);
+      return `Unknown Config (ID: ${unitConfigId})`;
+    }
   };
 
   const getStatusBadgeClass = (status) => {
@@ -201,26 +292,71 @@ const AdminBookings = () => {
       <Osr />
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 p-4 overflow-y-auto">
-
+          {loading ? (
+            <Loading />
+          ) : (
+            <>
         <div className="flex justify-between items-center mb-4">
           <h1>All Service Bookings</h1>
-          <button
-            onClick={handleCreateBooking}
-            className="btn btn-primary flex items-center gap-2"
-            style={{ 
-              backgroundColor: "#3b82f6",
-              color: "white",
-              padding: "10px 20px",
-              borderRadius: "6px",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "500"
-            }}
-          >
-            <FaPlus size={16} />
-            Book Service
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                await debugUnitConfigurations();
+                console.log("=== Manual Test ===");
+                console.log("Testing unit config lookup:");
+                console.log("Test ID 1:", getUnitConfigName(1));
+                console.log("Test ID 2:", getUnitConfigName(2));
+                console.log("Test ID 3:", getUnitConfigName(3));
+                console.log("Test ID '1':", getUnitConfigName('1'));
+                console.log("Test ID '2':", getUnitConfigName('2'));
+                console.log("Test ID null:", getUnitConfigName(null));
+                console.log("Test ID undefined:", getUnitConfigName(undefined));
+                console.log("Current unitConfigs state:", unitConfigs);
+                
+                // Test with a sample booking object
+                const sampleBooking = { 
+                  unit_configuration_id: 2,
+                  unit_configuration_name: "Direct Name Test",
+                  unit_configuration: { name: "Nested Name Test" }
+                };
+                console.log("Test with sample booking:", getUnitConfigName(2, sampleBooking));
+                console.log("=== End Manual Test ===");
+              }}
+              className="btn btn-secondary"
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#6c757d",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "14px",
+                fontWeight: "500"
+              }}
+            >
+              Debug Unit Configs
+            </button>
+            <button
+              onClick={handleCreateBooking}
+              className="btn btn-primary flex items-center gap-2"
+              style={{ 
+                backgroundColor: "#3b82f6",
+                color: "white",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500"
+              }}
+            >
+              <FaPlus size={16} />
+              Book Service
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -349,7 +485,7 @@ const AdminBookings = () => {
                       </div>
                     )}
                   </td>
-                  <td>{getUnitConfigName(booking.unit_configuration_id)}</td>
+                  <td>{getUnitConfigName(booking.unit_configuration_id, booking)}</td>
                   <td>₹{booking.total_amount || booking.price || 0}</td>
                   <td>
                     <span
@@ -460,7 +596,7 @@ const AdminBookings = () => {
                   </p>
                   <p>
                     <strong>Unit Type:</strong>{" "}
-                    {getUnitConfigName(selectedBooking.unit_configuration_id)}
+                    {getUnitConfigName(selectedBooking.unit_configuration_id, selectedBooking)}
                   </p>
                   {selectedBooking.service_slot && (
                     <p>
@@ -502,6 +638,8 @@ const AdminBookings = () => {
             </div>
           )}
         </OsrModal>
+            </>
+          )}
         </div>
       </div>
     </div>

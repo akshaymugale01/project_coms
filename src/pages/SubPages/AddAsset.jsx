@@ -5,7 +5,6 @@ import {
   getAssetGroups,
   getAssetSubGroups,
   getFloors,
-  getGroups,
   getParentAsset,
   getUnits,
   getVendors,
@@ -37,8 +36,179 @@ const AddAsset = () => {
   const [assetGroups, setAssetGroup] = useState([]);
   const [assetSubGoups, setAssetSubGroups] = useState([]);
   const [parentAsset, setParentAsset] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
   console.log(formData);
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)";
+
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateMobileNumber = (mobile) => {
+    const mobileRegex = /^[0-9]{10}$/;
+    return mobileRegex.test(mobile);
+  };
+
+  const validateNumber = (value) => {
+    return !isNaN(value) && value !== "" && parseFloat(value) >= 0;
+  };
+
+  const validateDecimal = (value) => {
+    const decimalRegex = /^-?\d+(\.\d+)?$/;
+    return decimalRegex.test(value) || value === "";
+  };
+
+  const validatePositiveDecimal = (value) => {
+    const decimalRegex = /^\d+(\.\d+)?$/;
+    return decimalRegex.test(value) || value === "";
+  };
+
+  const validateRequired = (value) => {
+    return (
+      value !== null && value !== undefined && value.toString().trim() !== ""
+    );
+  };
+
+  const validateAlphaNumeric = (value) => {
+    const alphaNumRegex = /^[a-zA-Z0-9\s]*$/;
+    return alphaNumRegex.test(value);
+  };
+
+  const validateOnlyNumbers = (value) => {
+    const numberRegex = /^[0-9]*$/;
+    return numberRegex.test(value);
+  };
+
+  const validateCoordinateStrict = (value, type) => {
+    if (!value) return true; // Allow empty values
+
+    // Strict validation for final values (used on blur and submit)
+    const coordinateRegex = /^-?\d+(\.\d+)?$/;
+    if (!coordinateRegex.test(value)) {
+      return false;
+    }
+
+    const numValue = parseFloat(value);
+
+    // Check for NaN
+    if (isNaN(numValue)) {
+      return false;
+    }
+
+    if (type === "latitude") {
+      return numValue >= -90 && numValue <= 90;
+    } else if (type === "longitude") {
+      return numValue >= -180 && numValue <= 180;
+    }
+
+    return false;
+  };
+
+  const validateCoordinate = (value, type) => {
+    if (!value) return true; // Allow empty values
+
+    // First check if value contains any invalid characters (letters, special characters except minus and dot)
+    const invalidCharsRegex = /[^-0-9.]/;
+    if (invalidCharsRegex.test(value)) {
+      return false; // Contains invalid characters
+    }
+
+    // Allow partial inputs during typing (like "18.", "-", "18", "-18.5")
+    const partialCoordinateRegex = /^-?(\d+\.?|\d*\.\d*)$/;
+    if (!partialCoordinateRegex.test(value)) {
+      return false;
+    }
+
+    // If value ends with just a decimal point (like "18."), consider it valid during typing
+    if (value.endsWith(".") && value.length > 1) {
+      const numberPart = value.slice(0, -1);
+      if (numberPart && !isNaN(parseFloat(numberPart))) {
+        return true; // Allow partial decimal input during typing
+      }
+    }
+
+    const numValue = parseFloat(value);
+
+    // Check for NaN (but allow partial inputs)
+    if (isNaN(numValue)) {
+      return false;
+    }
+
+    if (type === "latitude") {
+      return numValue >= -90 && numValue <= 90;
+    } else if (type === "longitude") {
+      return numValue >= -180 && numValue <= 180;
+    }
+
+    return false;
+  };
+
+  const validateField = (name, value) => {
+    let error = "";
+
+    switch (name) {
+      case "latitude":
+        if (value && !validateCoordinate(value, "latitude")) {
+          error = "Please enter a valid latitude (between -90 and 90)";
+        }
+        break;
+      case "longitude":
+        if (value && !validateCoordinate(value, "longitude")) {
+          error = "Please enter a valid longitude (between -180 and 180)";
+        }
+        break;
+      case "asset_number":
+        if (value && !validateOnlyNumbers(value)) {
+          error = "Asset number should contain only numbers";
+        }
+        break;
+      case "purchase_cost":
+      case "capacity":
+        if (value && !validatePositiveDecimal(value)) {
+          error = "Please enter a valid positive number";
+        }
+        break;
+      case "equipment_id":
+      case "serial_number":
+      case "model_number":
+        if (value && !validateAlphaNumeric(value)) {
+          error = "Please enter valid alphanumeric characters only";
+        }
+        break;
+      case "name":
+      case "oem_name":
+        if (value && value.length < 2) {
+          error = "Name should be at least 2 characters long";
+        }
+        if (value && !/^[a-zA-Z0-9\s\-_.]+$/.test(value)) {
+          error =
+            "Please enter valid characters only (letters, numbers, spaces, hyphens, dots, underscores)";
+        }
+        break;
+      default:
+        break;
+    }
+
+    return error;
+  };
+
+  const updateValidationError = (fieldName, error) => {
+    setValidationErrors((prev) => ({
+      ...prev,
+      [fieldName]: error,
+    }));
+  };
+
+  const clearValidationError = (fieldName) => {
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+  };
+
   const fetchVendors = async () => {
     try {
       const vendorResp = await getVendors();
@@ -49,10 +219,7 @@ const AddAsset = () => {
   };
   useEffect(() => {
     const fetchAssetGroups = async () => {
-      const assetGroupResponse = await getGroups();
-      
-      const data = assetGroupResponse.data
-      console.log("Groups", data);
+      const assetGroupResponse = await getAssetGroups();
       setAssetGroup(assetGroupResponse.data);
       // pass grp id in fn
       // fetchParentAsset(assetGroupResponse.data.asset_group_id_eq);
@@ -64,6 +231,37 @@ const AddAsset = () => {
   }, []);
 
   const handleChange = async (e) => {
+    const { name, value, type } = e.target;
+
+    // Handle specific input restrictions for asset_number only
+    if (name === "asset_number" && value && !validateOnlyNumbers(value)) {
+      // For asset_number, show error but don't update the form data if invalid
+      updateValidationError(name, "Only numbers are allowed");
+      return;
+    }
+
+    // For coordinates, validate in real-time and prevent storing invalid data
+    if (name === "latitude" || name === "longitude") {
+      const validationError = validateField(name, value);
+      if (validationError) {
+        updateValidationError(name, validationError);
+        // Don't store invalid coordinate data
+        if (value && /[^-0-9.]/.test(value)) {
+          return; // Contains invalid characters, don't update formData
+        }
+      } else {
+        clearValidationError(name);
+      }
+    } else {
+      // Validate other fields in real-time
+      const validationError = validateField(name, value);
+      if (validationError) {
+        updateValidationError(name, validationError);
+      } else {
+        clearValidationError(name);
+      }
+    }
+
     async function fetchFloor(floorID) {
       console.log(floorID);
       try {
@@ -73,6 +271,7 @@ const AddAsset = () => {
         console.log(e);
       }
     }
+
     async function getUnit(UnitID) {
       try {
         const unit = await getUnits(UnitID);
@@ -82,6 +281,7 @@ const AddAsset = () => {
         console.log(error);
       }
     }
+
     const fetchSubGroups = async (groupId) => {
       try {
         const subGroupResponse = await getAssetSubGroups(groupId);
@@ -97,38 +297,31 @@ const AddAsset = () => {
         console.log(error);
       }
     };
-    
+
     const fetchParentAsset = async (grpID) => {
       const parentAssetResp = await getParentAsset(grpID);
       console.log(parentAssetResp.data.site_assets);
       setParentAsset(parentAssetResp.data.site_assets);
     };
-    if (e.target.type === "select-one" && e.target.name === "building_id") {
-      const BuildID = Number(e.target.value);
+
+    if (type === "select-one" && name === "building_id") {
+      const BuildID = Number(value);
       await fetchFloor(BuildID);
 
       setFormData({
         ...formData,
         building_id: BuildID,
       });
-    } else if (
-      e.target.type === "select-one" &&
-      e.target.name === "floor_name"
-    ) {
-      const UnitID = Number(e.target.value);
+    } else if (type === "select-one" && name === "floor_name") {
+      const UnitID = Number(value);
       await getUnit(UnitID);
       setFormData({
         ...formData,
         floor_id: UnitID,
       });
-    } else if (
-      e.target.type === "select-one" &&
-      e.target.name === "asset_group_id"
-    ) {
-      const groupId = Number(e.target.value);
+    } else if (type === "select-one" && name === "asset_group_id") {
+      const groupId = Number(value);
       console.log("groupId:" + groupId);
-      const name = e.target.name
-      console.log("groupNam:" + name);
       await fetchSubGroups(groupId);
       await fetchParentAsset(groupId);
       setFormData({
@@ -138,7 +331,7 @@ const AddAsset = () => {
     } else {
       setFormData({
         ...formData,
-        [e.target.name]: e.target.value,
+        [name]: value,
       });
     }
   };
@@ -178,42 +371,87 @@ const AddAsset = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    // if (formData.warranty_start >= formData.warranty_expiry) {
-    //   toast.error("Warranty Start Date must be before Expiry Date.");
-    //   return;
-    // }
+    // Enhanced form validation
+    const errors = {};
 
-    // if (formData.warranty_start < formData.purchased_on || formData.installation < formData.purchased_on) {
-    //   toast.error(
-    //     "Warranty Start Date and Commissioning Date must be after or equal to Purchase Date."
-    //   );
-    //   return;
-    // }
+    // Validate required fields
+    if (!formData.building_id) {
+      errors.building_id = "Please Select Building Name";
+    }
+    if (!validateRequired(formData.name)) {
+      errors.name = "Please Enter Asset Name";
+    } else if (formData.name.length < 2) {
+      errors.name = "Asset name should be at least 2 characters long";
+    }
+    if (!validateRequired(formData.oem_name)) {
+      errors.oem_name = "Please Enter OEM Name";
+    } else if (formData.oem_name.length < 2) {
+      errors.oem_name = "OEM name should be at least 2 characters long";
+    }
+    if (!validateRequired(formData.equipment_id)) {
+      errors.equipment_id = "Please Enter Equipment Id";
+    }
+    if (!validateRequired(formData.purchase_cost)) {
+      errors.purchase_cost = "Please Enter Purchase Cost";
+    } else if (!validatePositiveDecimal(formData.purchase_cost)) {
+      errors.purchase_cost = "Please enter a valid purchase cost";
+    }
+    if (!formData.asset_group_id) {
+      errors.asset_group_id = "Please Select Group";
+    }
+    if (!formData.asset_sub_group_id) {
+      errors.asset_sub_group_id = "Please Select Sub Group";
+    }
 
-    if (formData.building_id === "") {
-      return toast.error("Please Select Building Name");
+    // Validate numeric fields
+    if (formData.asset_number && !validateOnlyNumbers(formData.asset_number)) {
+      errors.asset_number = "Asset number should contain only numbers";
     }
-    if (formData.name === "") {
-      return toast.error("Please Enter Asset Name");
+    if (
+      formData.latitude &&
+      !validateCoordinateStrict(formData.latitude, "latitude")
+    ) {
+      errors.latitude = "Please enter a valid latitude (between -90 and 90)";
     }
-    if (formData.oem_name === "") {
-      return toast.error("Please Enter ORM Name");
+    if (
+      formData.longitude &&
+      !validateCoordinateStrict(formData.longitude, "longitude")
+    ) {
+      errors.longitude =
+        "Please enter a valid longitude (between -180 and 180)";
     }
-    if (formData.asset_number === "") {
-      return toast.error("Please Enter Asset Number");
+    if (formData.capacity && !validatePositiveDecimal(formData.capacity)) {
+      errors.capacity = "Please enter a valid capacity";
     }
-    if (formData.equipment_id === "") {
-      return toast.error("Please Enter Equipment Id");
+
+    // Validate alphanumeric fields
+    if (formData.equipment_id && !validateAlphaNumeric(formData.equipment_id)) {
+      errors.equipment_id =
+        "Equipment ID should contain only letters and numbers";
     }
-    if (formData.purchase_cost === "") {
-      return toast.error("Please Enter Purchase Cost");
+    if (
+      formData.serial_number &&
+      !validateAlphaNumeric(formData.serial_number)
+    ) {
+      errors.serial_number =
+        "Serial number should contain only letters and numbers";
     }
-    // if (formData.asset_group_id === "") {
-    //   return toast.error("Please Select Group");
-    // }
-    // if (formData.asset_sub_group_id === "") {
-    //   return toast.error("Please Select Sub Group");
-    // }
+    if (formData.model_number && !validateAlphaNumeric(formData.model_number)) {
+      errors.model_number =
+        "Model number should contain only letters and numbers";
+    }
+
+    // Update validation errors
+    setValidationErrors(errors);
+
+    // If there are errors, show first error and return
+    if (Object.keys(errors).length > 0) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError);
+      return;
+    }
+
+    // Date validations (existing logic)
     if (
       formData.warranty_start &&
       formData.warranty_expiry &&
@@ -290,27 +528,12 @@ const AddAsset = () => {
       consumptionData.forEach((item) => {
         formDataSend.append("asset_params[][name]", item.name);
         formDataSend.append("asset_params[][order]", item.order);
-        formDataSend.append(
-          "asset_params[][unit_type]",
-          item.unit_type
-        );
+        formDataSend.append("asset_params[][unit_type]", item.unit_type);
         formDataSend.append("asset_params[][digit]", item.digit);
-        formDataSend.append(
-          "asset_params[][alert_below]",
-          item.alert_below
-        );
-        formDataSend.append(
-          "asset_params[][alert_above]",
-          item.alert_above
-        );
-        formDataSend.append(
-          "asset_params[][min_val]",
-          item.min_val
-        );
-        formDataSend.append(
-          "asset_params[][max_val]",
-          item.max_val
-        );
+        formDataSend.append("asset_params[][alert_below]", item.alert_below);
+        formDataSend.append("asset_params[][alert_above]", item.alert_above);
+        formDataSend.append("asset_params[][min_val]", item.min_val);
+        formDataSend.append("asset_params[][max_val]", item.max_val);
         formDataSend.append(
           "asset_params[][multiplier_factor]",
           item.multiplier_factor
@@ -323,10 +546,7 @@ const AddAsset = () => {
           "asset_params[][consumption_view]",
           item.consumption_view
         );
-        formDataSend.append(
-          "asset_params[][check_prev]",
-          item.check_prev
-        );
+        formDataSend.append("asset_params[][check_prev]", item.check_prev);
       });
 
       formData.invoice.forEach((file, index) => {
@@ -409,6 +629,22 @@ const AddAsset = () => {
 
   const handleAssetParamsChange = (index, e) => {
     const { name, value, type, checked } = e.target;
+
+    // Validate numeric fields
+    if (
+      name === "order" ||
+      name === "digit" ||
+      name === "alert_below" ||
+      name === "alert_above" ||
+      name === "min_val" ||
+      name === "max_val" ||
+      name === "multiplier_factor"
+    ) {
+      if (value && !validateDecimal(value)) {
+        return; // Don't update if validation fails
+      }
+    }
+
     setConsumptionData((prev) =>
       prev.map((item, i) =>
         i === index
@@ -416,6 +652,21 @@ const AddAsset = () => {
           : item
       )
     );
+  };
+
+  // Helper component for validation error display
+  const ValidationError = ({ error }) => {
+    if (!error) return null;
+    return <span className="text-red-500 text-xs mt-1 block">{error}</span>;
+  };
+
+  // Add real-time input formatting for specific fields
+  const handleNumericInput = (e) => {
+    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+  };
+
+  const handleDecimalInput = (e) => {
+    e.target.value = e.target.value.replace(/[^0-9.]/g, "");
   };
 
   return (
@@ -427,7 +678,7 @@ const AddAsset = () => {
       </div>
       <div className="md:p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <h2
-          style={{ background: "rgb(19 27 32)" }}
+          style={{ background: themeColor }}
           className="text-center text-xl font-bold p-2 rounded-full text-white"
         >
           Add Asset
@@ -503,10 +754,53 @@ const AddAsset = () => {
                   name="latitude"
                   id=""
                   onChange={handleChange}
+                  onInput={(e) => {
+                    // Allow only numbers, decimal point, and minus sign
+                    e.target.value = e.target.value.replace(/[^-0-9.]/g, "");
+                    // Prevent multiple decimal points
+                    if ((e.target.value.match(/\./g) || []).length > 1) {
+                      e.target.value = e.target.value.slice(0, -1);
+                    }
+                    // Prevent multiple minus signs and ensure minus is only at start
+                    if (e.target.value.includes("-")) {
+                      const minusCount = (e.target.value.match(/-/g) || [])
+                        .length;
+                      if (
+                        minusCount > 1 ||
+                        (e.target.value.indexOf("-") !== 0 &&
+                          e.target.value.includes("-"))
+                      ) {
+                        e.target.value = e.target.value.replace(/-/g, "");
+                        if (e.target.value.charAt(0) !== "-") {
+                          e.target.value = "-" + e.target.value;
+                        }
+                      }
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate on blur with strict validation
+                    if (
+                      e.target.value &&
+                      !validateCoordinateStrict(e.target.value, "latitude")
+                    ) {
+                      updateValidationError(
+                        "latitude",
+                        "Please enter a valid latitude (between -90 and 90)"
+                      );
+                    } else {
+                      clearValidationError("latitude");
+                    }
+                  }}
                   value={formData.latitude}
-                  placeholder="Latitude"
-                  className="border p-1 px-4 border-gray-500 rounded-md"
+                  placeholder="Latitude (e.g., 18.562281)"
+                  step="any"
+                  min="-90"
+                  max="90"
+                  className={`border p-1 px-4 border-gray-500 rounded-md ${
+                    validationErrors.latitude ? "border-red-500" : ""
+                  }`}
                 />
+                <ValidationError error={validationErrors.latitude} />
               </div>
               <div className="flex flex-col">
                 <label className="block text-gray-700 mb-1 font-medium">
@@ -517,10 +811,53 @@ const AddAsset = () => {
                   name="longitude"
                   id=""
                   onChange={handleChange}
+                  onInput={(e) => {
+                    // Allow only numbers, decimal point, and minus sign
+                    e.target.value = e.target.value.replace(/[^-0-9.]/g, "");
+                    // Prevent multiple decimal points
+                    if ((e.target.value.match(/\./g) || []).length > 1) {
+                      e.target.value = e.target.value.slice(0, -1);
+                    }
+                    // Prevent multiple minus signs and ensure minus is only at start
+                    if (e.target.value.includes("-")) {
+                      const minusCount = (e.target.value.match(/-/g) || [])
+                        .length;
+                      if (
+                        minusCount > 1 ||
+                        (e.target.value.indexOf("-") !== 0 &&
+                          e.target.value.includes("-"))
+                      ) {
+                        e.target.value = e.target.value.replace(/-/g, "");
+                        if (e.target.value.charAt(0) !== "-") {
+                          e.target.value = "-" + e.target.value;
+                        }
+                      }
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate on blur with strict validation
+                    if (
+                      e.target.value &&
+                      !validateCoordinateStrict(e.target.value, "longitude")
+                    ) {
+                      updateValidationError(
+                        "longitude",
+                        "Please enter a valid longitude (between -180 and 180)"
+                      );
+                    } else {
+                      clearValidationError("longitude");
+                    }
+                  }}
                   value={formData.longitude}
-                  placeholder="Longitude"
-                  className="border p-1 px-4 border-gray-500 rounded-md"
+                  placeholder="Longitude (e.g., 73.939194)"
+                  step="any"
+                  min="-180"
+                  max="180"
+                  className={`border p-1 px-4 border-gray-500 rounded-md ${
+                    validationErrors.longitude ? "border-red-500" : ""
+                  }`}
                 />
+                <ValidationError error={validationErrors.longitude} />
               </div>
             </div>
           </div>
@@ -542,8 +879,11 @@ const AddAsset = () => {
                     onChange={handleChange}
                     value={formData.name}
                     placeholder="Asset Name"
-                    className="border p-1 px-4 border-gray-500 rounded-md"
+                    className={`border p-1 px-4 border-gray-500 rounded-md ${
+                      validationErrors.name ? "border-red-500" : ""
+                    }`}
                   />
+                  <ValidationError error={validationErrors.name} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
@@ -557,8 +897,11 @@ const AddAsset = () => {
                     onChange={handleChange}
                     value={formData.oem_name}
                     placeholder="OEM Name"
-                    className="border p-1 px-4 border-gray-500 rounded-md w-full placeholder:text-gray-400"
+                    className={`border p-1 px-4 border-gray-500 rounded-md w-full placeholder:text-gray-400 ${
+                      validationErrors.oem_name ? "border-red-500" : ""
+                    }`}
                   />
+                  <ValidationError error={validationErrors.oem_name} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
@@ -566,14 +909,21 @@ const AddAsset = () => {
                     <span className="text-red-500 font-medium">*</span>
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="asset_number"
                     id="asset_number"
                     onChange={handleChange}
                     value={formData.asset_number}
                     placeholder="Asset Number"
-                    className="border p-1 px-4 border-gray-500 rounded-md"
+                    onInput={(e) => {
+                      // Only allow numbers
+                      e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    }}
+                    className={`border p-1 px-4 border-gray-500 rounded-md ${
+                      validationErrors.asset_number ? "border-red-500" : ""
+                    }`}
                   />
+                  <ValidationError error={validationErrors.asset_number} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
@@ -587,8 +937,11 @@ const AddAsset = () => {
                     onChange={handleChange}
                     value={formData.equipment_id}
                     placeholder="Equipment Id"
-                    className="border p-1 px-4 border-gray-500 rounded-md"
+                    className={`border p-1 px-4 border-gray-500 rounded-md ${
+                      validationErrors.equipment_id ? "border-red-500" : ""
+                    }`}
                   />
+                  <ValidationError error={validationErrors.equipment_id} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
@@ -601,8 +954,11 @@ const AddAsset = () => {
                     value={formData.model_number}
                     onChange={handleChange}
                     placeholder="Model Number "
-                    className="border p-1 px-4 border-gray-500 rounded-md"
+                    className={`border p-1 px-4 border-gray-500 rounded-md ${
+                      validationErrors.model_number ? "border-red-500" : ""
+                    }`}
                   />
+                  <ValidationError error={validationErrors.model_number} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
@@ -615,8 +971,11 @@ const AddAsset = () => {
                     value={formData.serial_number}
                     onChange={handleChange}
                     placeholder="Serial Number "
-                    className="border p-1 px-4 border-gray-500 rounded-md"
+                    className={`border p-1 px-4 border-gray-500 rounded-md ${
+                      validationErrors.serial_number ? "border-red-500" : ""
+                    }`}
                   />
+                  <ValidationError error={validationErrors.serial_number} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
@@ -630,8 +989,15 @@ const AddAsset = () => {
                     value={formData.purchase_cost}
                     onChange={handleChange}
                     placeholder="Purchase Cost"
-                    className="border p-1 px-4 border-gray-500 rounded-md"
+                    onInput={(e) => {
+                      // Only allow numbers and decimal
+                      e.target.value = e.target.value.replace(/[^0-9.]/g, "");
+                    }}
+                    className={`border p-1 px-4 border-gray-500 rounded-md ${
+                      validationErrors.purchase_cost ? "border-red-500" : ""
+                    }`}
                   />
+                  <ValidationError error={validationErrors.purchase_cost} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
@@ -645,7 +1011,13 @@ const AddAsset = () => {
                       value={formData.capacity}
                       onChange={handleChange}
                       placeholder="Capacity"
-                      className="border p-1 px-4 border-gray-500 w-1/2 rounded-l-md"
+                      onInput={(e) => {
+                        // Only allow numbers and decimal
+                        e.target.value = e.target.value.replace(/[^0-9.]/g, "");
+                      }}
+                      className={`border p-1 px-4 border-gray-500 w-1/2 rounded-l-md ${
+                        validationErrors.capacity ? "border-red-500" : ""
+                      }`}
                     />
                     <input
                       type="text"
@@ -657,11 +1029,12 @@ const AddAsset = () => {
                       className="border p-1 px-4 border-gray-500 rounded-r-md w-1/2 placeholder:text-sm"
                     />
                   </div>
+                  <ValidationError error={validationErrors.capacity} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
                     Group
-                    {/* <span className="text-red-500 font-medium">*</span> */}
+                    <span className="text-red-500 font-medium">*</span>
                   </label>
                   <select
                     className="border p-1 px-4 border-gray-500 rounded-md"
@@ -676,11 +1049,12 @@ const AddAsset = () => {
                       </option>
                     ))}
                   </select>
+                  <ValidationError error={validationErrors.asset_group_id} />
                 </div>
                 <div className="flex flex-col">
                   <label className="block text-gray-700 mb-1 font-medium">
                     Sub Group
-                    {/* <span className="text-red-500 font-medium">*</span> */}
+                    <span className="text-red-500 font-medium">*</span>
                   </label>
                   <select
                     className="border p-1 px-4 border-gray-500 rounded-md"
@@ -695,6 +1069,9 @@ const AddAsset = () => {
                       </option>
                     ))}
                   </select>
+                  <ValidationError
+                    error={validationErrors.asset_sub_group_id}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
@@ -912,6 +1289,71 @@ const AddAsset = () => {
                       name="installation"
                       id=""
                       className="border p-1 px-4 border-gray-500 rounded-md"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="border-b border-black font-semibold">
+              Compliance Details
+            </p>
+            <div className="flex  flex-col gap-4 my-2  justify-between">
+              <div className="flex gap-4 my-2">
+                <p className="font-semibold">Compliance applicable: </p>
+                <div className="flex gap-2">
+                  <input
+                    type="radio"
+                    onChange={() =>
+                      setFormData({ ...formData, complianceApplicable: true })
+                    }
+                    checked={formData.complianceApplicable === true}
+                    id="inWarranty"
+                    // onClick={() => setWarranty(true)}
+                    className="checked:accent-black"
+                  />
+                  <label htmlFor="inWarranty">Yes</label>
+                </div>
+                <div className="flex  gap-2">
+                  <input
+                    type="radio"
+                    id="notInWarranty"
+                    checked={formData.complianceApplicable === false}
+                    onChange={() =>
+                      setFormData({ ...formData, complianceApplicable: false })
+                    }
+                    // onClick={() => setWarranty(false)}
+                    className="checked:accent-black"
+                  />
+                  <label htmlFor="notInWarranty">No</label>
+                </div>
+              </div>
+
+              {formData.complianceApplicable && (
+                <div className="flex md:flex-row flex-col md:items-center  gap-5">
+                  <div className="md:flex  flex-col grid grid-cols-2  gap-2 ">
+                    <label htmlFor="" className="font-medium text-sm">
+                      Start Date :
+                    </label>
+                    <input
+                      type="date"
+                      name="warranty_start"
+                      value={formData.warranty_start}
+                      onChange={handleChange}
+                      id="warranty_start"
+                      className="border p-1 px-4 border-gray-500 rounded-md w-72"
+                    />
+                  </div>
+                  <div className="md:flex flex-col grid grid-cols-2  gap-2 ">
+                    <label htmlFor="" className="font-medium text-sm">
+                      End Date :
+                    </label>
+                    <input
+                      type="date"
+                      name="warranty_expiry"
+                      value={formData.warranty_expiry}
+                      onChange={handleChange}
+                      id="warranty_expiry"
+                      className="border p-1 px-4 border-gray-500 rounded-md w-72"
                     />
                   </div>
                 </div>
@@ -1311,7 +1753,7 @@ const AddAsset = () => {
                   </button>
                 </div>
               )}
-               {consumption === "nonConsumption" && (
+              {consumption === "nonConsumption" && (
                 <div className="my-5 space-y-3">
                   {consumptionData.map((con, index) => (
                     <div

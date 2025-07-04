@@ -84,14 +84,14 @@ const Checklist = () => {
   };
   
   
-const themeColor = "rgb(3 19 37)";
+const themeColor =useSelector((state)=> state.theme.color)
   useEffect(() => {
     const fetchChecklist = async () => {
      try {
        const checklist = await getChecklist();
-       const sortedChecklists = checklist?.data?.checklists.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+       const sortedChecklists = checklist.data.checklists.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
        setChecklists(sortedChecklists);
-       console.log(checklist?.data?.checklists)
+       console.log(checklist.data.checklists)
        setFilteredData(sortedChecklists)
      } catch (error) {
       console.log(error)
@@ -158,44 +158,44 @@ const themeColor = "rgb(3 19 37)";
   let selectedImageIndex = defaultImage.index;
   const [selectedImage, setSelectedImage] = useState(defaultImage);
   const [selectedIndex, setSelectedIndex] = useState(null);
-  // const Get_Background = async () => {
-  //   try {
-  //     // const params = {
-  //     //   user_id: user_id,
-  //     // };
-  //     const user_id = getItemInLocalStorage("VIBEUSERID");
-  //     console.log(user_id);
-  //     const data = await getVibeBackground(user_id);
+  const Get_Background = async () => {
+    try {
+      // const params = {
+      //   user_id: user_id,
+      // };
+      const user_id = getItemInLocalStorage("VIBEUSERID");
+      console.log(user_id);
+      const data = await getVibeBackground(user_id);
 
-  //     if (data.success) {
-  //       console.log("sucess");
+      if (data.success) {
+        console.log("sucess");
 
-  //       console.log(data.data);
-  //       selectedImageSrc = API_URL + data.data.image;
+        console.log(data.data);
+        selectedImageSrc = API_URL + data.data.image;
 
-  //       selectedImageIndex = data.data.index;
+        selectedImageIndex = data.data.index;
 
-  //       // Now, you can use selectedImageSrc and selectedImageIndex as needed
-  //       console.log("Received response:", data);
+        // Now, you can use selectedImageSrc and selectedImageIndex as needed
+        console.log("Received response:", data);
 
-  //       // For example, update state or perform any other actions
-  //       setSelectedImage(selectedImageSrc);
-  //       setSelectedIndex(selectedImageIndex);
-  //       console.log("Received selectedImageSrc:", selectedImageSrc);
-  //       console.log("Received selectedImageIndex:", selectedImageIndex);
-  //       console.log(selectedImage);
-  //       // dispatch(setBackground(selectedImageSrc));
-  //     } else {
-  //       console.log("Something went wrong");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //   }
-  // };
-  // useEffect(() => {
-  //   // Call the function to get the background image when the component mounts
-  //   Get_Background();
-  // }, []);
+        // For example, update state or perform any other actions
+        setSelectedImage(selectedImageSrc);
+        setSelectedIndex(selectedImageIndex);
+        console.log("Received selectedImageSrc:", selectedImageSrc);
+        console.log("Received selectedImageIndex:", selectedImageIndex);
+        console.log(selectedImage);
+        // dispatch(setBackground(selectedImageSrc));
+      } else {
+        console.log("Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+  useEffect(() => {
+    // Call the function to get the background image when the component mounts
+    Get_Background();
+  }, []);
 
   const handleSearch = (e) => {
     const searchValue = e.target.value;

@@ -5,53 +5,149 @@ import Table from "../components/table/Table";
 import { BsEye } from "react-icons/bs";
 import { MdDeleteForever } from "react-icons/md";
 import { BiEdit } from "react-icons/bi";
-import { API_URL, getRoutineTask, getVibeBackground } from "../api";
+import {
+  API_URL,
+  getRoutineTask,
+  getRoutineTaskStatus,
+  getVibeBackground,
+} from "../api";
 import toast from "react-hot-toast";
 import { getItemInLocalStorage } from "../utils/localStorage";
 import Navbar from "../components/Navbar";
 import AssetNav from "../components/navbars/AssetNav";
+import { getRandomColors } from "../components/Boards/getRandomColors";
+
+// Helper function to format date to YYYY-MM-DD
+const formatDateToInput = (date) => {
+  return date.toISOString().split("T")[0];
+};
+
+// Get current date and next day
+const getCurrentDate = () => formatDateToInput(new Date());
+const getNextDate = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return formatDateToInput(tomorrow);
+};
 
 const RoutineTask = () => {
   const [tasks, setTasks] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const [statusCounts, setStatusCounts] = useState({
+    all: 0,
+    open: 0,
+    pending: 0,
+    overdue: 0,
+    complete: 0, // Note: API returns 'complete' not 'completed'
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Status filter options
+  const statusOptions = [
+    { key: "all", label: "All", color: "bg-blue-500" },
+    // { key: "open", label: "Open", color: "bg-green-500" },
+    { key: "pending", label: "Pending", color: "bg-yellow-500" },
+    { key: "overdue", label: "Overdue", color: "bg-red-500" },
+    { key: "complete", label: "Complete", color: "bg-purple-500" }, // Changed from 'completed'
+  ];
+
+  // Update the fetch function to always use current dates if none provided
+  const fetchRoutineTask = async (start = null, end = null, status = null) => {
+    setIsLoading(true);
+    toast.loading("Please wait");
+    try {
+      // Use current dates as default if not provided
+      const defaultStart = start || startDate || getCurrentDate();
+      const defaultEnd = end || endDate || getNextDate();
+      const statusParam =
+        status || (selectedStatus === "all" ? null : selectedStatus);
+
+      const taskResponse = await getRoutineTask(
+        defaultStart,
+        defaultEnd,
+        statusParam
+      );
+      toast.dismiss();
+      toast.success("Routine task data fetched successfully");
+
+      const filteredServiceTask = taskResponse.data.activities
+        .filter((asset) => asset.asset_name)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      console.log(filteredServiceTask);
+      setTasks(filteredServiceTask);
+      setFilteredData(filteredServiceTask);
+
+      // Calculate status counts from the response
+      calculateStatusCounts(filteredServiceTask);
+    } catch (error) {
+      console.log(error);
+      toast.dismiss();
+      toast.error("Error fetching data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate status counts
+  const calculateStatusCounts = (data) => {
+    const counts = {
+      all: data.length,
+      // open: data.filter((t) => t.status.toLowerCase() === "open").length,
+      pending: data.filter((t) => t.status.toLowerCase() === "pending").length,
+      overdue: data.filter((t) => t.status.toLowerCase() === "overdue").length,
+      complete: data.filter((t) => t.status.toLowerCase() === "complete")
+        .length, // Changed to 'complete'
+    };
+    setStatusCounts(counts);
+  };
 
   useEffect(() => {
-    const fetchRoutineTask = async () => {
-      toast.loading("Please wait");
+    // Set default dates when component mounts
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    setStartDate(today.toISOString().split("T")[0]);
+    setEndDate(tomorrow.toISOString().split("T")[0]);
+
+    // Use the same API function as status filtering for consistency
+    const fetchInitialData = async () => {
       try {
-        const taskResponse = await getRoutineTask();
-        toast.dismiss()
-      toast.success("Routine task data fetched successfully");
-        // const filteredServiceTask = taskResponse.data.activities.filter(
-        //   (asset) => asset.asset_name
-        // );
-        const filteredServiceTask = taskResponse.data.activities
-        .filter((asset) => asset.asset_name) 
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        console.log(filteredServiceTask);
-        setTasks(filteredServiceTask);
-        setFilteredData(filteredServiceTask);
+        const data = await getRoutineTaskStatus(); // No status = all data
+        setTasks(data.activities);
+        setFilteredData(data.activities);
+
+        // Set initial counts including 'all'
+        const initialCounts = {
+          ...data.counts,
+          all: data.activities.length,
+        };
+        setStatusCounts(initialCounts);
+
+        console.log("Initial data:", data);
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching initial data:", error);
       }
     };
-    fetchRoutineTask();
-    console.log(tasks);
+
+    fetchInitialData();
   }, []);
 
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
       day: "2-digit",
-      month: "short", // or 'long' for full month names
+      month: "short",
       year: "numeric",
-      // hour: "2-digit",
-      // minute: "2-digit",
-      // // second: '2-digit'
-      // hour12: true,
     });
   };
+
   const RoutineColumns = [
     {
       name: "View",
@@ -75,9 +171,28 @@ const RoutineTask = () => {
       selector: (row) => dateFormat(row.start_time),
       sortable: true,
     },
-    // { name: "End Time", selector: (row) => row.end_time, sortable: true },
-
-    { name: "Status", selector: (row) => row.status, sortable: true },
+    {
+      name: "Status",
+      selector: (row) => row.status,
+      sortable: true,
+      cell: (row) => (
+        <span
+          className={`px-2 py-1 rounded-full text-white text-xs font-medium ${
+            row.status.toLowerCase() === "open"
+              ? "bg-green-500"
+              : row.status.toLowerCase() === "pending"
+              ? "bg-yellow-500"
+              : row.status.toLowerCase() === "overdue"
+              ? "bg-red-500"
+              : row.status.toLowerCase() === "complete" // Changed to 'complete'
+              ? "bg-purple-500"
+              : "bg-gray-500"
+          }`}
+        >
+          {row.status}
+        </span>
+      ),
+    },
     {
       name: "Assigned To",
       selector: (row) => row.assigned_to_name,
@@ -85,71 +200,186 @@ const RoutineTask = () => {
     },
   ];
 
-  const defaultImage = { index: 0, src: "" };
-  let selectedImageSrc = defaultImage.src;
-  let selectedImageIndex = defaultImage.index;
-  const [selectedImage, setSelectedImage] = useState(defaultImage);
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  // const Get_Background = async () => {
-  //   try {
-  //     // const params = {
-  //     //   user_id: user_id,
-  //     // };
-  //     const user_id = getItemInLocalStorage("VIBEUSERID");
-  //     console.log(user_id);
-  //     const data = await getVibeBackground(user_id);
+  // Export to Excel function
+  const exportToExcel = () => {
+    if (filteredData.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
 
-  //     if (data.success) {
-  //       console.log("sucess");
+    const headers = [
+      "ID",
+      "Asset Name",
+      "Checklist",
+      "Start Date",
+      "Status",
+      "Assigned To",
+    ];
+    const csvContent = [
+      headers.join(","),
+      ...filteredData
+        .map((row) => [
+          row.id,
+          `"${row.asset_name}"`,
+          `"${row.checklist_name}"`,
+          dateFormat(row.start_time),
+          row.status,
+          `"${row.assigned_to_name}"`,
+        ])
+        .join(","),
+    ].join("\n");
 
-  //       console.log(data.data);
-  //       selectedImageSrc = API_URL + data.data.image;
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `routine_tasks_${selectedStatus}_${
+        new Date().toISOString().split("T")[0]
+      }.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    window.URL.revokeObjectURL(url);
+    link.parentNode.removeChild(link);
 
-  //       selectedImageIndex = data.data.index;
+    toast.success("Data exported successfully");
+  };
 
-  //       // Now, you can use selectedImageSrc and selectedImageIndex as needed
-  //       console.log("Received response:", data);
+  // Filter by status with backend call
+  const handleStatusChange = async (statusKey) => {
+    setSelectedStatus(statusKey);
+    setIsLoading(true);
 
-  //       // For example, update state or perform any other actions
-  //       setSelectedImage(selectedImageSrc);
-  //       setSelectedIndex(selectedImageIndex);
-  //       console.log("Received selectedImageSrc:", selectedImageSrc);
-  //       console.log("Received selectedImageIndex:", selectedImageIndex);
-  //       console.log(selectedImage);
-  //       // dispatch(setBackground(selectedImageSrc));
-  //     } else {
-  //       console.log("Something went wrong");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //   }
-  // };
-  // useEffect(() => {
-  //   // Call the function to get the background image when the component mounts
-  //   Get_Background();
-  // }, []);
+    try {
+      const data = await getRoutineTaskStatus(
+        statusKey === "all" ? null : statusKey,
+        startDate || null,
+        endDate || null
+      );
 
+      setTasks(data.activities);
+      setFilteredData(data.activities);
+
+      const updatedCounts = {
+        ...data.counts,
+        all: data.activities.length,
+      };
+      setStatusCounts(updatedCounts);
+    } catch (error) {
+      toast.error("Failed to load activities.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDateFilter = async () => {
+    setIsLoading(true);
+
+    try {
+      const data = await getRoutineTaskStatus(
+        selectedStatus === "all" ? null : selectedStatus,
+        startDate || null,
+        endDate || null
+      );
+
+      setTasks(data.activities);
+      setFilteredData(data.activities);
+
+      const updatedCounts = {
+        ...data.counts,
+        all: data.activities.length,
+      };
+      setStatusCounts(updatedCounts);
+    } catch (error) {
+      toast.error("Failed to load activities.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClearFilters = async () => {
+    setStartDate("");
+    setEndDate("");
+    setSelectedStatus("all");
+    setIsLoading(true);
+
+    try {
+      const data = await getRoutineTaskStatus();
+
+      setTasks(data.activities);
+      setFilteredData(data.activities);
+
+      const updatedCounts = {
+        ...data.counts,
+        all: data.activities.length,
+      };
+      setStatusCounts(updatedCounts);
+    } catch (error) {
+      toast.error("Failed to clear filters.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  console.log("counts Status", statusCounts);
+
+  // Apply client-side filters (for search)
+  const applyClientFilters = (status, start, end, search) => {
+    let filtered = tasks;
+
+    // Filter by search text (client-side)
+    if (search.trim() !== "") {
+      filtered = filtered.filter(
+        (item) =>
+          (item.asset_name &&
+            item.asset_name.toLowerCase().includes(search.toLowerCase())) ||
+          (item.checklist_name &&
+            item.checklist_name.toLowerCase().includes(search.toLowerCase()))
+      );
+    }
+
+    setFilteredData(filtered);
+  };
+
+  // Update search handler
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
+    applyClientFilters(selectedStatus, startDate, endDate, searchValue);
+  };
 
-    if (searchValue.trim() === "") {
-      setFilteredData(tasks);
-    } else {
-      const filteredResults = tasks.filter(
-        (item) =>
-          (item.asset_name &&
-            item.asset_name
-              .toLowerCase()
-              .includes(searchValue.toLowerCase())) ||
-          (item.checklist_name &&
-            item.checklist_name
-              .toLowerCase()
-              .includes(searchValue.toLowerCase()))
-      );
-      setFilteredData(filteredResults);
+  // Background image logic (existing code)
+  const defaultImage = { index: 0, src: "" };
+  const [selectedImage, setSelectedImage] = useState(defaultImage);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
+  const Get_Background = async () => {
+    try {
+      const user_id = getItemInLocalStorage("VIBEUSERID");
+      console.log(user_id);
+      const data = await getVibeBackground(user_id);
+
+      if (data.success) {
+        const selectedImageSrc = API_URL + data.data.image;
+        const selectedImageIndex = data.data.index;
+        setSelectedImage(selectedImageSrc);
+        setSelectedIndex(selectedImageIndex);
+      } else {
+        console.log("Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
+
+  useEffect(() => {
+    Get_Background();
+  }, []);
 
   return (
     <section
@@ -161,7 +391,21 @@ const RoutineTask = () => {
       <Navbar />
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <AssetNav />
-        <div className="flex md:flex-row flex-col justify-between items-center my-2 gap-2  ">
+
+        {/* Overall Count Display */}
+        {/* <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Routine Tasks Overview</h2>
+          <div className="text-3xl font-bold text-blue-600">
+            Total: {statusCounts.all} Tasks
+          </div>
+          <div className="text-sm text-gray-600 mt-1">
+            {selectedStatus !== "all" && `Showing ${selectedStatus} tasks`}
+            {startDate && endDate && ` | Date Range: ${dateFormat(startDate)} - ${dateFormat(endDate)}`}
+          </div>
+        </div> */}
+
+        {/* Search and Export Section */}
+        <div className="flex md:flex-row flex-col justify-between items-center my-2 gap-2">
           <input
             type="text"
             placeholder="Search By Asset name or Checklist name"
@@ -169,30 +413,88 @@ const RoutineTask = () => {
             value={searchText}
             onChange={handleSearch}
           />
-          <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
-            {/* <Link
-            to={"/admin/add-checklist"}
-            className="bg-black  text-sm rounded-lg flex justify-center font-semibold items-center gap-2 text-white py-2 px-4 border-2 border-black hover:bg-white hover:text-black transition-all duration-300 "
-          >
-            <IoAddCircleOutline size={20} />
-            Add
-          </Link>
 
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            // onClick={exportToExcel}
-          >
-            Export
-          </button> */}
-            {/* <button
-    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    onClick={handleDownloadQRCode}
-    disabled={selectedRows.length === 0}
-  >
-    Download QR Code
-  </button> */}
+          <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
+            <button
+              className="bg-blue-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              onClick={exportToExcel}
+              disabled={filteredData.length === 0}
+            >
+              Export ({filteredData.length})
+            </button>
           </div>
         </div>
+
+        {/* Status Filter Boxes */}
+        <div className="flex flex-wrap gap-4 my-4 justify-center">
+          {statusOptions.map((status) => (
+            <div
+              key={status.key}
+              onClick={() => handleStatusChange(status.key)}
+              className={`shadow-xl cursor-pointer rounded-xl border-2 sm:w-32 sm:px-4 px-2 py-2 flex flex-col items-center transition-all duration-300 hover:scale-105 ${
+                selectedStatus === status.key
+                  ? "bg-blue-100 border-blue-500 transform scale-105"
+                  : "bg-white border-gray-300 hover:border-blue-300"
+              }`}
+              title={`Show ${status.label} activities`}
+              role="button"
+              tabIndex={0}
+            >
+              <span className="font-medium text-sm capitalize text-gray-700">
+                {status.label}
+              </span>
+              <span className="font-bold text-sm text-blue-600">
+                {statusCounts[status.key] || 0}
+              </span>
+            </div>
+          ))}
+
+          {/* Move date inputs outside the status boxes */}
+          <div className="flex flex-col gap-1 items-center">
+            <label className="text-sm font-medium">Start Date:</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border-2 p-2 border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1 items-center">
+            <label className="text-sm font-medium">End Date:</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border-2 p-2 border-gray-300 rounded-lg"
+            />
+          </div>
+          <div className="flex flex-col">
+            <button
+              onClick={handleDateFilter}
+              disabled={isLoading}
+              className="bg-blue-500 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-1 px-2 mb-2 rounded self-center"
+            >
+              {isLoading ? "Loading..." : "Apply Date Filter"}
+            </button>
+
+            <button
+              onClick={handleClearFilters}
+              disabled={isLoading}
+              className="bg-red-500 hover:bg-red-700 disabled:bg-red-300 text-white font-bold py-1 px-2 rounded self-center"
+            >
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+
         <Table
           columns={RoutineColumns}
           data={filteredData}
