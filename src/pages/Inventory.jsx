@@ -325,7 +325,7 @@ const Inventory = () => {
     link.download = fileName;
     link.click();
   };
-const themeColor = useSelector((state)=> state.theme.color)
+const themeColor = "rgb(3 19 37)"
   return (
     <section
       className="flex"

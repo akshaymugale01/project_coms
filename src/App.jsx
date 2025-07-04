@@ -754,6 +754,7 @@ import UnitConfigurations from "./pages/OSR/UnitConfig.jsx";
 import AdminBookings from "./pages/OSR/OsrBookings.jsx";
 import MyBookings from "./pages/OSR/ResidentialBookings.jsx";
 import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
+import EditPPMChecklist from "./pages/SubPages/EditPPMChecklist.jsx";
 
 // new admin hrms
 
@@ -2492,6 +2493,14 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <EditChecklist />
+              </ProtectedAdminRoutes>
+            }
+          />
+           <Route
+            path="/asset/edit-ppm/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditPPMChecklist />
               </ProtectedAdminRoutes>
             }
           />

@@ -16,7 +16,7 @@ const PPMActivity = () => {
   const [ppms, setPPms] = useState([]);
   const [searchPPMText, setSearchPPMCheck] = useState("");
   const [filteredPPMData, setFilteredPPMData] = useState([]);
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)";
   const handlePPMSearch = (event) => {
     const searchValue = event.target.value;
     setSearchPPMCheck(searchValue);

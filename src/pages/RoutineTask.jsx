@@ -215,21 +215,24 @@ const RoutineTask = () => {
       "Status",
       "Assigned To",
     ];
-    const csvContent = [
-      headers.join(","),
-      ...filteredData
-        .map((row) => [
-          row.id,
-          `"${row.asset_name}"`,
-          `"${row.checklist_name}"`,
-          dateFormat(row.start_time),
-          row.status,
-          `"${row.assigned_to_name}"`,
-        ])
-        .join(","),
-    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const csvRows = [
+      headers.join(","),
+      ...filteredData.map((row) =>
+        [
+          row.id,
+          `"${row.asset_name || ""}"`,
+          `"${row.checklist_name || ""}"`,
+          `"${dateFormat(row.start_time)}"`,
+          `"${row.status || ""}"`,
+          `"${row.assigned_to_name || ""}"`,
+        ].join(",")
+      ),
+    ];
+
+    const csvContent = csvRows.join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -404,87 +407,101 @@ const RoutineTask = () => {
           </div>
         </div> */}
 
-        {/* Search and Export Section */}
-        <div className="flex md:flex-row flex-col justify-between items-center my-2 gap-2">
-          <input
-            type="text"
-            placeholder="Search By Asset name or Checklist name"
-            className="border-2 p-2 md:w-96 border-gray-300 rounded-lg placeholder:text-sm"
-            value={searchText}
-            onChange={handleSearch}
-          />
-
-          <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
-            <button
-              className="bg-blue-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-              onClick={exportToExcel}
-              disabled={filteredData.length === 0}
-            >
-              Export ({filteredData.length})
-            </button>
-          </div>
-        </div>
-
-        {/* Status Filter Boxes */}
-        <div className="flex flex-wrap gap-4 my-4 justify-center">
-          {statusOptions.map((status) => (
-            <div
-              key={status.key}
-              onClick={() => handleStatusChange(status.key)}
-              className={`shadow-xl cursor-pointer rounded-xl border-2 sm:w-32 sm:px-4 px-2 py-2 flex flex-col items-center transition-all duration-300 hover:scale-105 ${
-                selectedStatus === status.key
-                  ? "bg-blue-100 border-blue-500 transform scale-105"
-                  : "bg-white border-gray-300 hover:border-blue-300"
-              }`}
-              title={`Show ${status.label} activities`}
-              role="button"
-              tabIndex={0}
-            >
-              <span className="font-medium text-sm capitalize text-gray-700">
-                {status.label}
-              </span>
-              <span className="font-bold text-sm text-blue-600">
-                {statusCounts[status.key] || 0}
-              </span>
+        {/* Search and Filter Section */}
+        <div className="flex flex-col gap-3 my-2">
+          {/* Search Bar */}
+          {/* Filters Row */}
+          <div className="flex flex-wrap justify-between items-center gap-3">
+            <div className="flex justify-start">
+              <input
+                type="text"
+                placeholder="Search By Asset name or Checklist name"
+                className="border-2 p-2 border-gray-300 rounded-lg placeholder:text-sm w-full max-w-md"
+                value={searchText}
+                onChange={handleSearch}
+              />
             </div>
-          ))}
+            {/* Date Filter Section - Compact */}
+            <div className="flex flex-col gap-2 bg-gray-50  rounded-lg">
+              {/* Date Inputs Row */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <label className="text-xs font-medium text-gray-600 whitespace-nowrap">
+                    Start:
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="border border-gray-300 p-1 text-xs rounded w-28"
+                  />
+                </div>
 
-          {/* Move date inputs outside the status boxes */}
-          <div className="flex flex-col gap-1 items-center">
-            <label className="text-sm font-medium">Start Date:</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border-2 p-2 border-gray-300 rounded-lg"
-            />
-          </div>
+                <div className="flex items-center gap-1">
+                  <label className="text-xs font-medium text-gray-600 whitespace-nowrap">
+                    End:
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="border border-gray-300 p-1 text-xs rounded w-28"
+                  />
+                </div>
+              </div>
 
-          <div className="flex flex-col gap-1 items-center">
-            <label className="text-sm font-medium">End Date:</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border-2 p-2 border-gray-300 rounded-lg"
-            />
-          </div>
-          <div className="flex flex-col">
-            <button
-              onClick={handleDateFilter}
-              disabled={isLoading}
-              className="bg-blue-500 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-1 px-2 mb-2 rounded self-center"
-            >
-              {isLoading ? "Loading..." : "Apply Date Filter"}
-            </button>
+              {/* Buttons Row */}
+              <div className="flex justify-center item-center gap-2">
+                <button
+                  onClick={handleDateFilter}
+                  disabled={isLoading}
+                  className="bg-gray-700 hover:bg-gray-800 disabled:bg-blue-300 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
+                >
+                  Apply
+                </button>
 
-            <button
-              onClick={handleClearFilters}
-              disabled={isLoading}
-              className="bg-red-500 hover:bg-red-700 disabled:bg-red-300 text-white font-bold py-1 px-2 rounded self-center"
-            >
-              Clear Filters
-            </button>
+                <button
+                  onClick={handleClearFilters}
+                  disabled={isLoading}
+                  className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
+                >
+                  Clear
+                </button>
+
+                <button
+                  className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
+                  onClick={exportToExcel}
+                  disabled={filteredData.length === 0}
+                >
+                  Export ({filteredData.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Status Filter Cards in single row */}
+            <div className="flex gap-2">
+              {statusOptions.map((status) => (
+                <div
+                  key={status.key}
+                  onClick={() => handleStatusChange(status.key)}
+                  className={`shadow-md cursor-pointer rounded-lg border-2 px-3 py-2 flex flex-col items-center transition-all duration-300 hover:scale-105 min-w-[80px] ${
+                    selectedStatus === status.key
+                      ? "bg-blue-100 border-blue-500 transform scale-105"
+                      : "bg-white border-gray-300 hover:border-blue-300"
+                  }`}
+                  title={`Show ${status.label} activities`}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="font-medium text-xs capitalize text-gray-700">
+                    {status.label}
+                  </span>
+                  <span className="font-bold text-sm text-blue-600">
+                    {statusCounts[status.key] || 0}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

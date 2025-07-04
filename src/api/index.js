@@ -197,6 +197,27 @@ export const getOtherBills = async () =>
       token: token,
     },
   });
+
+  export const deleteAssetAssociation = async ({ checklist_id, asset_id }) =>
+  axiosInstance.delete("/activities/bulk_destroy.json", {
+    params: {
+      checklist_id,
+      asset_id: asset_id,
+      token: token,
+    },
+  });
+
+export const updateActivity = async (id, data) =>
+  axiosInstance.put(`/activities/bulk_update.json`, data, {
+    params: {
+      token: token,
+    },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+});
+
 export const getOtherBillsDetails = async (id) =>
   axiosInstance.get(`/other_bills/${id}.json`, {
     params: {

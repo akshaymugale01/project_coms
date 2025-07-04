@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getSoftServices, softServiceDownloadQrCode } from "../../api";
+import { getSoftServices, softServiceDownloadQrCode} from "../../api";
 import { BiEdit, BiFilterAlt } from "react-icons/bi";
 import { IoAddCircleOutline } from "react-icons/io5";
 import Table from "../../components/table/Table";
@@ -16,7 +16,6 @@ import toast from "react-hot-toast";
 const ServicePage = () => {
   const [searchText, setSearchText] = useState("");
   const [filter, setFilter] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
   const [servicess, setServices] = useState([]);
   const dateFormat = (dateString) => {
@@ -55,7 +54,7 @@ const ServicePage = () => {
     },
     {
       name: "Unit",
-      selector: (row) => row?.units.map((unit) => (
+      selector: (row) => row?.units.map((unit)=>(
         <div className="flex gap-2">
           <p key={unit.id}>{unit.name},</p>
         </div>
@@ -76,6 +75,7 @@ const ServicePage = () => {
     },
   ];
 
+  useEffect(() => {
     const fetchService = async () => {
       try {
         const serviceResponse = await getSoftServices();
@@ -89,15 +89,7 @@ const ServicePage = () => {
         console.log(error);
       }
     };
-  useEffect(() => {
-  
     fetchService();
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-
   }, []);
   const handleSearch = (event) => {
     const searchValue = event.target.value;
@@ -132,7 +124,7 @@ const ServicePage = () => {
     link.download = fileName;
     link.click();
   };
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)";
 
 
   const [selectedRows, setSelectedRows] = useState([]);
@@ -147,10 +139,10 @@ const ServicePage = () => {
     if (selectedRows.length === 0) {
       return toast.error("Please select at least one data.");
     }
-
+  
     console.log(selectedRows);
     toast.loading("Qr code downloading, please wait!");
-
+  
     try {
       const response = await softServiceDownloadQrCode(selectedRows);
       const blob = new Blob([response.data], { type: "application/pdf" });
@@ -233,13 +225,13 @@ const ServicePage = () => {
             <Link
               to={"/services/add-service"}
               className="bg-black  rounded-lg flex font-semibold  items-center gap-2 text-white p-2 "
-              style={{ background: "rgb(3 19 37)" }}
+              style={{ background: themeColor }}
             >
               <IoAddCircleOutline size={20} />
               Add
             </Link>
             <button
-              style={{ background: "rgb(3 19 37)" }}
+              style={{ background: themeColor }}
               className="px-4 py-2  font-medium text-white rounded-md flex gap-2 items-center justify-center"
               onClick={handleQrDownload}
             >
@@ -249,7 +241,7 @@ const ServicePage = () => {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
               onClick={exportToExcel}
-              style={{ background: "rgb(3 19 37)" }}
+              style={{ background: themeColor }}
             >
               Export
             </button>
@@ -262,7 +254,7 @@ const ServicePage = () => {
           </button> */}
           </div>
         </div>
-        {/* {servicess.length !== 0 ? (
+        {servicess.length !== 0 ? (
           <Table columns={column} data={filteredData} onSelectedRows={handleSelectedRows} selectableRow={true}/>
         ) : (
           <div className="flex justify-center items-center h-full">
@@ -270,34 +262,10 @@ const ServicePage = () => {
               visible={true}
               height="120"
               width="120"
-              ariaLabel="dna-loading"
+              ariaLabel="dna-loading" 
               wrapperStyle={{}}
               wrapperClass="dna-wrapper"
             />
-          </div>
-        )} */}
-        
-        {servicess.length !== 0 ? (
-          <Table
-            columns={column}
-            data={filteredData}
-            onSelectedRows={handleSelectedRows}
-            selectableRow={true}
-          />
-        ) : loading ? (
-          <div className="flex justify-center items-center h-full">
-            <DNA
-              visible={true}
-              height="120"
-              width="120"
-              ariaLabel="dna-loading"
-              wrapperStyle={{}}
-              wrapperClass="dna-wrapper"
-            />
-          </div>
-        ) : (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500 text-lg">No Records!</p>
           </div>
         )}
         {/* <DataTable

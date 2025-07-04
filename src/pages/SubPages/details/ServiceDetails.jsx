@@ -2,23 +2,28 @@ import React, { useEffect, useState } from "react";
 import { BiEditAlt } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
-import { getSoftServicesDetails,getSoftServiceSchedule ,getSoftserviceActivityDetails, domainPrefix} from "../../../api";
+import {
+  getSoftServicesDetails,
+  getSoftServiceSchedule,
+  getSoftserviceActivityDetails,
+  domainPrefix,
+} from "../../../api";
 import { FaQrcode, FaRegFileAlt } from "react-icons/fa";
-import AssetQrCode from "./assetSubDetails/AssetQrCode";
 import Table from "../../../components/table/Table";
 import { dateTimeFormat } from "../../../utils/dateUtils";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { BsEye } from "react-icons/bs";
-import { HiArrowLeft, HiArrowRight } from 'react-icons/hi';
-
+import { HiArrowLeft, HiArrowRight } from "react-icons/hi";
+import SoftServiceQr from "./assetSubDetails/QrCodeSoft";
 
 const ServiceDetails = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [serviceFor, setserviceFor] = useState("schedule");
 
-
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)";
   const [details, setDetails] = useState([]);
   const [qrCode, setQrCode] = useState(false);
   const { id } = useParams();
@@ -35,39 +40,44 @@ const ServiceDetails = () => {
     };
     fetchServiceDetails();
   }, []);
-    const fetchScheduleData = async () => {
-      try {
-        const scheduleRes = await getSoftServiceSchedule(id);
-        setFilteredScheduleData(scheduleRes.data.activities);
-        setScheduleData(scheduleRes.data.activities);
-        console.log("Schedule table",scheduleRes.data.activities);
-      } catch (error) {
-        console.log(error);
-      }
-    };
+  const fetchScheduleData = async () => {
+    try {
+      const scheduleRes = await getSoftServiceSchedule(id);
+      setFilteredScheduleData(scheduleRes.data.activities);
+      setScheduleData(scheduleRes.data.activities);
+      console.log("Schedule table", scheduleRes.data.activities);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    const fetchLogsDetails = async () => {
-      try {
-        const logsDetailsResp = await getSoftserviceActivityDetails(id); // Assuming this fetches all logs
-        const filteredData = logsDetailsResp.data.activities.filter((activity) => {
+  const fetchLogsDetails = async () => {
+    try {
+      const logsDetailsResp = await getSoftserviceActivityDetails(id); // Assuming this fetches all logs
+      const filteredData = logsDetailsResp.data.activities.filter(
+        (activity) => {
           const activityDate = formatDate(activity.start_time); // Extract date from start_time
-         console.log("show date",activityDate)
-          return activityDate === selectedDate && activity.status !== 'pending' &&
-          activity.status !== 'overdue'; // Match with the selected date and 'complete' status
-        });
-       
-        console.log("logs data",filteredData)
-        setlogsDetails(filteredData); // Set filtered data
-      } catch (error) {
-        console.error('Error fetching logs details:', error);
-      }
-    };
-   
-    useEffect(() => {
-      fetchScheduleData();
-      fetchLogsDetails(); // Fetch logs based on the current id and date
-    }, [id]);
-     // Fetch data when the selected date changes
+          console.log("show date", activityDate);
+          return (
+            activityDate === selectedDate &&
+            activity.status !== "pending" &&
+            activity.status !== "overdue"
+          ); // Match with the selected date and 'complete' status
+        }
+      );
+
+      console.log("logs data", filteredData);
+      setlogsDetails(filteredData); // Set filtered data
+    } catch (error) {
+      console.error("Error fetching logs details:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchScheduleData();
+    fetchLogsDetails(); // Fetch logs based on the current id and date
+  }, [id]);
+  // Fetch data when the selected date changes
   useEffect(() => {
     fetchLogsDetails(); // Fetch data based on the selected date and status 'complete'
   }, [selectedDate]);
@@ -81,21 +91,21 @@ const ServiceDetails = () => {
   const handlePrevDate = () => {
     const prevDate = new Date(selectedDate);
     prevDate.setDate(prevDate.getDate() - 1); // Decrease by 1 day
-    setSelectedDate(prevDate.toISOString().split('T')[0]); // Update selectedDate
+    setSelectedDate(prevDate.toISOString().split("T")[0]); // Update selectedDate
   };
 
   // Increase date by 1 day
   const handleNextDate = () => {
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + 1); // Increase by 1 day
-    setSelectedDate(nextDate.toISOString().split('T')[0]); // Update selectedDate
+    setSelectedDate(nextDate.toISOString().split("T")[0]); // Update selectedDate
   };
 
   // Function to format the date from start_time
   // Function to format the date from start_time
-const formatDate = (isoString) => {
-  return isoString.split('T')[0]; // Extract YYYY-MM-DD part directly from ISO string
-};
+  const formatDate = (isoString) => {
+    return isoString.split("T")[0]; // Extract YYYY-MM-DD part directly from ISO string
+  };
 
   const [searchText, setSearchText] = useState("");
   const handleSearch = (e) => {
@@ -110,7 +120,7 @@ const formatDate = (isoString) => {
       setFilteredScheduleData(filteredResult);
     }
   };
- 
+
   const FormatedDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString();
@@ -184,7 +194,7 @@ const formatDate = (isoString) => {
     <section>
       <div className="m-2">
         <h2
-          style={{ background: "rgb(3 19 37)" }}
+          style={{ background: themeColor }}
           className="text-center text-xl font-bold p-2 rounded-full text-white"
         >
           Service Details
@@ -222,11 +232,12 @@ const formatDate = (isoString) => {
             </div>
             <div className="grid grid-cols-2">
               <p>Units :</p>
-              <div className="text-sm">{details.units?.map((unit)=>(
-                <p key={unit.id}>{unit.name}</p>
-              ))}</div>
+              <div className="text-sm">
+                {details.units?.map((unit) => (
+                  <p key={unit.id}>{unit.name}</p>
+                ))}
+              </div>
             </div>
-
 
             {/* <p>Wing:</p>
             <p>Area:</p> */}
@@ -252,7 +263,9 @@ const formatDate = (isoString) => {
                       src={domainPrefix + doc.document}
                       alt={`Attachment ${index + 1}`}
                       className="w-40 h-28 object-cover rounded-md"
-                      onClick={() => window.open(domainPrefix + doc.document, "_blank")}
+                      onClick={() =>
+                        window.open(domainPrefix + doc.document, "_blank")
+                      }
                     />
                   ) : (
                     <a
@@ -271,167 +284,200 @@ const formatDate = (isoString) => {
               <p className="text-center w-full">No Attachments</p>
             )}
           </div>
-          {qrCode && (
-            <AssetQrCode
-              assetName={details.name}
-              onClose={() => setQrCode(false)}
-              QR={domainPrefix + details.qr_code_image_url}
-            />
-          )}
-           <div className="flex justify-center items-center  md:p-0 p-2">
-      <div className="w-full my-2">
-        <div className="flex items-center gap-4 border-b border-gray-200">
-          <button
-            className={`font-medium ${
-              serviceFor === "schedule"
-                ? "text-black border-b border-black"
-                : "text-gray-400"
-            }`}
-            onClick={() => setserviceFor("schedule")}
-          >
-            Schedule
-          </button>
-          <button
-            className={`font-medium ${
-              serviceFor === "logs"
-                ? "border-b border-black text-black"
-                : "text-gray-400"
-            }`}
-            onClick={() => setserviceFor("logs")}
-          >
-            Logs
-          </button>
-        </div></div></div>
-        {serviceFor === "schedule" && (
-          <div className="flex flex-col w-full">
-            <div className="z-20 w-full flex gap-2 justify-between md:flex-row flex-col">
-              <input
-                type="text"
-                name=""
-                value={searchText}
-                onChange={handleSearch}
-                id=""
-                placeholder="Search by assigned to"
-                className="p-2 border-gray-300 rounded-md w-full  my-2 outline-none border"
-              />
-              <DatePicker
-                selectsRange={true}
-                startDate={startDate}
-                endDate={endDate}
-                onChange={(update) => {
-                  setStartDate(update[0]);
-                  setEndDate(update[1]);
-                  setFilteredScheduleData(filterByDateRange(ScheduleData));
-                }}
-                isClearable={true}
-                placeholderText="Search by Date range"
-                className="p-2 border-gray-300 rounded-md w-64  my-2 outline-none border"
-              />
-            </div>
-            <Table columns={ScheduleColumn} data={filteredScheduleData} />
-          </div>
-        )}
-         {serviceFor === "logs" && (
-          <div>
-           
-      {/* Buttons for Prev Date and Next Date */}
-      <div className="flex gap-4 justify-end my-2">
-        <button onClick={handlePrevDate} className="bg-gray-200 px-2 rounded-md py-2"><HiArrowLeft/></button>
-        <input
-        type="date"
-        value={selectedDate}
-        onChange={handleDateChange}
-        className="p-1 border-gray-300 rounded-md w-64  outline-none border"
-      />
 
-
-        <button onClick={handleNextDate}  className="bg-gray-200 px-2 rounded-md py-2"><HiArrowRight/></button>
-      </div>
-           
-      <div>
-  {logsDetails.map((task, index) => {
-    // Check if there are any submissions
-    const hasSubmissions = task.activity_log?.submissions?.length > 0;
-
-    // Only render the entire block if there are submissions
-    return (
-      hasSubmissions && (
-        <div key={task.id} className="my-4 flex flex-col bg-gray-50 shadow-custom-all-sides p-4 rounded-md gap-2">
-          <div className="grid grid-cols-12">
-            <div className="col-span-11 items-center">
-              <p className="font-medium">Checklist Name :</p>
-              <p className="w-full">{task.checklist?.name || 'No Checklist Name'}</p>
-            </div>
-          </div>
-
-          {task.activity_log.submissions.map((submission, subIndex) => (
-            submission && (
-              <div key={submission.id} className="my-2">
-                <div className="flex gap-4 items-center bg-green-100 mb-2 p-2 rounded-md">
-                  <p className="font-medium">Question {subIndex+1}:</p>
-                  <p>{submission.question?.name || 'No Question'}</p>
-                </div>
-
-                <div className="flex gap-4 items-center bg-blue-100 mb-2 p-2 rounded-md">
-                  <p className="font-medium">Answer :</p>
-                  <p>{submission.value || 'No Answer'}</p>
-                </div>
-
-                <span className="font-medium text-gray-500">Attachments :</span>
-                <div className="flex gap-4 flex-wrap my-4 items-center text-center">
-                  {submission.question_attachments?.length > 0 ? (
-                    submission.question_attachments.map((attachment, i) => (
-                      <img
-                        key={i}
-                        src={domainPrefix + attachment.document}
-                        alt={`Attachment ${i + 1}`}
-                        className="w-40 h-28 object-cover rounded-md"
-                        onClick={() => window.open(domainPrefix + attachment.document, "_blank")}
-                      />
-                    ))
-                  ) : (
-                    <p>No Attachments</p>
-                  )}
-                </div>
-
-                <div className="flex justify-between">
-                  <p>
-                    <span className="font-medium text-gray-500">Performed by:</span>
-                    <span className="font-medium text-gray-500">{task.assigned_name || 'Unknown'}</span>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {dateTimeFormat(submission.updated_at) || "No timestamp available"}
-                  </p>
-                </div>
+          <div className="flex justify-center items-center  md:p-0 p-2">
+            <div className="w-full my-2">
+              <div className="flex items-center gap-4 border-b border-gray-200">
+                <button
+                  className={`font-medium ${
+                    serviceFor === "schedule"
+                      ? "text-black border-b border-black"
+                      : "text-gray-400"
+                  }`}
+                  onClick={() => setserviceFor("schedule")}
+                >
+                  Schedule
+                </button>
+                <button
+                  className={`font-medium ${
+                    serviceFor === "logs"
+                      ? "border-b border-black text-black"
+                      : "text-gray-400"
+                  }`}
+                  onClick={() => setserviceFor("logs")}
+                >
+                  Logs
+                </button>
               </div>
-            )
-          ))}
+            </div>
+          </div>
+          {serviceFor === "schedule" && (
+            <div className="flex flex-col w-full">
+              <div className="z-20 w-full flex gap-2 justify-between md:flex-row flex-col">
+                <input
+                  type="text"
+                  name=""
+                  value={searchText}
+                  onChange={handleSearch}
+                  id=""
+                  placeholder="Search by assigned to"
+                  className="p-2 border-gray-300 rounded-md w-full  my-2 outline-none border"
+                />
+                <DatePicker
+                  selectsRange={true}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChange={(update) => {
+                    setStartDate(update[0]);
+                    setEndDate(update[1]);
+                    setFilteredScheduleData(filterByDateRange(ScheduleData));
+                  }}
+                  isClearable={true}
+                  placeholderText="Search by Date range"
+                  className="p-2 border-gray-300 rounded-md w-64  my-2 outline-none border"
+                />
+              </div>
+              <Table columns={ScheduleColumn} data={filteredScheduleData} />
+            </div>
+          )}
+          {serviceFor === "logs" && (
+            <div>
+              {/* Buttons for Prev Date and Next Date */}
+              <div className="flex gap-4 justify-end my-2">
+                <button
+                  onClick={handlePrevDate}
+                  className="bg-gray-200 px-2 rounded-md py-2"
+                >
+                  <HiArrowLeft />
+                </button>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  className="p-1 border-gray-300 rounded-md w-64  outline-none border"
+                />
 
-          <p>
-            <span className="font-medium">Comment : </span>
-            <span className="text-violet-500 font-medium">
-              {task.comment ? task.comment : "No Comment"}{" "}
-            </span>
-          </p>
-        </div>
-      )
-    );
-  })}
-</div>
+                <button
+                  onClick={handleNextDate}
+                  className="bg-gray-200 px-2 rounded-md py-2"
+                >
+                  <HiArrowRight />
+                </button>
+              </div>
 
+              <div>
+                {logsDetails.map((task, index) => {
+                  // Check if there are any submissions
+                  const hasSubmissions =
+                    task.activity_log?.submissions?.length > 0;
 
+                  // Only render the entire block if there are submissions
+                  return (
+                    hasSubmissions && (
+                      <div
+                        key={task.id}
+                        className="my-4 flex flex-col bg-gray-50 shadow-custom-all-sides p-4 rounded-md gap-2"
+                      >
+                        <div className="grid grid-cols-12">
+                          <div className="col-span-11 items-center">
+                            <p className="font-medium">Checklist Name :</p>
+                            <p className="w-full">
+                              {task.checklist?.name || "No Checklist Name"}
+                            </p>
+                          </div>
+                        </div>
 
+                        {task.activity_log.submissions.map(
+                          (submission, subIndex) =>
+                            submission && (
+                              <div key={submission.id} className="my-2">
+                                <div className="flex gap-4 items-center bg-green-100 mb-2 p-2 rounded-md">
+                                  <p className="font-medium">
+                                    Question {subIndex + 1}:
+                                  </p>
+                                  <p>
+                                    {submission.question?.name || "No Question"}
+                                  </p>
+                                </div>
 
-        </div>
-        )}
+                                <div className="flex gap-4 items-center bg-blue-100 mb-2 p-2 rounded-md">
+                                  <p className="font-medium">Answer :</p>
+                                  <p>{submission.value || "No Answer"}</p>
+                                </div>
+
+                                <span className="font-medium text-gray-500">
+                                  Attachments :
+                                </span>
+                                <div className="flex gap-4 flex-wrap my-4 items-center text-center">
+                                  {submission.question_attachments?.length >
+                                  0 ? (
+                                    submission.question_attachments.map(
+                                      (attachment, i) => (
+                                        <img
+                                          key={i}
+                                          src={
+                                            domainPrefix + attachment.document
+                                          }
+                                          alt={`Attachment ${i + 1}`}
+                                          className="w-40 h-28 object-cover rounded-md"
+                                          onClick={() =>
+                                            window.open(
+                                              domainPrefix +
+                                                attachment.document,
+                                              "_blank"
+                                            )
+                                          }
+                                        />
+                                      )
+                                    )
+                                  ) : (
+                                    <p>No Attachments</p>
+                                  )}
+                                </div>
+
+                                <div className="flex justify-between">
+                                  <p>
+                                    <span className="font-medium text-gray-500">
+                                      Performed by:
+                                    </span>
+                                    <span className="font-medium text-gray-500">
+                                      {task.assigned_name || "Unknown"}
+                                    </span>
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {dateTimeFormat(submission.updated_at) ||
+                                      "No timestamp available"}
+                                  </p>
+                                </div>
+                              </div>
+                            )
+                        )}
+
+                        <p>
+                          <span className="font-medium">Comment : </span>
+                          <span className="text-violet-500 font-medium">
+                            {task.comment ? task.comment : "No Comment"}{" "}
+                          </span>
+                        </p>
+                      </div>
+                    )
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+      {qrCode && (
+        <SoftServiceQr
+          assetName={details.name}
+          onClose={() => setQrCode(false)}
+          QR={domainPrefix + details.qr_code_image_url}
+          softId={details.id}
+        />
+      )}
     </section>
   );
 };
 
-
 export default ServiceDetails;
-
-
-

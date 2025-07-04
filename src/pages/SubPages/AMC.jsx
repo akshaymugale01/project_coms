@@ -15,7 +15,7 @@ const AMC = () => {
   const [searchText, setSearchText] = useState("");
   const [amc, setAmc] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-const themeColor = useSelector((state)=> state.theme.color)
+const themeColor = "rgb(3 19 37)";
   useEffect(() => {
     const fetchAmc = async () => {
       const AMCResponse = await getAMC();

@@ -84,7 +84,7 @@ const Checklist = () => {
   };
   
   
-const themeColor =useSelector((state)=> state.theme.color)
+const themeColor = "rgb(3 19 37)";
   useEffect(() => {
     const fetchChecklist = async () => {
      try {

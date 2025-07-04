@@ -31,7 +31,7 @@ const Meter = () => {
   const [selectedUnit, setSelectedUnit] = useState("");
   const [page, setPage] = useState("assets");
   const [assets, setAssets] = useState([]);
-const themeColor =useSelector((state)=> state.theme.color)
+const themeColor = "rgb(3 19 37)";
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString(); // Adjust the format as needed

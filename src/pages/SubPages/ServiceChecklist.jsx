@@ -10,6 +10,8 @@ import * as XLSX from "xlsx";
 import { DNA } from "react-loader-spinner";
 import { useSelector } from "react-redux";
 import { BsEye } from "react-icons/bs";
+import { FaCopy, FaDownload } from "react-icons/fa";
+
 const ServiceChecklist = () => {
   const [searchChecklistText, setSearchChecklistCheck] = useState("");
   const [filteredChecklistData, setFilteredChecklistData] = useState([]);
@@ -20,11 +22,14 @@ const ServiceChecklist = () => {
       name: "Action",
       cell: (row) => (
         <div className="flex items-center gap-4">
-          <Link to={`/services/checklist-details/${row.id}`}>
-            <BsEye size={15} />
-          </Link>
+          {/* <Link to={`/services/checklist-details/${row.id}`}>
+                <BsEye size={15} />
+              </Link> */}
           <Link to={`/services/edit-service-checklist/${row.id}`}>
             <BsEye size={15} />
+          </Link>
+          <Link to={`/admin/copy-checklist/service/${row.id}`}>
+          <FaCopy size={15}/>
           </Link>
         </div>
       ),
@@ -56,9 +61,8 @@ const ServiceChecklist = () => {
       sortable: true,
     },
     {
-      name: "No. Of Questions",
-      selector: (row) =>
-        Array.isArray(row.questions) ? row.questions.length : 0,
+      name: "No. Of Groups",
+      selector: (row) => row.groups.length,
       sortable: true,
     },
     {
@@ -80,9 +84,7 @@ const ServiceChecklist = () => {
     try {
       const fetchServicesChecklist = async () => {
         const checklistResponse = await getServicesChecklist();
-        const sortedChecklists = checklistResponse.data.checklists.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
+        const sortedChecklists = checklistResponse.data.checklists.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setFilteredChecklistData(sortedChecklists);
         setChecklists(sortedChecklists);
         console.log(checklistResponse);
@@ -113,10 +115,11 @@ const ServiceChecklist = () => {
   };
   const exportToExcel = () => {
     const mappedData = filteredChecklistData.map((check) => ({
+     
       "Checklist Name": check.name,
       "Start Date": check.start_date,
       "End Date": check.end_date,
-      Frequency: check.frequency,
+      "Frequency": check.frequency,
       "Created On": dateFormat(check.created_at),
       // "Question": check.questions.map(q => q.toString()).join(', ')
     }));
@@ -134,7 +137,7 @@ const ServiceChecklist = () => {
     link.click();
   };
 
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = "rgb(3 19 37)"
   return (
     <section className="flex ">
       <Navbar />
@@ -200,7 +203,7 @@ const ServiceChecklist = () => {
             <Link
               to={"/services/add-service-checklist"}
               className="bg-black  rounded-lg flex font-semibold  items-center gap-2 text-white p-2 "
-              style={{ background: themeColor }}
+              style={{background: themeColor}}
             >
               <IoAddCircleOutline size={20} />
               Add
@@ -208,7 +211,7 @@ const ServiceChecklist = () => {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
               onClick={exportToExcel}
-              style={{ background: themeColor }}
+              style={{background: themeColor}}
             >
               Export
             </button>
