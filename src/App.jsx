@@ -755,6 +755,7 @@ import AdminBookings from "./pages/OSR/OsrBookings.jsx";
 import MyBookings from "./pages/OSR/ResidentialBookings.jsx";
 import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
 import EditPPMChecklist from "./pages/SubPages/EditPPMChecklist.jsx";
+import CreateInvoiceReceipt from "./pages/SubPages/details/CreateInvoiceReciept.jsx";
 
 // new admin hrms
 
@@ -3808,6 +3809,14 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
+           <Route
+          path="/cam_bill/create-invoice-receipt/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <CreateInvoiceReceipt />
+            </ProtectedAdminRoutes>
+          }
+        />
           <Route
             path="/admin/billing-address"
             element={

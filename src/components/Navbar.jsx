@@ -81,6 +81,7 @@ import { LucideParkingSquare } from "lucide-react";
 import {
   getAmenitiesBooking,
   getAmenityBookNotification,
+  getVibeBackground,
   markNotificationAsRead,
 } from "../api";
 import { toast } from "react-toastify";
@@ -99,7 +100,9 @@ const Navbar = () => {
   const [newNotificationCount, setNewNotificationCount] = useState(0);
   const [lastFetchedCount, setLastFetchedCount] = useState(0);
   const countNotification = getItemInLocalStorage("shownNotificationIds");
-  console.log("asfd", countNotification);
+  const [bgImage ,setBgImage] = useState("")
+
+  // console.log("asfd", countNotification);
 
   // const fetchNotifications = async () => {
   //   try {
@@ -130,6 +133,16 @@ const Navbar = () => {
       return [];
     }
   };
+
+      useEffect(() => {
+        const BgImage = async () => {
+          const resp = await getVibeBackground();
+          console.log("resp", resp);
+          const image = resp?.data[2]?.image;
+          setBgImage(image);
+        };
+        BgImage();
+      }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -279,8 +292,8 @@ const Navbar = () => {
     <section className="flex gap-6 sticky top-0 left-0 bottom-0 h-screen z-20">
       <div
         style={{
-          // background: themeColor,
-          background: "rgb(17, 24, 39)",
+          background: "rgb(3 19 37)",
+          // background: `url(${bgImage})`
         }}
         className={`p-[8px] max-h-screen ${
           open ? "w-full md:w-60" : "w-20"

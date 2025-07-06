@@ -16,6 +16,8 @@ function AddCAMBilling() {
   const themeColor = useSelector((state) => state.theme.color);
   const [billingPeriod, setBillingPeriod] = useState([null, null]);
   const [invoiceAdd, setInvoiceAdd] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
     invoice_type: "",
     invoiceAddress: "",
@@ -82,15 +84,25 @@ function AddCAMBilling() {
     const updatedFields = [...fields];
     const camBilling = updatedFields[index];
 
-    // Prevent special characters for certain fields
+    // Input sanitization and validation
     let cleanedValue = value;
-    if (
-      name === "description" ||
-      name === "sacHsnCode" ||
-      name === "unit"
-    ) {
-      cleanedValue = value.replace(/[^a-zA-Z0-9 ]/g, "");
+    if (name === "description") {
+      cleanedValue = value.replace(/[^a-zA-Z0-9 .,\-()]/g, "").slice(0, 100);
+    } else if (name === "sacHsnCode") {
+      cleanedValue = value.replace(/[^0-9]/g, "").slice(0, 8);
+    } else if (name === "unit") {
+      cleanedValue = value.replace(/[^a-zA-Z ]/g, "").slice(0, 10);
+    } else if (["qty", "rate", "percentage", "discount", "cgstRate", "sgstRate", "igstRate"].includes(name)) {
+      cleanedValue = value.replace(/[^0-9.]/g, "");
+      // Prevent multiple decimal points
+      const decimalCount = (cleanedValue.match(/\./g) || []).length;
+      if (decimalCount > 1) {
+        cleanedValue = cleanedValue.substring(0, cleanedValue.lastIndexOf('.'));
+      }
     }
+
+    // Validate field in real-time
+    validateField(name, cleanedValue, index);
 
     // Update the field value
     updatedFields[index][name] = cleanedValue;
@@ -202,7 +214,24 @@ function AddCAMBilling() {
     useState("");
 
   const handleChangePreviousDue = (e) => {
-    const value = parseFloat(e.target.value) || "";
+    const value = e.target.value.replace(/[^0-9.]/g, "");
+    const numValue = parseFloat(value) || 0;
+    
+    // Validate amount
+    if (value && !validateAmount(value)) {
+      setErrors(prev => ({
+        ...prev,
+        [e.target.id]: "Amount must be between 0 and 999,999,999"
+      }));
+      toast.error("Amount must be between 0 and 999,999,999");
+      return;
+    } else {
+      setErrors(prev => ({
+        ...prev,
+        [e.target.id]: ""
+      }));
+    }
+
     if (e.target.id === "PreviousDueAmount") {
       setPreviousDueAmount(value);
     } else if (e.target.id === "PreviousDueAmountInterest") {
@@ -239,10 +268,16 @@ function AddCAMBilling() {
     const { name, value, type } = e.target;
 
     let cleanedValue = value;
-    // Only allow letters, numbers, spaces, and basic punctuation in notes
+    
+    // Input sanitization and validation
     if (name === "notes") {
-      cleanedValue = value.replace(/[^a-zA-Z0-9 .,!?'"()\-\n]/g, "");
+      cleanedValue = value.replace(/[^a-zA-Z0-9 .,!?'"()\-\n]/g, "").slice(0, 500);
+    } else if (name === "invoice_number") {
+      cleanedValue = value.replace(/[^A-Z0-9\-/]/g, "").slice(0, 20);
     }
+
+    // Validate field in real-time
+    validateField(name, cleanedValue);
 
     // Fetch floors based on building ID
     const fetchFloor = async (buildingID) => {
@@ -299,33 +334,67 @@ function AddCAMBilling() {
     !formData.block || !formData.floor_name || !units.length;
 
   const navigate = useNavigate();
+  
+  // Enhanced validation for form submission
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Basic form validation
+    if (!formData.invoice_type) newErrors.invoice_type = "Invoice type is required";
+    if (!formData.invoiceAddress) newErrors.invoiceAddress = "Invoice address is required";
+    if (!formData.invoice_number) newErrors.invoice_number = "Invoice number is required";
+    else if (!validateInvoiceNumber(formData.invoice_number)) newErrors.invoice_number = "Invalid invoice number format";
+    
+    if (!formData.dueDate) newErrors.dueDate = "Due date is required";
+    else if (!validateDate(formData.dueDate)) newErrors.dueDate = "Due date must be today or later";
+    
+    if (!formData.block) newErrors.block = "Block is required";
+    if (!formData.floor_name) newErrors.floor_name = "Floor is required";
+    if (!formData.flat) newErrors.flat = "Flat is required";
+
+    // Validate billing period
+    if (billingPeriod[0] && billingPeriod[1]) {
+      if (billingPeriod[0] > billingPeriod[1]) {
+        newErrors.billingPeriod = "Start date must be before end date";
+      }
+    }
+
+    // Validate charges fields
+    fields.forEach((field, index) => {
+      if (!field.description) newErrors[`description_${index}`] = "Description is required";
+      else if (!validateDescription(field.description)) newErrors[`description_${index}`] = "Description must be 3-100 characters";
+      
+      if (!field.sacHsnCode) newErrors[`sacHsnCode_${index}`] = "HSN/SAC code is required";
+      else if (!validateHsnCode(field.sacHsnCode)) newErrors[`sacHsnCode_${index}`] = "HSN/SAC code must be 4-8 digits";
+      
+      if (!field.qty) newErrors[`qty_${index}`] = "Quantity is required";
+      else if (!validateQuantity(field.qty)) newErrors[`qty_${index}`] = "Quantity must be between 1-9999";
+      
+      if (!field.rate) newErrors[`rate_${index}`] = "Rate is required";
+      else if (!validateRate(field.rate)) newErrors[`rate_${index}`] = "Rate must be between 1-999999";
+      
+      if (!field.unit) newErrors[`unit_${index}`] = "Unit is required";
+      else if (!validateText(field.unit, 1, 10)) newErrors[`unit_${index}`] = "Unit must be 1-10 characters";
+      
+      if (field.percentage && !validatePercentage(field.percentage)) newErrors[`percentage_${index}`] = "Percentage must be between 0-100";
+      if (field.cgstRate && !validateTaxRate(field.cgstRate)) newErrors[`cgstRate_${index}`] = "CGST rate must be between 0-28%";
+      if (field.sgstRate && !validateTaxRate(field.sgstRate)) newErrors[`sgstRate_${index}`] = "SGST rate must be between 0-28%";
+      if (field.igstRate && !validateTaxRate(field.igstRate)) newErrors[`igstRate_${index}`] = "IGST rate must be between 0-28%";
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async () => {
-    if (!formData.invoice_type) {
-      toast.error("Invoice Type is required");
-      return;
-    }
-    if (!formData.invoiceAddress) {
-      toast.error("Invoice Address is required");
-      return;
-    }
-    if (!formData.invoice_number) {
-      toast.error("Invoice Number is required");
-      return;
-    }
-    if (!formData.dueDate) {
-      toast.error("Due Date is required");
-      return;
-    }
-    if (!formData.block) {
-      toast.error("Block is required");
-      return;
-    }
-    if (!formData.floor_name) {
-      toast.error("Floor is required");
-      return;
-    }
-    if (!formData.flat) {
-      toast.error("Flat is required");
+    if (!validateForm()) {
+      toast.error("Please fix all validation errors before submitting");
+      // Show first error field
+      const firstError = Object.keys(errors)[0];
+      if (firstError) {
+        const element = document.querySelector(`[name="${firstError.split('_')[0]}"]`);
+        if (element) element.focus();
+      }
       return;
     }
     const sendData = new FormData();
@@ -425,6 +494,150 @@ function AddCAMBilling() {
     }
   };
 
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    const phonePattern = /^[6-9]\d{9}$/;
+    return phonePattern.test(phone);
+  };
+
+  const validateInvoiceNumber = (value) => {
+    const invoicePattern = /^[A-Z0-9\-/]{3,20}$/;
+    return invoicePattern.test(value);
+  };
+
+  const validateDate = (date) => {
+    const today = new Date();
+    const inputDate = new Date(date);
+    return inputDate >= today;
+  };
+
+  const validateNotes = (value) => {
+    return value.length <= 500;
+  };
+
+  const validateAmount = (value) => {
+    const numValue = parseFloat(value);
+    return !isNaN(numValue) && numValue >= 0 && numValue <= 999999999;
+  };
+
+  const validateDescription = (value) => {
+    return value.length >= 3 && value.length <= 100;
+  };
+
+  const validateHsnCode = (value) => {
+    const hsnPattern = /^[0-9]{4,8}$/;
+    return hsnPattern.test(value);
+  };
+
+  const validateQuantity = (value) => {
+    const numValue = parseFloat(value);
+    return !isNaN(numValue) && numValue > 0 && numValue <= 9999;
+  };
+
+  const validateRate = (value) => {
+    const numValue = parseFloat(value);
+    return !isNaN(numValue) && numValue > 0 && numValue <= 999999;
+  };
+
+  const validatePercentage = (value) => {
+    const numValue = parseFloat(value);
+    return !isNaN(numValue) && numValue >= 0 && numValue <= 100;
+  };
+
+  const validateTaxRate = (value) => {
+    const numValue = parseFloat(value);
+    return !isNaN(numValue) && numValue >= 0 && numValue <= 28;
+  };
+
+  const validateText = (value, minLength = 1, maxLength = 100) => {
+    return value.length >= minLength && value.length <= maxLength;
+  };
+
+  // Field validation with error handling
+  const validateField = (name, value, index = null) => {
+    const fieldKey = index !== null ? `${name}_${index}` : name;
+    let error = '';
+
+    switch (name) {
+      case 'invoice_number':
+        if (!value) error = 'Invoice number is required';
+        else if (!validateInvoiceNumber(value)) error = 'Invalid invoice number format (use A-Z, 0-9, -, /)';
+        break;
+      
+      case 'dueDate':
+        if (!value) error = 'Due date is required';
+        else if (!validateDate(value)) error = 'Due date must be today or later';
+        break;
+      
+      case 'dateSupply':
+        if (value && !validateDate(value)) error = 'Supply date must be today or later';
+        break;
+      
+      case 'notes':
+        if (value && !validateNotes(value)) error = 'Notes must be 500 characters or less';
+        break;
+      
+      case 'description':
+        if (!value) error = 'Description is required';
+        else if (!validateDescription(value)) error = 'Description must be 3-100 characters';
+        break;
+      
+      case 'sacHsnCode':
+        if (!value) error = 'HSN/SAC code is required';
+        else if (!validateHsnCode(value)) error = 'HSN/SAC code must be 4-8 digits';
+        break;
+      
+      case 'qty':
+        if (!value) error = 'Quantity is required';
+        else if (!validateQuantity(value)) error = 'Quantity must be between 1-9999';
+        break;
+      
+      case 'rate':
+        if (!value) error = 'Rate is required';
+        else if (!validateRate(value)) error = 'Rate must be between 1-999999';
+        break;
+      
+      case 'percentage':
+        if (value && !validatePercentage(value)) error = 'Percentage must be between 0-100';
+        break;
+      
+      case 'discount':
+        if (value && !validateAmount(value)) error = 'Invalid discount amount';
+        break;
+      
+      case 'cgstRate':
+      case 'sgstRate':
+      case 'igstRate':
+        if (value && !validateTaxRate(value)) error = 'Tax rate must be between 0-28%';
+        break;
+      
+      case 'unit':
+        if (!value) error = 'Unit is required';
+        else if (!validateText(value, 1, 10)) error = 'Unit must be 1-10 characters';
+        break;
+      
+      default:
+        break;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [fieldKey]: error
+    }));
+
+    return !error;
+  };
+
+  // Error display component
+  const ErrorMessage = ({ error }) => {
+    return error ? <span className="text-red-500 text-xs mt-1 block">{error}</span> : null;
+  };
+
   return (
     <section className="flex">
       <div className="hidden md:block">
@@ -488,9 +701,10 @@ function AddCAMBilling() {
                   id="invoiceNumber"
                   value={formData.invoice_number}
                   onChange={handleChange1}
-                  placeholder="Enter Phone Number "
-                  className="border p-1 px-4 border-gray-500 rounded-md"
+                  placeholder="Enter Invoice Number"
+                  className={`border p-1 px-4 border-gray-500 rounded-md ${errors.invoice_number ? 'border-red-500' : ''}`}
                 />
+                <ErrorMessage error={errors.invoice_number} />
               </div>
               <div className="flex flex-col ">
                 <label htmlFor="dueDate" className="font-semibold my-2">
@@ -503,8 +717,10 @@ function AddCAMBilling() {
                   value={formData.dueDate}
                   onChange={handleChange1}
                   placeholder="Enter Due Date"
-                  className="border p-1 px-4 border-gray-500 rounded-md"
+                  className={`border p-1 px-4 border-gray-500 rounded-md ${errors.dueDate ? 'border-red-500' : ''}`}
                 />
+                <ErrorMessage error={errors.dueDate} />
+                <ErrorMessage error={errors.dueDate} />
               </div>
               <div className="flex flex-col ">
                 <label htmlFor="dateSupply" className="font-semibold my-2">
@@ -517,8 +733,10 @@ function AddCAMBilling() {
                   value={formData.dateSupply}
                   onChange={handleChange1}
                   placeholder="Enter Date of supply"
-                  className="border p-1 px-4 border-gray-500 rounded-md"
+                  className={`border p-1 px-4 border-gray-500 rounded-md ${errors.dateSupply ? 'border-red-500' : ''}`}
                 />
+                <ErrorMessage error={errors.dateSupply} />
+                <ErrorMessage error={errors.dateSupply} />
               </div>
               <div className="flex flex-col ">
                 <label htmlFor="billingPeriod" className="font-semibold my-2">
@@ -605,10 +823,11 @@ function AddCAMBilling() {
                   name="previousDueAmount"
                   id="PreviousDueAmount"
                   placeholder="Enter Previous Due Amount"
-                  className="border p-1 px-4 border-gray-500 rounded-md"
+                  className={`border p-1 px-4 border-gray-500 rounded-md ${errors.PreviousDueAmount ? 'border-red-500' : ''}`}
                   value={previousDueAmount}
                   onChange={handleChangePreviousDue}
                 />
+                <ErrorMessage error={errors.PreviousDueAmount} />
               </div>
               <div className="flex flex-col ">
                 <label
@@ -622,10 +841,11 @@ function AddCAMBilling() {
                   name="previousDueAmountInterest"
                   id="PreviousDueAmountInterest"
                   placeholder="Enter Previous Due Amount Interest"
-                  className="border p-1 px-4 border-gray-500 rounded-md"
+                  className={`border p-1 px-4 border-gray-500 rounded-md ${errors.PreviousDueAmountInterest ? 'border-red-500' : ''}`}
                   value={previousDueAmountInterest}
                   onChange={handleChangePreviousDue}
                 />
+                <ErrorMessage error={errors.PreviousDueAmountInterest} />
               </div>
             </div>
             <h2 className="border-b border-black my-5 font-semibold text-xl">
@@ -649,10 +869,11 @@ function AddCAMBilling() {
                       id={`desc-${index}`}
                       name="description"
                       placeholder="Enter Description"
-                      className="border p-1 px-4 border-gray-500 rounded-md"
+                      className={`border p-1 px-4 border-gray-500 rounded-md ${errors[`description_${index}`] ? 'border-red-500' : ''}`}
                       value={field.description}
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`description_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -666,10 +887,11 @@ function AddCAMBilling() {
                       id={`shCode-${index}`}
                       name="sacHsnCode"
                       placeholder="Enter SAC/HSN Code"
-                      className="border p-1 px-4 border-gray-500 rounded-md"
+                      className={`border p-1 px-4 border-gray-500 rounded-md ${errors[`sacHsnCode_${index}`] ? 'border-red-500' : ''}`}
                       value={field.sacHsnCode}
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`sacHsnCode_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -687,6 +909,7 @@ function AddCAMBilling() {
                       value={field.qty}
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`qty_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -704,6 +927,7 @@ function AddCAMBilling() {
                       name="unit"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`unit_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -721,6 +945,7 @@ function AddCAMBilling() {
                       value={field.rate}
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`rate_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -738,6 +963,7 @@ function AddCAMBilling() {
                       name="totalValue"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`totalValue_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -755,6 +981,7 @@ function AddCAMBilling() {
                       name="percentage"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`percentage_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -772,6 +999,7 @@ function AddCAMBilling() {
                       name="discount"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`discount_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -789,6 +1017,7 @@ function AddCAMBilling() {
                       name="taxableValue"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`taxableValue_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -806,6 +1035,7 @@ function AddCAMBilling() {
                       name="cgstRate"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`cgstRate_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -841,6 +1071,7 @@ function AddCAMBilling() {
                       name="sgstRate"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`sgstRate_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -876,6 +1107,7 @@ function AddCAMBilling() {
                       name="igstRate"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`igstRate_${index}`]} />
                   </div>
                   <div className="flex flex-col">
                     <label
@@ -911,6 +1143,7 @@ function AddCAMBilling() {
                       name="total"
                       onChange={(e) => handleChange(e, index)}
                     />
+                    <ErrorMessage error={errors[`total_${index}`]} />
                   </div>
 
                   <div className="flex justify-start items-center mt-8">
@@ -952,6 +1185,7 @@ function AddCAMBilling() {
                   placeholder="Enter extra notes"
                   className="border p-1 px-4 border-gray-500 rounded-md"
                 />
+                <ErrorMessage error={errors.notes} />
               </div>
             </div>
             <div className="flex justify-center my-8 gap-2 ">

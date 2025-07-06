@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import { useSelector } from "react-redux";
-import { getTicketDashboard } from "../api";
+import { getTicketDashboard, getVibeBackground } from "../api";
 import {
   getItemInLocalStorage,
   setItemInLocalStorage,
@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [siteData, setSiteData] = useState([]);
   const dropdownRef = useRef(null);
   const [siteName, setSiteName] = useState("");
+  const [bgImage, setBgImage] = useState("")
   // console.log(vibeUserId);
   const contentRef = useRef(null);
 
@@ -41,6 +42,17 @@ const Dashboard = () => {
     getAllowedFeatures();
     // fetchCalendar();
   }, []);
+
+
+    useEffect(() => {
+      const BgImage = async () => {
+        const resp = await getVibeBackground();
+        console.log("resp", resp);
+        const image = resp?.data[1]?.image;
+        setBgImage(image);
+      };
+      BgImage();
+    }, []);
 
   const getAllowedFeatures = () => {
     const storedFeatures = getItemInLocalStorage("FEATURES");
@@ -124,13 +136,14 @@ const Dashboard = () => {
     <section
       className="flex"
       ref={contentRef}
-      //   style={{
-      //   background: `url(${wave})`,
-      //   // backgroundSize: "100% 100% ",
-      //   backgroundSize: "cover",
-      //   backgroundRepeat: "no-repeat",
-      //   backgroundPosition: "center",
-      // }}
+        style={{
+        // background: `url(${bgImage || wave})`,
+        background: `rgb(3 19 37)`,
+        // backgroundSize: "100% 100% ",
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+      }}
     >
       <Navbar />
       <div className=" w-full flex lg:mx-3 flex-col bg-gray-900 overflow-hidden">
