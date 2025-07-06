@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import wave from "/wave.png";
-import { login, vibeLogin } from "../../api";
+import { getVibeBackground, login, vibeLogin } from "../../api";
 import Typewriter from "typewriter-effect";
 import { setItemInLocalStorage } from "../../utils/localStorage";
 
@@ -15,6 +15,7 @@ const Login = () => {
   });
   const [password, showPassword] = useState(false);
   const [page, setPage] = useState("login");
+  const [bgImage, setBgImage] = useState("");
   const onChange = (e) => {
     const { name, value } = e.target;
     if (name === "email") {
@@ -35,6 +36,16 @@ const Login = () => {
   //     toast.success("You are already logged in!");
   //   }
   // }, []);
+
+  useEffect(() => {
+    const BgImage = async () => {
+      const resp = await getVibeBackground();
+      console.log("resp", resp);
+      const image = resp?.data[1]?.image;
+      setBgImage(image);
+    };
+    BgImage();
+  }, []);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -86,21 +97,21 @@ const Login = () => {
       const featNames = features.map((feature) => feature.feature_name);
       // vibe login
       // if (selectedSiteId === 10) {
-      if (featNames.includes("project_task")) {
-        console.log("running myciti.life login");
+      // if (featNames.includes("project_task")) {
+      //   console.log("running myciti.life login");
 
-        const vibeResponse = await vibeLogin({
-          email: formData.email,
-          password: formData.password,
-        });
-        console.log("vibe", vibeResponse);
-        const vibeToken = vibeResponse.data.token.access.token;
-        setItemInLocalStorage("VIBETOKEN", vibeToken);
-        const vibeUserId = vibeResponse.data.data.user_id;
-        setItemInLocalStorage("VIBEUSERID", vibeUserId);
-        const vibeOrganizationId = vibeResponse.data.data.organization_id;
-        setItemInLocalStorage("VIBEORGID", vibeOrganizationId);
-      }
+      //   const vibeResponse = await vibeLogin({
+      //     email: formData.email,
+      //     password: formData.password,
+      //   });
+      //   console.log("vibe", vibeResponse);
+      //   const vibeToken = vibeResponse.data.token.access.token;
+      //   setItemInLocalStorage("VIBETOKEN", vibeToken);
+      //   const vibeUserId = vibeResponse.data.data.user_id;
+      //   setItemInLocalStorage("VIBEUSERID", vibeUserId);
+      //   const vibeOrganizationId = vibeResponse.data.data.organization_id;
+      //   setItemInLocalStorage("VIBEORGID", vibeOrganizationId);
+      // }
 
       // console.log("skipped copilot");
       const loginD = response.data.user;
@@ -183,7 +194,7 @@ const Login = () => {
     <div
       className="h-screen relative bg-cover bg-center"
       style={{
-        backgroundImage: `url(${wave})`,
+        backgroundImage: `url(${bgImage || wave})`,
         opacity: 0.9,
       }}
     >
