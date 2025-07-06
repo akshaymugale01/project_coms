@@ -69,7 +69,11 @@ export const getPerPageSiteAsset = async (page, perPage) =>
     },
   });
 
-  export const getRoutineTaskStatus = async (status = null, startDate = null, endDate = null) => {
+export const getRoutineTaskStatus = async (
+  status = null,
+  startDate = null,
+  endDate = null
+) => {
   const token = localStorage.getItem("token");
 
   const params = {
@@ -88,7 +92,10 @@ export const getPerPageSiteAsset = async (page, perPage) =>
     params["q[start_time_lteq]"] = endDate;
   }
 
-  const response = await axiosInstance.get("/activities/routine_task_counts.json", { params });
+  const response = await axiosInstance.get(
+    "/activities/routine_task_counts.json",
+    { params }
+  );
 
   return response.data;
 };
@@ -198,7 +205,7 @@ export const getOtherBills = async () =>
     },
   });
 
-  export const deleteAssetAssociation = async ({ checklist_id, asset_id }) =>
+export const deleteAssetAssociation = async ({ checklist_id, asset_id }) =>
   axiosInstance.delete("/activities/bulk_destroy.json", {
     params: {
       checklist_id,
@@ -216,7 +223,7 @@ export const updateActivity = async (id, data) =>
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-});
+  });
 
 export const getOtherBillsDetails = async (id) =>
   axiosInstance.get(`/other_bills/${id}.json`, {
@@ -375,7 +382,7 @@ export const postSnagAnswer = async (data) =>
     },
   });
 
-  export const getSnagAnswer = async (data) =>
+export const getSnagAnswer = async (data) =>
   axiosInstance.get(`/snag_answers.json`, data, {
     params: {
       token: token,
@@ -390,8 +397,6 @@ export const getSnagAnswersByResource = async (categoryTypeId) => {
     },
   });
 };
-
-
 
 //
 export const getComplaints = async () =>
@@ -3562,18 +3567,18 @@ export const postVibeBackground = async (data) => {
 export const getVibeBackground = async (userId) => {
   // eslint-disable-next-line no-useless-catch
   try {
-    const response = await vibeAuth.get(
-      `/api/employee/get_bg_image/?user_id=${userId}`,
+    const url = userId
+      ? `/api/employee/get_bg_image/?user_id=${userId}.json`
+      : `/api/employee/get_bg_image.json`;
 
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await vibeAuth.get(url, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     return response.data;
   } catch (error) {
-    // console.error("Error creating calendar events:", error);
     throw error;
   }
 };
