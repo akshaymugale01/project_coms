@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Detail from "../../../containers/Detail";
 import {
+  domainPrefix,
   editComplaintsDetails,
   getCARItems,
   getComplaintsDetails,
@@ -131,7 +132,6 @@ const TicketDetails = () => {
     { name: "Name", selector: (row) => row.item_name, sortable: true },
     { name: "Rate", selector: (row) => row.rate, sortable: true },
   ];
-  const domainPrefix = "https://app.myciti.life";
   // const domainPrefix = "http://localhost:3000";
 
   console.log(ticketinfo);
