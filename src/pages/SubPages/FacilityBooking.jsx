@@ -63,6 +63,8 @@ const FacilityBooking = () => {
     no_of_guests: 0,
     payment_mode: "post",
     no_of_tenants: 0,
+    min_people: 0,
+    max_people: 0,
   });
 
   const [units, setUnits] = useState([]); // To store units
@@ -256,7 +258,28 @@ const calculateBookingAmount = (facility, formData) => {
   };
 
   const handleInputChange = (field, value) => {
-    const updatedFormData = { ...formData, [field]: parseInt(value) };
+    const updatedFormData = { ...formData, [field]: parseInt(value) || 0 };
+    
+    // Calculate total number of people
+    const totalPeople = 
+      updatedFormData.member_adult +
+      updatedFormData.member_child +
+      updatedFormData.guest_adult +
+      updatedFormData.guest_child +
+      updatedFormData.tenant_adult +
+      updatedFormData.tenant_child;
+    
+    // Validate against max_people limit
+    if (facility?.max_people && totalPeople > facility.max_people) {
+      toast.error(`Total number of people (${totalPeople}) cannot exceed the maximum limit of ${facility.max_people} for this facility.`);
+      return; // Don't update the state if validation fails
+    }
+
+    // Validate against min_people limit
+    if (facility?.min_people && totalPeople < facility.min_people && totalPeople > 0) {
+      toast.error(`Total number of people (${totalPeople}) must be at least ${facility.min_people} for this facility.`);
+    }
+
     const memberTotal =
       updatedFormData.member_adult * prices.member_price_adult +
       updatedFormData.member_child * prices.member_price_child;
@@ -324,6 +347,26 @@ const calculateBookingAmount = (facility, formData) => {
     const postData = new FormData();
     if (!formData.user_id || !formData.amenity_slot_id) {
       toast.error("All Details are mandatory!");
+      return;
+    }
+
+    // Calculate total number of people for final validation
+    const totalPeople = 
+      formData.member_adult +
+      formData.member_child +
+      formData.guest_adult +
+      formData.guest_child +
+      formData.tenant_adult +
+      formData.tenant_child;
+
+    // Final validation before submission
+    if (facility?.max_people && totalPeople > facility.max_people) {
+      toast.error(`Total number of people (${totalPeople}) cannot exceed the maximum limit of ${facility.max_people} for this facility.`);
+      return;
+    }
+
+    if (facility?.min_people && totalPeople < facility.min_people) {
+      toast.error(`Total number of people (${totalPeople}) must be at least ${facility.min_people} for this facility.`);
       return;
     }
 
@@ -431,6 +474,8 @@ const calculateBookingAmount = (facility, formData) => {
       fetchUsers();
     }
   }, [units]);
+
+  console.log("facility", facility);
 
   const handleFacilityChange = (e) => {
     const selectedFacilityId = e.target.value;
@@ -671,6 +716,26 @@ const calculateBookingAmount = (facility, formData) => {
             <div className="border-b text-xl border-black font-semibold">
               Members
             </div>
+            {facility && (facility.min_people || facility.max_people) && (
+              <div className="bg-blue-50 p-3 rounded-md mb-4">
+                <div className="text-sm font-medium text-blue-800">
+                  Facility Capacity: 
+                  {facility.min_people && ` Min: ${facility.min_people} people`}
+                  {facility.min_people && facility.max_people && ' | '}
+                  {facility.max_people && ` Max: ${facility.max_people} people`}
+                </div>
+                <div className="text-sm text-blue-600">
+                  Current Total: {
+                    (formData.member_adult || 0) +
+                    (formData.member_child || 0) +
+                    (formData.guest_adult || 0) +
+                    (formData.guest_child || 0) +
+                    (formData.tenant_adult || 0) +
+                    (formData.tenant_child || 0)
+                  } people
+                </div>
+              </div>
+            )}
             {/* <div className="flex flex-col my-2">
               <label htmlFor="" className="font-semibold">
                 Comment :

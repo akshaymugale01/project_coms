@@ -234,9 +234,9 @@ const Ticket = () => {
       console.error("Error fetching data:", error);
     }
   };
-  useEffect(() => {
-    fetchData(currentPage, perPage);
-  }, [currentPage]);
+  // useEffect(() => {
+  //   fetchData(currentPage, perPage);
+  // }, [currentPage]);
   const [ticketTypes, setTicketsTypes] = useState({});
   const [statusData, setStatusData] = useState({});
   console.log("Ticket Types", ticketTypes);
@@ -246,9 +246,14 @@ const Ticket = () => {
     const fetchTicketInfo = async () => {
       try {
         const ticketInfoResp = await getTicketDashboard();
+        console.log("Dashboard API Response:", ticketInfoResp.data);
         setAllCounts(ticketInfoResp.data);
         setTicketsTypes(ticketInfoResp.data.by_type);
         setStatusData(ticketInfoResp.data.by_status);
+        console.log(
+          "Status Data from Dashboard:",
+          ticketInfoResp.data.by_status
+        );
         console.log(ticketInfoResp);
       } catch (error) {
         console.log(error);
@@ -259,7 +264,20 @@ const Ticket = () => {
       try {
         const searchAllTickets = await getAdminComplaints();
         const searchResp = searchAllTickets?.data?.complaints;
+        console.log("All Tickets API Response:", searchResp);
+        console.log("Total tickets from list API:", searchResp?.length);
+
+        // Count status distribution in the actual data
+        const statusCounts = searchResp?.reduce((acc, ticket) => {
+          const status = ticket.issue_status || "Unknown";
+          acc[status] = (acc[status] || 0) + 1;
+          return acc;
+        }, {});
+        console.log("Actual status counts from list data:", statusCounts);
+
         setFilter(searchResp);
+        setFilteredData(searchResp); // Set initial filtered data to show all tickets
+        setComplaints(searchResp); // Update complaints to use all data
         console.log(searchResp);
       } catch (error) {
         console.log(error);
@@ -287,7 +305,7 @@ const Ticket = () => {
     setSearchText(searchValue);
 
     if (searchValue.trim() === "") {
-      setFilteredData(complaints);
+      setFilteredData(filterSearch); // Use all data instead of paginated complaints
     } else {
       // Split search into words, ignore extra spaces
       const searchWords = searchValue
@@ -333,16 +351,25 @@ const Ticket = () => {
 
   console.log("Data", searchText);
   console.log("Filtered Data:", filteredData);
+  console.log("Filter Search Data:", filterSearch);
+  console.log("Selected Status:", selectedStatus);
   const handleStatusChange = (status) => {
     setSelectedStatus(status);
+    console.log("Filtering by status:", status);
 
     if (status === "all") {
-      setFilteredData(complaints);
+      setFilteredData(filterSearch); // Use filterSearch (all data) instead of complaints (paginated data)
     } else {
-      const filteredResults = filterSearch.filter(
-        (item) => item.issue_status.toLowerCase() === status.toLowerCase()
-      );
-
+      const filteredResults = filterSearch.filter((item) => {
+        console.log(
+          "Item status:",
+          item.issue_status,
+          "Comparing with:",
+          status
+        );
+        return item.issue_status.toLowerCase() === status.toLowerCase();
+      });
+      console.log("Filtered results count:", filteredResults.length);
       setFilteredData(filteredResults);
     }
   };
@@ -350,14 +377,10 @@ const Ticket = () => {
   const handelTypeChange = (type) => {
     setSelectedStatus(type);
 
-    if (type === "Complaint") {
-      setSelectedStatus("Complaint");
-    } else {
-      const filterType = filterSearch.filter(
-        (i) => i.issue_type.toLowerCase() === type.toLowerCase()
-      );
-      setFilteredData(filterType);
-    }
+    const filterType = filterSearch.filter(
+      (i) => i.issue_type.toLowerCase() === type.toLowerCase()
+    );
+    setFilteredData(filterType);
   };
 
   const [exportAllTickets, setExportAllTickets] = useState([]);

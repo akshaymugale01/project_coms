@@ -57,9 +57,9 @@ const SetupFacility = () => {
       deposit: "",
       description: "",
       max_slots: "",
-      member: null,
-      guest: null,
-      tenant: null,
+      member: false,
+      guest: false,
+      tenant: false,
       pay_on_facility: null,
       gst: "",
       sgst: "",
@@ -523,7 +523,7 @@ const SetupFacility = () => {
                 className="ml-2"
                 name="payment_type"
                 value="prepaid"
-                checked={formData.amenity.prepaid} // Bind state for prepaid
+                checked={formData.amenity.prepaid} 
                 onChange={handelPayemntRadioChange}
               />
             </span>
@@ -534,7 +534,7 @@ const SetupFacility = () => {
                 className="ml-2"
                 name="payment_type"
                 value="postpaid"
-                checked={formData.amenity.postpaid} // Bind state for postpaid
+                checked={formData.amenity.postpaid} 
                 onChange={handelPayemntRadioChange}
               />
             </span>
@@ -593,7 +593,7 @@ const SetupFacility = () => {
                   disabled={
                     !(
                       formData.amenity.fac_type === "request" &&
-                      formData.amenity.postpaid === true
+                      formData.amenity.postpaid === true || formData.amenity.prepaid
                     )
                   }
                   value={formData.amenity.fixed_amount || ""}

@@ -91,7 +91,7 @@ const FacilityDetails = () => {
             Fee Details
           </h2>
           <div className="border shadow-md rounded-lg bg-blue-50 p-4">
-            {['member', 'guest', 'tenant'].map((type) => (
+            {['member', 'guest', 'tenant',].map((type) => (
               <div key={type} className="my-2">
                 <p className="font-medium capitalize">{type}:</p>
                 <div className="grid grid-cols-2 gap-4">
@@ -106,6 +106,9 @@ const FacilityDetails = () => {
                 </div>
               </div>
             ))}
+            <div className='border p-2 rounded-md'>
+              <p className="font-medium text-bold capitalize gap-5">Fixed Price: {facilityData?.fixed_amount || "NA"}</p> 
+            </div>
           </div>
           <div className='border-b border-black'>
             <div className='grid grid-cols-3 p-4 gap-4'>
