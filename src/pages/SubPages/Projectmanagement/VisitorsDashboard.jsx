@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FaDownload } from "react-icons/fa";
-import { getTicketDashboard, getVisitorDashboard } from "../../../api";
+import { getVisitorDashboard, API_URL } from "../../../api";
+import toast from "react-hot-toast";
+import { getItemInLocalStorage } from "../../../utils/localStorage";
 
 const VisitorsDashboard = () => {
   const [totalTickets, setTotalTickets] = useState("");
@@ -34,60 +36,76 @@ const VisitorsDashboard = () => {
     };
     fetchTicketInfo();
   }, []);
-  const getRandomColor = () => {
-    const letters = "0123456789ABCDEF";
-    let color = "#";
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
 
-  const handleTicketStatusDownload = async () => {
-    toast.loading("Downloading Please Wait");
+  const handleVisitorsDownload = async () => {
+    toast.loading("Downloading Visitors Report, Please Wait...");
     try {
-      const response = await getTicketStatusDownload();
-      const url = window.URL.createObjectURL(
-        new Blob([response.data], {
-          type: response.headers["content-type"],
-        })
-      );
-      const link = document.createElement("a");
+      const token = getItemInLocalStorage("TOKEN");
+      const siteId = getItemInLocalStorage("SITEID");
+      
+      // Direct download URL approach
+      const downloadUrl = `${API_URL}/visitors/export_visitors.xlsx?token=${token}&site_ids=${siteId}`;
+      
+      // Using fetch for better control
+      const response = await fetch(downloadUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.style.display = 'none';
       link.href = url;
-      link.setAttribute("download", "ticket_file.xlsx");
+      link.download = 'visitors_export.xlsx';
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      toast.success("Ticket downloaded successfully");
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
       toast.dismiss();
+      toast.success("Visitors report downloaded successfully");
     } catch (error) {
       toast.dismiss();
-      console.error("Error downloading Ticket:", error);
-      toast.error("Something went wrong, please try again");
+      console.error("Error downloading visitors report:", error);
+      toast.error("Failed to download visitors report. Please try again.");
     }
   };
 
-  const handleStatusDownload = async (key) => {
-    toast.loading("Downloading Please Wait");
+  const handleGenericDownload = async (type) => {
+    toast.loading(`Downloading ${type} report, Please Wait...`);
     try {
-      const response = await getStatusDownload(key);
-      const url = window.URL.createObjectURL(
-        new Blob([response.data], {
-          type: response.headers["content-type"],
-        })
-      );
-      const link = document.createElement("a");
+      const token = getItemInLocalStorage("TOKEN");
+      const siteId = getItemInLocalStorage("SITEID");
+      
+      // For now, using the same visitors API for all types
+      // You can customize this based on different endpoints for each type
+      const downloadUrl = `${API_URL}/visitors/export_visitors.xlsx?token=${token}&site_ids=${siteId}`;
+      
+      const response = await fetch(downloadUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.style.display = 'none';
       link.href = url;
-      link.setAttribute("download", "Ticket_Status_file.xlsx");
+      link.download = `${type.toLowerCase().replace(/\s+/g, '_')}_report.xlsx`;
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      toast.success("Soft Service downloaded successfully");
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
       toast.dismiss();
+      toast.success(`${type} report downloaded successfully`);
     } catch (error) {
       toast.dismiss();
-      console.error("Error downloading Soft Service:", error);
-      toast.error("Something went wrong, please try again");
+      console.error(`Error downloading ${type} report:`, error);
+      toast.error(`Failed to download ${type} report. Please try again.`);
     }
   };
 
@@ -97,7 +115,7 @@ const VisitorsDashboard = () => {
         <div className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
           <div className="flex gap-2">
             <span> Total Visitors </span>
-            <button onClick={handleTicketStatusDownload}>
+            <button onClick={handleVisitorsDownload}>
               <FaDownload />
             </button>
           </div>
@@ -108,7 +126,7 @@ const VisitorsDashboard = () => {
         <div className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
           <div className="flex gap-2">
             <span> Total In </span>
-            <button onClick={handleTicketStatusDownload}>
+            <button onClick={() => handleGenericDownload("Total In")}>
               <FaDownload />
             </button>
           </div>
@@ -119,7 +137,7 @@ const VisitorsDashboard = () => {
         <div className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
           <div className="flex gap-2">
             <span> Total Out </span>
-            <button onClick={handleTicketStatusDownload}>
+            <button onClick={() => handleGenericDownload("Total Out")}>
               <FaDownload />
             </button>
           </div>
@@ -129,8 +147,8 @@ const VisitorsDashboard = () => {
         </div>
         <div className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
           <div className="flex gap-2">
-            <span> Today's In </span>
-            <button onClick={handleTicketStatusDownload}>
+            <span> Today&apos;s In </span>
+            <button onClick={() => handleGenericDownload("Today's In")}>
               <FaDownload />
             </button>
           </div>
@@ -140,8 +158,8 @@ const VisitorsDashboard = () => {
         </div>
         <div className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
           <div className="flex gap-2">
-            <span> Today's Out</span>
-            <button onClick={handleTicketStatusDownload}>
+            <span> Today&apos;s Out</span>
+            <button onClick={() => handleGenericDownload("Today's Out")}>
               <FaDownload />
             </button>
           </div>

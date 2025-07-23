@@ -26,7 +26,7 @@ const Dashboard = () => {
   const [siteData, setSiteData] = useState([]);
   const dropdownRef = useRef(null);
   const [siteName, setSiteName] = useState("");
-  const [bgImage, setBgImage] = useState("")
+  const [bgImage, setBgImage] = useState("");
   // console.log(vibeUserId);
   const contentRef = useRef(null);
 
@@ -43,16 +43,15 @@ const Dashboard = () => {
     // fetchCalendar();
   }, []);
 
-
-    useEffect(() => {
-      const BgImage = async () => {
-        const resp = await getVibeBackground();
-        console.log("resp", resp);
-        const image = resp?.data[1]?.image;
-        setBgImage(image);
-      };
-      BgImage();
-    }, []);
+  useEffect(() => {
+    const BgImage = async () => {
+      const resp = await getVibeBackground();
+      console.log("resp", resp);
+      const image = resp?.data[1]?.image;
+      setBgImage(image);
+    };
+    BgImage();
+  }, []);
 
   const getAllowedFeatures = () => {
     const storedFeatures = getItemInLocalStorage("FEATURES");
@@ -136,7 +135,7 @@ const Dashboard = () => {
     <section
       className="flex"
       ref={contentRef}
-        style={{
+      style={{
         // background: `url(${bgImage || wave})`,
         background: `rgb(3 19 37)`,
         // backgroundSize: "100% 100% ",

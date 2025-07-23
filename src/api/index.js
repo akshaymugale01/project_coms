@@ -2809,6 +2809,20 @@ export const getVisitorDetails = async (id) =>
       Expires: "0",
     },
   });
+
+  export const getExportVisitors = async () =>
+  axiosInstance.get(`/visitors/export_visitors.json`, {
+    params: {
+      token: token,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
+  
+
 export const editVisitorDetails = async (id, data) =>
   axiosInstance.put(`/visitors/${id}.json`, data, {
     params: {
