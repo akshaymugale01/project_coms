@@ -463,13 +463,21 @@ export const getFitOutCategoriesSetup = async () =>
   });
 
 // ticket download section
-export const getTicketStatusDownload = async () =>
-  axiosInstance.get(`/pms/admin/complaints/export_complaints.xlsx?`, {
-    params: {
-      token: token,
-    },
+export const getTicketStatusDownload = async (startDate = null, endDate = null) => {
+  const params = {
+    token: token,
+  };
+  
+  if (startDate && endDate) {
+    params.start_date = startDate;
+    params.end_date = endDate;
+  }
+  
+  return axiosInstance.get(`/pms/admin/complaints/export_complaints.xlsx`, {
+    params,
     responseType: "blob",
   });
+};
 
 export const getStatusDownload = async (id) =>
   axiosInstance.get(`/pms/admin/complaints/export_complaints.xlsx`, {
@@ -2810,17 +2818,32 @@ export const getVisitorDetails = async (id) =>
     },
   });
 
-  export const getExportVisitors = async () =>
-  axiosInstance.get(`/visitors/export_visitors.json`, {
-    params: {
+  export const getExportVisitors = async (startDate = null, endDate = null, filterType = null) => {
+    const params = {
       token: token,
-    },
-    headers: {
-      "Cache-Control": "no-cache",
-      Pragma: "no-cache",
-      Expires: "0",
-    },
-  });
+    };
+    
+    // Add date parameters if provided
+    if (startDate && endDate) {
+      params.start_date = startDate;
+      params.end_date = endDate;
+    }
+    
+    // Add filter type parameter if provided
+    if (filterType) {
+      params.filter_type = filterType;
+    }
+    
+    return axiosInstance.get(`/visitors/export_visitors.xlsx`, {
+      params: params,
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+      responseType: 'blob', // Important for Excel file download
+    });
+  };
   
 
 export const editVisitorDetails = async (id, data) =>
@@ -4645,6 +4668,7 @@ export const getDocCancelCheck = async (userId, consultId) => {
     throw error;
   }
 };
+
 export const postDocCancellation = async (data) => {
   try {
     const response = await vibeAuth.post(
