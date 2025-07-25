@@ -21,6 +21,7 @@ function CreatePolls() {
   const [share, setShare] = useState("all");
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [groupMembers, setGroupMembers] = useState([]);
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [units, setUnits] = useState([]);
@@ -33,6 +34,7 @@ function CreatePolls() {
   const [selectedUserOption, setSelectedUserOption] = useState([]);
   const [pollsOption, setPollsOption] = useState([]);
   const [currentDate, setCurrentDate] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState([]);
 
   useEffect(() => {
     const today = new Date();
@@ -109,9 +111,14 @@ function CreatePolls() {
   };
 
   const handleGroupChange = (event) => {
-    const groupId = parseInt(event.target.value, 10) || 0; // Default to 0 if value is invalid
+    const groupId = parseInt(event.target.value, 10) || 0;
+    const selectedGroupObj = groups.find((group) => group.id === groupId);
+
     setSelectedGroup(event.target.value);
     setFormData({ ...formData, group_id: groupId });
+
+    // Set members directly from selected group object
+    setGroupMembers(selectedGroupObj?.group_members || []);
   };
 
   const handleRemovePolls = (index) => {
@@ -136,6 +143,7 @@ function CreatePolls() {
     send_mail: "",
     target_groups: [], // Array to store selected target groups
     poll_options_attributes: {}, // Object to store poll options
+    group_member: [],
   });
 
   console.log("FormData", formData);
@@ -208,8 +216,9 @@ function CreatePolls() {
         const employeesList = usersRes.data.map((emp) => ({
           id: emp.id,
           name: `${emp.firstname} ${emp.lastname}`,
-          building_id: emp.building_id,
+          building_id: emp.building_id || emp.building?.id || null, //for some users id is null
           userSites: emp.user_sites || [],
+          building: emp.building || {},
         }));
 
         setMembers(employeesList);
@@ -235,6 +244,12 @@ function CreatePolls() {
       const buildingMatch =
         !selectedUnit || Number(member.building_id) === Number(selectedUnit);
 
+      console.log(
+        "building_id type:",
+        typeof member.building_id,
+        member.building_id
+      );
+
       // Check if any of the user's sites match the selected ownership
       const ownershipMatch =
         !selectedOwnership ||
@@ -257,9 +272,8 @@ function CreatePolls() {
 
     console.log("Filtered Members:", filtered);
     setFilteredMembers(filtered);
+    toast.success("Filter applied");
   };
-
-  const [selectedMembers, setSelectedMembers] = useState([]);
 
   const handleSelectEdit = (option) => {
     if (selectedMembers.includes(option)) {
@@ -509,6 +523,32 @@ function CreatePolls() {
                       </option>
                     ))}
                   </select>
+
+                  {/* Display group members as per group selection */}
+                  {selectedGroup && (
+                    <div className="mt-4 p-4 border rounded-md bg-gray-50">
+                      <h2 className="text-lg font-semibold mb-2">
+                        Group Members
+                      </h2>
+
+                      {groupMembers.length > 0 ? (
+                        <div className="space-y-2">
+                          {groupMembers.map((member, index) => (
+                            <div
+                              key={index}
+                              className="p-2 border rounded bg-white shadow-sm"
+                            >
+                              {member.user_name}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                          No members exist inside this group.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

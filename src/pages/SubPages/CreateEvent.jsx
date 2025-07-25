@@ -30,11 +30,13 @@ const CreateEvent = () => {
   const [share, setShare] = useState("all");
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("");
+  const [groupMembers, setGroupMembers] = useState([]);
   const [ownership, setOwnership] = useState([]);
   const [selectedOwnership, setSelectedOwnership] = useState("");
+  const [selectedFloor, setselectedFloor] = useState("");
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [users, setUsers] = useState([]);
-  const [selectedUnits, setSelectedUnits] = useState([]);
+  // const [selectedUnits, setSelectedUnits] = useState([]);
   const [members, setMembers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
@@ -57,6 +59,7 @@ const CreateEvent = () => {
     email_enabled: false,
     rsvp_enabled: false,
     important: false,
+    group_member: [],
   });
   console.log(formData);
   const fileInputRef = useRef(null);
@@ -75,12 +78,12 @@ const CreateEvent = () => {
         const employeesList = usersRes.data.map((emp) => ({
           id: emp.id,
           name: `${emp.firstname} ${emp.lastname}`,
-          building_id: emp.building_id,
+          building_id: emp.building_id || emp.building?.id || null, //for some users id is null
           userSites: emp.user_sites || [],
+          building: emp.building || {},
         }));
 
         setMembers(employeesList);
-        setFilteredMembers(employeesList);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -100,7 +103,13 @@ const CreateEvent = () => {
     const filtered = members.filter((member) => {
       // Check if the user belongs to the selected building
       const buildingMatch =
-        !selectedUnit || Number(member.building_id) === Number(selectedUnit);
+        !selectedUnit || Number(member.building_id ?? member.building?.id) ===  Number(selectedUnit);
+
+      console.log(
+        "building_id type:",
+        typeof member.building_id,
+        member.building_id
+      );
 
       // Check if any of the user's sites match the selected ownership
       const ownershipMatch =
@@ -124,6 +133,7 @@ const CreateEvent = () => {
 
     console.log("Filtered Members:", filtered);
     setFilteredMembers(filtered);
+    toast.success("Filter applied");
   };
 
   const handleStartDateChange = (date) => {
@@ -217,13 +227,13 @@ const CreateEvent = () => {
     const filtered = members.filter((user) =>
       user.userSites.some(
         (site) =>
-          (selectedUnits.length === 0 ||
-            selectedUnits.includes(site.unit_id)) &&
-          (ownership.length === 0 || ownership.includes(site.ownership))
+          (!selectedUnit || site.unit_id === selectedUnit) &&
+          (!ownership || site.ownership === ownership)
       )
     );
+
     setFilteredMembers(filtered);
-  }, [selectedUnits, ownership, members]);
+  }, [selectedUnit, ownership, members]);
 
   const fetchGroups = async () => {
     try {
@@ -237,11 +247,24 @@ const CreateEvent = () => {
 
   console.log("ggp", groups);
 
+  // const handleGroupChange = (event) => {
+  //   const groupId = parseInt(event.target.value, 10) || 0; // Default to 0 if value is invalid
+  //   setSelectedGroup(event.target.value);
+  //   setFormData({ ...formData, group_id: groupId });
+  // };
+
   const handleGroupChange = (event) => {
-    const groupId = parseInt(event.target.value, 10) || 0; // Default to 0 if value is invalid
+    const groupId = parseInt(event.target.value, 10) || 0;
+    const selectedGroupObj = groups.find((group) => group.id === groupId);
+
     setSelectedGroup(event.target.value);
     setFormData({ ...formData, group_id: groupId });
+
+    // Set members directly from selected group object
+    setGroupMembers(selectedGroupObj?.group_members || []);
   };
+
+  console.log("Group member", groupMembers);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -597,6 +620,32 @@ const CreateEvent = () => {
                         </option>
                       ))}
                     </select>
+
+                    {/* Display group members as per group selection */}
+                    {selectedGroup && (
+                      <div className="mt-4 p-4 border rounded-md bg-gray-50">
+                        <h2 className="text-lg font-semibold mb-2">
+                          Group Members
+                        </h2>
+
+                        {groupMembers.length > 0 ? (
+                          <div className="space-y-2">
+                            {groupMembers.map((member, index) => (
+                              <div
+                                key={index}
+                                className="p-2 border rounded bg-white shadow-sm"
+                              >
+                                {member.user_name}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600">
+                            No members exist inside this group.
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -26,6 +26,7 @@ const CreateBroadcast = () => {
   const [selectedGroup, setSelectedGroup] = useState("");
   const themeColor = useSelector((state) => state.theme.color);
   const [selectedUnit, setSelectedUnit] = useState(null);
+  const [groupMembers, setGroupMembers] = useState([]);
   const siteId = getItemInLocalStorage("SITEID");
   const currentUser = getItemInLocalStorage("UserId");
   const [units, setUnits] = useState([]);
@@ -47,6 +48,7 @@ const CreateBroadcast = () => {
     group_name: "",
     important: "",
     send_email: "",
+    group_member: [],
   });
   console.log(formData);
   const datePickerRef = useRef(null);
@@ -94,16 +96,15 @@ const CreateBroadcast = () => {
         const unitsRes = await getBuildings();
         console.log("userSites", unitsRes);
         setUnits(unitsRes.data);
-
         const employeesList = usersRes.data.map((emp) => ({
           id: emp.id,
           name: `${emp.firstname} ${emp.lastname}`,
-          building_id: emp.building_id,
+          building_id: emp.building_id || emp.building?.id || null, //for some users id is null
           userSites: emp.user_sites || [],
+          building: emp.building || {},
         }));
 
         setMembers(employeesList);
-        setFilteredMembers(employeesList);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -147,6 +148,7 @@ const CreateBroadcast = () => {
 
     console.log("Filtered Members:", filtered);
     setFilteredMembers(filtered);
+    toast.success("Filter applied");
   };
 
   const fetchGroups = async () => {
@@ -159,17 +161,17 @@ const CreateBroadcast = () => {
     }
   };
 
-  const handleGroupChange = (event) => {
-    const selectedGroupId = event.target.value;
-    setSelectedGroup(selectedGroupId);
-    // Update formData with the selected group_id
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      group_id: selectedGroupId, // Set the selected group_id
-      group_name:
-        groups.find((group) => group.id === selectedGroupId)?.group_name || "", // Optionally, set the group_name if needed
-    }));
+   const handleGroupChange = (event) => {
+    const groupId = parseInt(event.target.value, 10) || 0;
+    const selectedGroupObj = groups.find((group) => group.id === groupId);
+
+    setSelectedGroup(event.target.value);
+    setFormData({ ...formData, group_id: groupId });
+
+    // Set members directly from selected group object
+    setGroupMembers(selectedGroupObj?.group_members || []);
   };
+
 
   const handleShareChange = (shareType) => {
     setShare(shareType); // Update the share state
@@ -530,6 +532,32 @@ const CreateBroadcast = () => {
                           </option>
                         ))}
                       </select>
+
+                      {/* Display group members as per group selection */}
+                      {selectedGroup && (
+                        <div className="mt-4 p-4 border rounded-md bg-gray-50">
+                          <h2 className="text-lg font-semibold mb-2">
+                            Group Members
+                          </h2>
+
+                          {groupMembers.length > 0 ? (
+                            <div className="space-y-2">
+                              {groupMembers.map((member, index) => (
+                                <div
+                                  key={index}
+                                  className="p-2 border rounded bg-white shadow-sm"
+                                >
+                                  {member.user_name}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-600">
+                              No members exist inside this group.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

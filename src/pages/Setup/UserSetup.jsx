@@ -42,36 +42,36 @@ const UserSetup = () => {
     fetchUsers();
   }, []);
 
-console.log("count", count);  
-const handleSearch = (e) => {
-  const searchValue = e.target.value;
-  setSearchText(searchValue);
+  console.log("count", count);
+  const handleSearch = (e) => {
+    const searchValue = e.target.value;
+    setSearchText(searchValue);
 
-  if (searchValue.trim() === "") {
-    setFilteredData(users);
-  } else {
-    const searchWords = searchValue.toLowerCase().split(" ").filter(Boolean);
-    const filteredResults = users.filter((item) => {
-      // Combine searchable fields into one string
-      const searchable = [
-        item.firstname,
-        item.lastname,
-        // item.unit_name,
-        item.email,
-        item.mobile,
-        item.user_type,
-        item.unit?.name || "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+    if (searchValue.trim() === "") {
+      setFilteredData(users);
+    } else {
+      const searchWords = searchValue.toLowerCase().split(" ").filter(Boolean);
+      const filteredResults = users.filter((item) => {
+        // Combine searchable fields into one string
+        const searchable = [
+          item.firstname,
+          item.lastname,
+          // item.unit_name,
+          item.email,
+          item.mobile,
+          item.user_type,
+          item.unit?.name || "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
 
-      // Check if every search word is present in the combined string
-      return searchWords.every((word) => searchable.includes(word));
-    });
-    setFilteredData(filteredResults);
-  }
-};
+        // Check if every search word is present in the combined string
+        return searchWords.every((word) => searchable.includes(word));
+      });
+      setFilteredData(filteredResults);
+    }
+  };
 
   // const totalUsers = users.length;
   // const appDownloadedCount = users.filter((user) => user.is_downloaded).length;
@@ -113,7 +113,16 @@ const handleSearch = (e) => {
       selector: (row) => (row.is_downloaded ? "Yes" : "No"),
       sortable: true,
     },
-    { name: "Unit", selector: (row) => row.unit?.name || "NA", sortable: true },
+    {
+      name: "Building-Floor-Unit",
+      selector: (row) => {
+        const building = row.building?.name || "NA";
+        const floor = row.floor?.name || "NA";
+        const unit = row.unit?.name || "NA";
+        return `${building} - ${floor} - ${unit}`;
+      },
+      sortable: true,
+    },
     {
       name: "Type",
       selector: (row) =>
@@ -212,7 +221,7 @@ const handleSearch = (e) => {
                 <p className="text-xl font-bold">{pendingUsers}</p>
               </div> */}
             </div>
-            <Table columns={userColumn} data={filteredData} />
+            <Table columns={userColumn} data={filteredData}/>
           </>
         )}
       </div>
