@@ -82,6 +82,7 @@ const Ticket = () => {
       selector: (row) => row.building_name,
       sortable: true,
     },
+    { name: "Status", selector: (row) => row.issue_status, sortable: true },
     { name: "Floor Name", selector: (row) => row.floor_name, sortable: true },
     { name: "Unit Name", selector: (row) => row.unit, sortable: true },
     {
@@ -102,7 +103,6 @@ const Ticket = () => {
     //   sortable: true,
     //   // maxWidth: "500px",
     // },
-    { name: "Status", selector: (row) => row.issue_status, sortable: true },
     { name: "Created By", selector: (row) => row.created_by, sortable: true },
     {
       name: "Created On",
