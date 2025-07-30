@@ -62,13 +62,16 @@ const Table = ({
   data,
   apiEndpoint,
   customStyles,
+  paginationPerPage,
+  paginationRowsPerPageOptions,
+  paginationTotalRows,
   onChangePage,
+  onChangeRowsPerPage,
   selectableRow,
-  onSelectedRows 
+  onSelectedRows,
 }) => {
   const themeColor = useSelector((state) => state.theme.color);
 
-  
   const customStyle = {
     headRow: {
       style: {
@@ -83,7 +86,6 @@ const Table = ({
         paddingLeft: "16px",
         paddingRight: "16px",
         width: "150px",
-        
       },
     },
     // cells: {
@@ -98,10 +100,10 @@ const Table = ({
         whiteSpace: "nowrap",
         fontSize: "14px",
         lineHeight: "24px",
-        width: "150px",
+        width: "200px",
         // color: "#6b7280",
         color: "#4b5260",
-        fontWeight: 450
+        fontWeight: 450,
       },
     },
   };
@@ -122,12 +124,16 @@ const Table = ({
         data={data}
         customStyles={customStyles || customStyle}
         pagination={pagination}
-        // paginationServer
+        paginationServer
+        paginationPerPage={paginationPerPage}
+        paginationRowsPerPageOptions={paginationRowsPerPageOptions}
+        paginationTotalRows={paginationTotalRows}
         fixedHeader
         selectableRowsHighlight
         selectableRows={selectableRow}
         highlightOnHover
         onChangePage={onChangePage}
+        onChangeRowsPerPage={onChangeRowsPerPage}
         onSelectedRowsChange={handleSelectedRowsChange}
       />
     </div>
