@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 import DataTable from "react-data-table-component";
 import Navbar from "../components/Navbar";
@@ -24,21 +24,22 @@ const Ticket = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [ticketTypeCounts, setTicketTypeCounts] = useState({});
-  const [ticketStatusCounts, setTicketStatusCounts] = useState({});
-  const allTicketTypes = ["Complaint", "Request", "Suggestion"];
-  const [filterSearch, setFilter] = useState([]);
+  const [selectedType, setSelectedType] = useState("all");
+  const [allComplaints, setAllComplaints] = useState([]); // Store all complaints in state
   const [complaints, setComplaints] = useState([]);
-  const [allData, setAllData] = useState([]);
   const [allCounts, setAllCounts] = useState({});
   const perPage = 10;
   const [totalRows, setTotalRows] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterModal, setFilterModal] = useState(false);
   const [hideColumn, setHideColumn] = useState(false);
+  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
-  const [activeStatus, setActiveStatus] = useState(null);
-  const [activeType, setActiveType] = useState(null);
+  
+  // Add state for tracking filtered mode
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [currentFilterParams, setCurrentFilterParams] = useState({});
 
   const getTimeAgo = (timestamp) => {
     const createdTime = moment(timestamp);
@@ -205,116 +206,162 @@ const Ticket = () => {
     },
   };
 
-  const fetchData = async (page, perPage) => {
+  // Function to fetch filtered data from API with query parameters and server pagination
+  const fetchFilteredData = useCallback(async (filterParams = {}, page = 1) => {
     try {
-      const response = await getAdminPerPageComplaints(page, perPage);
-      console.log("Resp", response);
-
-      setAllData(response?.data || []);
-      console.log("All Data", allData);
-      const complaints = response?.data?.complaints || [];
-      setFilteredData(complaints);
-      setComplaints(complaints);
-      setTotalRows(complaints.length);
-
-      setTotalRows(complaints.length);
-
-      const statusCounts = complaints.reduce((acc, curr) => {
-        acc[curr.issue_status] = (acc[curr.issue_status] || 0) + 1;
-        return acc;
-      }, {});
-      setTicketStatusCounts(statusCounts);
-
-      const typeCounts = complaints.reduce((acc, curr) => {
-        acc[curr.issue_type] = (acc[curr.issue_type] || 0) + 1;
-        return acc;
-      }, {});
-      setTicketTypeCounts(typeCounts);
+      setLoading(true);
+      
+      // Build query string from filter parameters
+      const queryParams = new URLSearchParams();
+      Object.entries(filterParams).forEach(([key, value]) => {
+        if (value && value !== 'all') {
+          queryParams.append(key, value);
+        }
+      });
+      
+      // Add page parameter for server-side pagination
+      queryParams.append('page', page.toString());
+      
+      console.log("Fetching with filters:", filterParams);
+      console.log("Page:", page);
+      console.log("Query string:", queryParams.toString());
+      
+      // Construct the query string for the API call
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      
+      // Fetch filtered data from API with server pagination
+      const response = await getAdminComplaints(queryString);
+      
+      if (response?.data?.complaints) {
+        const filteredComplaints = response.data.complaints;
+        
+        // Use server-provided pagination info
+        const { count, total_pages, current_page } = response.data;
+        
+        setTotalRows(count || 0);
+        setTotalPages(total_pages || 1);
+        setCurrentPage(current_page || page);
+        setFilteredData(filteredComplaints);
+        
+        console.log("Filtered data received:", filteredComplaints.length);
+        console.log("Server pagination - Total:", count, "Pages:", total_pages, "Current:", current_page);
+        return filteredComplaints;
+      } else {
+        console.log("No complaints data in response:", response?.data);
+        setFilteredData([]);
+        setTotalRows(0);
+        setTotalPages(1);
+        return [];
+      }
+      
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching filtered data:", error);
+      setFilteredData([]);
+      setTotalRows(0);
+      setTotalPages(1);
+      return [];
+    } finally {
+      setLoading(false);
     }
-  };
-  // useEffect(() => {
-  //   fetchData(currentPage, perPage);
-  // }, [currentPage]);
-  const [ticketTypes, setTicketsTypes] = useState({});
-  const [statusData, setStatusData] = useState({});
-  console.log("Ticket Types", ticketTypes);
-  console.log("Status Data", statusData);
-
-  useEffect(() => {
-    const fetchTicketInfo = async () => {
-      try {
-        const ticketInfoResp = await getTicketDashboard();
-        console.log("Dashboard API Response:", ticketInfoResp.data);
-        setAllCounts(ticketInfoResp.data);
-        setTicketsTypes(ticketInfoResp.data.by_type);
-        setStatusData(ticketInfoResp.data.by_status);
-        console.log(
-          "Status Data from Dashboard:",
-          ticketInfoResp.data.by_status
-        );
-        console.log(ticketInfoResp);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    const filterSearchStatus = async () => {
-      try {
-        const searchAllTickets = await getAdminComplaints();
-        const searchResp = searchAllTickets?.data?.complaints;
-        console.log("All Tickets API Response:", searchResp);
-        console.log("Total tickets from list API:", searchResp?.length);
-
-        // Count status distribution in the actual data
-        const statusCounts = searchResp?.reduce((acc, ticket) => {
-          const status = ticket.issue_status || "Unknown";
-          acc[status] = (acc[status] || 0) + 1;
-          return acc;
-        }, {});
-        console.log("Actual status counts from list data:", statusCounts);
-
-        setFilter(searchResp);
-        setFilteredData(searchResp); // Set initial filtered data to show all tickets
-        setComplaints(searchResp); // Update complaints to use all data
-        console.log(searchResp);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    filterSearchStatus();
-    fetchTicketInfo();
   }, []);
 
-  const handleNext = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-    console.log(currentPage);
-  };
+  const fetchData = useCallback(async (page, perPageSize) => {
+    try {
+      setLoading(true);
+      
+      // Fetch both paginated and all data in parallel for efficiency
+      const [paginatedResponse, allComplaintsResponse] = await Promise.all([
+        getAdminPerPageComplaints(page, perPageSize),
+        allComplaints.length === 0 ? getAdminComplaints() : Promise.resolve(null)
+      ]);
+      
+      console.log("Paginated Response", paginatedResponse);
 
-  const handlePrevious = () => {
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1)); // Ensure currentPage does not go below 1
-  };
+      if (paginatedResponse?.data) {
+        const { complaints = [], count, total_pages, current_page } = paginatedResponse.data;
+        
+        // Update state with paginated data
+        setComplaints(complaints);
+        setTotalRows(count || 0);
+        setTotalPages(total_pages || 1);
+        setCurrentPage(current_page || 1);
+        
+        // Set filtered data to current page complaints initially
+        setFilteredData(complaints);
+      }
 
-  // const handlePerRowsChange = async (newPerPage, page) => {
-  //   setCurrentPage(page);
-  // };
+      // Update all complaints if we fetched them
+      if (allComplaintsResponse?.data?.complaints) {
+        const allComplaintsData = allComplaintsResponse.data.complaints;
+        setAllComplaints(allComplaintsData);
+        console.log("All complaints loaded:", allComplaintsData.length);
+      }
+      
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [allComplaints.length]);
 
-  const handleSearch = async (e) => {
-    const searchValue = e.target.value;
-    setSearchText(searchValue);
+  const fetchTicketInfo = useCallback(async () => {
+    try {
+      const ticketInfoResp = await getTicketDashboard();
+      console.log("Dashboard API Response:", ticketInfoResp.data);
+      
+      const dashboardData = ticketInfoResp.data;
+      setAllCounts(dashboardData);
+      setTicketsTypes(dashboardData.by_type);
+      setStatusData(dashboardData.by_status);
+      
+      // Debug: Log the exact status keys from the API
+      console.log("Available status keys from API:", Object.keys(dashboardData.by_status || {}));
+      console.log("Available type keys from API:", Object.keys(dashboardData.by_type || {}));
+      
+      console.log("Status Data from Dashboard:", dashboardData.by_status);
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
 
-    if (searchValue.trim() === "") {
-      setFilteredData(filterSearch); // Use all data instead of paginated complaints
-    } else {
-      // Split search into words, ignore extra spaces
-      const searchWords = searchValue
+  // Function to apply current filters to the data
+  const applyFilters = useCallback((data) => {
+    // Determine the data source
+    let sourceData = data;
+    if (!sourceData) {
+      // If we have a specific status or type selected, use all complaints data
+      if (selectedStatus !== "all" || selectedType !== "all") {
+        sourceData = allComplaints;
+      } else {
+        // Otherwise use current page data
+        sourceData = complaints;
+      }
+    }
+    
+    let filtered = [...sourceData];
+
+    // Apply status filter
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter(item => 
+        item.issue_status?.toLowerCase() === selectedStatus.toLowerCase()
+      );
+    }
+
+    // Apply type filter
+    if (selectedType !== "all") {
+      filtered = filtered.filter(item => 
+        item.issue_type?.toLowerCase() === selectedType.toLowerCase()
+      );
+    }
+
+    // Apply search filter
+    if (searchText.trim() !== "") {
+      const searchWords = searchText
         .toLowerCase()
         .split(" ")
         .filter((w) => w.trim() !== "");
 
-      const filteredResults = filterSearch.filter((item) => {
-        // Gather all searchable fields as a single string
+      filtered = filtered.filter((item) => {
         const searchable = [
           item.ticket_number,
           item.category_type,
@@ -331,85 +378,132 @@ const Ticket = () => {
           .map((v) => (v || "").toLowerCase())
           .join(" ");
 
-        // All search words must be present in the searchable string
-        const allWordsMatch = searchWords.every((word) =>
-          searchable.includes(word)
-        );
-
-        // Status filter
-        const statusMatch =
-          selectedStatus === "all" ||
-          (item.issue_status || "").toLowerCase() ===
-            selectedStatus.toLowerCase();
-
-        return allWordsMatch && statusMatch;
+        return searchWords.every((word) => searchable.includes(word));
       });
+    }
 
-      setFilteredData(filteredResults);
+    setFilteredData(filtered);
+  }, [complaints, selectedStatus, selectedType, searchText, allComplaints]);
+
+  // useEffect(() => {
+  //   fetchData(currentPage, perPage);
+  // }, [currentPage]);
+  const [ticketTypes, setTicketsTypes] = useState({});
+  const [statusData, setStatusData] = useState({});
+  console.log("Ticket Types", ticketTypes);
+  console.log("Status Data", statusData);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      // Only fetch normal pagination data if we're not in filtered mode
+      if (!isFiltered) {
+        await Promise.all([
+          fetchTicketInfo(),
+          fetchData(currentPage, perPage)
+        ]);
+      }
+    };
+
+    initializeData();
+  }, [currentPage, perPage, fetchData, fetchTicketInfo, isFiltered]);
+
+  const handleNext = async () => {
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      
+      if (isFiltered && Object.keys(currentFilterParams).length > 0) {
+        // If we're in filtered mode, fetch next page from server
+        await fetchFilteredData(currentFilterParams, nextPage);
+      } else {
+        // Normal server-side pagination
+        setCurrentPage(nextPage);
+      }
     }
   };
 
-  console.log("Data", searchText);
-  console.log("Filtered Data:", filteredData);
-  console.log("Filter Search Data:", filterSearch);
-  console.log("Selected Status:", selectedStatus);
-  const handleStatusChange = (status) => {
+  const handlePrevious = async () => {
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      
+      if (isFiltered && Object.keys(currentFilterParams).length > 0) {
+        // If we're in filtered mode, fetch previous page from server
+        await fetchFilteredData(currentFilterParams, prevPage);
+      } else {
+        // Normal server-side pagination
+        setCurrentPage(prevPage);
+      }
+    }
+  };
+
+  const handleSearch = async (e) => {
+    const searchValue = e.target.value;
+    setSearchText(searchValue);
+  };
+
+  // Apply filters whenever search text, status, or type changes
+  useEffect(() => {
+    applyFilters();
+  }, [searchText, selectedStatus, selectedType, applyFilters]);
+
+  const handleStatusChange = async (status) => {
     setSelectedStatus(status);
+    setCurrentPage(1); // Reset to first page when filter changes
     console.log("Filtering by status:", status);
-
+    
     if (status === "all") {
-      setFilteredData(filterSearch); // Use filterSearch (all data) instead of complaints (paginated data)
+      // Show current page data when "all" is selected - reset to normal pagination
+      setIsFiltered(false);
+      setCurrentFilterParams({});
+      await fetchData(1, perPage); // Fetch first page of unfiltered data
+      console.log("Reset to normal pagination");
     } else {
-      const filteredResults = filterSearch.filter((item) => {
-        console.log(
-          "Item status:",
-          item.issue_status,
-          "Comparing with:",
-          status
-        );
-        return item.issue_status.toLowerCase() === status.toLowerCase();
-      });
-      console.log("Filtered results count:", filteredResults.length);
-      setFilteredData(filteredResults);
+      // Use API filtering with query parameters and server pagination
+      const filterParams = {
+        'q[complaint_status_name_eq]': status // Use the exact value from the dashboard
+      };
+      
+      setIsFiltered(true);
+      setCurrentFilterParams(filterParams);
+      
+      console.log("Sending filter params:", filterParams);
+      const filteredResults = await fetchFilteredData(filterParams, 1);
+      console.log(`API filtered results for ${status}:`, filteredResults.length);
     }
   };
 
-  const handelTypeChange = (type) => {
-    setSelectedStatus(type);
-
-    const filterType = filterSearch.filter(
-      (i) => i.issue_type.toLowerCase() === type.toLowerCase()
-    );
-    setFilteredData(filterType);
+  const handleTypeChange = async (type) => {
+    setSelectedType(type);
+    setCurrentPage(1); // Reset to first page when filter changes
+    console.log("Filtering by type:", type);
+    
+    if (type === "all") {
+      // Reset to normal pagination
+      setIsFiltered(false);
+      setCurrentFilterParams({});
+      await fetchData(1, perPage);
+      console.log("Reset to normal pagination");
+    } else {
+      // Use API filtering with query parameters and server pagination
+      const filterParams = {
+        'q[complaint_type_eq]': type // Use the exact value from the dashboard
+      };
+      
+      setIsFiltered(true);
+      setCurrentFilterParams(filterParams);
+      
+      console.log("Sending filter params:", filterParams);
+      const filteredResults = await fetchFilteredData(filterParams, 1);
+      console.log(`API filtered results for type ${type}:`, filteredResults.length);
+    }
   };
 
-  const [exportAllTickets, setExportAllTickets] = useState([]);
   const getAllTickets = async () => {
     const allTicketResp = await getAdminComplaints();
     console.log(allTicketResp);
-    setExportAllTickets(allTicketResp.data.complaints);
     return allTicketResp.data.complaints;
   };
 
   // export data
-  const exportToExcel = () => {
-    // const modifiedData = filteredData.map((item) => ({
-    //   ...item,
-    //   "Ticket Number": item.ticket_number,
-    // }));
-    const fileType =
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
-    const fileName = "helpdesk_data.xlsx";
-    const ws = XLSX.utils.json_to_sheet(filteredData);
-    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: fileType });
-    const url = URL.createObjectURL(data);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    link.click();
-  };
   const exportAllToExcel = async () => {
     // const modifiedData = filteredData.map((item) => ({
     //   ...item,
@@ -466,14 +560,6 @@ const Ticket = () => {
   };
 
   document.title = `Tickets - My Citi Life`;
-  const getRandomColor = () => {
-    const letters = "0123456789ABCDEF";
-    let color = "#";
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
 
   const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A6", "#FFC300"];
 
@@ -507,7 +593,11 @@ const Ticket = () => {
                 )}30, #ffffff)`,
                 border: `2px solid ${getFixedColor(index)}`,
               }}
-              onClick={() => handleStatusChange(key.toLowerCase())}
+              onClick={() => {
+                console.log("Card clicked for status:", key);
+                // Use the exact key from the API response instead of lowercase
+                handleStatusChange(key);
+              }}
             >
               {key}
               <span className="font-medium text-base text-black drop-shadow-md">
@@ -526,7 +616,11 @@ const Ticket = () => {
                 )}30, #ffffff)`,
                 border: `2px solid ${getFixedColor(index)}`,
               }}
-              onClick={() => handelTypeChange(key.toLowerCase())}
+              onClick={() => {
+                console.log("Card clicked for type:", key);
+                // Use the exact key from the API response instead of lowercase
+                handleTypeChange(key);
+              }}
             >
               {key}
               <span className="font-medium text-base text-black drop-shadow-md">
@@ -555,8 +649,8 @@ const Ticket = () => {
                 type="radio"
                 id="open"
                 name="status"
-                checked={selectedStatus === "open"}
-                onChange={() => handleStatusChange("open")}
+                checked={selectedStatus === "Open"}
+                onChange={() => handleStatusChange("Open")}
               />
               <label htmlFor="open" className="text-sm">
                 Open
@@ -567,8 +661,8 @@ const Ticket = () => {
                 type="radio"
                 id="closed"
                 name="status"
-                checked={selectedStatus === "closed"}
-                onChange={() => handleStatusChange("closed")}
+                checked={selectedStatus === "Closed"}
+                onChange={() => handleStatusChange("Closed")}
               />
               <label htmlFor="closed" className="text-sm">
                 Closed
@@ -579,32 +673,32 @@ const Ticket = () => {
                 type="radio"
                 id="pending"
                 name="status"
-                checked={selectedStatus === "pending"}
-                onChange={() => handleStatusChange("pending")}
+                checked={selectedStatus === "Pending"}
+                onChange={() => handleStatusChange("Pending")}
               />
               <label htmlFor="pending" className="text-sm">
                 Pending
               </label>
             </div>
-            {/* <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <input
                 type="radio"
-                id="hold"
+                id="received"
                 name="status"
-                checked={selectedStatus === "hold"}
-                onChange={() => handleStatusChange("hold")}
+                checked={selectedStatus === "Received"}
+                onChange={() => handleStatusChange("Received")}
               />
-              <label htmlFor="hold" className="text-sm">
-                On Hold
+              <label htmlFor="received" className="text-sm">
+                Received
               </label>
-            </div> */}
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="radio"
                 id="completed"
                 name="status"
-                checked={selectedStatus === "completed"}
-                onChange={() => handleStatusChange("completed")}
+                checked={selectedStatus === "Completed"}
+                onChange={() => handleStatusChange("Completed")}
               />
               <label htmlFor="completed" className="text-sm">
                 Completed
@@ -674,7 +768,7 @@ const Ticket = () => {
           </div>
         </div>
 
-        {complaints.length === 0 ? (
+        {loading || complaints.length === 0 ? (
           <div className="flex justify-center items-center h-full">
             <DNA
               visible={true}
@@ -704,22 +798,35 @@ const Ticket = () => {
         )}
         {/* </div> */}
 
-        <div className="flex justify-end m-2 gap-2 items-center">
-          <button
-            onClick={handlePrevious}
-            className=" px-2   disabled:opacity-50 disabled:shadow-none shadow-custom-all-sides rounded-full"
-            disabled={currentPage <= 1}
-          >
-            <MdKeyboardArrowLeft size={30} />
-          </button>
+        <div className="flex justify-between items-center m-2 gap-2">
+          <div className="text-sm text-gray-600">
+            {isFiltered ? (
+              `Filtered results: Page ${currentPage} of ${totalPages} | Showing ${filteredData.length} of ${totalRows} records`
+            ) : (
+              `Page ${currentPage} of ${totalPages} | Showing ${filteredData.length} of ${totalRows} records`
+            )}
+          </div>
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={handlePrevious}
+              className="px-2 disabled:opacity-50 disabled:shadow-none shadow-custom-all-sides rounded-full"
+              disabled={currentPage <= 1}
+            >
+              <MdKeyboardArrowLeft size={30} />
+            </button>
 
-          <button
-            onClick={handleNext}
-            className="px-2 rounded-full shadow-custom-all-sides  disabled:opacity-50 disabled:shadow-none"
-            disabled={perPage > totalRows}
-          >
-            <MdKeyboardArrowRight size={30} />
-          </button>
+            <span className="text-sm px-2">
+              {currentPage} / {totalPages}
+            </span>
+
+            <button
+              onClick={handleNext}
+              className="px-2 rounded-full shadow-custom-all-sides disabled:opacity-50 disabled:shadow-none"
+              disabled={currentPage >= totalPages}
+            >
+              <MdKeyboardArrowRight size={30} />
+            </button>
+          </div>
         </div>
       </div>
       {filterModal && (

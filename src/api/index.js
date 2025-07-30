@@ -675,8 +675,8 @@ export const postFitOutStatus = async (data) =>
     },
   });
 
-export const getAdminComplaints = async () =>
-  axiosInstance.get(`/pms/admin/complaints.json`, {
+export const getAdminComplaints = async (queryParams = '') =>
+  axiosInstance.get(`/pms/admin/complaints.json${queryParams}`, {
     params: {
       token: token,
     },
