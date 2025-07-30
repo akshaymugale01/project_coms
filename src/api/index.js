@@ -1339,6 +1339,22 @@ export const getPaymentBookings = async () =>
 
 //   Parking Api
 
+//vehicle
+export const getVehicle = async ()=>
+  axiosInstance.get(`/vehicle.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const postVehicle = async (data)=>
+  axiosInstance.post(`/vehicle.json`,data, {
+    params: {
+      token: token,
+    },
+  });
+
+
 export const postParking = async (data) =>
   axiosInstance.post(`/booking_parkings.json`, data, {
     params: {
@@ -1346,12 +1362,33 @@ export const postParking = async (data) =>
     },
   });
 
+//posting the data for parking slot
+export const postParkingSlots = async (parkingSlotData) =>
+  axiosInstance.post(`/parking_slots.json`, 
+    { parking_slot: parkingSlotData },
+    {
+      params: { token: token }
+    }
+  );
+
 export const getParkingSlots = async () =>
   axiosInstance.get(`/parking_slots.json`, {
     params: {
       token: token,
     },
   });
+
+  export const updateParkingSlot = async ({ id, parking_slot }) => {
+  try {
+    const response = await axiosInstance.put(`/parking_slots/${id}.json`, {
+      parking_slot,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Update failed:", error.message);
+    throw error;
+  }
+};
 
 export const getAvailableParkingNumber = async () =>
   axiosInstance.get(`/available_parking_configurations.json`, {
@@ -1943,12 +1980,23 @@ export const postNewGoods = async (data) =>
       token: token,
     },
   });
-export const getStaff = async () =>
+export const getStaff = async (per_page,page) =>
+  axiosInstance.get(`/staffs.json`, {
+    params: {
+      token: token,
+      per_page : per_page,
+      page : page
+    },
+  });
+
+ export const getPendingStaff = async () =>
   axiosInstance.get("/staffs.json", {
     params: {
       token: token,
+      "q[status_type_eq]": "Pending",
     },
   });
+
 export const getStaffDetails = async (id) =>
   axiosInstance.get(`/staffs/${id}.json`, {
     params: {
@@ -1963,6 +2011,13 @@ export const editStaffDetails = async (id, data) =>
   });
 export const postStaff = async (data) =>
   axiosInstance.post("/staffs.json", data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const putStaffApproval = async (id,data) =>
+  axiosInstance.put(`/staffs/${id}.json`, data, {
     params: {
       token: token,
     },
