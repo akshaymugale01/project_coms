@@ -1,13 +1,9 @@
 import React, { useState } from "react";
-import ParkingTag from "./ParkingSetupPages/ParkingTag";
-import ParkingCategoriesSetup from "./ParkingSetupPages/ParkingCategoriesSetup";
+// import ParkingTag from "./ParkingSetupPages/ParkingTag";
 import ParkingSlotSetup from "./ParkingSetupPages/ParkingSlotSetup";
-import ParkingConfigurationSetup from "./ParkingSetupPages/ParkingConfigurationSetup";
-import ParkingConfig from "./ParkingSetupPages/ParkingConfiguration.jsx";
-import ParkingConfigSetup from "./ParkingSetupPages/ParkingConfigSetup.jsx";
 import VehicleSetup from "./ParkingSetupPages/VehicleSetup";
+import ParkingConfigurationSetup from "./ParkingSetupPages/ParkingConfigurationSetup";
 import Navbar from "../../components/Navbar";
-
 // import PermitTypeTable from "./PermitTypeTable";
 // import PermitActivityTable from "./PermitActivityTable";
 // import PermitSubActivityTable from "./PermitSubActivityTable";
@@ -40,7 +36,7 @@ const ParkingSetup = () => {
         >
           Parking Categories
         </h2> */}
-            <h2
+            {/* <h2
               className={`p-1 ${
                 page === "Parking Configuration" &&
                 `bg-white font-medium text-blue-500 shadow-custom-all-sides`
@@ -48,16 +44,16 @@ const ParkingSetup = () => {
               onClick={() => setPage("Parking Configuration")}
             >
               Parking Configuration
-            </h2>
-            {/* <h2
-              className={`p-1 ${
-                page === "Parking Configurations" &&
-                "bg-white font-medium text-blue-500 shadow-custom-all-sides"
-              } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
-              onClick={() => setPage("Parking Configurations")}
-            >
-              Parking Configurations
             </h2> */}
+            <h2
+              className={`p-1 ${
+                page === "Parking Configuration" &&
+                `bg-white font-medium text-blue-500 shadow-custom-all-sides`
+              } rounded-t-md px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
+              onClick={() => setPage("Parking Configuration")}
+            >
+              Parking Configuration Setup
+            </h2>
             <h2
               className={`p-1 ${
                 page === "Parking Slots" &&
@@ -70,10 +66,9 @@ const ParkingSetup = () => {
           </div>
         </div>
         <div>
-          {/* {page === "Parking Categories" && <div><ParkingCategoriesSetup/></div> } */}
           {page === "Parking Configuration" && (
             <div>
-              <ParkingConfig />
+              <ParkingConfigurationSetup />
             </div>
           )}
           {page === "Vehicle Configuration" && (
