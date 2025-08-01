@@ -43,6 +43,7 @@ import Booking from "./pages/Booking.jsx";
 import AmenitiesBooking from "./pages/SubPages/FacilityBooking.jsx";
 import BookingDetails from "./pages/SubPages/details/BookingDetails.jsx";
 import SetupFacility from "./pages/SubPages/SetupFacility.jsx";
+import SetupHotelBooking from "./pages/SubPages/SetupHotelBooking.jsx";
 import Communication from "./pages/Communication.jsx";
 import CreateEvent from "./pages/SubPages/CreateEvent.jsx";
 import EventDetails from "./pages/SubPages/details/EventDetails.jsx";
@@ -756,6 +757,7 @@ import MyBookings from "./pages/OSR/ResidentialBookings.jsx";
 import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
 import EditPPMChecklist from "./pages/SubPages/EditPPMChecklist.jsx";
 import CreateInvoiceReceipt from "./pages/SubPages/details/CreateInvoiceReciept.jsx";
+import ParkingConfiguration from "./pages/Setup/ParkingSetupPages/ParkingConfiguration.jsx";
 
 // new admin hrms
 
@@ -1275,6 +1277,14 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <SetupFacility />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/setup/facility/create-hotelbooking"
+            element={
+              <ProtectedAdminRoutes>
+                <SetupHotelBooking />
               </ProtectedAdminRoutes>
             }
           />
@@ -2141,6 +2151,14 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <ParkingSetup />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/parking-config"
+            element={
+              <ProtectedAdminRoutes>
+                <ParkingConfiguration />
               </ProtectedAdminRoutes>
             }
           />
