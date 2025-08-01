@@ -489,7 +489,7 @@ const ParkingConfiguration = () => {
   const StackConfig = ({ index }) => {
     const slotCount = stackSlotCounts[index] || 0;
     const levels = stackLevels[index] || 0;
-    // const displayFormat = displayFormats[index] || "";
+    const displayFormat = displayFormats[index] || "";
     const totalSlots = slotCount > 0 && levels > 0 ? slotCount * levels : 0;
 
     const config = useMemo(

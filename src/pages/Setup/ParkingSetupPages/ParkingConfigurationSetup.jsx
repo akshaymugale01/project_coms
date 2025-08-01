@@ -14,7 +14,7 @@ const ParkingConfigurationSetup = () => {
 
   const navigate = useNavigate();
   const handleAddClick = () => {
-    navigate("/admin/parking-config");
+    navigate("/admin/modern-parking-config");
   };
   const column = [
     {
