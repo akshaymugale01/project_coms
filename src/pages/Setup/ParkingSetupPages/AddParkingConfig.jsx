@@ -289,7 +289,7 @@ const ParkingConfig = () => {
           style={{ background: themeColor }}
           className="text-center md:text-xl font-bold p-2 my-2 bg-black rounded-md text-white"
         >
-          Parking Group Configuration
+          Parking Configuration
         </h2>
         <div className="grid md:grid-cols-2 gap-5">
           <div className="grid gap-2 items-center w-full">
