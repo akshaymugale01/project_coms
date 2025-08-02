@@ -1,12 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PiPlusCircle } from "react-icons/pi";
 import { Link } from "react-router-dom";
-//import Navbar from "../../../components/Navbar";
-import DataTable from "react-data-table-component";
 import { BsEye } from "react-icons/bs";
-import { useSelector } from "react-redux";
 import { BiEdit } from "react-icons/bi";
-import { TiTick } from "react-icons/ti";
 import { IoClose } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa6";
 import Table from "../../components/table/Table";
@@ -19,7 +15,7 @@ import {
   getPendingStaff,
   putStaffApproval,
 } from "../../api";
-import { dateFormat, SendDueDateFormat } from "../../utils/dateUtils";
+import { dateFormat } from "../../utils/dateUtils";
 import image from "/profile.png";
 
 const Staff = () => {
@@ -28,13 +24,15 @@ const Staff = () => {
   const [FilteredApproval, setFilteredApproval] = useState([]);
   const [approvalStatusChanged, setApprovalStatusChanged] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [searchApprovalText, setSearchApprovalText] = useState("");
   const [page, setPage] = useState("all");
-  const themeColor = useSelector((state) => state.theme.color);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  const totalPages = Math.ceil(totalCount / rowsPerPage);
+  
+  // Approval pagination states
+  const [approvalCurrentPage, setApprovalCurrentPage] = useState(1);
+  const [approvalRowsPerPage, setApprovalRowsPerPage] = useState(10);
+  const [approvalTotalCount, setApprovalTotalCount] = useState(0);
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -42,7 +40,6 @@ const Staff = () => {
         const res = await getStaff(rowsPerPage, currentPage);
 
         const staffArray = res.data.staffs || [];
-        const totalPages = res.data.total_pages || 1;
         const totalCount = res.data.total_count || staffArray.length; // fallback just in case
 
         setStaffs(staffArray);
@@ -70,7 +67,7 @@ const Staff = () => {
     };
 
     fetchStaff();
-  }, [currentPage, rowsPerPage]);
+  }, [currentPage, rowsPerPage, searchText]);
 
   const handleSearch = (e) => {
     const searchValue = e.target.value.toLowerCase();
@@ -93,9 +90,12 @@ const Staff = () => {
   const fetchPending = async () => {
     try {
       const res = await getPendingStaff();
-      setFilteredApproval(res.data.staffs);
+      const staffArray = res.data.staffs || res.data || [];
+      setFilteredApproval(staffArray);
+      setApprovalTotalCount(staffArray.length);
     } catch (err) {
       toast.error("Failed to fetch pending staff");
+      console.error(err);
     }
   };
 
@@ -107,6 +107,12 @@ const Staff = () => {
       return () => clearTimeout(timer);
     }
   }, [page, approvalStatusChanged]);
+
+  // Reset pagination when switching tabs
+  useEffect(() => {
+    setCurrentPage(1);
+    setApprovalCurrentPage(1);
+  }, [page]);
 
   useEffect(() => {
     if (currentPage > Math.ceil(totalCount / rowsPerPage)) {
@@ -306,15 +312,7 @@ const Staff = () => {
                   ? "text-blue-500 font-medium shadow-custom-all-sides"
                   : "text-black"
               } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
-              onClick={async () => {
-                setPage("approval");
-                try {
-                  const res = await getPendingStaff();
-                  setFilteredApproval(res.data);
-                } catch (err) {
-                  console.log(err);
-                }
-              }}
+              onClick={() => setPage("approval")}
             >
               Approvals
             </h2>
@@ -344,29 +342,36 @@ const Staff = () => {
         )}
 
         {page === "all" && (
-          <Table columns={columns} pagination={true}
+          <Table 
+            columns={columns} 
+            data={filteredStaff}
+            pagination={true}
+            paginationServer={true}
             paginationPerPage={rowsPerPage}
-            paginationRowsPerPageOptions={[5, 10, 15, 20, 25]}
             paginationTotalRows={totalCount}
-            onChangePage={(page) => setCurrentPage(page)}
+            currentPage={currentPage}
+            onChangePage={setCurrentPage}
             onChangeRowsPerPage={(newPerPage) => {
               setRowsPerPage(newPerPage);
-              setCurrentPage(1); // optional: reset to first page
+              setCurrentPage(1);
             }}
-            data={filteredStaff}
           />
         )}
 
         {page === "approval" && (
-          <Table columns={approvalColumn} pagination={true} paginationPerPage={rowsPerPage}
-            paginationRowsPerPageOptions={[5, 10, 15, 20, 25]}
-            paginationTotalRows={totalCount}
-            onChangePage={(page) => setCurrentPage(page)}
-            onChangeRowsPerPage={(newPerPage) => {
-              setRowsPerPage(newPerPage);
-              setCurrentPage(1); // optional: reset to first page
-            }}
+          <Table 
+            columns={approvalColumn} 
             data={FilteredApproval}
+            pagination={true}
+            paginationServer={false}
+            paginationPerPage={approvalRowsPerPage}
+            paginationTotalRows={approvalTotalCount}
+            currentPage={approvalCurrentPage}
+            onChangePage={setApprovalCurrentPage}
+            onChangeRowsPerPage={(newPerPage) => {
+              setApprovalRowsPerPage(newPerPage);
+              setApprovalCurrentPage(1);
+            }}
           />
         )}
       </div>

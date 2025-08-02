@@ -1,20 +1,58 @@
 import { useEffect, useState } from "react";
 import { PiPlusCircle } from "react-icons/pi";
 import { Link } from "react-router-dom";
-//import Navbar from "../../../components/Navbar";
-import DataTable from "react-data-table-component";
 import { BsEye } from "react-icons/bs";
-import { useSelector } from "react-redux";
 import { BiEdit } from "react-icons/bi";
-import { TiTick } from "react-icons/ti";
-import { IoAddCircle, IoClose } from "react-icons/io5";
 import Table from "../../components/table/Table";
 import { getGoods } from "../../api";
 import { dateFormat, formatTime } from "../../utils/dateUtils";
 const InwardsTable = () => {
   const [filteredData, setFilteredData] = useState([]);
-  const themeColor = useSelector((state) => state.theme.color);
   const [goodsIn, setGoodsIn] = useState([]);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+  
+  // Full filtered dataset for pagination calculation
+  const [fullFilteredData, setFullFilteredData] = useState([]);
+  
+  // Function to get paginated data
+  const getPaginatedData = (data, currentPage, perPage) => {
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  // Pagination helper functions
+  const handlePerPageChange = (newPerPage) => {
+    console.log(`Changing per page to ${newPerPage}`);
+    setPerPage(newPerPage);
+    setCurrentPage(1);
+    
+    // Use current search state for pagination
+    let dataToUse = searchText.trim() === "" ? goodsIn : 
+      goodsIn.filter((item) =>
+        (item.person_name && 
+         item.person_name.name &&
+         item.person_name.name.toLowerCase().includes(searchText.toLowerCase())) ||
+        (item.vehicle_no &&
+         item.vehicle_no.toLowerCase().includes(searchText.toLowerCase()))
+      );
+    
+    setFullFilteredData(dataToUse);
+    const pageData = getPaginatedData(dataToUse, 1, newPerPage);
+    setFilteredData(pageData);
+  };
+
+  // Page change handler
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    const pageData = getPaginatedData(fullFilteredData, page, perPage);
+    setFilteredData(pageData);
+  };
+
   useEffect(() => {
     const fetchGoods = async () => {
       try {
@@ -24,13 +62,20 @@ const InwardsTable = () => {
         );
 
         setGoodsIn(filterGoodsIn);
-        setFilteredData(filterGoodsIn);
+        
+        // Set pagination data
+        setFullFilteredData(filterGoodsIn);
+        setTotalRows(filterGoodsIn.length);
+        const pageData = getPaginatedData(filterGoodsIn, currentPage, perPage);
+        setFilteredData(pageData);
+        
+        console.log(`Inwards: showing ${pageData.length} items out of ${filterGoodsIn.length} total`);
       } catch (error) {
         console.log(error);
       }
     };
     fetchGoods();
-  }, []);
+  }, [currentPage, perPage]);
   const columns = [
     {
       name: "Action",
@@ -85,19 +130,29 @@ const InwardsTable = () => {
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
-    if (searchValue.trim === "") {
-      setFilteredData(goodsIn);
+    setCurrentPage(1); // Reset to first page when searching
+    
+    let filteredResults;
+    if (searchValue.trim() === "") {
+      filteredResults = goodsIn;
     } else {
-      const filteredResult = goodsIn.filter(
+      filteredResults = goodsIn.filter(
         (item) =>
-          item.person_name && 
-        item.person_name.name &&
-        item.person_name.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+          (item.person_name && 
+           item.person_name.name &&
+           item.person_name.name.toLowerCase().includes(searchValue.toLowerCase())) ||
           (item.vehicle_no &&
-            item.vehicle_no.toLowerCase().includes(searchValue.toLowerCase()))
+           item.vehicle_no.toLowerCase().includes(searchValue.toLowerCase()))
       );
-      setFilteredData(filteredResult);
     }
+    
+    // Update full filtered data and pagination
+    setFullFilteredData(filteredResults);
+    setTotalRows(filteredResults.length);
+    const pageData = getPaginatedData(filteredResults, 1, perPage);
+    setFilteredData(pageData);
+    
+    console.log(`Search: filtered to ${filteredResults.length} items, showing ${pageData.length} on page 1`);
   };
   return (
     <section className="flex">
@@ -125,6 +180,14 @@ const InwardsTable = () => {
           data={filteredData}
           // customStyles={customStyle}
           isPagination={true}
+          pagination
+          paginationServer
+          paginationTotalRows={totalRows}
+          paginationDefaultPage={currentPage}
+          onChangePage={handlePageChange}
+          paginationPerPage={perPage}
+          onChangeRowsPerPage={handlePerPageChange}
+          paginationRowsPerPageOptions={[5, 10, 15, 20]}
         />
       </div>
     </section>
