@@ -1465,6 +1465,26 @@ export const updateFacitilitySetup = async (data, id) =>
     },
   });
 
+  //hotel
+// export const getHotelSetup = async (data) => {
+//   try {
+//     const response = await axiosInstance.get(`/amenities.json`, data,{
+//       params: {
+//         token: token,
+//       },
+//       headers: {
+//         "Cache-Control": "no-cache",
+//         Pragma: "no-cache",
+//         Expires: "0",
+//       },
+//     });
+//     return response;
+//   } catch (error) {
+//     console.error("Error fetching facility setup:", error);
+//     throw error;
+//   }
+// };
+
 // ppm details/
 
 export const getPPMDetails = async (assetId, activityId) =>
@@ -1869,15 +1889,7 @@ export const deleteVehicleParking = async (id) =>
       token: token,
     },
   });
-export const deleteQuestionChecklist = async (id, qid) =>
-  axiosInstance.delete(
-    `/checklists/${id}/delete_question.json?question_id=${qid}`,
-    {
-      params: {
-        token: token,
-      },
-    }
-  );
+
 export const getVehicleParkingDetails = async (id) =>
   axiosInstance.get(`/parking_configurations/${id}.json`, {
     params: {
@@ -1890,6 +1902,54 @@ export const editVehicleParking = async (data, id) =>
       token: token,
     },
   });
+
+//Vehicle Setup
+export const getVehicleSetup = async () =>
+  axiosInstance.get("/vehicle_setups.json", {
+    params: {
+      token: token,
+    },
+  });
+export const postVehicleSetup = async (data) =>
+  axiosInstance.post("/vehicle_setups.json", data, {
+    params: {
+      token: token,
+    },
+  });
+export const getVehicleSetupDetails = async (id) =>
+  axiosInstance.get(`/vehicle_setups/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const editVehicleSetup = async (id, data) =>
+  axiosInstance.put(`/vehicle_setups/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+export const deleteVehicleSetup = async (id) =>
+  axiosInstance.delete(`/vehicle_setups/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const putVehicleSetup = async (id, data) =>
+  axiosInstance.put(`/vehicle_setups/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const deleteQuestionChecklist = async (id, qid) =>
+  axiosInstance.delete(
+    `/checklists/${id}/delete_question.json?question_id=${qid}`,
+    {
+      params: {
+        token: token,
+      },
+    }
+  );
 export const postOTPVisitors = async (data) =>
   axiosInstance.post("/visitors/verify_votp.json", data, {
     params: {
