@@ -8,18 +8,20 @@ import {
   getAdminComplaints,
   getAdminPerPageComplaints,
   getTicketDashboard,
+  getTicketStatusDownload,
 } from "../api";
 import { BsEye } from "react-icons/bs";
 import { BiEdit, BiFilterAlt } from "react-icons/bi";
 import moment from "moment";
 // import { getItemInLocalStorage } from "../utils/localStorage";
-import * as XLSX from "xlsx";
 // import { useSelector } from "react-redux";
 // import Table from "../components/table/Table";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { DNA } from "react-loader-spinner";
 import TicketFilterModal from "../containers/modals/TicketFilterModal";
 import { IoIosArrowDown } from "react-icons/io";
+import { FaDownload, FaCalendarAlt } from "react-icons/fa";
+import toast from "react-hot-toast";
 const Ticket = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchText, setSearchText] = useState("");
@@ -40,6 +42,11 @@ const Ticket = () => {
   // Add state for tracking filtered mode
   const [isFiltered, setIsFiltered] = useState(false);
   const [currentFilterParams, setCurrentFilterParams] = useState({});
+
+  // Add new state for export modal and date range
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
 
   const getTimeAgo = (timestamp) => {
     const createdTime = moment(timestamp);
@@ -546,74 +553,87 @@ const Ticket = () => {
     await fetchData(1, perPage);
   };
 
-  const getAllTickets = async () => {
-    const allTicketResp = await getAdminComplaints();
-    console.log(allTicketResp);
-    return allTicketResp.data.complaints;
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  // Function to get fixed colors for status/type cards
+  const getFixedColor = (index) => {
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+    return colors[index % colors.length];
   };
 
   // export data
-  const exportAllToExcel = async () => {
-    // const modifiedData = filteredData.map((item) => ({
-    //   ...item,
-    //   "Ticket Number": item.ticket_number,
-    // }));
-    const Alltickets = await getAllTickets();
-    const mappedData = Alltickets.map((ticket) => {
-      // Format complaint logs as a single string
-      const complaintLogs = ticket.complaint_logs
-        .map((log) => {
-          return `Log By: ${log.log_by}, Status: ${
-            log.log_status
-          }, Date: ${dateFormat(log.created_at)}`;
+  const exportTicketsToExcel = async (exportType = 'overall', dateRange = null) => {
+    const loadingMessage = exportType === 'overall' 
+      ? "Downloading All Tickets Report, Please Wait..." 
+      : "Downloading Date-wise Tickets Report, Please Wait...";
+      
+    toast.loading(loadingMessage);
+    
+    try {
+      // Use the API function with date parameters, similar to VisitorsDashboard
+      const response = exportType === 'date' && dateRange
+        ? await getTicketStatusDownload(dateRange.start, dateRange.end)
+        : await getTicketStatusDownload();
+      
+      // Create blob and download
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         })
-        .join(" | ");
-
-      return {
-        "Site Name": ticket.site_name,
-        "Ticket No.": ticket.ticket_number,
-        "Related To": ticket.issue_type_id,
-        Title: ticket.heading,
-        Description: ticket.text,
-        Building: ticket.building_name,
-        Floor: ticket.floor_name,
-        Unit: ticket.unit,
-        Category: ticket.category_type,
-        "Sub Category": ticket.sub_category,
-        Status: ticket.issue_status,
-        Type: ticket.issue_type,
-        Priority: ticket.priority,
-        "Assigned To": ticket.assigned_to,
-        "Created By": ticket.created_by,
-        "Created On": dateFormat(ticket.created_at),
-        "Updated On": dateFormat(ticket.updated_at),
-        "Updated By": ticket.updated_by,
-        "Resolution Breached": ticket.resolution_breached ? "Yes" : "No",
-        "Response Breached": ticket.response_breached ? "Yes" : "No",
-        "Complaint Logs": complaintLogs, // Include the formatted complaint logs
-      };
-    });
-
-    const fileType =
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
-    const fileName = "helpdesk_data.xlsx";
-    const ws = XLSX.utils.json_to_sheet(mappedData);
-    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: fileType });
-    const url = URL.createObjectURL(data);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    link.click();
+      );
+      
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      
+      // Dynamic filename based on export type
+      const filename = exportType === 'date' && dateRange
+        ? `tickets_${dateRange.start}_to_${dateRange.end}.xlsx`
+        : `tickets_export_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.xlsx`;
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      toast.dismiss();
+      toast.success("Tickets report downloaded successfully");
+      setShowExportModal(false); // Close modal after download
+      
+    } catch (error) {
+      toast.dismiss();
+      console.error("Error downloading tickets report:", error);
+      toast.error("Failed to download tickets report. Please try again.");
+    }
   };
 
-  document.title = `Tickets - My Citi Life`;
+  const handleOverallExport = () => {
+    exportTicketsToExcel('overall');
+  };
 
-  const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A6", "#FFC300"];
+  const handleDateRangeExport = () => {
+    if (!exportStartDate || !exportEndDate) {
+      toast.error("Please select both start and end dates");
+      return;
+    }
+    
+    if (new Date(exportStartDate) > new Date(exportEndDate)) {
+      toast.error("Start date must be before end date");
+      return;
+    }
+    
+    const dateRange = { start: exportStartDate, end: exportEndDate };
+    exportTicketsToExcel('date', dateRange);
+  };
 
-  const getFixedColor = (index) => {
-    return colors[index % colors.length];
+  const openExportModal = () => {
+    setExportStartDate(getTodayDate());
+    setExportEndDate(getTodayDate());
+    setShowExportModal(true);
   };
 
   return (
@@ -807,13 +827,16 @@ const Ticket = () => {
                 </div>
               )}
             </div>
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              onClick={exportAllToExcel}
-              style={{ background: "rgb(3 19 37)" }}
-            >
-              Export
-            </button>
+            <div className="relative">
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+                onClick={openExportModal}
+                style={{ background: "rgb(3 19 37)" }}
+              >
+                <span>Export</span>
+                <IoIosArrowDown />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -901,6 +924,86 @@ const Ticket = () => {
           currentPage={currentPage}
           perPage={perPage}
         />
+      )}
+
+      {/* Export Options Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
+            {/* Close button */}
+            <button
+              onClick={() => setShowExportModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
+            >
+              ✕
+            </button>
+            
+            <h3 className="text-lg font-semibold mb-6">Export Tickets Report</h3>
+            
+            {/* Download All Records Section */}
+            <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">Export All Records</h4>
+              <p className="text-gray-600 text-sm mb-3">Download complete tickets report</p>
+              <button
+                onClick={handleOverallExport}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                <FaDownload />
+                Export All Tickets
+              </button>
+            </div>
+            
+            {/* Download by Date Range Section */}
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h4 className="font-semibold text-gray-800 mb-2">Export by Date Range</h4>
+              <p className="text-gray-600 text-sm mb-4">Select specific date range for export</p>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={exportStartDate}
+                    onChange={(e) => setExportStartDate(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={exportEndDate}
+                    onChange={(e) => setExportEndDate(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+              
+              <button
+                onClick={handleDateRangeExport}
+                disabled={!exportStartDate || !exportEndDate}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 transition-colors"
+              >
+                <FaCalendarAlt />
+                Export Date Range
+              </button>
+            </div>
+            
+            {/* Cancel Button */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
