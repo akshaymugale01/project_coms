@@ -1918,10 +1918,11 @@ export const getVisitorByNumber = async (mobile) =>
     },
   });
 
-export const getPatrollings = async () =>
+export const getPatrollings = async (params = {}) =>
   axiosInstance.get("/patrollings.json", {
     params: {
       token: token,
+      ...params
     },
   });
 export const getPatrollingDetails = async (id) =>
@@ -2694,10 +2695,13 @@ export const getServicesRoutineDetails = async (id) =>
       token: token,
     },
   });
-export const getExpectedVisitor = async () =>
+export const getExpectedVisitor = async (page = 1, perPage = 10, filters = {}) =>
   axiosInstance.get(`/visitors.json`, {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
+      ...filters
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -2723,10 +2727,11 @@ export const getRegisteredVehicleDetails = async (id) =>
       token: token,
     },
   });
-export const getPatrollingHistory = async () =>
+export const getPatrollingHistory = async (params = {}) =>
   axiosInstance.get(`/patrolling_histories.json`, {
     params: {
       token: token,
+      ...params
     },
   });
 export const editRegisteredVehicleDetails = async (id, data) =>
@@ -2833,10 +2838,12 @@ export const postOTPVerification = async (data) =>
     },
   });
 
-export const getVisitorApprovals = async () =>
+export const getVisitorApprovals = async (page = 1, perPage = 10) =>
   axiosInstance.get(`/visitors/approval_form.json`, {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -2850,10 +2857,12 @@ export const visitorApproval = async (id, data) =>
       token: token,
     },
   });
-export const getVisitorHistory = async () =>
+export const getVisitorHistory = async (page = 1, perPage = 10) =>
   axiosInstance.get(`/visitors/approval_history.json`, {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -2915,10 +2924,12 @@ export const getVisitorCategory = async () =>
     },
   });
 
-export const getAllVisitorLogs = async () =>
+export const getAllVisitorLogs = async (page = 1, perPage = 10) =>
   axiosInstance.get(`/visitor_device_logs.json`, {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
     },
     headers: {
       "Cache-Control": "no-cache",
