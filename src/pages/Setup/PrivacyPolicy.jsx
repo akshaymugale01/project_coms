@@ -29,7 +29,8 @@ const PrivacyPolicy = () => {
                         <li><strong>Company:</strong> Referred to as either “the Company,” “We,” “Us,” or “Our” in this Agreement.</li>
                         <li><strong>Country:</strong> Refers to India.</li>
                         <li><strong>Device:</strong> Your Mobile or Laptop that can access the Logicon App.</li>
-                        <li><strong>Personal Data:</strong> Includes Name, email address, phone number, and login credentials.</li>
+                        <li><strong>Personal Data:</strong> •	Personal Data: Includes Name, email address, phone number, login credentials, and location data (e.g., latitude and longitude for attendance purposes)..</li>
+                        <li><strong>To improve location-based features:</strong> We collect and use your device’s location data, including background location, to enable features such as attendance marking based on your current geographical position. This ensures that attendance is recorded accurately and in compliance with company policies. Location data is only collected at the time of check-in/check-out and is not used for continuous tracking.</li>
                         <li><strong>Service:</strong> Refers to the Application.</li>
                         <li>
                             <strong>Project and Module Data:</strong> Includes:
