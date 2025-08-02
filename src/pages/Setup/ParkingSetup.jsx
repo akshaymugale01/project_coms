@@ -33,7 +33,6 @@ const ParkingSetup = () => {
             "bg-white font-medium text-blue-500 shadow-custom-all-sides"
           } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
           onClick={() => setPage("Parking Categories")}
-        >
           Parking Categories
         </h2> */}
             {/* <h2
