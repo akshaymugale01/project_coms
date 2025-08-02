@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import { BsEye } from "react-icons/bs";
 import { getAmenitiesBooking, getFacitilitySetup } from "../api";
 
+
 const Booking = () => {
   const [searchText, setSearchText] = useState("");
   const [modal, showModal] = useState(false);
@@ -203,6 +204,15 @@ const Booking = () => {
             >
               Amenities Bookings
             </h2>
+            <h2
+              className={`p-1 ${
+                page === "hotelBooking" &&
+                "bg-white text-blue-500 shadow-custom-all-sides"
+              } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
+              onClick={() => setPage("hotelBooking")}
+            >
+              Hotel Bookings
+            </h2>
           </div>
         </div>
         {page === "meetingBooking" && (
@@ -218,6 +228,51 @@ const Booking = () => {
               <div className="flex gap-2 justify-end">
                 <Link
                   to={"/bookings/new-facility-booking"}
+                  style={{ background: themeColor }}
+                  className="bg-black w-20 rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+                >
+                  <IoAddCircleOutline size={20} />
+                  Book
+                </Link>
+                <button
+                  style={{ background: themeColor }}
+                  onClick={() => showModal(true)}
+                  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+                >
+                  <BiExport size={20} />
+                  Export
+                </button>
+              </div>
+            </div>
+
+            <div className="flex min-h-screen">
+              {loading ? (
+                <p className="text-center">Loading bookings...</p>
+              ) : error ? (
+                <p className="text-center text-red-500">{error}</p>
+              ) : (
+                <div className="w-full">
+                  <Table columns={columns} data={sortedData} />
+                </div>
+              )}
+            </div>
+            {modal && <ExportBookingModal onclose={() => showModal(false)} />}
+          </div>
+        )}
+
+        {page === "hotelBooking" && (
+          <div>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                placeholder="Search By Facility"
+                className="border p-2 w-full border-gray-300 rounded-lg"
+                value={searchText}
+                onChange={handleSearch}
+              />
+              <div className="flex gap-2 justify-end">
+                <Link
+                  to={"/bookings/new-hotel-booking"}
                   style={{ background: themeColor }}
                   className="bg-black w-20 rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
                 >
