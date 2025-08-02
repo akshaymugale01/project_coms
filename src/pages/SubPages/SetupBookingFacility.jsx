@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import { BsEye } from "react-icons/bs";
 // import SeatBooking from "./SeatBooking";
 import SetupSeatBooking from "./SetupSeatBooking";
+import SetupHotelBooking from "./SetupHotelBooking";
 import { getFacitilitySetup } from "../../api";
 
 const SetupBookingFacility = () => {
@@ -169,9 +170,10 @@ const SetupBookingFacility = () => {
         <div className="flex justify-center my-2">
           <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200 ">
             <h2
-              className={`p-1 ${page === "facility" &&
+              className={`p-1 ${
+                page === "facility" &&
                 "bg-white text-blue-500 shadow-custom-all-sides"
-                } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
+              } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
               onClick={() => setPage("facility")}
             >
               Amenities
@@ -185,6 +187,15 @@ const SetupBookingFacility = () => {
             >
               Seat
             </h2> */}
+            <h2
+              className={`p-1 ${
+                page === "HotelBooking" &&
+                "bg-white text-blue-500 shadow-custom-all-sides"
+              } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
+              onClick={() => setPage("HotelBooking")}
+            >
+              Hotel
+            </h2>
           </div>
         </div>
         {page === "facility" && (
@@ -234,12 +245,58 @@ const SetupBookingFacility = () => {
               )}
             </div>
           </>
-
         )}
 
-        {page === "seatBooking" && (
-          <SetupSeatBooking />
+        {page === "HotelBooking" && (
+          <>
+            <div className="flex gap-2 items-center w-full">
+              <input
+                type="text"
+                placeholder="Search by name"
+                className="border p-2 border-gray-300 rounded-md w-full"
+                value={searchText}
+                onChange={handleSearch}
+              />
+              <div className="flex gap-2 justify-end ">
+                <Link
+                  style={{ background: themeColor }}
+                  to={"/setup/facility/create-hotelbooking"}
+                  className="bg-black w-20 rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+                >
+                  <IoAddCircleOutline size={20} />
+                  Add
+                </Link>
+                <button
+                  style={{ background: themeColor }}
+                  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+                >
+                  <BiExport size={20} />
+                  Export
+                </button>
+              </div>
+            </div>
+            {/* <Table
+              columns={setupColumn}
+              data={bookingFacility}
+              // data={filteredData}
+
+              // customStyles={customStyle}
+            /> */}
+            <div className="flex min-h-screen">
+              {loading ? (
+                <p className="flex text-center">Loading bookings...</p>
+              ) : error ? (
+                <p className="text-center text-red-500">{error}</p>
+              ) : (
+                <div className="w-full">
+                  <Table columns={setupColumn} data={bookingFacility} />
+                </div>
+              )}
+            </div>
+          </>
         )}
+
+        {page === "seatBooking" && <SetupSeatBooking />}
       </div>
     </div>
   );

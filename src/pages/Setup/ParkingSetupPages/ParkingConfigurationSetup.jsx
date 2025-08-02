@@ -68,33 +68,33 @@ const ParkingConfigurationSetup = () => {
     },
   };
   return (
-     <section className="flex ">
+    <section className="flex ">
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <div className=" flex m-3 flex-row">
-        <button
-          // to={"/admin/parking-config"}
-          className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-black cursor-pointer text-center flex items-center gap-2 justify-center"
-          style={{ height: "1cm" }}
-          onClick={handleAddClick}
-        >
-          <PiPlusCircle size={20} />
-          Add
-        </button>
+          <button
+            // to={"/admin/parking-config"}
+            className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-black cursor-pointer text-center flex items-center gap-2 justify-center"
+            style={{ height: "1cm" }}
+            onClick={handleAddClick}
+          >
+            <PiPlusCircle size={20} />
+            Add
+          </button>
+        </div>
+        <Table
+          columns={column}
+          data={data}
+          // customStyles={customStyle}
+          responsive
+          fixedHeader
+          fixedHeaderScrollHeight="500px"
+          pagination
+          selectableRowsHighlight
+          highlightOnHover
+          omitColumn={column}
+        />
       </div>
-      <Table
-        columns={column}
-        data={data}
-        // customStyles={customStyle}
-        responsive
-        fixedHeader
-        fixedHeaderScrollHeight="500px"
-        pagination
-        selectableRowsHighlight
-        highlightOnHover
-        omitColumn={column}
-      />
-    </div>
-  </section>
+    </section>
   );
 };
 

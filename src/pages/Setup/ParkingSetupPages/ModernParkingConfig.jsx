@@ -402,7 +402,6 @@ const FloorConfig = React.memo(({ floor, floorIndex, onUpdate, onDelete }) => {
             value={floor.displayFormat}
             onChange={(value) => handleUpdate('displayFormat', value)}
             placeholder="e.g., A1, B2, C3"
-            icon="🏷️"
           />
           
           <ModernSelect
@@ -549,10 +548,10 @@ const ModernParkingConfig = () => {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              🚗 Modern Parking Configuration
+              Parking Configuration
             </h1>
             <p className="text-gray-600">
-              Configure parking settings for different floors and zones with an intuitive interface.
+              Configure parking settings for different floors and zones.
             </p>
           </div>
 
