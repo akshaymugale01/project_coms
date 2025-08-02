@@ -43,7 +43,8 @@ import Booking from "./pages/Booking.jsx";
 import AmenitiesBooking from "./pages/SubPages/FacilityBooking.jsx";
 import BookingDetails from "./pages/SubPages/details/BookingDetails.jsx";
 import SetupFacility from "./pages/SubPages/SetupFacility.jsx";
-// import SetupHotelBooking from "./pages/SubPages/SetupHotelBooking.jsx";
+import HotelBooking from "./pages/SubPages/HotelBooking.jsx";
+import SetupHotelBooking from "./pages/SubPages/SetupHotelBooking.jsx";
 import Communication from "./pages/Communication.jsx";
 import CreateEvent from "./pages/SubPages/CreateEvent.jsx";
 import EventDetails from "./pages/SubPages/details/EventDetails.jsx";
@@ -1252,6 +1253,11 @@ function App() {
             path="/bookings/new-facility-booking"
             element={<AmenitiesBooking />}
           />
+          {/* hotel booking */}
+          <Route
+            path="/bookings/new-hotel-booking"
+            element={<HotelBooking />}
+          />
           <Route
             path="/bookings/booking-details/:id"
             element={<BookingDetails />}
@@ -1281,14 +1287,15 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-          {/* <Route
+          {/* Admin hotel booking */}
+          <Route
             path="/setup/facility/create-hotelbooking"
             element={
               <ProtectedAdminRoutes>
                 <SetupHotelBooking />
               </ProtectedAdminRoutes>
             }
-          /> */}
+          />
           <Route
             path="/setup/seat-setup"
             element={
