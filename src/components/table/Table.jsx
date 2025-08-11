@@ -47,7 +47,6 @@
 // };
 
 // export default Table;
-
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 
@@ -55,7 +54,7 @@ const Table = ({
   columns,
   title,
   height,
-  pagination = false,
+  pagination = true,
   data,
   customStyles,
   paginationPerPage = 10,

@@ -18,7 +18,7 @@ const VisitorDetails = () => {
         const detailsResp = await getVisitorDetails(id);
         const data = detailsResp.data;
         setDetails(data);
-        console.log("Visistore Details", data);
+        console.log("Visistor Details", data);
       } catch (error) {
         console.log(error);
       }
