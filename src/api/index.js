@@ -739,6 +739,12 @@ export const fetchUserComplaints = async (data) =>
     },
   });
 
+export const fetchUserComplaintsById = async (user_id) =>
+  axiosInstance.get(`/pms/admin/complaints.json?q[id_user_eq]=${user_id}`, {
+    params: {
+      token: token,
+    },
+  });
 //
 
 export const getUnits = async (floor_id) =>
@@ -1282,10 +1288,12 @@ export const getAboutUs = async () =>
 //     },
 //   });
 
-export const getAmenitiesBooking = async () => {
+export const getAmenitiesBooking = async (page, per_page) => {
   return axiosInstance.get(`/amenity_bookings.json`, {
     params: {
       token: token,
+      page,
+      per_page,
     },
     // headers: {
     //   "Cache-Control": "no-cache",
@@ -1297,21 +1305,21 @@ export const getAmenitiesBooking = async () => {
 
 export const getAmenitiesIdBooking = async (id) => {
   try {
-    const response = await axiosInstance.get(`/amenity_bookings/${id}.json`, {
+    const response = await axiosInstance.get(`/amenity_bookings.json`, {
       params: {
         token: token,
+        'q[amenity_id_eq]': id,
       },
       headers: {
-        "Cache-Control": "no-cache", // Disable caching on the client side
-        Pragma: "no-cache", // Older HTTP/1.0 caches
-        Expires: "0", // Immediately expires the cached response
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
-
-    return response; // Ensure the response is returned
+    return response.data;
   } catch (error) {
-    console.error("Error fetching amenity booking by ID:", error);
-    throw error; // Optionally, you can throw an error or handle it as needed
+    console.error("Error fetching amenity bookings:", error);
+    throw error;
   }
 };
 
@@ -1423,11 +1431,13 @@ export const postParkingConfiguration = async (data) =>
 //     },
 //   });
 
-export const getFacitilitySetup = async () => {
+export const getFacitilitySetup = async (page, per_page) => {
   try {
     const response = await axiosInstance.get(`/amenities.json`, {
       params: {
         token: token,
+        page,
+        per_page
       },
       headers: {
         "Cache-Control": "no-cache",
@@ -1441,6 +1451,35 @@ export const getFacitilitySetup = async () => {
     throw error;
   }
 };
+
+export const getAmenityBooking = async()=>
+  axiosInstance.get(`/amenity_bookings/all_records_of_amenity.json?`,{
+    params: {
+      token: token,
+    },
+  })
+
+export const getFacitilitySetupId = async (id) =>
+  axiosInstance.get(`/amenities/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
+export const getHotelSetupList = async()=>{
+  try {
+    const response = await axiosInstance.get(`/amenities.json?q[is_hotel_eq]=true`, {
+      params: {
+        token: token,
+      },
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching facility setup:", error);
+    throw error;
+  }
+}
 
 export const getFacilitySlots = async (facilityId, selectedDate) =>
   axiosInstance.get(`/slots/available.json`, {
@@ -1466,24 +1505,27 @@ export const updateFacitilitySetup = async (data, id) =>
   });
 
   //hotel
-// export const getHotelSetup = async (data) => {
-//   try {
-//     const response = await axiosInstance.get(`/amenities.json`, data,{
-//       params: {
-//         token: token,
-//       },
-//       headers: {
-//         "Cache-Control": "no-cache",
-//         Pragma: "no-cache",
-//         Expires: "0",
-//       },
-//     });
-//     return response;
-//   } catch (error) {
-//     console.error("Error fetching facility setup:", error);
-//     throw error;
-//   }
-// };
+export const getHotelSetup = async (isHotel, page, per_page) => {
+  try {
+    const response = await axiosInstance.get(`/amenities.json`, {
+      params: {
+        token: token,
+        "q[is_hotel_eq]": isHotel,
+        page,
+        per_page
+      },
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching facility setup:", error);
+    throw error;
+  }
+};
 
 // ppm details/
 
@@ -1674,6 +1716,47 @@ export const getSetupUsers = async () =>
     },
   });
 
+export const getSetupUsersByUnit = async (type, unit_id) =>
+  axiosInstance.get("users/user_dropdown.json",{
+    params: {
+      token: token,
+      type,
+      unit_id,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
+
+  export const getSetupUsersByFloor = async (type, floor_id) =>
+  axiosInstance.get("users/user_dropdown.json",{
+    params: {
+      token: token,
+      type,
+      floor_id,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
+
+  export const getSetupUsersByBuilding = async (type, building_id) =>
+  axiosInstance.get("users/user_dropdown.json",{
+    params: {
+      token: token,
+      type,
+      building_id,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
 export const getUserCount = async () =>
   axiosInstance.get("/users/index_count.json", {
     params: {
@@ -1690,6 +1773,14 @@ export const getFilterUsers = async (id) =>
   axiosInstance.get(`/users/${id}.json`, {
     params: {
       token: token,
+    },
+  });
+
+export const getUsersByID = async (id) =>
+  axiosInstance.get(`/users.json`, {
+    params: {
+      token: token,
+      "q[id_eq]":id,
     },
   });
 

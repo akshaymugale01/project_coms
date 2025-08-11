@@ -12,47 +12,89 @@ import { BsEye } from "react-icons/bs";
 // import SeatBooking from "./SeatBooking";
 import SetupSeatBooking from "./SetupSeatBooking";
 import SetupHotelBooking from "./SetupHotelBooking";
-import { getFacitilitySetup } from "../../api";
+import { getFacitilitySetup, getHotelSetup } from "../../api";
+import HotelBooking from "./HotelBooking";
 
 const SetupBookingFacility = () => {
   const [searchText, setSearchText] = useState("");
+  const [originalFacilityData, setOriginalFacilityData] = useState([]); // Store the original facility data for reference
+  const [originalHotelData, setOriginalHotelData] = useState([]); // Store the original hotel data for reference
   const [bookingFacility, SetBookingFacility] = useState([]);
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error state
+  const [hotelBooking, setHotelBooking] = useState([]);
+  const [page_no, setPageNo] = useState(1);
+  const [per_page, setPerPage] = useState(10);
 
   useEffect(() => {
     const fetchFacilityBooking = async () => {
       try {
-        const response = await getFacitilitySetup();
-        SetBookingFacility(response.data);
-        console.log("Response", response);
-        // Correct function name
-        setLoading(false); // Stop loading when data is fetched
+        const response = await getFacitilitySetup(page_no, per_page);
+        // Filter out hotel facilities and set the booking facility data
+        const facilityData = response.data.amenities.filter(
+          (facility) => facility.is_hotel !== true
+        );
+        SetBookingFacility(facilityData);
+        setOriginalFacilityData(facilityData); // Store the original data for reference
+        console.log("Response", response.data);
       } catch (error) {
         console.error("Error fetching facilities", error);
         setError("Failed to fetch booking facilities. Please try again."); // Set error message
-        setLoading(true); // Stop loading on error
+        setLoading(false); // Stop loading on error
       }
     };
 
     fetchFacilityBooking();
   }, []);
 
+ useEffect(() => {
+   const fetchHotelBooking = async () => {
+     try {
+       const response = await getHotelSetup(true, page_no, per_page);
+       // Get the hotel amenities array
+       const hotelData = response.data.amenities;
+       console.log("Hotel Data:", hotelData);
+       setHotelBooking(hotelData);
+       setOriginalHotelData(hotelData); // Store the original data for reference
+       setLoading(false); // Stop loading on success
+     } catch (error) {
+       console.error("Error fetching hotel bookings", error);
+       setError("Failed to fetch hotel bookings. Please try again."); // Set error message
+       setLoading(false); // Stop loading on error
+     }
+   };
+   fetchHotelBooking();
+ }, [page_no, per_page]);
 
   const setupColumn = [
     {
       name: "Action",
-      cell: (row) => (
-        <div className="flex items-center gap-2 px-2 py-2 mt-1">
-          <Link to={`/setup/facility-details/${row.id}`}>
-            <BsEye />
-          </Link>
-          <Link to={`/setup/facility-details/edit/${row.id}`}>
-            <BiEdit size={15} />
-          </Link>
-        </div>
-
-      ),
+      cell: (row) => {
+        if (page === "facility") {
+          return (
+            <div className="flex items-center gap-2 px-2 py-2 mt-1">
+              <Link to={`/setup/facility-details/${row.id}`}>
+                <BsEye />
+              </Link>
+              <Link to={`/setup/facility-details/edit/${row.id}`}>
+                <BiEdit size={15} />
+              </Link>
+            </div>
+          );
+        }
+        if (page === "HotelBooking") {
+          return (
+            <div className="flex items-center gap-2 px-2 py-2 mt-1">
+              <Link to={`/setup/hotel-details/${row.id}`}>
+                <BsEye />
+              </Link>
+              <Link to={`/setup/hotel-details/edit/${row.id}`}>
+                <BiEdit size={15} />
+              </Link>
+            </div>
+          );
+        }
+      },
       sortable: true,
     },
 
@@ -79,7 +121,9 @@ const SetupBookingFacility = () => {
         const bookBefore = row?.book_before && row.book_before[1];
         return (
           <>
-              {bookBefore ? `${bookBefore.days} days, ${bookBefore.hours} hours, ${bookBefore.minutes} minutes` : "Not Available"}
+            {bookBefore
+              ? `${bookBefore.days} days, ${bookBefore.hours} hours, ${bookBefore.minutes} minutes`
+              : "Not Available"}
           </>
         );
       },
@@ -91,7 +135,9 @@ const SetupBookingFacility = () => {
         const advanceBooking = row?.advance_booking && row.advance_booking[1];
         return (
           <>
-            {advanceBooking ? `${advanceBooking.days} days, ${advanceBooking.hours} hours, ${advanceBooking.minutes} minutes` : "Not Available"}
+            {advanceBooking
+              ? `${advanceBooking.days} days, ${advanceBooking.hours} hours, ${advanceBooking.minutes} minutes`
+              : "Not Available"}
           </>
         );
       },
@@ -103,8 +149,8 @@ const SetupBookingFacility = () => {
       selector: (row) => {
         const date = new Date(row.created_at);
         const yy = date.getFullYear().toString(); // Get last 2 digits of the year
-        const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
-        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
         return `${dd}/${mm}/${yy}`;
       },
       sortable: true,
@@ -149,23 +195,41 @@ const SetupBookingFacility = () => {
       // status: <Switch />,
     },
   ];
-  const [filteredData, setFilteredData] = useState(setupData);
-  const handleSearch = (event) => {
+
+  // const [filteredData, setFilteredData] = useState(bookingFacility);
+  const handleAmenitySearch = (event) => {
     const searchValue = event.target.value;
     setSearchText(searchValue);
-    const filteredResults = setupData.filter((item) =>
-      item.facility.toLowerCase().includes(searchValue.toLowerCase())
-    );
-    setFilteredData(filteredResults);
+    if (searchValue.trim() === "") {
+      // Restore the original data
+      SetBookingFacility(originalFacilityData); // Keep this full list in a separate state variable
+    } else {
+      const filteredResults = bookingFacility.filter((item) =>
+        item.fac_name.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      SetBookingFacility(filteredResults);
+    }
   };
 
+  const handleHotelSearch = (event) => {
+    const searchValue = event.target.value;
+    setSearchText(searchValue);
+    if (searchValue.trim() === "") {
+      // Restore the original data
+      SetBookingFacility(originalHotelData); // Keep this full list in a separate state variable
+    } else {
+      const filteredResults = bookingFacility.filter((item) =>
+        item.fac_name.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      SetBookingFacility(filteredResults);
+    }
+  };
 
   const themeColor = useSelector((state) => state.theme.color);
   const [page, setPage] = useState("facility");
   return (
     <div className="flex bg-gray-100">
       <Navbar />
-
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <div className="flex justify-center my-2">
           <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200 ">
@@ -206,7 +270,7 @@ const SetupBookingFacility = () => {
                 placeholder="Search by name"
                 className="border p-2 border-gray-300 rounded-md w-full"
                 value={searchText}
-                onChange={handleSearch}
+                onChange={handleAmenitySearch}
               />
               <div className="flex gap-2 justify-end ">
                 <Link
@@ -255,7 +319,7 @@ const SetupBookingFacility = () => {
                 placeholder="Search by name"
                 className="border p-2 border-gray-300 rounded-md w-full"
                 value={searchText}
-                onChange={handleSearch}
+                onChange={handleHotelSearch}
               />
               <div className="flex gap-2 justify-end ">
                 <Link
@@ -289,7 +353,7 @@ const SetupBookingFacility = () => {
                 <p className="text-center text-red-500">{error}</p>
               ) : (
                 <div className="w-full">
-                  <Table columns={setupColumn} data={bookingFacility} />
+                  <Table columns={setupColumn} data={hotelBooking} />
                 </div>
               )}
             </div>

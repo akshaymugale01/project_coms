@@ -5,6 +5,7 @@ import { getItemInLocalStorage } from '../../utils/localStorage';
 import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill, FaProjectDiagram, FaWizardsOfTheCoast, FaRProject } from 'react-icons/fa';
 import { FaBilibili, FaDiagramProject, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaTimeline } from 'react-icons/fa6';
 import { FcAbout } from 'react-icons/fc';
+import { ImTree } from "react-icons/im";
 
 const SetupNavbar = () => {
   const themeColor = useSelector((state) => state.theme.color);
@@ -40,6 +41,10 @@ const SetupNavbar = () => {
 
           <Link to="/setup/users-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
             <FaUser /> Users
+          </Link>
+
+          <Link to="/setup/users-tree" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+            <ImTree /> User Tree
           </Link>
 
           {feat.includes("setup_assets") && (
