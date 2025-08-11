@@ -147,7 +147,7 @@ const calculateBookingAmount = (facility, formData) => {
       const response = await getFacitilitySetup(); // Assuming getFacilitySetup is an API call
       // console.log("Booking Setups", response);
 
-      setFacilities(response.data);
+      setFacilities(response.data.amenities);
     } catch (error) {
       console.log("Error Fetching facilities", error);
     }
@@ -205,17 +205,17 @@ const calculateBookingAmount = (facility, formData) => {
     try {
       const response = await getFacitilitySetup();
       if (response?.data) {
-        const selectedFacility = response.data.find(
+        const selectedFacility = response.data.amenities.find(
           (facility) => facility.id === parseInt(facilityId, 10)
         );
         // console.log("Selected Facility:", selectedFacility);
         const newPrices = {
-          member_price_adult: selectedFacility.member_price_adult || 0,
-          member_price_child: selectedFacility.member_price_child || 0,
-          guest_price_adult: selectedFacility.guest_price_adult || 0,
-          guest_price_child: selectedFacility.guest_price_child || 0,
-          tenant_price_adult: selectedFacility.tenant_price_adult || 0,
-          tenant_price_child: selectedFacility.tenant_price_child || 0,
+          member_price_adult: selectedFacility.member_price_adult ?? 0,
+          member_price_child: selectedFacility.member_price_child ?? 0,
+          guest_price_adult: selectedFacility.guest_price_adult ?? 0,
+          guest_price_child: selectedFacility.guest_price_child ?? 0,
+          tenant_price_adult: selectedFacility.tenant_price_adult ?? 0,
+          tenant_price_child: selectedFacility.tenant_price_child ?? 0,
         };
         // console.log("Selected Facility:", selectedFacility);
 

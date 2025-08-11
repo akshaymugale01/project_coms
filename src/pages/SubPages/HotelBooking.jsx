@@ -11,7 +11,10 @@ import {
   getFacitilitySetup,
   getSetupUsers,
   getSiteData,
+  getAmenitiesIdBooking,
   postAmenitiesBooking,
+  getHotelSetupList,
+  getAmenitiesBooking,
 } from "../../api";
 import { useSelector } from "react-redux";
 import Navbar from "../../components/Navbar";
@@ -20,18 +23,14 @@ import { getItemInLocalStorage } from "../../utils/localStorage";
 import { error } from "highcharts";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { addHours , isSameDay } from "date-fns";
 
 const HotelBooking = () => {
   const navigate = useNavigate();
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const formattedDate = `${year}-${month}-${day}`;
   const [isOpen, setIsOpen] = useState(false);
   const [isTermOpen, setIsTermOpen] = useState(false);
-  const [time, setTime] = useState("");
-  const [date, setDate] = useState(formattedDate);
   const [facility, setFacility] = useState("");
   const [userOptions, setUserOptions] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -42,16 +41,23 @@ const HotelBooking = () => {
   );
   const [paymentMode, setPaymentMode] = useState("post");
   const siteId = getItemInLocalStorage("SITEID");
+  const [memberTotalWithoutTax, setMemberTotalWithoutTax]= useState(0)
+  const [guestTotalWithoutTax, setGuestTotalWithoutTax] = useState(0);
+  const [tenantTotalWithoutTax, setTenantTotalWithoutTax] = useState(0);
+  const[totalDays, setTotalDays] = useState(1);
   // const [userOptions, setUserOptions] = useState([]);
   const [formData, setFormData] = useState({
     hotel_id: "",
     hotel_slot_id: "",
     user_id: "",
-    check_in_date_time: "",
-    check_out_date_time: "",
+    check_in_date_time: null,
+    check_out_date_time: null,
     site_id: siteId,
     amount: "",
     gst_no: 0,
+    sgst: 0,
+    tax: 0,
+    consecutive_slot_allowed: false,
     member_adult: 0,
     member_child: 0,
     guest_adult: 0,
@@ -99,28 +105,208 @@ const HotelBooking = () => {
   //   }
   // };
 
-  const calculateBookingAmount = (hotel, formData) => {
-    if (hotel?.fac_type === "request" && hotel?.postpaid === true) {
-      const fixedAmount = Number(hotel?.fixed_amount) || 0;
-      const taxPercentage = Number(hotel?.gst_no) || 0;
-      console.log("taxPercentage Amount:", taxPercentage);
-      const taxAmount = (fixedAmount * taxPercentage) / 100;
-      const totalAmount = fixedAmount + taxAmount;
-      console.log("Fixed Amount:", totalAmount);
-      return totalAmount;
-    } else {
-      return formData?.amount ?? "";
+  const [unavailableBookings, setUnavailableBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+
+  useEffect(() => {
+     if (!facility?.id) return console.log("Facility id does not exist");
+
+    const fetchBookedDates = async () => {
+      try {
+        const response = await getAmenitiesIdBooking(facility.id); //fetching all the bookings of the one facility
+        const bookings = response.amenity_bookings;
+        console.log("My facility id is", facility)
+        console.log("amenity_bookings:", response.amenity_bookings);
+        setUnavailableBookings(Array.isArray(bookings) ? bookings : []);
+      } catch (error) {
+        console.error("Failed to fetch bookings", error);
+        setUnavailableBookings([]);
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+
+    fetchBookedDates();
+  }, [facility.id]);
+
+
+  // Time-based validation: conflict on same day + earlier/equal to checkout time
+  const validateCheckInDateTime = (selectedDateTime) => {
+    if (loadingBookings) {
+      return { conflict: false, message: "" };
     }
+    const selectedHour = selectedDateTime.getHours();
+    const selectedMinute = selectedDateTime.getMinutes();
+
+    const isDefaultTime = selectedHour === 0 && selectedMinute === 0;
+
+    for (const { checkin_at, checkout_at } of unavailableBookings) {
+      const checkinDate = new Date(checkin_at);
+      const checkoutDateTime = new Date(checkout_at);
+
+      const isSameCheckinDate = isSameDay(selectedDateTime, checkinDate);
+      const isSameCheckoutDate = isSameDay(selectedDateTime, checkoutDateTime);
+      const isBeforeOrEqualCheckout = selectedDateTime <= checkoutDateTime;
+
+      if (isSameCheckinDate) {
+        return {
+          conflict: true,
+          message:
+            "The selected date is already booked for check-in. Please select another date.",
+        };
+      }
+
+      // 💡 Only check time conflicts once user has picked a time (not default midnight)
+      if (!isDefaultTime && isSameCheckoutDate && isBeforeOrEqualCheckout) {
+        return {
+          conflict: true,
+          message: `The selected date is already booked for check-out. Please choose a later time than ${checkoutDateTime.toLocaleTimeString()} or another date.`,
+        };
+      }
+    }
+
+    return { conflict: false, message: "" };
+  };
+
+const parseApiDate = (str) => {
+  if (!str) return null;
+
+  const [datePart, timePart] = str.split(" ");
+  if (!datePart || !timePart) return null;
+
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+
+  return new Date(year, month - 1, day, hour, minute); // ✅ Local time
+};
+
+const formatToApiDate = (date) => {
+  if (!date || isNaN(date.getTime())) return "";
+
+  const pad = (n) => String(n).padStart(2, "0");
+
+  const yyyy = date.getFullYear();
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const min = pad(date.getMinutes());
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+};
+  const getMaxCheckoutDate = (checkinDate, facility) => {
+    if (!checkinDate || !facility || !facility.no_of_days) return null;
+
+    const totalDays =
+      facility.consecutive_slot_allowed === true ||
+      facility.consecutive_slot_allowed === "true"
+        ? Number(facility.no_of_days) + 1
+        : 1;
+
+    return addHours(new Date(checkinDate), totalDays * 24);
+  };
+
+  const getTimeLimits = (checkOutDate, checkinDate, facility) => {
+    const selectedDate = parseApiDate(checkOutDate);
+    const checkin = parseApiDate(checkinDate);
+    const maxCheckout = getMaxCheckoutDate(checkinDate, facility);
+
+    if (!selectedDate || !checkin)
+      return {
+        minTime: null,
+        maxTime: null,
+        maxDate: null,
+      };
+
+    const isSameDay = selectedDate.toDateString() === checkin.toDateString();
+    const isLastDay =
+      maxCheckout && selectedDate.toDateString() === maxCheckout.toDateString();
+
+    const minTime = isSameDay
+      ? new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          checkin.getHours(),
+          checkin.getMinutes()
+        )
+      : new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          0,
+          0
+        );
+
+    const maxTime = isLastDay
+      ? new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          maxCheckout.getHours(),
+          maxCheckout.getMinutes()
+        )
+      : new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          23,
+          59
+        );
+
+    if (minTime.getTime() === maxTime.getTime()) {
+      maxTime.setMinutes(maxTime.getMinutes() + 30);
+    }
+
+    return {
+      minTime,
+      maxTime,
+      maxDate: maxCheckout ?? selectedDate,
+    };
+  };
+
+  // Extract limits
+  const { minTime, maxTime, maxDate } = getTimeLimits(
+    formData.check_out_date_time,
+    formData.check_in_date_time,
+    facility
+  );
+
+    const today = new Date();
+    const checkinDate = parseApiDate(formData.check_in_date_time);
+   
+    const minCheckoutDate = checkinDate > today ? checkinDate : today;
+
+    const calculateBookingAmount = (hotel, totalDays) => {
+      console.log("Fixed amount of chosen hotel",hotel.fixed_amount)
+      if (hotel.fixed_amount) {
+        const fixedAmount = Number(hotel?.fixed_amount) * totalDays || 0;
+        const taxPercentage = Number(hotel?.gst_no)+ Number(hotel?.sgst) || 0;
+        const taxAmount = (fixedAmount * taxPercentage) / 100;
+        console.log("total with tax", fixedAmount+taxAmount)
+        return fixedAmount + taxAmount;
+      }
+    };
+
+  //  console.log("Total allowed days", totalDays)
+
+  //checkout date validation
+  // const isValidDuration = (checkin, checkout) => {
+  //   if (!checkin || !checkout) return false;
+
+  //   const diffMs = new Date(checkout) - new Date(checkin);
+  //   const diffHours = diffMs / (1000 * 60 * 60);
+
+  //   return diffHours <= 23;
+  // };
+
+  const safeDate = (d) => {
+    if (!d) return null;
+    const date = new Date(d);
+    return isNaN(date.getTime()) ? null : date;
   };
 
   useEffect(() => {
     fetchHotelSetup();
-    if (!formData.booking_date) {
-      setFormData((prevData) => ({
-        ...prevData,
-        booking_date: today,
-      }));
-    }
     fetchUsers();
     fetchUnits();
   }, []);
@@ -131,10 +317,11 @@ const HotelBooking = () => {
   };
 
   useEffect(() => {
-    const bookingAmount = calculateBookingAmount(facility, formData);
+    const bookingAmount = calculateBookingAmount(facility, totalDays);
     console.log("Booking Amount:", bookingAmount);
     setAmountt(bookingAmount);
-  }, [facility, formData]);
+    setFormData((prev) => ({ ...prev, amount: bookingAmount }));
+  }, [facility, totalDays]);
 
   // Calculate GST based on total amount before tax
   const calculateGST = (amount, gstNo) => {
@@ -143,41 +330,32 @@ const HotelBooking = () => {
 
   const fetchHotelSetup = async () => {
     try {
-      const response = await getFacitilitySetup(); // Fetches the amenities.json data
-      const allAmenities = response.data;
+      const response = await getHotelSetupList(); // Fetches the amenities.json data
+      const allHotel = response.data.amenities;
+      // console.log("All Hotel Data:", allHotel);
 
-      // Filter amenities where is_hotel is true
-      const hotelAmenities = allAmenities.filter(
-        (item) => item.is_hotel === true
-      );
-
-      setFacilities(hotelAmenities); // Update your state with only hotel-specific amenities
+      setFacilities(allHotel); // Update your state with only hotel-specific amenities
     } catch (error) {
       console.log("Error Fetching hotel amenities", error);
     }
   };
 
-  const formatTime = (hr, min) => {
-    const safeMin = min ?? 0;
-    return `${hr}:${safeMin.toString().padStart(2, "0")}`;
-  };
-
   //fetch terms ,cancel, gst, member price
   const fetchTermsPolicy = async (facilityId) => {
     try {
-      const response = await getFacitilitySetup();
-      if (response?.data) {
-        const selectedFacility = response.data.find(
+      const response = await getHotelSetupList();
+      if (response?.data.amenities) {
+        const selectedFacility = response.data.amenities.find(
           (facility) => facility.id === parseInt(facilityId, 10)
         );
-        // console.log("Selected Facility:", selectedFacility);
+        
         const newPrices = {
-          member_price_adult: selectedFacility.member_price_adult || 0,
-          member_price_child: selectedFacility.member_price_child || 0,
-          guest_price_adult: selectedFacility.guest_price_adult || 0,
-          guest_price_child: selectedFacility.guest_price_child || 0,
-          tenant_price_adult: selectedFacility.tenant_price_adult || 0,
-          tenant_price_child: selectedFacility.tenant_price_child || 0,
+          member_price_adult: selectedFacility.member_price_adult ?? 0,
+          member_price_child: selectedFacility.member_price_child ?? 0,
+          guest_price_adult: selectedFacility.guest_price_adult ?? 0,
+          guest_price_child: selectedFacility.guest_price_child ?? 0,
+          tenant_price_adult: selectedFacility.tenant_price_adult ?? 0,
+          tenant_price_child: selectedFacility.tenant_price_child ?? 0,
         };
         // console.log("Selected Facility:", selectedFacility);
 
@@ -185,6 +363,9 @@ const HotelBooking = () => {
         setFormData((prevFormData) => ({
           ...prevFormData,
           gst_no: selectedFacility.gst_no,
+          sgst: selectedFacility.sgst,
+          consecutive_slot_allowed: selectedFacility.consecutive_slot_allowed,
+          no_of_days: Number(selectedFacility.no_of_days),
           prices: newPrices,
         }));
         // console.log("new p", newPrices);
@@ -219,88 +400,90 @@ const HotelBooking = () => {
     }
   };
 
-  const handleInputChange = (field, value) => {
-    const updatedFormData = { ...formData, [field]: parseInt(value) || 0 };
+const handleInputChange = (field, value) => {
+  const parsedValue = field.includes("date_time")
+    ? value
+    : parseInt(value) || 0;
 
-    // Calculate total number of people
-    const totalPeople =
-      updatedFormData.member_adult +
-      updatedFormData.member_child +
-      updatedFormData.guest_adult +
-      updatedFormData.guest_child +
-      updatedFormData.tenant_adult +
-      updatedFormData.tenant_child;
+  const updatedFormData = {
+    ...formData,
+    [field]: parsedValue,
+  };
 
-    // Validate against max_people limit
-    if (facility?.max_people && totalPeople > facility.max_people) {
-      toast.error(
-        `Total number of people (${totalPeople}) cannot exceed the maximum limit of ${facility.max_people} for this facility.`
-      );
-      return; // Don't update the state if validation fails
-    }
+  // Calculate total number of people
+  const totalPeople = updatedFormData.member_adult + updatedFormData.member_child + updatedFormData.guest_adult +
+    updatedFormData.guest_child + updatedFormData.tenant_adult + updatedFormData.tenant_child;
 
-    // Validate against min_people limit
-    if (
-      facility?.min_people &&
-      totalPeople < facility.min_people &&
-      totalPeople > 0
-    ) {
-      toast.error(
-        `Total number of people (${totalPeople}) must be at least ${facility.min_people} for this facility.`
-      );
-    }
+  // Always update state first
+  setFormData(updatedFormData);
 
+  // Then validate and show errors
+  if (facility?.max_people && totalPeople > facility.max_people) {
+    toast.error(
+      `Total number of people (${totalPeople}) cannot exceed the maximum limit of ${facility.max_people} for this facility.`
+    );
+  }
+
+  if (facility?.min_people &&totalPeople < facility.min_people && totalPeople > 0) {
+    toast.error(
+      `Total number of people (${totalPeople}) must be at least ${facility.min_people} for this facility.`
+    );
+  }
+
+  // Duration logic
+  const checkin = parseApiDate(updatedFormData.check_in_date_time);
+  const checkout = parseApiDate(updatedFormData.check_out_date_time);
+
+  const durationInDays =
+    checkin && checkout && !isNaN(checkin.getTime()) && !isNaN(checkout.getTime())
+      ? Math.ceil((checkout - checkin) / (24 * 60 * 60 * 1000)) : 1;
+
+  setTotalDays(durationInDays);
+console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amount));
+  // Pricing logic
+  if (facility.fixed_amount == null || Number(facility.fixed_amount) === 0) {
+    console.log("Thee amount inside the facility", facility.fixed_amount)
     const memberTotal =
-      updatedFormData.member_adult * prices.member_price_adult +
-      updatedFormData.member_child * prices.member_price_child;
+      (updatedFormData.member_adult * prices.member_price_adult +
+        updatedFormData.member_child * prices.member_price_child) *
+      durationInDays;
+
     const guestTotal =
-      updatedFormData.guest_adult * prices.guest_price_adult +
-      updatedFormData.guest_child * prices.guest_price_child;
+      (updatedFormData.guest_adult * prices.guest_price_adult +
+        updatedFormData.guest_child * prices.guest_price_child) *
+      durationInDays;
+
     const tenantTotal =
-      updatedFormData.tenant_adult * prices.tenant_price_adult +
-      updatedFormData.tenant_child * prices.tenant_price_child;
+      (updatedFormData.tenant_adult * prices.tenant_price_adult +
+        updatedFormData.tenant_child * prices.tenant_price_child) *
+      durationInDays;
+
     const totalBeforeTax = memberTotal + guestTotal + tenantTotal;
-    // Assuming `tax_no` comes from the fetched data (e.g., tax rate is 12%)
-    const taxAmount = calculateGST(totalBeforeTax, formData.gst_no || 0); // If no tax, use 0
-    console.log("tax amm", taxAmount);
+
+    const taxAmount = calculateGST(
+      totalBeforeTax,
+      Number(formData.gst_no) + Number(formData.sgst) || 0
+    );
+
     const finalAmount = totalBeforeTax + taxAmount;
-    // Update formData and the total amount
-    setFormData({
-      ...updatedFormData,
+
+    setMemberTotalWithoutTax(memberTotal);
+    setGuestTotalWithoutTax(guestTotal);
+    setTenantTotalWithoutTax(tenantTotal);
+
+    setFormData((prev) => ({
+      ...prev,
       amount: finalAmount,
-      tax: taxAmount, // Store the calculated tax in formData for reference
-    });
-  };
-
-  const handleDateChange = (e) => {
-    const selectedDate = e.target.value;
-    setDate(selectedDate); // Update date state
-
-    setFormData((prevData) => ({
-      ...prevData,
-      booking_date: selectedDate,
     }));
-  };
+  } else {
+    const fixedAmount = calculateBookingAmount(facility, totalDays);
+    setFormData((prev) => ({
+      ...prev,
+      amount: fixedAmount,
+    }));
+  }
+};
 
-  // const handleButtonClick = (selectedTime) => {
-  //   setSelectedTimes((prevState) => {
-  //     const newState = {
-  //       ...prevState,
-  //       [selectedTime]: !prevState[selectedTime],
-  //     };
-
-  //     // Determine if any time slot is selected
-  //     const anyTimeSelected = Object.values(newState).some(
-  //       (isSelected) => isSelected
-  //     );
-
-  //     // Update the state for timeSelected and time
-  //     setTimeSelected(anyTimeSelected);
-  //     setTime(anyTimeSelected ? selectedTime : "");
-
-  //     return newState;
-  //   });
-  // };
 
   const postBookFacility = async () => {
     const postData = new FormData();
@@ -390,10 +573,11 @@ const HotelBooking = () => {
     } catch (error) {
       // Handle errors
       console.error("Error in booking:", error);
-      alert("Error in booking. Please try again.", error);
+      alert("Error in booking. Please try agai1n.", error);
     }
   };
   console.log("uuu", units);
+
   const fetchUsers = async () => {
     try {
       const response = await getSetupUsers();
@@ -442,35 +626,27 @@ const HotelBooking = () => {
     }
   }, [units]);
 
-  console.log("facility", facility);
-
   const handleFacilityChange = (e) => {
-    const selectedFacilityId = e.target.value;
+    const selectedHotelId = e.target.value;
 
-    fetchTermsPolicy(selectedFacilityId); // Fetch Terms
+    fetchTermsPolicy(selectedHotelId); // Fetch Terms
 
+    console.log("Selected Facility ID:", selectedHotelId);
     const selectedFacility = facilities.find(
-      (facility) => facility.id === parseInt(selectedFacilityId)
+      (facility) => facility.id === parseInt(selectedHotelId)
     );
     setFacility(selectedFacility);
 
     setFormData((prevData) => ({
       ...prevData,
-      amenity_id: selectedFacilityId,
+      amenity_id: selectedHotelId,
     }));
   };
 
-  const handleSelectChange = (e) => {
-    const selectedUserId = e.target.value;
-    setFormData((prevData) => ({
-      ...prevData,
-      user_id: selectedUserId, // Update user_id in the formData state
-    }));
-  };
+  console.log("facility", facility.id); //selected guestroom id
 
   const [searchText, setSearchText] = useState("");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null); // Store the selected user
   const filteredOptions = userOptions.filter((user) =>
     user.label.toLowerCase().includes(searchText.toLowerCase())
   );
@@ -509,7 +685,7 @@ const HotelBooking = () => {
               Hotel Booking
             </h2>
             <div className="grid grid-cols-4 gap-2">
-              <div className="relative mt-3 p-2">
+              <div className="relative mt-3 p-2 flex flex-col gap-1">
                 <label htmlFor="facility" className="font-semibold">
                   Select Hotel:
                 </label>
@@ -518,14 +694,30 @@ const HotelBooking = () => {
                 <input
                   type="text"
                   value={searchFATerm}
-                  onChange={(e) => setSearchFATerm(e.target.value)} // Update search term
+                  onChange={(e) => {
+                    setSearchFATerm(e.target.value);
+                    setFormData({
+                      check_in_date_time: null,
+                      check_out_date_time: null,
+                      member_adult: 0,
+                      member_child: 0,
+                      guest_adult: 0,
+                      guest_child: 0,
+                      tenant_adult: 0,
+                      tenant_child: 0,
+                      // Add any other fields your formData includes
+                    });
+                    setMemberTotalWithoutTax(0);
+                    setGuestTotalWithoutTax(0);
+                    setTenantTotalWithoutTax(0);
+                  }} // Update search term
                   onFocus={() => setShowDropdown(true)} // Show dropdown on focus
                   className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
                   placeholder="Search Room"
                 />
                 {/* Dropdown */}
                 {showDropdown && (
-                  <div className="absolute z-10 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto w-full">
+                  <div className="relative z-10 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto w-full">
                     {filteredFacilities.length > 0 ? (
                       filteredFacilities.map((facility) => (
                         <div
@@ -559,20 +751,35 @@ const HotelBooking = () => {
                 </select>
               </div> */}
 
-              <div className="mt-3 relative p-2">
+              <div className="mt-3 relative p-2 flex flex-col gap-1">
                 <label htmlFor="users" className="font-semibold">
                   Select User:
                 </label>
                 <input
                   type="text"
+                  id="users"
                   value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  onChange={(e) => {
+                    setSearchText(e.target.value);
+                    setFormData((prev) => ({
+                      ...prev,
+                      check_in_date_time: formatToApiDate(date),
+                      check_out_date_time: null,
+                      amount: 0,
+                      member_adult: 0,
+                      member_child: 0,
+                      guest_adult: 0,
+                      guest_child: 0,
+                      tenant_adult: 0,
+                      tenant_child: 0,
+                    }));
+                  }}
                   onFocus={() => setDropdownOpen(true)}
                   placeholder="Search User"
                   className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
                 />
                 {isDropdownOpen && (
-                  <ul className="absolute bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto w-full">
+                  <ul className="relative bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto w-60">
                     {filteredOptions.length > 0 ? (
                       filteredOptions.map((user, index) => (
                         <li
@@ -591,83 +798,86 @@ const HotelBooking = () => {
               </div>
 
               {/* Check-in Date */}
-              <div className="relative mt-3 p-2">
-                <label htmlFor="checkInDate" className="font-semibold">
-                  Check-in Date:
+              <div className="mt-3">
+                <label className="font-semibold block mb-1">
+                  Check-in Date & Time:
                 </label>
-                <input
-                  type="datetime-local"
-                  id="checkInDate"
-                  name="check_in_date_time"
-                  min={new Date().toISOString().slice(0, 16)}
-                  value={formData.check_in_date_time}
-                  onChange={(e) =>
+                <DatePicker
+                  selected={
+                    formData.check_in_date_time
+                      ? new Date(formData.check_in_date_time)
+                      : null
+                  }
+                  onChange={(date) => {
+                    const { conflict, message } = validateCheckInDateTime(date);
+                    if (conflict) {
+                      toast.error(message);
+                      return;
+                    }
                     setFormData((prev) => ({
                       ...prev,
-                      check_in_date_time: e.target.value,
-                    }))
-                  }
+                      check_in_date_time: formatToApiDate(date),
+                      check_out_date_time: null,
+                      amount: 0,
+                      member_adult: 0,
+                      member_child: 0,
+                      guest_adult: 0,
+                      guest_child: 0,
+                      tenant_adult: 0,
+                      tenant_child: 0,
+                      amount: 0,
+                    }));
+                    setMemberTotalWithoutTax(0);
+                    setGuestTotalWithoutTax(0);
+                    setTenantTotalWithoutTax(0);
+                  }}
+                  showTimeSelect
+                  timeIntervals={30}
+                  dateFormat="Pp"
+                  minDate={new Date()}
                   className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
                 />
               </div>
-              {/* Check-in Time */}
-              {/* <div className="relative mt-3 p-2">
-                <label htmlFor="checkInTime" className="font-semibold">
-                  Check-in Time:
-                </label>
-                <input
-                  type="time"
-                  id="checkInTime"
-                  name="check_in_time"
-                  value={formData.check_in_time}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      check_in_time: e.target.value,
-                    }))
-                  }
-                  className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
-                />
-              </div> */}
+
               {/* Check-out Date */}
-              <div className="relative mt-3 p-2">
-                <label htmlFor="checkOutDate" className="font-semibold">
-                  Check-out Date:
+              <div className="mt-3">
+                <label className="font-semibold block mb-1">
+                  Check-out Date & Time:
                 </label>
-                <input
-                  type="datetime-local"
-                  id="checkOutDate"
-                  name="check_out_date_time"
-                  min={new Date().toISOString().slice(0, 16)}
-                  value={formData.check_out_date_time}
-                  onChange={(e) =>
+                <DatePicker
+                  selected={parseApiDate(formData.check_out_date_time)}
+                  onChange={(date) => {
                     setFormData((prev) => ({
                       ...prev,
-                      check_out_date_time: e.target.value,
-                    }))
-                  }
+                      check_out_date_time: formatToApiDate(date),
+                      amount: 0,
+                      member_adult: 0,
+                      member_child: 0,
+                      guest_adult: 0,
+                      guest_child: 0,
+                      tenant_adult: 0,
+                      tenant_child: 0,
+                    }));
+                    setMemberTotalWithoutTax(0);
+                    setGuestTotalWithoutTax(0);
+                    setTenantTotalWithoutTax(0);
+                  }}
+                  minDate={checkinDate > today ? checkinDate : today} //blocks past dates
+                  maxDate={getMaxCheckoutDate(
+                    formData.check_in_date_time,
+                    facility
+                  )}
+                  showTimeSelect
+                  timeIntervals={30}
+                  dateFormat="Pp"
                   className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
                 />
+
+                <p className="text-sm text-gray-600 mt-1">
+                  You can book up to {Number(facility.no_of_days) + 1 || 0}{" "}
+                  consecutive days.
+                </p>
               </div>
-              {/* Check-out Time */}
-              {/* <div className="relative mt-3 p-2">
-                <label htmlFor="checkOutTime" className="font-semibold">
-                  Check-out Time:
-                </label>
-                <input
-                  type="time"
-                  id="checkOutTime"
-                  name="check_out_time"
-                  value={formData.check_out_time}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      check_out_time: e.target.value,
-                    }))
-                  }
-                  className="border p-[6px] px-4 border-gray-500 rounded-md w-60"
-                />
-              </div> */}
             </div>
 
             <div className="my-2">
@@ -782,11 +992,7 @@ const HotelBooking = () => {
                       }
                     />
                   </div>
-                  <div>
-                    Total:{" "}
-                    {formData.member_adult * prices.member_price_adult +
-                      formData.member_child * prices.member_price_child}
-                  </div>
+                  <div>Total: {memberTotalWithoutTax || 0}</div>
                 </div>
 
                 {/* Guest Fields */}
@@ -826,11 +1032,7 @@ const HotelBooking = () => {
                       }
                     />
                   </div>
-                  <div>
-                    Total:{" "}
-                    {formData.guest_adult * prices.guest_price_adult +
-                      formData.guest_child * prices.guest_price_child}
-                  </div>
+                  <div>Total: {guestTotalWithoutTax || 0}</div>
                 </div>
 
                 {/* Tenant Fields */}
@@ -870,11 +1072,7 @@ const HotelBooking = () => {
                       }
                     />
                   </div>
-                  <div>
-                    Total:{" "}
-                    {formData.tenant_adult * prices.tenant_price_adult +
-                      formData.tenant_child * prices.tenant_price_child}
-                  </div>
+                  <div>Total: {tenantTotalWithoutTax || 0}</div>
                 </div>
               </div>
 
@@ -887,7 +1085,7 @@ const HotelBooking = () => {
                   type="text"
                   id="tax"
                   name="tax"
-                  value={formData.gst_no} // Display tax amount
+                  value={Number(formData.gst_no) + Number(formData.sgst) || 0} // Display tax amount
                   disabled
                   className="flex p-2 border border-grey-300 rounded"
                 />
@@ -900,7 +1098,7 @@ const HotelBooking = () => {
                   type="text"
                   id="amount"
                   name="amount"
-                  value={amountt ? amountt : formData.amount || 0} // Conditional display
+                  value={formData.amount || 0} // Conditional display
                   disabled
                   className="flex p-2 border border-grey-300 rounded"
                 />
@@ -953,4 +1151,3 @@ const HotelBooking = () => {
 };
 
 export default HotelBooking;
-("http://13.215.74.38//complaint_modes.jsontoken=efe990d24b0379af8ba3d0a986ac802796bc2e0db15552&q[of_atype]=complaint");

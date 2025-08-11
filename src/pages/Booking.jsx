@@ -9,34 +9,42 @@ import SeatBooking from "./SubPages/SeatBooking";
 import Table from "../components/table/Table";
 import { useSelector } from "react-redux";
 import { BsEye } from "react-icons/bs";
-import { getAmenitiesBooking, getFacitilitySetup } from "../api";
-
+import {
+  getAmenitiesBooking,
+  getAmenityBooking,
+  getFacitilitySetup,
+  getHotelSetup,
+} from "../api";
 
 const Booking = () => {
   const [searchText, setSearchText] = useState("");
   const [modal, showModal] = useState(false);
   const [page, setPage] = useState("meetingBooking");
   const [bookings, setBookings] = useState([]); // State to hold booking data
+  const [page_no, setPageNo] = useState(1);
+  const [per_page, setPerPage] = useState(10);
   const [loading, setLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
   const [bookingFacility, setBookingFacility] = useState([]);
+  const [hotelbooking, setHotelBooking] = useState([]);
   const themeColor = "rgb(3, 19 37)";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const hotelbookingResponse = await getAmenitiesBooking();
+        console.log("Bookings Data:", hotelbookingResponse?.data);
+        setHotelBooking(hotelbookingResponse?.data.amenity_bookings || []);
 
         // Fetch Bookings
-        const bookingsResponse = await getAmenitiesBooking();
-        // console.log("Bookings Response:", bookingsResponse);
-        setBookings(bookingsResponse?.data || []);
+        const bookingsResponse = await getAmenityBooking();
+        console.log("Bookings Data:", bookingsResponse?.data);
+        setBookings(bookingsResponse?.data.amenity_bookings || []);
 
-        // Fetch Facility Setup
-        const facilityResponse = await getFacitilitySetup();
-        // console.log("Facility Setup Response:", facilityResponse);
-        setBookingFacility(facilityResponse?.data || []);
-
+        // Fetch Facility Setup — pass the required params here!
+        const facilityResponse = await getFacitilitySetup(page_no, per_page);
+        setBookingFacility(facilityResponse?.data.amenities || []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -44,14 +52,19 @@ const Booking = () => {
         setLoading(false);
       }
     };
-    fetchData();
-  }, []);
 
-  const combinedData = bookings.map((booking) => {
+    fetchData();
+  }, [page_no, per_page]); // add dependencies if these are dynamic
+
+  useEffect(() => {
+    console.log("Updated Booking Facility:", bookingFacility);
+  }, [bookingFacility]);
+
+  const combinedData = bookings?.map((booking) => {
     const facility = bookingFacility.find(
       (fac) => fac.id === booking.amenity_id
     );
-
+    console.log("Facility Data:", facility);
     // Find the relevant slot from amenity slots
     const amenitySlots = facility?.amenity_slots || [];
     const slot = amenitySlots.find((s) => s.id === booking.amenity_slot_id);
@@ -78,6 +91,39 @@ const Booking = () => {
 
   // Sort combinedData by ID in descending order
   const sortedData = combinedData.sort((a, b) => b.id - a.id);
+
+  const combinedHotelData = hotelbooking.map((booking) => {
+      const facility = bookingFacility.find(
+        (fac) => fac.id === booking.amenity_id
+      );
+
+      if (!facility || !facility.is_hotel) return null; // Filter out non-hotel amenities
+
+      // const amenitySlots = facility.amenity_slots || [];
+      // const slot = amenitySlots.find((s) => s.id === booking.amenity_slot_id);
+
+      // const slotTime = slot
+      //   ? `${String(slot.start_hr || 0).padStart(2, "0")}:${String(
+      //       slot.start_min || 0
+      //     ).padStart(2, "0")} - ${String(slot.end_hr || 0).padStart(
+      //       2,
+      //       "0"
+      //     )}:${String(slot.end_min || 0).padStart(2, "0")}`
+      //   : "N/A";
+
+      return {
+        ...booking,
+        fac_name: facility.fac_name || "N/A",
+        fac_type: facility.fac_type || "N/A",
+        description: facility.description || "N/A",
+        terms: facility.terms || "N/A",
+        // slot_time: slotTime,
+      };
+    })
+    .filter((item) => item !== null) // Remove filtered-out bookings
+    .sort((a, b) => b.id - a.id); // Sort descending by booking ID
+
+  const sortHotelData = combinedHotelData;
 
   // Handle Search
   const handleSearch = (event) => {
@@ -114,12 +160,12 @@ const Booking = () => {
     // },
     {
       name: "Facility Name",
-      selector: (row) => row.fac_name,
+      selector: (row) => row.amenity.fac_name,
       sortable: true,
     },
     {
       name: "Facility Type",
-      selector: (row) => row.fac_type,
+      selector: (row) => row.amenity.fac_type,
       sortable: true,
     },
     {
@@ -169,7 +215,111 @@ const Booking = () => {
     },
     {
       name: "Scheduled Time",
-      selector: (row) => row.slot_time || "N/A",
+      selector: (row) => row.slot.slot_str || "N/A",
+      sortable: true,
+    },
+    {
+      name: "Description",
+      selector: (row) => row.amenity.description,
+      sortable: true,
+    },
+    {
+      name: "Terms",
+      selector: (row) => row.amenity.terms,
+      sortable: true,
+    },
+    {
+      name: "Booking Status",
+      selector: (row) => row.status || "N/A",
+      sortable: true,
+    },
+  ];
+
+  const hotelColumns = [
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="flex item-center gap-2">
+          <Link to={`/bookings/booking-details/${row.id}`}>
+            <BsEye />
+          </Link>
+          {/* <Link to={`bookings/edit_bookings/${row.id}`}>
+        <BiEdit size={15} />
+      </Link> */}
+        </div>
+      ),
+      sortable: false,
+    },
+    { name: "ID", selector: (row) => row.id, sortable: true },
+    // {
+    //   name: "Facility ID",
+    //   selector: (row) => row.amenity_id,
+    //   sortable: true,
+    // },
+    {
+      name: "Facility Name",
+      selector: (row) => row.fac_name,
+      sortable: true,
+    },
+    {
+      name: "Facility Type",
+      selector: (row) => row.fac_type,
+      sortable: true,
+    },
+    {
+      name: "Total Amount",
+      selector: (row) => row.amount || "NA",
+      sortable: true,
+    },
+    {
+      name: "Payment Status",
+      selector: (row) => row.status || "NA",
+      sortable: true,
+    },
+    {
+      name: "Payment Method",
+      selector: (row) => row.payment_mode || "NA",
+      sortable: true,
+    },
+    {
+      name: "Booked By",
+      selector: (row) => {
+        console.log("row", row.book_by_user);
+        return row?.book_by_user || "User Not Set!";
+      },
+      sortable: true,
+    },
+    {
+      name: "Booked On",
+      selector: (row) => {
+        const date = new Date(row.created_at);
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${dd}/${mm}/${yy}`;
+      },
+      sortable: true,
+    },
+    {
+      name: "Check-in Date",
+      selector: (row) => {
+        const date = new Date(row.checkin_at);
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${dd}/${mm}/${yy}`;
+      },
+      sortable: true,
+    },
+    {
+      name: "Check-out Date",
+      selector: (row) => {
+        const date = new Date(row.checkout_at);
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${dd}/${mm}/${yy}`;
+      },
       sortable: true,
     },
     {
@@ -188,7 +338,6 @@ const Booking = () => {
       sortable: true,
     },
   ];
-
   return (
     <section className="flex">
       <Navbar />
@@ -297,7 +446,7 @@ const Booking = () => {
                 <p className="text-center text-red-500">{error}</p>
               ) : (
                 <div className="w-full">
-                  <Table columns={columns} data={sortedData} />
+                  <Table columns={hotelColumns} data={sortHotelData} />
                 </div>
               )}
             </div>

@@ -759,7 +759,10 @@ import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
 import EditPPMChecklist from "./pages/SubPages/EditPPMChecklist.jsx";
 import CreateInvoiceReceipt from "./pages/SubPages/details/CreateInvoiceReciept.jsx";
 //import ParkingConfiguration from "./pages/Setup/ParkingSetupPages/ParkingConfiguration.jsx";
-//import ModernParkingConfig from "./pages/Setup/ParkingSetupPages/ModernParkingConfig.jsx";
+import ModernParkingConfig from "./pages/Setup/ParkingSetupPages/ModernParkingConfig.jsx";
+import EditHotelSetup from "./pages/SubPages/EditHotelSetup.jsx";
+import UserSetupTree from "./pages/Setup/UserSetupTree.jsx";
+import UserSetupTreeView from "./pages/Setup/UserSetupTreeView.jsx";
 
 // new admin hrms
 
@@ -1002,6 +1005,22 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <AddRole />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/setup/users-tree"
+            element={
+              <ProtectedAdminRoutes>
+                <UserSetupTree />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/setup/users-tree/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <UserSetupTreeView />
               </ProtectedAdminRoutes>
             }
           />
@@ -1278,6 +1297,15 @@ function App() {
           <Route
             path="/setup/facility-details/edit/:id"
             element={<EditAmenitySetup />}
+          />
+          <Route
+            path="/setup/hotel-details/:id"
+            element={<BookingFacilityDetails />}
+          />
+
+          <Route
+            path="/setup/hotel-details/edit/:id"
+            element={<EditHotelSetup />}
           />
           <Route
             path="/setup/facility/create-facility"
@@ -2159,14 +2187,6 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <ParkingSetup />
-              </ProtectedAdminRoutes>
-            }
-          />
-          <Route
-            path="/admin/parking-config"
-            element={
-              <ProtectedAdminRoutes>
-                <ParkingConfiguration />
               </ProtectedAdminRoutes>
             }
           />

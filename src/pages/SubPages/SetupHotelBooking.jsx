@@ -28,6 +28,9 @@ const SetupHotelBooking = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const sitID = getItemInLocalStorage("SITEID");
   const navigate = useNavigate();
+  const initialCgstNo = "";
+  const initialSgst = "";
+  const initialGst = Number(initialCgstNo) + Number(initialSgst);
   const [formData, setFormData] = useState({
     hotel: {
       site_id: sitID,
@@ -63,7 +66,6 @@ const SetupHotelBooking = () => {
       max_people: "",
       cancel_before: "",
       terms: "",
-      gst_no: "",
       fixed_amount: "",
       is_fixed: "",
       prepaid: false,
@@ -75,9 +77,10 @@ const SetupHotelBooking = () => {
       member: false,
       guest: false,
       tenant: false,
-      pay_on_facility: null,
-      gst: "",
-      sgst: "",
+      pay_on_facility: false,
+      gst_no: initialCgstNo,
+      sgst: initialSgst,
+      gst: initialGst,
     },
     covers: [],
     attachments: [],
@@ -101,11 +104,13 @@ const SetupHotelBooking = () => {
     // Validate required fields
     if (!formData.hotel.gst_no || !formData.hotel.fac_type) {
       toast.error(
-        "All fields are mandatory! Please provide GST number, Facility Type, and at least one slot."
+        "All fields are mandatory! Please provide GST number, Facility Type"
       );
       return; // Stop the function if validation fails
     }
     const postData = new FormData();
+    const gst = Number(formData.gst_no) + Number(formData.sgst);
+    postData.append("amenity[gst]", gst);
     // Append covers as an array
     if (formData.covers.length > 0) {
       formData.covers.forEach((file) => {
@@ -229,22 +234,6 @@ const SetupHotelBooking = () => {
       toast.error(`${name.replace("_", " ")} cannot exceed 59 minutes.`);
     }
   };
-  const [timeValues, setTimeValues] = useState({
-    time1: "00:00",
-    time2: "00:00",
-    time3: "00:00",
-  });
-
-  const handleTimeChange = (e, timeKey) => {
-    const { value } = e.target;
-    setTimeValues((prev) => ({
-      ...prev,
-      [timeKey]: value,
-    }));
-  };
-  const [subFacilities, setSubFacilities] = useState([
-    { name: "", status: "" },
-  ]);
 
   //new
   const [rules, setRules] = useState([{ timesPerDay: "", selectedOption: "" }]);
@@ -457,7 +446,8 @@ const SetupHotelBooking = () => {
               </div>
               <div className="flex justify-center my-2">
                 <input
-                  type="text"
+                  type="number"
+                  min={0}
                   disabled={!formData.hotel.member}
                   value={formData.hotel.member_price_adult || ""}
                   onChange={(e) =>
@@ -469,7 +459,8 @@ const SetupHotelBooking = () => {
               </div>
               <div className="flex justify-center my-2">
                 <input
-                  type="text"
+                  type="number"
+                  min={0}
                   disabled={!formData.hotel.member}
                   value={formData.hotel.member_price_child || ""}
                   onChange={(e) =>
@@ -481,14 +472,15 @@ const SetupHotelBooking = () => {
               </div>
               <div className="flex justify-center my-2">
                 <input
-                  type="text"
-                  disabled={
-                    !(
-                      (formData.hotel.fac_type === "request" &&
-                        formData.hotel.postpaid === true) ||
-                      formData.hotel.prepaid
-                    )
-                  }
+                  type="number"
+                  min={0}
+                  // disabled={
+                  //   !(
+                  //     (formData.hotel.fac_type === "request" &&
+                  //       formData.hotel.postpaid === true) ||
+                  //     formData.hotel.prepaid
+                  //   )
+                  // }
                   value={formData.hotel.fixed_amount || ""}
                   onChange={(e) =>
                     handlePriceChange("fixed_amount", e.target.value)
@@ -513,7 +505,8 @@ const SetupHotelBooking = () => {
               </div>
               <div className="flex justify-center my-2">
                 <input
-                  type="text"
+                  type="number"
+                  min={0}
                   disabled={!formData.hotel.guest}
                   value={formData.hotel.guest_price_adult || ""}
                   onChange={(e) =>
@@ -525,7 +518,8 @@ const SetupHotelBooking = () => {
               </div>
               <div className="flex justify-center my-2">
                 <input
-                  type="text"
+                  type="number"
+                  min={0}
                   disabled={!formData.hotel.guest}
                   value={formData.hotel.guest_price_child || ""}
                   onChange={(e) =>
@@ -551,7 +545,8 @@ const SetupHotelBooking = () => {
               </div>
               <div className="flex justify-center my-2">
                 <input
-                  type="text"
+                  type="number"
+                  min={0}
                   disabled={!formData.hotel.tenant}
                   value={formData.hotel.tenant_price_adult || ""}
                   onChange={(e) =>
@@ -563,7 +558,8 @@ const SetupHotelBooking = () => {
               </div>
               <div className="flex justify-center my-2">
                 <input
-                  type="text"
+                  type="number"
+                  min={0}
                   disabled={!formData.hotel.tenant}
                   value={formData.hotel.tenant_price_child || ""}
                   onChange={(e) =>
@@ -590,7 +586,7 @@ const SetupHotelBooking = () => {
               {/* GST Input */}
               <div className="flex items-center space-x-11">
                 <label htmlFor="gst_no" className="font-medium p-2">
-                  GST
+                  CGST
                 </label>
                 <input
                   type="number"
@@ -598,7 +594,7 @@ const SetupHotelBooking = () => {
                   id="gst_no"
                   min={0}
                   className="border border-gray-400 rounded p-2 outline-none"
-                  placeholder="GST(%)"
+                  placeholder="CGST(%)"
                   value={formData.hotel.gst_no || ""} // Add GST to the state if necessary
                   onChange={(e) =>
                     setFormData((prevState) => ({
@@ -714,12 +710,6 @@ const SetupHotelBooking = () => {
                 placeholder="Mins"
                 onBlur={validateInput} // Validate on losing focus
                 maxLength="2" // Restrict input to a maximum of 2 characters
-              />
-
-              <input
-                type="hidden"
-                name="book_before"
-                value={formData.hotel.book_before || ""}
               />
             </div>
           </div>
