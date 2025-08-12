@@ -93,16 +93,19 @@ const UserSetup = () => {
   const userColumn = [
     {
       name: "View",
-      cell: (row) => (
-        <div className="flex items-center">
-          <Link to={`/setup/users-details/${row.id}`}>
-            <BsEye size={15} />
-          </Link>
-          <Link to={`/setup/users-edit-page/${row.id}`} className="ml-2">
-            <BiEdit size={15} />
-          </Link>
-        </div>
-      ),
+      cell: (row) => {
+        console.log("row", row);
+        return (
+          <div className="flex items-center">
+            <Link to={`/setup/users-details/${row.id}`}>
+              <BsEye size={15} />
+            </Link>
+            <Link to={`/setup/users-edit-page/${row.id}`} className="ml-2">
+              <BiEdit size={15} />
+            </Link>
+          </div>
+        );
+      },
     },
     { name: "First Name", selector: (row) => row.firstname, sortable: true },
     { name: "Last Name", selector: (row) => row.lastname, sortable: true },
@@ -115,12 +118,7 @@ const UserSetup = () => {
     },
     {
       name: "Building-Floor-Unit",
-      selector: (row) => {
-        const building = row.building?.name || "NA";
-        const floor = row.floor?.name || "NA";
-        const unit = row.unit?.name || "NA";
-        return `${building} - ${floor} - ${unit}`;
-      },
+      selector: (row) => row.full_unit_name,
       sortable: true,
     },
     {
