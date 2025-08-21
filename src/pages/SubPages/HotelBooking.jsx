@@ -113,7 +113,7 @@ const HotelBooking = () => {
 
     const fetchBookedDates = async () => {
       try {
-        const response = await getAmenitiesIdBooking(facility.id); //fetching all the bookings of the one facility
+        const response = await getAmenitiesIdBooking(facility.amenity_id); //fetching all the bookings of the one facility
         const bookings = response.amenity_bookings;
         console.log("My facility id is", facility)
         console.log("amenity_bookings:", response.amenity_bookings);
@@ -410,39 +410,51 @@ const handleInputChange = (field, value) => {
     [field]: parsedValue,
   };
 
-  // Calculate total number of people
-  const totalPeople = updatedFormData.member_adult + updatedFormData.member_child + updatedFormData.guest_adult +
-    updatedFormData.guest_child + updatedFormData.tenant_adult + updatedFormData.tenant_child;
+  const totalPeople =
+    (updatedFormData.member_adult || 0) +
+    (updatedFormData.member_child || 0) +
+    (updatedFormData.guest_adult || 0) +
+    (updatedFormData.guest_child || 0) +
+    (updatedFormData.tenant_adult || 0) +
+    (updatedFormData.tenant_child || 0);
 
-  // Always update state first
-  setFormData(updatedFormData);
-
-  // Then validate and show errors
+  //Block update if over max
   if (facility?.max_people && totalPeople > facility.max_people) {
     toast.error(
       `Total number of people (${totalPeople}) cannot exceed the maximum limit of ${facility.max_people} for this facility.`
     );
+    return; 
   }
 
-  if (facility?.min_people &&totalPeople < facility.min_people && totalPeople > 0) {
+  //Block update if under min (but not zero)
+  if (
+    facility?.min_people &&
+    totalPeople < facility.min_people &&
+    totalPeople > 0
+  ) {
     toast.error(
       `Total number of people (${totalPeople}) must be at least ${facility.min_people} for this facility.`
     );
+    return;
   }
+
+  //Update
+  setFormData(updatedFormData);
 
   // Duration logic
   const checkin = parseApiDate(updatedFormData.check_in_date_time);
   const checkout = parseApiDate(updatedFormData.check_out_date_time);
 
   const durationInDays =
-    checkin && checkout && !isNaN(checkin.getTime()) && !isNaN(checkout.getTime())
-      ? Math.ceil((checkout - checkin) / (24 * 60 * 60 * 1000)) : 1;
+    checkin &&
+    checkout &&
+    !isNaN(checkin.getTime()) &&
+    !isNaN(checkout.getTime())? Math.ceil((checkout - checkin) / (24 * 60 * 60 * 1000)): 1;
 
   setTotalDays(durationInDays);
-console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amount));
+
   // Pricing logic
   if (facility.fixed_amount == null || Number(facility.fixed_amount) === 0) {
-    console.log("Thee amount inside the facility", facility.fixed_amount)
     const memberTotal =
       (updatedFormData.member_adult * prices.member_price_adult +
         updatedFormData.member_child * prices.member_price_child) *
@@ -476,7 +488,7 @@ console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amo
       amount: finalAmount,
     }));
   } else {
-    const fixedAmount = calculateBookingAmount(facility, totalDays);
+    const fixedAmount = calculateBookingAmount(facility, durationInDays);
     setFormData((prev) => ({
       ...prev,
       amount: fixedAmount,
@@ -965,6 +977,7 @@ console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amo
                     </label>
                     <input
                       name="member_adult"
+                      id="member_adult"
                       type="number"
                       min={0}
                       className="flex-1 p-2 border border-gray-300 rounded"
@@ -1008,6 +1021,7 @@ console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amo
                       name="guest_adult"
                       type="number"
                       id="guest_adult"
+                      min={0}
                       className="flex-1 p-2 border border-gray-300 rounded"
                       placeholder="No. of Guest Adult"
                       value={formData.guest_adult}
@@ -1024,6 +1038,7 @@ console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amo
                       name="guest_child"
                       id="guest_child"
                       type="number"
+                      min={0}
                       placeholder="No. of Guest Child"
                       className="flex-1 p-2 border border-grey-300 rounded"
                       value={formData.guest_child}
@@ -1048,6 +1063,7 @@ console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amo
                       name="tenant_adult"
                       id="tenant_adult"
                       type="number"
+                      min={0}
                       className="border rounded border-grey-300 p-2 flex"
                       placeholder="No. of Tenant Adult"
                       value={formData.tenant_adult}
@@ -1064,6 +1080,7 @@ console.log("Outside if block", facility.fixed_amount, typeof(facility.fixed_amo
                       name="tenant_child"
                       id="tenant_child"
                       type="number"
+                      min={0}
                       placeholder="No. Of Tenant Child"
                       className="flex p-2 border border-grey-300 rounded"
                       value={formData.tenant_child}

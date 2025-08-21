@@ -1303,12 +1303,26 @@ export const getAmenitiesBooking = async (page, per_page) => {
   });
 };
 
+//user tree amenities
+export const getAmenitiesBookedByUserId = async (id) => {
+  return axiosInstance.get(`/amenity_bookings.json`, {
+    params: {
+      token: token,
+      "q[user_id_eq]":id,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache", // Older HTTP/1.0 caches
+      Expires: "0", // Immediately expires the cached response
+    },
+  });
+};
+
 export const getAmenitiesIdBooking = async (id) => {
   try {
-    const response = await axiosInstance.get(`/amenity_bookings.json`, {
+    const response = await axiosInstance.get(`/amenity_bookings/${id}.json`, {
       params: {
         token: token,
-        'q[amenity_id_eq]': id,
       },
       headers: {
         "Cache-Control": "no-cache",
@@ -1322,6 +1336,27 @@ export const getAmenitiesIdBooking = async (id) => {
     throw error;
   }
 };
+
+export const getAmenitiesBookingById = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/amenity_bookings.json`, {
+      params: {
+        token: token,
+        'q[id_eq]': id,
+      },
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+    return response.data;
+  }
+  catch (error) {
+    console.error("Error fetching amenity bookings:", error);
+    throw error;
+  }
+}
 
 export const updateAmenityBook = async (id, data) =>
   axiosInstance.put(`/amenity_bookings/${id}.json`, data, {
@@ -1465,7 +1500,6 @@ export const getFacitilitySetupId = async (id) =>
       token: token,
     },
   });
-
 
 export const getHotelSetupList = async()=>{
   try {
@@ -2195,7 +2229,6 @@ export const getEmployeeAttendance = async (userId) =>
   });
 
 // Events
-
 export const getEvents = async () =>
   axiosInstance.get("/events.json", {
     params: {
@@ -2218,6 +2251,15 @@ export const postEvents = async (data) =>
   axiosInstance.post("/events.json", data, {
     params: {
       token: token,
+    },
+  });
+
+ //user tree event 
+ export const getEventsCreatedByUserId = async (id) =>
+  axiosInstance.get(`/events.json`, {
+    params: {
+      token: token,
+      "q[created_by_id_eq]":id,
     },
   });
 export const postGroups = async (data) =>
@@ -2520,6 +2562,16 @@ export const editBroadcastDetails = async (id, data) =>
   axiosInstance.put(`/notices/${id}.json`, data, {
     params: {
       token: token,
+    },
+  });
+
+//User tree broadcast
+export const getBroadCastCreatedByUserId = async (id) =>
+  axiosInstance.get("/notices.json", {
+    params: {
+      token: token,
+      "created_by_id":id
+      // token: "775d6ae27272741669a65456ea10cc56cd4cce2bb99287b6",
     },
   });
 //Permit
@@ -2860,6 +2912,21 @@ export const getExpectedVisitor = async (page = 1, perPage = 10, filters = {}) =
       Expires: "0",
     },
   });
+
+//usertree visitors
+export const getAllVisitorsByUserId =async (id) =>
+  axiosInstance.get(`/visitors.json`, {
+    params: {
+      token: token,
+      "q[hosts_user_id_eq]" : id,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
+
 export const getVisitorDashboard = async () =>
   axiosInstance.get("/visitors/visitors_dashboard.json", {
     params: {

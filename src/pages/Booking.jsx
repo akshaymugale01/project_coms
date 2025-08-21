@@ -39,7 +39,7 @@ const Booking = () => {
 
         // Fetch Bookings
         const bookingsResponse = await getAmenityBooking();
-        console.log("Bookings Data:", bookingsResponse?.data);
+        console.log("Bookings Data of only amenities:", bookingsResponse?.data);
         setBookings(bookingsResponse?.data.amenity_bookings || []);
 
         // Fetch Facility Setup — pass the required params here!
