@@ -13,7 +13,12 @@ import {
   getUsersByID,
 } from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import UserSetupTreeServiceDesk from "./UserSetupTreeServiceDesk"; 
+import UserSetupTreeServiceDesk from "./UserSetupTreeServiceDesk";
+import VisitorSetup from "./VisitorSetup";
+import UserSetupTree from "./UserSetupTree";
+import UserSetupTreeVisitor from "./UserSetpupTreeVisitor";
+import UserSetupTreeAmenities from "./UserSetupTreeAmenities";
+import UserSetupTreeCommunication from "./UserSetupTreeCommunication";
 
 const UserSetupTreeView = () => {
   const siteId = getItemInLocalStorage("SITEID");
@@ -21,19 +26,19 @@ const UserSetupTreeView = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sites, setSites] = useState([]);
   const [units, setUnits] = useState([]);
-  const[userData, setUserData] = useState([]);
+  const [userData, setUserData] = useState([]);
   // const users = getItemInLocalStorage("UserId");
   const { id } = useParams();
-  
-console.log(id)
+
+  console.log(id);
   const fetchUserById = async () => {
-  try {
-    const user = await getUsersByID(id); // example ID
-    console.log("Fetched user:", user.data);
-    setUserData(user.data[0]); // or whatever state you're updating
-  } catch (err) {
-    console.error("Error fetching user:", err);
-  }
+    try {
+      const user = await getUsersByID(id); // example ID
+      console.log("Fetched user:", user.data);
+      setUserData(user.data[0]); // or whatever state you're updating
+    } catch (err) {
+      console.error("Error fetching user:", err);
+    }
   };
 
   useEffect(() => {
@@ -42,7 +47,7 @@ console.log(id)
     }
   }, [id]);
 
-  console.log("User data",userData)
+  console.log("User data", userData);
   return (
     <section className="flex">
       {/* Navbar stays visible */}
@@ -67,27 +72,36 @@ console.log(id)
 
           {/* Tabs */}
           <div className="flex gap-4 sm:rounded-full rounded-md opacity-90 bg-gray-200 mx-auto">
-            {["ServiceDesk", "Visitors", "meetingBooking", "Communication"].map(
-              (tab) => (
-                <h2
-                  key={tab}
-                  className={`px-9 py-2 rounded-full cursor-pointer text-center transition-all duration-300 ease-linear ${
-                    page === tab
-                      ? "bg-white text-blue-500 shadow-custom-all-sides"
-                      : "text-gray-700"
-                  }`}
-                  onClick={() => setPage(tab)}
-                >
-                  {tab === "meetingBooking" ? "Amenities Bookings" : tab}
-                </h2>
-              )
-            )}
+            {[
+              "ServiceDesk",
+              "Visitors",
+              "Amenities Bookings",
+              "Communication",
+            ].map((tab) => (
+              <h2
+                key={tab}
+                className={`px-9 py-2 rounded-full cursor-pointer text-center transition-all duration-300 ease-linear ${
+                  page === tab
+                    ? "bg-white text-blue-500 shadow-custom-all-sides"
+                    : "text-gray-700"
+                }`}
+                onClick={() => setPage(tab)}
+              >
+                {tab}
+              </h2>
+            ))}
           </div>
         </div>
 
         {/* Page Content */}
         <div className="w-full overflow-x-auto mt-10">
           {page === "ServiceDesk" && <UserSetupTreeServiceDesk />}
+          {page === "Visitors" && <UserSetupTreeVisitor />}
+          {page === "Amenities Bookings" && <UserSetupTreeAmenities />}
+        </div>
+
+        <div className="w-full overflow-x-auto">
+          {page === "Communication" && <UserSetupTreeCommunication />}
           {/* Add other page components as needed */}
         </div>
       </div>
@@ -113,9 +127,8 @@ console.log(id)
               />
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  {userData.firstname ||
-                    "No data"} {" " + userData.lastname ||
-                    "No data"}
+                  {userData.firstname || "No data"}{" "}
+                  {" " + userData.lastname || "No data"}
                 </h2>
                 <p className="text-sm text-gray-500">
                   {userData.department || ""}

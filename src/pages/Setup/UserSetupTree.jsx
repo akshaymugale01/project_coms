@@ -94,43 +94,54 @@ const UserSetupTree = () => {
     fetchData();
   }, []);
 
-
   const fetchUsers = async () => {
     try {
-      if(selectedBuilding && selectedFloorId && selectedUnitId && selectedUnitId != ""){
-      const user = await getSetupUsersByUnit("users", selectedUnitId);
-      setUsers(user.data)
-    }else if (selectedBuilding && selectedFloorId && selectedFloorId != "") {
-      const userbyfloor = await getSetupUsersByFloor("users", selectedFloorId);
-      setUsers(userbyfloor.data);
-      setSelectedUnitId("");
-    } else if (selectedBuilding) {
-      const userbybuilding = await getSetupUsersByBuilding("users",selectedBuilding);
-      setUsers(userbybuilding.data);
-      setSelectedFloorId("");
-      setSelectedUnitId("");
-    
-    }
+      if (
+        selectedBuilding &&
+        selectedFloorId &&
+        selectedUnitId &&
+        selectedUnitId != ""
+      ) {
+        const user = await getSetupUsersByUnit("users", selectedUnitId);
+        setUsers(user.data);
+      } else if (selectedBuilding && selectedFloorId && selectedFloorId != "") {
+        const userbyfloor = await getSetupUsersByFloor(
+          "users",
+          selectedFloorId
+        );
+        setUsers(userbyfloor.data);
+        setSelectedUnitId("");
+      } else if (selectedBuilding) {
+        const userbybuilding = await getSetupUsersByBuilding(
+          "users",
+          selectedBuilding
+        );
+        setUsers(userbybuilding.data);
+        setSelectedFloorId("");
+        setSelectedUnitId("");
+      }
     } catch (err) {
       console.error("Error fetching users:", err);
     }
   };
 
+  console.log("The unit id selected is", selectedUnitId);
+  console.log(
+    "The selected building and floor",
+    selectedBuilding,
+    selectedFloorId
+  );
+  console.log("Users:", users);
 
-console.log("The unit id selected is",selectedUnitId)
-console.log("The selected building and floor", selectedBuilding, selectedFloorId)
-console.log("Users:", users);
-
-const handleFilterChange = (field, value) => {
+  const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSearchClick = async () => {
-    try{
-    fetchUsers()
-    }
+    try {
+      fetchUsers();
+    } catch (error) {
       // assuming this feeds your DataTable
-    catch (error) {
       console.error("Error fetching users:", error);
       setUserData([]);
     }
@@ -155,13 +166,23 @@ const handleFilterChange = (field, value) => {
       ),
     },
     {
-      name: "First Name",
-      selector: (row) => row.firstname,
+      name: "Name",
+      selector: (row) => row.good_name,
       sortable: true,
     },
     {
-      name: "Last Name",
-      selector: (row) => row.lastname,
+      name: "Mobile",
+      selector: (row) => row.mobile,
+      sortable: true,
+    },
+    {
+      name: "Building",
+      selector: (row) => row.building_name,
+      sortable: true,
+    },
+    {
+      name: "Floor",
+      selector: (row) => row.floor_name,
       sortable: true,
     },
     // {
@@ -287,13 +308,13 @@ const handleFilterChange = (field, value) => {
           {/* Unit Selection */}
           <div className="flex flex-col">
             <label className="font-semibold">
-              Units: <span style={{ color: "red" }}>*</span>
+              Units: 
+              {/* <span style={{ color: "red" }}>*</span> */}
             </label>
             <select
               className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
               value={selectedUnitId}
-              onChange={(e) => setSelectedUnitId(e.target.value)
-              }
+              onChange={(e) => setSelectedUnitId(e.target.value)}
             >
               <option value="">-- Choose Unit --</option>
               {units.map((unit) => (

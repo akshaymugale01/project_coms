@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
-import { getFacitilitySetup } from '../../api';
+import { getFacitilitySetupId } from "../../api";
 import { useParams } from 'react-router-dom';
 import { formatTime } from '../../utils/dateUtils';
 
@@ -13,15 +13,16 @@ const FacilityDetails = () => {
   // Fetch the facility details for the specific ID
   const fetchFacilityBooking = async () => {
     try {
-      const response = await getFacitilitySetup(id); // API call
-      // console.log("Amenitis", response.data); // Check the raw response
+      const response = await getFacitilitySetupId(id); // API call
+      console.log("Test Amenitis", response.data); // Check the raw response
 
       // Filter the specific facility by ID (assuming 'id' is unique in the response)
-      const facility = response.data.find(facility => facility.id === parseInt(id));
+      const facility = response.data.id === parseInt(id);
+      const facilitydata = response.data;
       console.log("facility ", facility);
 
       if (facility) {
-        setFacilityData(facility); // Set only the matching facility
+        setFacilityData(facilitydata); // Set only the matching facility
       } else {
         setError('Facility not found.');
       }

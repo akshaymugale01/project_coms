@@ -1293,7 +1293,6 @@ function App() {
             path="/setup/facility-details/:id"
             element={<BookingFacilityDetails />}
           />
-
           <Route
             path="/setup/facility-details/edit/:id"
             element={<EditAmenitySetup />}
