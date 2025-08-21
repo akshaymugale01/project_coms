@@ -2,190 +2,158 @@ import { useEffect, useState, useMemo } from "react";
 import DataTable from "react-data-table-component";
 import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
-import { getAllVisitorsByUserId } from "../../api";
+import { getAmenitiesBookedByUserId } from "../../api";
 import { Link, useParams } from "react-router-dom";
 import moment from "moment";
 
-const UserSetupTreeVisitor = () => {
-  const [visitors, setVisitors] = useState([]);
+const UserSetupTreeAmenities = () => {
+  const [amenitiesBooking, setAmenitiesBooking] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({});
   const [showSearch, setShowSearch] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   const { id } = useParams();
 
-  // console.log("Extracted ID from URL:", id);
-
-  const VisitorColumns = [
+  const rawColumns = [
     {
       name: "Action",
       selectorKey: null,
-      cell: (row) =>
+      cell: (row) => 
         row.isSearchRow ? null : (
-          <div className="flex items-center gap-4">
-            <Link to={`/admin/passes/visitors/visitor-details/${row.id}`}>
-              <BsEye size={15} />
-            </Link>
-            <Link to={`/admin/passes/visitors/edit-visitor/${row.id}`}>
-              <BiEdit size={15} />
-            </Link>
-          </div>
-        ),
-    },
-    {
-      name: "Visitor Type",
-      selectorKey: "visit_type",
-      selector: (row) => row.visit_type,
-      sortable: true,
-    },
-    {
-      name: "Name",
-      selectorKey: "name",
-      selector: (row) => row.name,
-      sortable: true,
-    },
-    {
-      name: "Contact No.",
-      selectorKey: "contact_no",
-      selector: (row) => row.contact_no,
-      sortable: true,
-    },
-
-    {
-      name: "Purpose",
-      selectorKey: "purpose",
-      selector: (row) => row.purpose,
-      sortable: true,
-    },
-    {
-      name: "Coming from",
-      selectorKey: "coming_from",
-      selector: (row) => row.coming_from,
-      sortable: true,
-    },
-    {
-      name: "Expected Date",
-      selectorKey: "expected_date",
-      selector: (row) => row.expected_date,
-      sortable: true,
-    },
-    {
-      name: "Expected Time",
-      selectorKey: "expected_time",
-      selector: (row) => row.expected_time,
-      sortable: true,
-    },
-    {
-      name: "Vehicle No.",
-      selectorKey: "vehicle_number",
-      selector: (row) => row.vehicle_number,
-      sortable: true,
-    },
-
-    // {
-    //   name: "Host Approval",
-    //   selector: (row) => (row.skip_host_approval ? "Not Required" : "Required"),
-    //   sortable: true,
-    // },
-
-    {
-      name: "Pass Start",
-      selectorKey: "start_pass",
-      selector: (row) => (row.start_pass ? dateFormat(row.start_pass) : ""),
-      sortable: true,
-    },
-    {
-      name: "Pass End",
-      selectorKey: "end_pass",
-      selector: (row) => (row.end_pass ? dateFormat(row.end_pass) : ""),
-      sortable: true,
-    },
-    // {
-    //   name: "Check In",
-    //   selector: (row) => (
-    //     <p>
-    //       {row && row.visits_log && row.visits_log.length > 0 ? (
-    //         row.visits_log.map((visit, index) =>
-    //           visit.check_in ? (
-    //             <span key={index}>{dateTimeFormat(visit.check_in)}</span>
-    //           ) : (
-    //             <span key={index}>-</span>
-    //           )
-    //         )
-    //       ) : (
-    //         <span>-</span>
-    //       )}
-    //     </p>
-    //   ),
-    //   sortable: true,
-    // },
-    // {
-    //   name: "Check Out",
-    //   selector: (row) => (row.check_out ? dateTimeFormat(row.check_out) : ""),
-    //   sortable: true,
-    // },
-    // {
-    //   name: "Status",
-    //   selector: (row) => (
-    //     <div
-    //       className={`${
-    //         row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
-    //       } `}
-    //     >
-    //       {row.visitor_in_out}
-    //     </div>
-    //   ),
-    //   sortable: true,
-    // },
-    {
-      name: "In/OUT",
-      selectorKey: "visitor_in_out",
-      selector: (row) => (
-        <div
-          className={`${
-            row.visitor_in_out === "IN" ? "text-red-400" : "text-green-400"
-          } `}
-        >
-          {row.visitor_in_out}
+        <div className="flex item-center gap-2">
+          <Link to={`/bookings/booking-details/${row.id}`}>
+            <BsEye />
+          </Link>
+          {/* <Link to={`bookings/edit_bookings/${row.id}`}>
+          <BiEdit size={15} />
+        </Link> */}
         </div>
       ),
+      sortable: false,
+    },
+    {
+      name: "ID",
+      selectorKey: "id",
+      selector: (row) => row.id,
+      sortable: true,
+    },
+    // {
+    //   name: "Facility ID",
+    //   selector: (row) => row.amenity_id,
+    //   sortable: true,
+    // },
+    {
+      name: "Facility Name",
+      selectorKey: "facility_name",
+      selector: (row) => row.amenity.fac_name,
       sortable: true,
     },
     {
-      name: "Host",
-      selectorKey: "created_by_name",
-      selector: (row) =>
-        `${row?.created_by_name?.firstname} ${row?.created_by_name?.lastname}`,
+      name: "Facility Type",
+      selectorKey: "facility_type",
+      selector: (row) => row.amenity.fac_type,
+      sortable: true,
+    },
+    {
+      name: "Total Amount",
+      selectorKey: "total_amount",
+      selector: (row) => row.amount || "NA",
+      sortable: true,
+    },
+    {
+      name: "Paymnet Status",
+      selectorKey: "payment_status",
+      selector: (row) => row.status || "NA",
+      sortable: true,
+    },
+    {
+      name: "Paymnet Method",
+      selectorKey: "payment_method",
+      selector: (row) => row?.payment?.payment_method || "NA",
+      sortable: true,
+    },
+    {
+      name: "Booked By",
+      selectorKey: "booked_by",
+      selector: (row) => {
+        console.log("row", row.book_by_user);
+        return row?.book_by_user || "User Not Set!";
+      },
+      sortable: true,
+    },
+    {
+      name: "Booked On",
+      selectorKey: "booked_on",
+      selector: (row) => {
+        const date = new Date(row.created_at);
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${dd}/${mm}/${yy}`;
+      },
+      sortable: true,
+    },
+    {
+      name: "Scheduled On",
+      selectorKey: "scheduled_on",
+      selector: (row) => {
+        const date = new Date(row.booking_date);
+        const yy = date.getFullYear().toString(); // Get last 2 digits of the year
+        const mm = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${dd}/${mm}/${yy}`;
+      },
+      sortable: true,
+    },
+    {
+      name: "Scheduled Time",
+      selectorKey: "scheduled_time",
+      selector: (row) => row.slot.slot_str || "N/A",
+      sortable: true,
+    },
+    // {
+    //   name: "Description",
+    //   selectorKey: "description",
+    //   selector: (row) => row.amenity.description,
+    //   sortable: true,
+    // },
+    // {
+    //   name: "Terms",
+    //   selectorKey: "terms",
+    //   selector: (row) => row.amenity.terms,
+    //   sortable: true,
+    // },
+    {
+      name: "Booking Status",
+      selectorKey: "booking_status",
+      selector: (row) => row.status || "N/A",
       sortable: true,
     },
   ];
 
   const [columnVisibility, setColumnVisibility] = useState(() =>
-    Object.fromEntries(VisitorColumns.map((col) => [col.name, true]))
+    Object.fromEntries(rawColumns.map((col) => [col.name, true]))
   );
 
   useEffect(() => {
-    const getAllVisitors = async () => {
+    const getAmenities = async () => {
       try {
-        const response = await getAllVisitorsByUserId(id);
-        console.log(
-          "The response received for visitors",
-          response.data.visitors
-        );
-        setVisitors(response.data.visitors);
+        const response = await getAmenitiesBookedByUserId(id);
+        setAmenitiesBooking(response.data.amenity_bookings);
       } catch (error) {
-        console.error("Error fetching visitors:", error);
+        console.error("Error fetching amenities booking:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    getAllVisitors();
+    getAmenities();
   }, [id]);
 
   const visibleColumns = useMemo(() => {
-    return VisitorColumns.filter((col) => columnVisibility[col.name]).map(
-      (col) => {
+    return rawColumns
+      .filter((col) => columnVisibility[col.name])
+      .map((col) => {
         const key = col.selectorKey;
         const isFilterable = key && !["action", "created_at"].includes(key);
 
@@ -218,13 +186,12 @@ const UserSetupTreeVisitor = () => {
             return col.cell ? col.cell(row) : col.selector?.(row);
           },
         };
-      }
-    );
-  }, [VisitorColumns, columnVisibility, filters, showSearch]);
+      });
+  }, [rawColumns, columnVisibility, filters, showSearch]);
 
-  const filteredVisitors = useMemo(() => {
-    const filtered = visitors.filter((item) =>
-      VisitorColumns.every((col) => {
+  const filteredBookings = useMemo(() => {
+    const filtered = amenitiesBooking.filter((item) =>
+      rawColumns.every((col) => {
         const key = col.selectorKey;
         if (!key || !filters[key]) return true;
         return (item[key] ?? "")
@@ -240,7 +207,7 @@ const UserSetupTreeVisitor = () => {
     }
 
     return filtered;
-  }, [visitors, filters, showSearch]);
+  }, [amenitiesBooking, filters, showSearch]);
 
   const customStyle = {
     headRow: {
@@ -317,7 +284,7 @@ const UserSetupTreeVisitor = () => {
                 overflowY: "auto",
               }}
             >
-              {VisitorColumns.map((col) => (
+              {rawColumns.map((col) => (
                 <label
                   key={col.name}
                   style={{
@@ -348,7 +315,7 @@ const UserSetupTreeVisitor = () => {
       <DataTable
         responsive
         columns={visibleColumns}
-        data={filteredVisitors}
+        data={filteredBookings}
         customStyles={customStyle}
         fixedHeader
         fixedHeaderScrollHeight="500px"
@@ -361,4 +328,4 @@ const UserSetupTreeVisitor = () => {
   );
 };
 
-export default UserSetupTreeVisitor;
+export default UserSetupTreeAmenities;

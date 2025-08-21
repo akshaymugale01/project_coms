@@ -261,6 +261,7 @@ const UserSetupTreeServiceDesk = () => {
         selectableRowsHighlight
         highlightOnHover
         progressPending={loading}
+        pagination
       />
     </div>
   );

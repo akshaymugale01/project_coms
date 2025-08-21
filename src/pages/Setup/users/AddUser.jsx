@@ -24,41 +24,67 @@ const AddUser = () => {
   const [filteredBuildings, setFilteredBuildings] = useState([]);
   const [filtteredFloors, setFilteredFloors] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [selectedUnit, setSelectedUnit] = useState("");
   const [floors, setFloors] = useState([]);
   const [selectedFloorId, setSelectedFloorId] = useState("");
   const [members, setMembers] = useState([]);
   // const [units, setUnits] = useState([]);
-  const [formData, setFormData] = useState({
-    firstname: "",
-    lastname: "",
-    email: "",
-    password: "",
-    mobile: "",
-    userType: "unit_resident",
-    site_ids: [siteId],
-    user_sites: [
-      {
-        unit_id: "",
-        site_id: siteId,
-        ownership: "",
-        ownership_type: "",
-        is_approved: true,
-        lives_here: "",
-      },
-    ],
-    occupancy_type: "",
-    lease_expiry: "",
-  });
   const [showMemberFields, setShowMemberFields] = useState(false);
-  const [memberData, setMemberData] = useState({
-    name: "",
+const [memberData, setMemberData] = useState([
+  {
+    member_type: "",
+    member_name: "",
     contact: "",
     relation: "",
-  });
+  },
+]);
 
-  const [vendorList, setVendorList] = useState([
-    { service: "", name: "", contact: "" },
-  ]);
+const [vendorList, setVendorList] = useState([
+  { service_type: "", name: "", contact: "" },
+]);
+
+const[occupancy_type, setOccupancy_type] = useState("")
+
+const [formData, setFormData] = useState({
+  firstname: "",
+  lastname: "",
+  email: "",
+  password: "",
+  mobile: "",
+  userType: "unit_resident",
+  site_ids: [siteId], // Make sure siteId is defined before this runs
+  moving_date: "",
+  building_id: selectedBuilding, // Same here
+  lease_expiry: "",
+  lives_here: "",
+  profession: "",
+  mgl_cust_number: "",
+  adani_account: "",
+  net_provider_name: "",
+  net_provider_id: "",
+  blood_group: "",
+  no_of_pets: "",
+  birth_date: "",
+  user_sites: [
+    {
+      unit_id: selectedUnit,
+      site_id: siteId,
+      ownership: occupancy_type, // Will be filled later from formData.occupancy_type
+      ownership_type: "primary",
+      is_approved: true,
+      lives_here: "",
+    },
+  ],
+
+  user_members: memberData, // Now an array
+  user_vendors: vendorList,
+});
+
+  const handleUnitChange = (e) => {
+    setSelectedUnit(e.target.value);
+    // Optional: log or trigger side effects
+    console.log("Selected unit ID:", e.target.value);
+  };
 
   const handleAddVendor = () => {
     setVendorList([...vendorList, { service: "", name: "", contact: "" }]);
@@ -112,6 +138,11 @@ const AddUser = () => {
   //   }));
   // };
 
+ const validateMobileInput = (value) => {
+   const digitsOnly = value.replace(/\D/g, "");
+   return digitsOnly.slice(0, 10); // Always returns string
+ };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "firstname" || name === "lastname") {
@@ -120,12 +151,11 @@ const AddUser = () => {
       return;
     }
 
-    if (name === "mobile") {
-      const mobileRegex = /^[0-9]{0,10}$/;
-      if (!mobileRegex.test(value)) {
-        return;
-      }
-    }
+     if (name === "mobile") {
+       const validated = validateMobileInput(value);
+       setFormData((prev) => ({ ...prev, [name]: validated }));
+       return;
+     }
 
     if (name === "email") {
       // Remove all spaces from email input
@@ -176,64 +206,71 @@ const AddUser = () => {
     setMembers((prev) => [...prev, { name: "", contact: "", relation: "" }]);
   };
 
-  // 📝 Update member field
+  // Update member field
   const handleMemberChange = (index, field, value) => {
     const updated = [...members];
     updated[index][field] = value;
     setMembers(updated);
   };
 
-  // ❌ Delete member row
+  // Delete member row
   const handleDeleteMember = (index) => {
     const updated = members.filter((_, i) => i !== index);
     setMembers(updated);
   };
 
   const handleAddUser = async () => {
+    const {
+      firstname,
+      lastname,
+      email,
+      mobile,
+      password,
+      moving_date,
+      occupancy_type,
+      lease_expiry,
+    } = formData;
+
+    // Validate required fields
     if (
-      !formData.firstname ||
-      !formData.lastname ||
-      !formData.email ||
-      !formData.password ||
-      formData.user_sites.length === 0
+      !firstname ||
+      !lastname ||
+      !email ||
+      !mobile ||
+      !password ||
+      !moving_date ||
+      !occupancy_type ||
+      !selectedBuilding ||
+      !selectedFloorId ||
+      !selectedUnit
     ) {
-      return toast.error(
-        "All fields are required! including at least one user site!"
-      );
+      return toast.error("Please fill all mandatory fields marked with *");
     }
 
+    // Conditional check for lease expiry
+    if (occupancy_type === "tenant" && !lease_expiry) {
+      return toast.error("Lease expiry date is required for tenants");
+    }
+
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      return toast.error("Please enter a valid email address!");
+    if (!emailRegex.test(email)) {
+      return toast.error("Please enter a valid email address");
     }
-    const postData = {
-      user: {
-        firstname: formData.firstname,
-        lastname: formData.lastname,
-        mobile: formData.mobile,
-        password: formData.password,
-        email: formData.email,
-        user_type: formData.userType,
-        user_sites: formData.user_sites.map((site) => ({
-          unit_id: site.unit_id,
-          site_id: site.site_id,
-          ownership: site.ownership,
-          ownership_type: site.ownership_type,
-          is_approved: site.is_approved,
-          lives_here: site.lives_here,
-        })),
-      },
-    };
 
+    // Validate mobile number format (Indian 10-digit starting with 6-9)
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(mobile)) {
+      return toast.error("Please enter a valid 10-digit mobile number");
+    }
+
+    // Proceed with submission
     try {
-      await postSetupUsers(postData);
-
-      console.log("created details", postData);
-      toast.success("User created successfully!");
-      navigate("/setup/users-setup");
+      await postSetupUsers(postData); // API call
+      toast.success("User added successfully!");
     } catch (error) {
-      console.error("Error creating user:", error);
-      toast.error("Failed to create user.");
+      console.error("Error adding user:", error);
+      toast.error("Failed to add user. Please try again.");
     }
   };
 
@@ -342,7 +379,11 @@ const AddUser = () => {
                 <label className="font-semibold">
                   Units: <span style={{ color: "red" }}>*</span>
                 </label>
-                <select className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm">
+                <select
+                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
+                  value={selectedUnit}
+                  onChange={handleUnitChange}
+                >
                   <option value="">-- Choose Unit --</option>
                   {units.map((unit) => (
                     <option key={unit.id} value={unit.id}>
@@ -425,12 +466,14 @@ const AddUser = () => {
                 <input
                   type="number"
                   min={0}
-                  id="pets"
-                  name="pets"
+                  id="no_of_pets"
+                  name="no_of_pets"
                   className="border p-2 rounded border-gray-300"
                   placeholder="Number of pets"
-                  value={formData.pets || ""}
-                  onChange={(e) => handleInputChange("pets", e.target.value)}
+                  value={formData.no_of_pets || ""}
+                  onChange={(e) =>
+                    handleInputChange("no_of_pets", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -447,7 +490,7 @@ const AddUser = () => {
                   type="text"
                   id="blood_group"
                   name="blood_group"
-                  maxLength={2}
+                  maxLength={3}
                   className="border p-2 rounded border-gray-300"
                   placeholder="e.g. A+, B-"
                   value={formData.blood_group || ""}
@@ -467,11 +510,13 @@ const AddUser = () => {
                 </label>
                 <input
                   type="date"
-                  id="dob"
-                  name="dob"
+                  id="birth_date"
+                  name="birth_date"
                   className="border p-2 rounded border-gray-300"
-                  value={formData.dob || ""}
-                  onChange={(e) => handleInputChange("dob", e.target.value)}
+                  value={formData.birth_date || ""}
+                  onChange={(e) =>
+                    handleInputChange("birth_date", e.target.value)
+                  }
                 />
               </div>
 
@@ -534,9 +579,13 @@ const AddUser = () => {
                     type="text"
                     className="border p-2 rounded border-gray-300"
                     value={member.name}
-                    onChange={(e) =>
-                      handleMemberChange(index, "name", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const validated = e.target.value.replace(
+                        /[^a-zA-Z ]/g,
+                        ""
+                      );
+                      handleMemberChange(index, "name", validated);
+                    }}
                   />
                 </div>
 
@@ -544,12 +593,18 @@ const AddUser = () => {
                 <div className="flex flex-col gap-2">
                   <label className="font-semibold">Contact Details:</label>
                   <input
-                    type="text"
+                    type="tel"
                     className="border p-2 rounded border-gray-300"
                     value={member.contact}
-                    onChange={(e) =>
-                      handleMemberChange(index, "contact", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const input = e.target.value;
+                      const digitsOnly = input.replace(/\D/g, "");
+                      if (digitsOnly.length <= 10) {
+                        handleMemberChange(index, "contact", digitsOnly);
+                      }
+                    }}
+                    placeholder="Enter 10-digit mobile number"
+                    maxLength={10}
                   />
                 </div>
 
@@ -600,12 +655,12 @@ const AddUser = () => {
                 </label>
                 <input
                   type="text"
-                  id="mgl_number"
-                  name="mgl_number"
+                  id="mgl_cust_number"
+                  name="mgl_cust_number"
                   className="border border-gray-300 rounded-md p-2"
-                  value={formData.mgl_number || ""}
+                  value={formData.mgl_cust_number || ""}
                   onChange={(e) =>
-                    handleInputChange("mgl_number", e.target.value)
+                    handleInputChange("mgl_cust_number", e.target.value)
                   }
                 />
               </div>
@@ -634,19 +689,19 @@ const AddUser = () => {
                 {/* 🌐 Internet Provider Name */}
                 <div className="flex flex-col">
                   <label
-                    htmlFor="internet_provider"
+                    htmlFor="net_provider_name"
                     className="text-sm font-medium text-gray-700 mb-1"
                   >
                     Internet Provider Name
                   </label>
                   <input
                     type="text"
-                    id="internet_provider"
-                    name="internet_provider"
+                    id="net_provider_name"
+                    name="net_provider_name"
                     className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    value={formData.internet_provider || ""}
+                    value={formData.net_provider_name || ""}
                     onChange={(e) =>
-                      handleInputChange("internet_provider", e.target.value)
+                      handleInputChange("net_provider_name", e.target.value)
                     }
                   />
                 </div>
@@ -654,19 +709,19 @@ const AddUser = () => {
                 {/* 🆔 Internet ID */}
                 <div className="flex flex-col">
                   <label
-                    htmlFor="internet_id"
+                    htmlFor="net_provider_id"
                     className="text-sm font-medium text-gray-700 mb-1"
                   >
                     Internet ID
                   </label>
                   <input
                     type="text"
-                    id="internet_id"
-                    name="internet_id"
+                    id="net_provider_id"
+                    name="net_provider_id"
                     className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    value={formData.internet_id || ""}
+                    value={formData.net_provider_id || ""}
                     onChange={(e) =>
-                      handleInputChange("internet_id", e.target.value)
+                      handleInputChange("net_provider_id", e.target.value)
                     }
                   />
                 </div>
@@ -739,12 +794,18 @@ const AddUser = () => {
                       Contact Details
                     </label>
                     <input
-                      type="text"
+                      type="tel"
                       className="border p-2 rounded border-gray-300"
                       value={vendor.contact}
                       onChange={(e) =>
-                        handleVendorChange(index, "contact", e.target.value)
+                        handleVendorChange(
+                          index,
+                          "contact",
+                          validateMobileInput(e.target.value)
+                        )
                       }
+                      placeholder="Enter 10-digit mobile number"
+                      maxLength={10}
                     />
                   </div>
 
