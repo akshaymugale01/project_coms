@@ -146,8 +146,9 @@ const calculateBookingAmount = (facility, formData) => {
     try {
       const response = await getFacitilitySetup(); // Assuming getFacilitySetup is an API call
       // console.log("Booking Setups", response);
-
-      setFacilities(response.data.amenities);
+      const list_of_amenities = response.data.amenities.filter((facility) => facility.is_hotel !== true);
+      // console.log("List of all the amenities", list_of_amenities)
+      setFacilities(list_of_amenities);
     } catch (error) {
       console.log("Error Fetching facilities", error);
     }

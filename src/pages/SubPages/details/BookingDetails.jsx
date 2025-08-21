@@ -3,7 +3,14 @@ import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import Navbar from "../../../components/Navbar";
-import { getAmenitiesIdBooking, getSetupUsers, getFacitilitySetup, getPaymentBookings, postPaymentBookings, updateAmenityBook } from "../../../api"; // Import API call
+import {
+  getAmenitiesBookingById,
+  getSetupUsers,
+  getFacitilitySetupId,
+  getPaymentBookings,
+  postPaymentBookings,
+  updateAmenityBook,
+} from "../../../api"; // Import API call
 
 const BookingDetails = () => {
   const themeColor = useSelector((state) => state.theme.color);
@@ -36,8 +43,8 @@ const BookingDetails = () => {
       // Fetch booking and facility details
       // const bookingResponse = await getAmenitiesIdBooking(id);
 
-      const bookingResponse = await getAmenitiesIdBooking(id);
-      const bookingData = bookingResponse.data
+      const bookingResponse = await getAmenitiesBookingById(id);
+      const bookingData = bookingResponse.amenity_bookings;
 
       console.log("data", bookingData);
 
@@ -46,9 +53,9 @@ const BookingDetails = () => {
         return;
       }
 
-      const bookingD = bookingResponse.data;
-
-      setBookingDetails(bookingD)
+      const bookingD = bookingResponse.amenity_bookings[0];
+      // console.log("REsponse received is", bookingD)
+      setBookingDetails(bookingD);
 
       // const bookingD = bookingData.map((facility) => facility.id === parseInt(id));
       // if (bookingD) {
@@ -60,14 +67,19 @@ const BookingDetails = () => {
 
       // Fetch facility details
       const amenityId = bookingD.amenity_id;
-      const facilityResponse = await getFacitilitySetup(amenityId);
+      console.log(amenityId);
+      const facilityResponse = await getFacitilitySetupId(amenityId);
+      // console.log("Facility data is", facilityResponse.data)
       const facilityData = facilityResponse.data;
-      const filteredFacilityData = facilityData.find((facility) => facility.id === amenityId);
-      setFacilityDetails(filteredFacilityData);
+      const filteredFacilityData = facilityData.id === amenityId; //returns true
+      //  console.log("Facility filter", filteredFacilityData);
+      if (filteredFacilityData) setFacilityDetails(facilityData);
 
       // Fetch payment details
       const paymentResponse = await getPaymentBookings();
-      const paymentDetails = paymentResponse.data.filter(record => record.resource_id === parseInt(id));
+      const paymentDetails = paymentResponse.data.filter(
+        (record) => record.resource_id === parseInt(id)
+      );
       if (paymentDetails.length > 0) {
         setFormData(paymentDetails[0]);
       }
@@ -81,7 +93,6 @@ const BookingDetails = () => {
       setUserOptions(transformedUsers);
       const user = transformedUsers.find((u) => u.value === bookingD.user_id);
       setUserName(user ? user.label : "User not found");
-
     } catch (error) {
       console.error("Error fetching data:", error);
       setError("Failed to fetch data. Please try again.");
@@ -91,8 +102,6 @@ const BookingDetails = () => {
   };
 
   useEffect(() => {
-
-
     if (id) {
       fetchData();
     }
@@ -127,13 +136,19 @@ const BookingDetails = () => {
   // };
 
   const postPaymentBooking = async () => {
-    if (!formData.payment_method || !formData.transaction_id || !formData.paid_amount) {
+    if (
+      !formData.payment_method ||
+      !formData.transaction_id ||
+      !formData.paid_amount
+    ) {
       toast.error("Payment Type, amount, and Transaction_Id are mandatory!");
       return;
     }
 
     // Validate that the payable amount matches the paid amount
-    if (parseFloat(formData.paid_amount) !== parseFloat(bookingDetails.amount)) {
+    if (
+      parseFloat(formData.paid_amount) !== parseFloat(bookingDetails.amount)
+    ) {
       toast.error("Paid amount must equal the payable amount!");
       return;
     }
@@ -153,7 +168,6 @@ const BookingDetails = () => {
       const response = await postPaymentBookings(postData);
 
       if (response?.status === 201) {
-
         // Update the booking status to "paid"
         const updatedBookingData = {
           status: "paid", // Change the status to "paid"
@@ -192,7 +206,6 @@ const BookingDetails = () => {
       toast.error("Error in booking. Please try again.");
     }
   };
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -253,9 +266,8 @@ const BookingDetails = () => {
       console.log("Booking ID to update:", id); // Log the id to check
 
       // Make the API call to update the booking status
-      const response = await updateAmenityBook(id, updatedBookingData);  // Pass the id and updated data
+      const response = await updateAmenityBook(id, updatedBookingData); // Pass the id and updated data
       console.log("response", response);
-
 
       // Check if the update was successful
       if (response?.status === 200) {
@@ -312,16 +324,23 @@ const BookingDetails = () => {
   const created = () => {
     const date = new Date(facilityDetails.created_at);
     const yy = date.getFullYear().toString();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
     return `${yy}-${mm}-${dd}`;
   };
 
   // Find the relevant slot time based on the slot ID in the booking
   const amenitySlotId = bookingDetails.amenity_slot_id;
-  const selectedSlot = facilityDetails.amenity_slots?.find((slot) => slot.id === amenitySlotId);
+  const selectedSlot = facilityDetails.amenity_slots?.find(
+    (slot) => slot.id === amenitySlotId
+  );
   const slotTime = selectedSlot
-    ? `${String(selectedSlot.start_hr || 0).padStart(2, "0")}:${String(selectedSlot.start_min || 0).padStart(2, "0")} - ${String(selectedSlot.end_hr || 0).padStart(2, "0")}:${String(selectedSlot.end_min || 0).padStart(2, "0")}`
+    ? `${String(selectedSlot.start_hr || 0).padStart(2, "0")}:${String(
+        selectedSlot.start_min || 0
+      ).padStart(2, "0")} - ${String(selectedSlot.end_hr || 0).padStart(
+        2,
+        "0"
+      )}:${String(selectedSlot.end_min || 0).padStart(2, "0")}`
     : "N/A";
   // console.log("slot time", slotTime);
 
@@ -336,19 +355,22 @@ const BookingDetails = () => {
           style={{ background: "rgb(17, 24, 39)" }}
           className="flex justify-center bg-black m-2 p-2 rounded-md"
         >
-          <h2 className="text-xl font-semibold text-center text-white">Booking Details</h2>
+          <h2 className="text-xl font-semibold text-center text-white">
+            Booking Details
+          </h2>
         </div>
         <div className="flex justify-end rounded border border-black-50 p-2 items-center w-full">
           <div>
             <div className="flex justify-end gap-2 w-full">
-              {bookingDetails.status !== "cancelled" && bookingDetails.status !== "paid" && (
-                <button
-                  className="bg-yellow-500 rounded-md text-white p-2 w-[150px] cursor-pointer"
-                  onClick={() => setShowModal(true)}
-                >
-                  Capture Payment
-                </button>
-              )}
+              {bookingDetails.status !== "cancelled" &&
+                bookingDetails.status !== "paid" && (
+                  <button
+                    className="bg-yellow-500 rounded-md text-white p-2 w-[150px] cursor-pointer"
+                    onClick={() => setShowModal(true)}
+                  >
+                    Capture Payment
+                  </button>
+                )}
               {/* <button
                 className="bg-red-500 rounded-md text-white p-2 w-[100px] cursor-pointer"
                 onClick={() => navigate("/bookings")}
@@ -365,13 +387,16 @@ const BookingDetails = () => {
                   </button>
                 )}
 
-
                 {/* Confirmation Popup */}
                 {showConfirmPopup && (
                   <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-6 rounded-md shadow-md w-1/3">
-                      <h3 className="text-xl font-semibold mb-4">Are you sure?</h3>
-                      <p className="mb-4">Do you want to cancel and go back to the bookings page?</p>
+                      <h3 className="text-xl font-semibold mb-4">
+                        Are you sure?
+                      </h3>
+                      <p className="mb-4">
+                        Do you want to cancel and go back to the bookings page?
+                      </p>
                       <div className="flex justify-end gap-4">
                         <button
                           className="bg-green-500 text-white px-4 py-2 rounded-md"
@@ -419,9 +444,9 @@ const BookingDetails = () => {
                       />
                     </label>
 
-
                     <label>
-                      Paid Amount <label className="text-red-500 font-semibold">*</label>
+                      Paid Amount{" "}
+                      <label className="text-red-500 font-semibold">*</label>
                       <input
                         type="text"
                         name="paid_amount"
@@ -442,7 +467,6 @@ const BookingDetails = () => {
                       className="border p-2 rounded-md w-full"
                     /> */}
 
-
                     {/* <input
                       type="text"
                       name="payment_method"
@@ -451,8 +475,11 @@ const BookingDetails = () => {
                       onChange={handleInputChange}
                       className="border p-2 rounded-md w-full"
                     /> */}
-                    <label>Payment Method <label className="text-red-500 font-semibold">*</label>
-                      <select className="border p-2 rounded w-full"
+                    <label>
+                      Payment Method{" "}
+                      <label className="text-red-500 font-semibold">*</label>
+                      <select
+                        className="border p-2 rounded w-full"
                         value={formData.payment_method}
                         onChange={(e) => handlePaymentChange(e.target.value)}
                       >
@@ -463,7 +490,10 @@ const BookingDetails = () => {
                         <option value="CASH">Cash</option>
                       </select>
                     </label>
-                    <label> Transaction ID <label className="text-red-500 font-semibold">*</label>
+                    <label>
+                      {" "}
+                      Transaction ID{" "}
+                      <label className="text-red-500 font-semibold">*</label>
                       <input
                         type="text"
                         name="transaction_id"
@@ -473,7 +503,9 @@ const BookingDetails = () => {
                         className="border p-2 rounded-md w-full"
                       />
                     </label>
-                    <label> Date
+                    <label>
+                      {" "}
+                      Date
                       <input
                         type="date"
                         name="paymen_date"
@@ -483,7 +515,8 @@ const BookingDetails = () => {
                         className="border p-2 rounded-md w-full"
                       />
                     </label>
-                    <label>Remarks
+                    <label>
+                      Remarks
                       <input
                         type="textarea"
                         name="notes"
@@ -526,14 +559,17 @@ const BookingDetails = () => {
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Status:</p>
             <p
-              className={`${bookingDetails.status === "booked"
-                ? "bg-yellow-500" // yellow for booked
-                : bookingDetails.status === "cancelled"
+              className={`${
+                bookingDetails.status === "booked"
+                  ? "bg-yellow-500" // yellow for booked
+                  : bookingDetails.status === "cancelled"
                   ? "bg-red-500" // red for cancelled
                   : "bg-green-500" // default color for other statuses
-                } text-white p-1 rounded-md text-center`}
+              } text-white p-1 rounded-md text-center`}
             >
-              {bookingDetails.status.charAt(0).toUpperCase() + bookingDetails.status.slice(1)} {/* Capitalize first letter */}
+              {bookingDetails.status.charAt(0).toUpperCase() +
+                bookingDetails.status.slice(1)}{" "}
+              {/* Capitalize first letter */}
             </p>
           </div>
 
@@ -563,8 +599,6 @@ const BookingDetails = () => {
             <p>{bookingDetails.payment?.transaction_id || "NA"}</p>
           </div> */}
 
-
-
           {/* <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payment Status:</p>
             <p
@@ -585,7 +619,13 @@ const BookingDetails = () => {
 
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Payment Type:</p>
-            <p>{bookingDetails.payment_mode === "post" ? "Postpaid" : bookingDetails.payment_mode === "pre" ? "Prepaid" : "Unknown Payment Mode"}</p>
+            <p>
+              {bookingDetails.payment_mode === "post"
+                ? "Postpaid"
+                : bookingDetails.payment_mode === "pre"
+                ? "Prepaid"
+                : "Unknown Payment Mode"}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2 items-center">
@@ -616,7 +656,6 @@ const BookingDetails = () => {
             </div>
           )} */}
 
-          
           {bookingDetails.status === "paid" && (
             <div className="flex justify-center bg-gray-100 items-center gap-4 border rounded-lg h-10">
               {bookingDetails.status.toUpperCase()}
@@ -674,27 +713,37 @@ const BookingDetails = () => {
             <div className="mt-2 p-6 bg-blue-50 rounded-lg shadow-md">
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Payment Type</label>
+                  <label className="font-medium text-gray-600">
+                    Payment Type
+                  </label>
                   <p>{bookingDetails.payment.payment_method || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Total Amount</label>
+                  <label className="font-medium text-gray-600">
+                    Total Amount
+                  </label>
                   <p>{bookingDetails.payment.total_amount || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Paid Amount</label>
+                  <label className="font-medium text-gray-600">
+                    Paid Amount
+                  </label>
                   <p>{bookingDetails.payment.paid_amount || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Payment Date</label>
+                  <label className="font-medium text-gray-600">
+                    Payment Date
+                  </label>
                   <p>{bookingDetails.payment.paymen_date || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Transaction ID</label>
+                  <label className="font-medium text-gray-600">
+                    Transaction ID
+                  </label>
                   <p>{bookingDetails.payment.transaction_id || "NA"}</p>
                 </div>
 
@@ -704,40 +753,47 @@ const BookingDetails = () => {
                 </div>
 
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Resource ID</label>
+                  <label className="font-medium text-gray-600">
+                    Resource ID
+                  </label>
                   <p>{bookingDetails.payment.resource_id || "NA"}</p>
                 </div>
 
                 <div className="flex flex-col space-y-2">
-                  <label className="font-medium text-gray-600">Resource Type</label>
+                  <label className="font-medium text-gray-600">
+                    Resource Type
+                  </label>
                   <p>{bookingDetails.payment.resource_type || "NA"}</p>
                 </div>
               </div>
             </div>
           )}
-
         </div>
-
-
-
-
 
         <div className="mt-6 p-4 bg-blue-50 rounded-lg shadow-md border">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Description:</h3>
-            <p className={`text-gray-600 ${facilityDetails.description ? '' : 'italic text-gray-400'}`}>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              Description:
+            </h3>
+            <p
+              className={`text-gray-600 ${
+                facilityDetails.description ? "" : "italic text-gray-400"
+              }`}
+            >
               {facilityDetails.description || "NA"}
             </p>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Terms:</h3>
-            <p className={`text-gray-600 ${facilityDetails.terms ? '' : 'italic text-gray-400'}`}>
+            <p
+              className={`text-gray-600 ${
+                facilityDetails.terms ? "" : "italic text-gray-400"
+              }`}
+            >
               {facilityDetails.terms || "NA"}
             </p>
           </div>
         </div>
-
-
       </div>
     </section>
   );

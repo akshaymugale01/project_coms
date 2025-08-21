@@ -912,7 +912,7 @@ const handleInputChange = (e) => {
               <input
                 type="number"
                 min={0}
-                name="advance_booking_days"
+                name="advance_days"
                 value={formData.hotel.advance_days ?? 0}
                 onBlur={validateInput} // Validate on losing focus
                 onChange={handleInputChange}
@@ -925,8 +925,8 @@ const handleInputChange = (e) => {
               <input
                 type="number"
                 min={0}
-                name="advance_booking_hours"
-                value={formData.hotel.advance_booking_hours ?? 0}
+                name="advance_hours"
+                value={formData.hotel.advance_hours ?? 0}
                 onBlur={validateInput} // Validate on losing focus
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
@@ -938,8 +938,8 @@ const handleInputChange = (e) => {
               <input
                 type="number"
                 min={0}
-                name="advance_booking_minutes"
-                value={formData.hotel.advance_booking_minutes ?? 0}
+                name="advance_minutes"
+                value={formData.hotel.advance_minutes ?? 0}
                 onBlur={validateInput} // Validate on losing focus
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
