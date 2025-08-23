@@ -775,7 +775,7 @@ const handleInputChange = (field, value) => {
                     setSearchText(e.target.value);
                     setFormData((prev) => ({
                       ...prev,
-                      check_in_date_time: formatToApiDate(date),
+                      check_in_date_time: null,
                       check_out_date_time: null,
                       amount: 0,
                       member_adult: 0,
