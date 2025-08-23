@@ -27,6 +27,8 @@ const Booking = () => {
   const [error, setError] = useState(null); // Error state
   const [bookingFacility, setBookingFacility] = useState([]);
   const [hotelbooking, setHotelBooking] = useState([]);
+  const [filteredBookings, setFilteredBookings] = useState([]); // Filtered amenities bookings
+  const [filteredHotelBookings, setFilteredHotelBookings] = useState([]); // Filtered hotel bookings
   const themeColor = "rgb(3, 19 37)";
 
   useEffect(() => {
@@ -35,12 +37,16 @@ const Booking = () => {
         setLoading(true);
         const hotelbookingResponse = await getAmenitiesBooking();
         console.log("Bookings Data:", hotelbookingResponse?.data);
-        setHotelBooking(hotelbookingResponse?.data.amenity_bookings || []);
+        const hotelBookings = hotelbookingResponse?.data.amenity_bookings || [];
+        setHotelBooking(hotelBookings);
+        setFilteredHotelBookings(hotelBookings); // Initialize filtered hotel data
 
         // Fetch Bookings
         const bookingsResponse = await getAmenityBooking();
         console.log("Bookings Data of only amenities:", bookingsResponse?.data);
-        setBookings(bookingsResponse?.data.amenity_bookings || []);
+        const amenityBookings = bookingsResponse?.data.amenity_bookings || [];
+        setBookings(amenityBookings);
+        setFilteredBookings(amenityBookings); // Initialize filtered data
 
         // Fetch Facility Setup — pass the required params here!
         const facilityResponse = await getFacitilitySetup(page_no, per_page);
@@ -60,7 +66,14 @@ const Booking = () => {
     console.log("Updated Booking Facility:", bookingFacility);
   }, [bookingFacility]);
 
-  const combinedData = bookings?.map((booking) => {
+  // Reset search when page changes
+  useEffect(() => {
+    setSearchText("");
+    setFilteredBookings(bookings);
+    setFilteredHotelBookings(hotelbooking);
+  }, [page, bookings, hotelbooking]);
+
+  const combinedData = filteredBookings?.map((booking) => {
     const facility = bookingFacility.find(
       (fac) => fac.id === booking.amenity_id
     );
@@ -87,12 +100,12 @@ const Booking = () => {
       terms: facility?.terms || "N/A",
       slot_time: slotTime, // Add formatted slot time
     };
-  });
+  }) || [];
 
   // Sort combinedData by ID in descending order
   const sortedData = combinedData.sort((a, b) => b.id - a.id);
 
-  const combinedHotelData = hotelbooking.map((booking) => {
+  const combinedHotelData = filteredHotelBookings.map((booking) => {
       const facility = bookingFacility.find(
         (fac) => fac.id === booking.amenity_id
       );
@@ -130,10 +143,54 @@ const Booking = () => {
     const searchValue = event.target.value;
     setSearchText(searchValue);
 
-    const filteredResults = sortedData.filter((item) =>
-      item.fac_name.toLowerCase().includes(searchValue.toLowerCase())
-    );
-    setBookings(filteredResults);
+    if (!searchValue.trim()) {
+      // If search is empty, reset to original data
+      setFilteredBookings(bookings);
+      setFilteredHotelBookings(hotelbooking);
+      return;
+    }
+
+    // Filter amenities bookings
+    const filteredAmenityResults = bookings.filter((booking) => {
+      const facility = bookingFacility.find(
+        (fac) => fac.id === booking.amenity_id
+      );
+      const facName = facility?.fac_name || "";
+      const facType = facility?.fac_type || "";
+      const bookedBy = booking?.book_by_user || "";
+      
+      return (
+        facName.toLowerCase().includes(searchValue.toLowerCase()) ||
+        facType.toLowerCase().includes(searchValue.toLowerCase()) ||
+        bookedBy.toLowerCase().includes(searchValue.toLowerCase()) ||
+        booking.id.toString().includes(searchValue)
+      );
+    });
+    
+    setFilteredBookings(filteredAmenityResults);
+
+    // Filter hotel bookings
+    const filteredHotelResults = hotelbooking.filter((booking) => {
+      const facility = bookingFacility.find(
+        (fac) => fac.id === booking.amenity_id
+      );
+      
+      // Only consider hotel amenities
+      if (!facility || !facility.is_hotel) return false;
+      
+      const facName = facility?.fac_name || "";
+      const facType = facility?.fac_type || "";
+      const bookedBy = booking?.book_by_user || "";
+      
+      return (
+        facName.toLowerCase().includes(searchValue.toLowerCase()) ||
+        facType.toLowerCase().includes(searchValue.toLowerCase()) ||
+        bookedBy.toLowerCase().includes(searchValue.toLowerCase()) ||
+        booking.id.toString().includes(searchValue)
+      );
+    });
+    
+    setFilteredHotelBookings(filteredHotelResults);
   };
 
   // Columns for DataTable
