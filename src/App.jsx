@@ -42,6 +42,7 @@ import Materials from "./pages/Materials.jsx";
 import Booking from "./pages/Booking.jsx";
 import AmenitiesBooking from "./pages/SubPages/FacilityBooking.jsx";
 import BookingDetails from "./pages/SubPages/details/BookingDetails.jsx";
+import HotelBookingDetails from "./pages/SubPages/details/HotelBookingDetails.jsx";
 import SetupFacility from "./pages/SubPages/SetupFacility.jsx";
 import HotelBooking from "./pages/SubPages/HotelBooking.jsx";
 import SetupHotelBooking from "./pages/SubPages/SetupHotelBooking.jsx";
@@ -1280,6 +1281,10 @@ function App() {
           <Route
             path="/bookings/booking-details/:id"
             element={<BookingDetails />}
+          />
+          <Route
+            path="/bookings/hotelbooking-details/:id"
+            element={<HotelBookingDetails />}
           />
           <Route
             path="/setup/facility"

@@ -12,7 +12,7 @@ import {
   updateAmenityBook,
 } from "../../../api"; // Import API call
 
-const BookingDetails = () => {
+const HotelBookingDetails = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -350,6 +350,9 @@ const BookingDetails = () => {
   // console.log("slot time", slotTime);
 
   // console.log("fac anem", bookingDetails.amount);
+  const check_in_date = bookingDetails.checkin_at || "";
+  console.log("This is the data of check in", bookingDetails.checkin_at);
+  const check_out_date = bookingDetails.checkout_at || "";
 
   return (
     <section className="flex ">
@@ -583,8 +586,12 @@ const BookingDetails = () => {
             <p>{bookingDetails.booking_date}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
-            <p className="font-medium">Selected Slot:</p>
-            <p>{slotTime}</p>
+            <p className="font-medium">Check in date:</p>
+            <p>{check_in_date}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <p className="font-medium">Check out date:</p>
+            <p>{check_out_date}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Booked On:</p>
@@ -597,7 +604,10 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">GST(%):</p>
-            <p>{Number(facilityDetails.gst_no) + Number(facilityDetails.sgst) || "NA"}</p>
+            <p>
+              {Number(facilityDetails.gst_no) + Number(facilityDetails.sgst) ||
+                "NA"}
+            </p>
           </div>
 
           {/* <div className="grid grid-cols-2 gap-2 items-center">
@@ -805,4 +815,4 @@ const BookingDetails = () => {
   );
 };
 
-export default BookingDetails;
+export default HotelBookingDetails;
