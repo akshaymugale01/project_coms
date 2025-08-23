@@ -240,7 +240,7 @@ const Booking = () => {
       name: "Action",
       cell: (row) => (
         <div className="flex item-center gap-2">
-          <Link to={`/bookings/booking-details/${row.id}`}>
+          <Link to={`/bookings/hotelbooking-details/${row.id}`}>
             <BsEye />
           </Link>
           {/* <Link to={`bookings/edit_bookings/${row.id}`}>
