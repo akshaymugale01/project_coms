@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { PiPlusCircle } from "react-icons/pi";
 import Navbar from "../../components/Navbar";
 import DataTable from "react-data-table-component";
-import { getSetupUsers, getUserCount } from "../../api";
+import { getSetupUsers, getSetupUsersByMemberType, getUserCount } from "../../api";
 import { Link } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
@@ -30,8 +30,8 @@ const UserSetupTree = () => {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [floors, setFloors] = useState([]);
   const [selectedFloorId, setSelectedFloorId] = useState("");
-  const [members, setMembers] = useState([]);
   const [selectedUnitId, setSelectedUnitId] = useState("");
+  const[memberType, setMemberType]= useState("");
   const [filters, setFilters] = useState({
     tower: "",
     floor: "",
@@ -96,15 +96,15 @@ const UserSetupTree = () => {
 
   const fetchUsers = async () => {
     try {
-      if (
-        selectedBuilding &&
-        selectedFloorId &&
-        selectedUnitId &&
-        selectedUnitId != ""
+      if (selectedBuilding && memberType != "") {
+        const user = await getSetupUsersByMemberType("users", selectedBuilding, memberType);
+        setUsers(user.data);
+      }
+      else if ( selectedBuilding && selectedFloorId && selectedUnitId != ""
       ) {
         const user = await getSetupUsersByUnit("users", selectedUnitId);
         setUsers(user.data);
-      } else if (selectedBuilding && selectedFloorId && selectedFloorId != "") {
+      } else if (selectedBuilding && selectedFloorId != "") {
         const userbyfloor = await getSetupUsersByFloor(
           "users",
           selectedFloorId
@@ -125,6 +125,7 @@ const UserSetupTree = () => {
     }
   };
 
+  console.log("The building id & member type is", selectedBuilding, memberType)
   console.log("The unit id selected is", selectedUnitId);
   console.log(
     "The selected building and floor",
@@ -232,7 +233,7 @@ const UserSetupTree = () => {
         </h2>
 
         {/* Dropdown Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end mt-6">
           {/* Tower Selection */}
           <div className="flex flex-col">
             <label className="font-semibold">
@@ -308,7 +309,7 @@ const UserSetupTree = () => {
           {/* Unit Selection */}
           <div className="flex flex-col">
             <label className="font-semibold">
-              Units: 
+              Units:
               {/* <span style={{ color: "red" }}>*</span> */}
             </label>
             <select
@@ -322,6 +323,23 @@ const UserSetupTree = () => {
                   {unit.name}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Member Type Selection */}
+          <div className="flex flex-col">
+            <label className="font-semibold">
+              Member Type:
+              {/* <span style={{ color: "red" }}>*</span> */}
+            </label>
+            <select
+              className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
+              value={memberType}
+              onChange={(e) => setMemberType(e.target.value)}
+            >
+              <option value="">-- Choose Member Type --</option>
+              <option value="owner">Owner</option>
+              <option value="tenant">Tenant</option>
             </select>
           </div>
 
