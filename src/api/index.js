@@ -1791,6 +1791,22 @@ export const getSetupUsersByUnit = async (type, unit_id) =>
       Expires: "0",
     },
   });
+
+   export const getSetupUsersByMemberType = async (type,building_id,ownership) =>
+  axiosInstance.get("users/user_dropdown.json",{
+    params: {
+      token: token,
+      type,
+      building_id,
+      ownership,
+    },
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
+
 export const getUserCount = async () =>
   axiosInstance.get("/users/index_count.json", {
     params: {
