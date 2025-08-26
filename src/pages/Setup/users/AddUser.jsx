@@ -229,12 +229,8 @@ const [formData, setFormData] = useState({
       moving_date,
       occupancy_type,
       lease_expiry,
-      user_members,
-      user_vendors,
-      user_sites,
       userType,
       site_ids,
-      building_id,
       lives_here,
       profession,
       mgl_cust_number,
@@ -280,43 +276,48 @@ const [formData, setFormData] = useState({
     }
 
     const postData = {
-      firstname,
-      lastname,
-      email,
-      password,
-      mobile,
-      userType,
-      site_ids,
-      moving_date,
-      building_id,
-      lease_expiry,
-      lives_here,
-      profession,
-      mgl_cust_number,
-      adani_account,
-      net_provider_name,
-      net_provider_id,
-      blood_group,
-      no_of_pets,
-      birth_date,
+      user: {
+        firstname,
+        lastname,
+        email,
+        password,
+        mobile,
+        userType,
+        site_ids,
+        moving_date,
+        building_id: selectedBuilding,
+        lease_expiry,
+        lives_here,
+        profession,
+        mgl_cust_number,
+        adani_account,
+        net_provider_name,
+        net_provider_id,
+        blood_group,
+        no_of_pets,
+        birth_date,
+      },
 
-      user_sites: user_sites.map((site) => ({
-        unit_id: site.unit_id,
-        site_id: site.site_id,
-        ownership: occupancy_type,
-        ownership_type: site.ownership_type,
-        is_approved: site.is_approved,
-        lives_here: site.lives_here,
-      })),
+      user_sites: [
+        {
+          unit_id: selectedUnit,
+          site_id: siteId,
+          ownership: occupancy_type,
+          ownership_type: "primary",
+          is_approved: true,
+          lives_here,
+        },
+      ],
 
-      user_members: user_members.map((member) => ({
-        member_type: member.member_type,
-        member_name: member.member_name,
+      user_members: members.map((member) => ({
+        member_type: member.type,
+        member_name: member.name,
         contact: member.contact,
         relation: member.relation,
       })),
-      user_vendors: user_vendors.map((vendor) => ({
-        service_type: vendor.service_type,
+
+      user_vendors: vendorList.map((vendor) => ({
+        service_type: vendor.service,
         name: vendor.name,
         contact: vendor.contact,
       })),
@@ -326,6 +327,7 @@ const [formData, setFormData] = useState({
     try {
       await postSetupUsers(postData); // API call
       toast.success("User added successfully!");
+      navigate('/setup/users'); // Navigate back to users list
     } catch (error) {
       console.error("Error adding user:", error);
       toast.error("Failed to add user. Please try again.");
