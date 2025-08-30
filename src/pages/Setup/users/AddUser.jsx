@@ -23,62 +23,62 @@ const AddUser = () => {
   const [units, setUnits] = useState([]);
   const [filteredBuildings, setFilteredBuildings] = useState([]);
   const [filtteredFloors, setFilteredFloors] = useState([]);
-  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
   const [floors, setFloors] = useState([]);
   const [selectedFloorId, setSelectedFloorId] = useState("");
   const [members, setMembers] = useState([]);
   // const [units, setUnits] = useState([]);
   const [showMemberFields, setShowMemberFields] = useState(false);
-const [memberData, setMemberData] = useState([
-  {
-    member_type: "",
-    member_name: "",
-    contact: "",
-    relation: "",
-  },
-]);
-
-const [vendorList, setVendorList] = useState([
-  { service_type: "", name: "", contact: "" },
-]);
-
-const[occupancy_type, setOccupancy_type] = useState("")
-
-const [formData, setFormData] = useState({
-  firstname: "",
-  lastname: "",
-  email: "",
-  password: "",
-  mobile: "",
-  userType: "unit_resident",
-  site_ids: [siteId], // Make sure siteId is defined before this runs
-  moving_date: "",
-  building_id: selectedBuilding, // Same here
-  lease_expiry: "",
-  lives_here: "",
-  profession: "",
-  mgl_cust_number: "",
-  adani_account: "",
-  net_provider_name: "",
-  net_provider_id: "",
-  blood_group: "",
-  no_of_pets: "",
-  birth_date: "",
-  user_sites: [
+  const [memberData, setMemberData] = useState([
     {
-      unit_id: selectedUnit,
-      site_id: siteId,
-      ownership: occupancy_type, // Will be filled later from formData.occupancy_type
-      ownership_type: "primary",
-      is_approved: true,
-      lives_here: "",
+      member_type: "",
+      member_name: "",
+      contact: "",
+      relation: "",
     },
-  ],
+  ]);
 
-  user_members: [], // Now an array
-  user_vendors: [],
-});
+  const [vendorList, setVendorList] = useState([
+    { service_type: "", name: "", contact: "" },
+  ]);
+
+  const [occupancy_type, setOccupancy_type] = useState("");
+
+  const [formData, setFormData] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    password: "",
+    mobile: "",
+    userType: "unit_resident",
+    site_ids: [siteId], // Make sure siteId is defined before this runs
+    moving_date: "",
+    building_id: selectedBuilding, // Same here
+    lease_expiry: "",
+    lives_here: "",
+    profession: "",
+    mgl_customer_number: "",
+    adani_electricity_account_no: "",
+    net_provider_name: "",
+    net_provider_id: "",
+    blood_group: "",
+    no_of_pets: "",
+    birth_date: "",
+    user_sites: [
+      {
+        unit_id: selectedUnit,
+        site_id: siteId,
+        ownership: occupancy_type, // Will be filled later from formData.occupancy_type
+        ownership_type: "primary",
+        is_approved: true,
+        lives_here: "",
+      },
+    ],
+
+    user_members: [], // Now an array
+    user_vendors: [],
+  });
 
   const handleUnitChange = (e) => {
     setSelectedUnit(e.target.value);
@@ -138,10 +138,10 @@ const [formData, setFormData] = useState({
   //   }));
   // };
 
- const validateMobileInput = (value) => {
-   const digitsOnly = value.replace(/\D/g, "");
-   return digitsOnly.slice(0, 10); // Always returns string
- };
+  const validateMobileInput = (value) => {
+    const digitsOnly = value.replace(/\D/g, "");
+    return digitsOnly.slice(0, 10); // Always returns string
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -151,11 +151,11 @@ const [formData, setFormData] = useState({
       return;
     }
 
-     if (name === "mobile") {
-       const validated = validateMobileInput(value);
-       setFormData((prev) => ({ ...prev, [name]: validated }));
-       return;
-     }
+    if (name === "mobile") {
+      const validated = validateMobileInput(value);
+      setFormData((prev) => ({ ...prev, [name]: validated }));
+      return;
+    }
 
     if (name === "email") {
       // Remove all spaces from email input
@@ -233,8 +233,8 @@ const [formData, setFormData] = useState({
       site_ids,
       lives_here,
       profession,
-      mgl_cust_number,
-      adani_account,
+      mgl_customer_number,
+      adani_electricity_account_no,
       net_provider_name,
       net_provider_id,
       blood_group,
@@ -283,22 +283,19 @@ const [formData, setFormData] = useState({
         password,
         mobile,
         userType,
-        site_ids,
         moving_date,
         building_id: selectedBuilding,
         lease_expiry,
         lives_here,
         profession,
-        mgl_cust_number,
-        adani_account,
+        mgl_customer_number,
+        adani_electricity_account_no,
         net_provider_name,
         net_provider_id,
         blood_group,
         no_of_pets,
         birth_date,
-      },
-
-      user_sites: [
+        user_sites: [
         {
           unit_id: selectedUnit,
           site_id: siteId,
@@ -321,13 +318,15 @@ const [formData, setFormData] = useState({
         name: vendor.name,
         contact: vendor.contact,
       })),
+      },
+      site_ids,
     };
-    
+
     // Proceed with submission
     try {
       await postSetupUsers(postData); // API call
       toast.success("User added successfully!");
-      navigate('/setup/users'); // Navigate back to users list
+      navigate("/setup/users-setup"); // Navigate back to users list
     } catch (error) {
       console.error("Error adding user:", error);
       toast.error("Failed to add user. Please try again.");
@@ -695,7 +694,7 @@ const [formData, setFormData] = useState({
             ))}
           </div>
 
-          {/* 🧾 Section Header */}
+          {/* Section Header */}
 
           <div className="mt-10 space-y-4">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-5">
@@ -715,12 +714,12 @@ const [formData, setFormData] = useState({
                 </label>
                 <input
                   type="text"
-                  id="mgl_cust_number"
-                  name="mgl_cust_number"
+                  id="mgl_customer_number"
+                  name="mgl_customer_number"
                   className="border border-gray-300 rounded-md p-2"
-                  value={formData.mgl_cust_number || ""}
+                  value={formData.mgl_customer_number || ""}
                   onChange={(e) =>
-                    handleInputChange("mgl_cust_number", e.target.value)
+                    handleInputChange("mgl_customer_number", e.target.value)
                   }
                 />
               </div>
@@ -728,19 +727,19 @@ const [formData, setFormData] = useState({
               {/* ⚡ Adani Electricity Account Number */}
               <div className="flex flex-col mt-5">
                 <label
-                  htmlFor="adani_account"
+                  htmlFor="adani_electricity_account_no"
                   className="text-sm font-medium text-gray-700 mb-1"
                 >
                   Adani Electricity Account Number
                 </label>
                 <input
                   type="text"
-                  id="adani_account"
-                  name="adani_account"
+                  id="adani_electricity_account_no"
+                  name="adani_electricity_account_no"
                   className="border border-gray-300 rounded-md p-2"
-                  value={formData.adani_account || ""}
+                  value={formData.adani_electricity_account_no || ""}
                   onChange={(e) =>
-                    handleInputChange("adani_account", e.target.value)
+                    handleInputChange("adani_electricity_account_no", e.target.value)
                   }
                 />
               </div>
@@ -789,7 +788,7 @@ const [formData, setFormData] = useState({
             </div>
           </div>
 
-          {/* 🏠 Section Header */}
+          {/* Section Header */}
           <div className="mt-10 space-y-4">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
               Resident Services / Vendor Details

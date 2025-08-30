@@ -576,6 +576,11 @@ const VisitorPage = () => {
       sortable: true,
     },
     {
+      name: "Tower-Floor-Unit",
+      selector: (row) => row.hosts[0].unit_name,
+      sortable: true,
+    },
+    {
       name: "Expected Date",
       selector: (row) => row.expected_date,
       sortable: true,
