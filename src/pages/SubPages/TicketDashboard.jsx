@@ -13,7 +13,7 @@ const TicketDashboard = () => {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  
+
   useEffect(() => {
     const fetchTicketInfo = async (retry = 0) => {
       try {
@@ -24,13 +24,12 @@ const TicketDashboard = () => {
       } catch (error) {
         if (retry < 1) {
           setTimeout(() => {
-            console.log("Ticket DashBoard",error);
-            fetchTicketInfo(retry + 1)
-          }, 100)  
+            console.log("Ticket DashBoard", error);
+            fetchTicketInfo(retry + 1);
+          }, 100);
         } else {
           console.error("Error fetching dashboard ticket  info:", error);
         }
-        
       }
     };
     fetchTicketInfo();
@@ -60,7 +59,10 @@ const TicketDashboard = () => {
     }
   };
 
-  const handleTicketStatusDownload = async (startDate = null, endDate = null) => {
+  const handleTicketStatusDownload = async (
+    startDate = null,
+    endDate = null
+  ) => {
     toast.loading("Downloading Please Wait");
     try {
       const response = await getTicketStatusDownload(startDate, endDate);
@@ -110,8 +112,8 @@ const TicketDashboard = () => {
       <div className="flex items-center gap-6 overflow-auto p-2 ">
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
           <div className="flex gap-2 items-center">
-            <span>Tickets Created{" "}</span>
-            <button 
+            <span>Tickets Created </span>
+            <button
               onClick={handleDownloadClick}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-full transition-all duration-200 hover:scale-110"
               title="Download with date options"
@@ -130,7 +132,7 @@ const TicketDashboard = () => {
           >
             <div className="flex gap-2 items-center">
               <span>{key} </span>
-              <button 
+              <button
                 onClick={() => handleStatusDownload(key)}
                 className="bg-orange-500 hover:bg-orange-600 p-1.5 rounded-full transition-all duration-200 hover:scale-110"
                 title="Direct download"
@@ -154,13 +156,19 @@ const TicketDashboard = () => {
             >
               ✕
             </button>
-            
-            <h3 className="text-lg font-semibold mb-6">Download Tickets Report</h3>
-            
+
+            <h3 className="text-lg font-semibold mb-6">
+              Download Tickets Report
+            </h3>
+
             {/* Download All Records Section */}
             <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-              <h4 className="font-semibold text-gray-800 mb-2">Download All Records</h4>
-              <p className="text-gray-600 text-sm mb-3">Download complete tickets report</p>
+              <h4 className="font-semibold text-gray-800 mb-2">
+                Download All Records
+              </h4>
+              <p className="text-gray-600 text-sm mb-3">
+                Download complete tickets report
+              </p>
               <button
                 onClick={() => handleModalDownload(true)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
@@ -169,12 +177,16 @@ const TicketDashboard = () => {
                 Download
               </button>
             </div>
-            
+
             {/* Download by Date Range Section */}
             <div className="p-4 border border-gray-200 rounded-lg">
-              <h4 className="font-semibold text-gray-800 mb-2">Download by Date Range</h4>
-              <p className="text-gray-600 text-sm mb-4">Select specific date range for download</p>
-              
+              <h4 className="font-semibold text-gray-800 mb-2">
+                Download by Date Range
+              </h4>
+              <p className="text-gray-600 text-sm mb-4">
+                Select specific date range for download
+              </p>
+
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -199,7 +211,7 @@ const TicketDashboard = () => {
                   />
                 </div>
               </div>
-              
+
               <button
                 onClick={() => handleModalDownload(false)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
@@ -207,7 +219,7 @@ const TicketDashboard = () => {
                 📅 Download Date Range
               </button>
             </div>
-            
+
             {/* Cancel Button */}
             <div className="mt-6 flex justify-end">
               <button

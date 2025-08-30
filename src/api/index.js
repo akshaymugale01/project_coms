@@ -28,10 +28,11 @@ export const login = async (data) => axiosInstance.post("/login.json", data);
 export const getLogin = async () => axiosInstance.get("/login.json");
 
 // dashboard
-export const getTicketDashboard = async () =>
+export const getTicketDashboard = async (additionalParams = {}) =>
   axiosInstance.get("/pms/admin/complaints/complaints_dashboard.json", {
     params: {
       token: token,
+      ...additionalParams,
     },
   });
 
