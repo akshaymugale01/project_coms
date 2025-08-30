@@ -153,6 +153,10 @@ const UserSetupTreeView = () => {
                   {userData.email || ""}
                 </p>
                 <p>
+                  <span className="font-semibold">Date of birth:</span>{" "}
+                  {userData.birth_date || ""}
+                </p>
+                <p>
                   <span className="font-semibold">Occupation:</span>{" "}
                   {userData.occupation || ""}
                 </p>
@@ -175,7 +179,7 @@ const UserSetupTreeView = () => {
                 <li>
                   {/* {member.name}{" "} */}
                   <span className="text-gray-500">
-                    {userData.family_member || ""}
+                    {userData.family_member || "No member has been added"}
                     {/* ({member.relation} || "") */}
                   </span>
                 </li>
