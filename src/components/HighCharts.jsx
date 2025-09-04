@@ -9,6 +9,13 @@ import toast from "react-hot-toast";
 import HighchartsReact from "highcharts-react-official";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Exporting from "highcharts/modules/exporting";
+import ExportData from "highcharts/modules/export-data";
+import OfflineExporting from "highcharts/modules/offline-exporting";
+
+Exporting(Highcharts);
+ExportData(Highcharts);
+OfflineExporting(Highcharts);
 
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 const TicketHighCharts = () => {
@@ -120,44 +127,63 @@ const TicketHighCharts = () => {
   
 
   // download section 
-  const handleTicketStatusDownload = async () => {
-    toast.loading("Downloading Please Wait");
-    try {
-      // Format dates for download API if they exist
-      const formattedStartDate = formatDateForAPI(startDate);
-      const formattedEndDate = formatDateForAPI(endDate);
-      
-      const response = await getTicketStatusDownload(formattedStartDate, formattedEndDate);
-      const url = window.URL.createObjectURL(
-        new Blob([response.data], {
-          type: response.headers["content-type"],
-        })
-      );
-      const link = document.createElement("a");
-      link.href = url;
-      
-      // Create filename based on whether dates are filtered
-      let filename = "ticket_file.xlsx";
-      if (formattedStartDate && formattedEndDate) {
-        filename = `tickets_${formattedStartDate.replace(/\//g, '-')}_to_${formattedEndDate.replace(/\//g, '-')}.xlsx`;
-      } else if (formattedStartDate) {
-        filename = `tickets_from_${formattedStartDate.replace(/\//g, '-')}.xlsx`;
-      } else if (formattedEndDate) {
-        filename = `tickets_until_${formattedEndDate.replace(/\//g, '-')}.xlsx`;
-      }
-      
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast.success("Ticket downloaded successfully");
-      toast.dismiss();
-    } catch (error) {
-      toast.dismiss();
-      console.error("Error downloading Ticket:", error);
-      toast.error("Something went wrong, please try again");
-    }
-  };
+ const handleTicketStatusDownload = async (chartId) => {
+   toast.loading("Downloading Please Wait");
+
+   try {
+     // 1. Download Excel
+     const formattedStartDate = formatDateForAPI(startDate);
+     const formattedEndDate = formatDateForAPI(endDate);
+
+     const response = await getTicketStatusDownload(
+       formattedStartDate,
+       formattedEndDate
+     );
+     const url = window.URL.createObjectURL(
+       new Blob([response.data], {
+         type: response.headers["content-type"],
+       })
+     );
+
+     const link = document.createElement("a");
+     link.href = url;
+
+     let filename = "ticket_file.xlsx";
+     if (formattedStartDate && formattedEndDate) {
+       filename = `tickets_${formattedStartDate.replace(
+         /\//g,
+         "-"
+       )}_to_${formattedEndDate.replace(/\//g, "-")}.xlsx`;
+     } else if (formattedStartDate) {
+       filename = `tickets_from_${formattedStartDate.replace(/\//g, "-")}.xlsx`;
+     } else if (formattedEndDate) {
+       filename = `tickets_until_${formattedEndDate.replace(/\//g, "-")}.xlsx`;
+     }
+
+     link.setAttribute("download", filename);
+     document.body.appendChild(link);
+     link.click();
+     link.remove();
+
+     // 2. Download Chart Image
+    //  const chartRef = Highcharts.charts.find(
+    //    (chart) => chart?.renderTo?.id === chartId
+    //  );
+    //  if (chartRef) {
+    //    chartRef.exportChartLocal({
+    //      type: "image/png",
+    //      filename: chartId,
+    //    });
+    //  }
+
+     toast.success("Download complete");
+     toast.dismiss();
+   } catch (error) {
+     toast.dismiss();
+     console.error("Error downloading:", error);
+     toast.error("Something went wrong, please try again");
+   }
+ };
 
   const sortData = (data, order = "ascending") => {
     const sortedEntries = Object.entries(data).sort(([, a], [, b]) =>
@@ -174,6 +200,9 @@ const TicketHighCharts = () => {
       },
       title: {
         text: title,
+      },
+      exporting:{
+        enabled:true,
       },
       series: [
         {
@@ -452,7 +481,7 @@ const TicketHighCharts = () => {
               <label className="text-sm font-medium text-gray-600">From:</label>
               <DatePicker
                 selected={startDate}
-                onChange={(date) => handleDateChange(date, 'start')}
+                onChange={(date) => handleDateChange(date, "start")}
                 placeholderText="Start Date"
                 dateFormat="dd/MM/yyyy"
                 maxDate={endDate || new Date()}
@@ -463,7 +492,7 @@ const TicketHighCharts = () => {
               <label className="text-sm font-medium text-gray-600">To:</label>
               <DatePicker
                 selected={endDate}
-                onChange={(date) => handleDateChange(date, 'end')}
+                onChange={(date) => handleDateChange(date, "end")}
                 placeholderText="End Date"
                 dateFormat="dd/MM/yyyy"
                 minDate={startDate}
@@ -476,7 +505,7 @@ const TicketHighCharts = () => {
               disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Filtering...' : 'Apply Filter'}
+              {loading ? "Filtering..." : "Apply Filter"}
             </button>
             <button
               onClick={clearDateFilters}
@@ -492,23 +521,29 @@ const TicketHighCharts = () => {
       <div className="bg-white grid md:grid-cols-2 mr-2  gap-2">
         <div className=" shadow-custom-all-sides rounded-md">
           <div className="flex justify-end p-3">
-          <button
-            className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
-              startDate || endDate 
-                ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-            onClick={handleTicketStatusDownload}
-            title={startDate || endDate ? 'Download filtered data' : 'Download all data'}
-          >
-            <FaDownload />
-            {startDate || endDate ? 'Filtered' : 'All'}
-          </button>
+            <button
+              className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
+                startDate || endDate
+                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+              // onClick={handleTicketStatusDownload}
+              onClick={() => handleTicketStatusDownload("ticket-status-chart")}
+              title={
+                startDate || endDate
+                  ? "Download filtered data"
+                  : "Download all data"
+              }
+            >
+              <FaDownload />
+              {startDate || endDate ? "Filtered" : "All"}
+            </button>
           </div>
           {statusData && Object.keys(statusData).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
               options={generatePieChartOptions("Tickets by Status", statusData)}
+              containerProps={{ id: "ticket-status-chart" }}
             />
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -524,23 +559,27 @@ const TicketHighCharts = () => {
           )}
         </div>
 
-        
-
         <div className="bg-white shadow-custom-all-sides rounded-md">
-        <div className="flex justify-end p-3">
-          <button
-            className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
-              startDate || endDate 
-                ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-            onClick={handleTicketStatusDownload}
-            title={startDate || endDate ? 'Download filtered data' : 'Download all data'}
-          >
-            <FaDownload />
-            {startDate || endDate ? 'Filtered' : 'All'}
-          </button>
-        </div>
+          <div className="flex justify-end p-3">
+            <button
+              className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
+                startDate || endDate
+                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+              onClick={() =>
+                handleTicketStatusDownload("ticket-category-chart")
+              }
+              title={
+                startDate || endDate
+                  ? "Download filtered data"
+                  : "Download all data"
+              }
+            >
+              <FaDownload />
+              {startDate || endDate ? "Filtered" : "All"}
+            </button>
+          </div>
           {categoryData && Object.keys(categoryData).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
@@ -548,6 +587,7 @@ const TicketHighCharts = () => {
                 "Tickets by Category",
                 categoryData
               )}
+              containerProps={{ id: "ticket-category-chart" }}
               order="descending"
             />
           ) : (
@@ -564,20 +604,24 @@ const TicketHighCharts = () => {
           )}
         </div>
         <div className="bg-white shadow-custom-all-sides rounded-md">
-        <div className="flex justify-end p-3">
-          <button
-            className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
-              startDate || endDate 
-                ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-            onClick={handleTicketStatusDownload}
-            title={startDate || endDate ? 'Download filtered data' : 'Download all data'}
-          >
-            <FaDownload />
-            {startDate || endDate ? 'Filtered' : 'All'}
-          </button>
-        </div>
+          <div className="flex justify-end p-3">
+            <button
+              className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
+                startDate || endDate
+                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+              onClick={() => handleTicketStatusDownload("ticket-type-chart")}
+              title={
+                startDate || endDate
+                  ? "Download filtered data"
+                  : "Download all data"
+              }
+            >
+              <FaDownload />
+              {startDate || endDate ? "Filtered" : "All"}
+            </button>
+          </div>
           {ticketTypes && Object.keys(ticketTypes).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
@@ -585,6 +629,7 @@ const TicketHighCharts = () => {
                 "Tickets by Type",
                 ticketTypes
               )}
+              containerProps={{ id: "ticket-type-chart" }}
               order="ascending"
             />
           ) : (
@@ -601,20 +646,24 @@ const TicketHighCharts = () => {
           )}
         </div>
         <div className="bg-white shadow-custom-all-sides rounded-md">
-        <div className="flex justify-end p-3">
-          <button
-            className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
-              startDate || endDate 
-                ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-            onClick={handleTicketStatusDownload}
-            title={startDate || endDate ? 'Download filtered data' : 'Download all data'}
-          >
-            <FaDownload />
-            {startDate || endDate ? 'Filtered' : 'All'}
-          </button>
-        </div>
+          <div className="flex justify-end p-3">
+            <button
+              className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
+                startDate || endDate
+                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+              onClick={() => handleTicketStatusDownload("ticket-floor-chart")}
+              title={
+                startDate || endDate
+                  ? "Download filtered data"
+                  : "Download all data"
+              }
+            >
+              <FaDownload />
+              {startDate || endDate ? "Filtered" : "All"}
+            </button>
+          </div>
           {floorTickets && Object.keys(floorTickets).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
@@ -622,6 +671,7 @@ const TicketHighCharts = () => {
                 "Tickets by Floor",
                 floorTickets
               )}
+              containerProps={{ id: "ticket-floor-chart" }}
             />
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -638,18 +688,22 @@ const TicketHighCharts = () => {
         </div>
       </div>
       <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
-      <div className="flex justify-end p-3">
+        <div className="flex justify-end p-3">
           <button
             className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
-              startDate || endDate 
-                ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              startDate || endDate
+                ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
-            onClick={handleTicketStatusDownload}
-            title={startDate || endDate ? 'Download filtered data' : 'Download all data'}
+            onClick={() => handleTicketStatusDownload("ticket-unit-chart")}
+            title={
+              startDate || endDate
+                ? "Download filtered data"
+                : "Download all data"
+            }
           >
             <FaDownload />
-            {startDate || endDate ? 'Filtered' : 'All'}
+            {startDate || endDate ? "Filtered" : "All"}
           </button>
         </div>
         {unitTickets && Object.keys(unitTickets).length > 0 && !loading ? (
@@ -659,6 +713,7 @@ const TicketHighCharts = () => {
               "Tickets by Unit",
               unitTickets
             )}
+            containerProps={{ id: "ticket-unit-chart" }}
           />
         ) : (
           <div className="flex justify-center items-center h-full">
