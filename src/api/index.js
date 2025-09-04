@@ -435,10 +435,12 @@ export const postFitoutRequest = async (data) =>
       token: token,
     },
   });
-export const getFitoutRequest = async () =>
+export const getFitoutRequest = async (page, per_page) =>
   axiosInstance.get(`/fitout_request.json`, {
     params: {
       token: token,
+      per_page: per_page,
+      page: page,
     },
   });
 

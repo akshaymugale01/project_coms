@@ -14,6 +14,8 @@ import SetupSeatBooking from "./SetupSeatBooking";
 import SetupHotelBooking from "./SetupHotelBooking";
 import { getFacitilitySetup, getHotelSetup } from "../../api";
 import HotelBooking from "./HotelBooking";
+import { FaCalendarCheck } from "react-icons/fa6";
+import AmenitiesCalendar from "./AmenitiesCalendar";
 
 const SetupBookingFacility = () => {
   const [searchText, setSearchText] = useState("");
@@ -25,6 +27,13 @@ const SetupBookingFacility = () => {
   const [hotelBooking, setHotelBooking] = useState([]);
   const [page_no, setPageNo] = useState(1);
   const [per_page, setPerPage] = useState(10);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [filteredBookings, setFilteredBookings] = useState([]);
+  const [filteredHotelBookings, setFilteredHotelBookings] = useState([]);
+  const toggleCalendar = () => {
+    setShowCalendar((prev) => !prev);
+    console.log("The calendar was clicked");
+  };
 
   useEffect(() => {
     const fetchFacilityBooking = async () => {
@@ -47,24 +56,24 @@ const SetupBookingFacility = () => {
     fetchFacilityBooking();
   }, []);
 
- useEffect(() => {
-   const fetchHotelBooking = async () => {
-     try {
-       const response = await getHotelSetup(true, page_no, per_page);
-       // Get the hotel amenities array
-       const hotelData = response.data.amenities;
-       console.log("Hotel Data:", hotelData);
-       setHotelBooking(hotelData);
-       setOriginalHotelData(hotelData); // Store the original data for reference
-       setLoading(false); // Stop loading on success
-     } catch (error) {
-       console.error("Error fetching hotel bookings", error);
-       setError("Failed to fetch hotel bookings. Please try again."); // Set error message
-       setLoading(false); // Stop loading on error
-     }
-   };
-   fetchHotelBooking();
- }, [page_no, per_page]);
+  useEffect(() => {
+    const fetchHotelBooking = async () => {
+      try {
+        const response = await getHotelSetup(true, page_no, per_page);
+        // Get the hotel amenities array
+        const hotelData = response.data.amenities;
+        console.log("Hotel Data:", hotelData);
+        setHotelBooking(hotelData);
+        setOriginalHotelData(hotelData); // Store the original data for reference
+        setLoading(false); // Stop loading on success
+      } catch (error) {
+        console.error("Error fetching hotel bookings", error);
+        setError("Failed to fetch hotel bookings. Please try again."); // Set error message
+        setLoading(false); // Stop loading on error
+      }
+    };
+    fetchHotelBooking();
+  }, [page_no, per_page]);
 
   const setupColumn = [
     {
@@ -196,6 +205,38 @@ const SetupBookingFacility = () => {
     },
   ];
 
+  const calendarData = [
+    // Amenities: single-day bookings
+    ...filteredBookings.map((booking) => {
+      const facility = bookingFacility.find(
+        (fac) => fac.id === booking.amenity_id
+      );
+      if (!facility || facility.is_hotel) return null; // skip hotels
+
+      return {
+        title: `${facility.fac_name} - ${booking.book_by_user || "Guest"}`,
+        start: new Date(booking.checkin_at.replace(" ", "T")),
+        end: new Date(booking.checkin_at.replace(" ", "T")), // same as start
+        type: "amenity",
+      };
+    }),
+
+    // Hotels: multi-day bookings
+    ...filteredHotelBookings.map((booking) => {
+      const facility = bookingFacility.find(
+        (fac) => fac.id === booking.amenity_id
+      );
+      if (!facility || !facility.is_hotel) return null;
+
+      return {
+        title: `${facility.fac_name} - ${booking.book_by_user || "Guest"}`,
+        start: new Date(booking.checkin_at.replace(" ", "T")),
+        end: new Date(booking.checkout_at.replace(" ", "T")),
+        type: "hotel",
+      };
+    }),
+  ].filter((event) => event !== null); // remove skipped entries
+
   // const [filteredData, setFilteredData] = useState(bookingFacility);
   const handleAmenitySearch = (event) => {
     const searchValue = event.target.value;
@@ -231,6 +272,12 @@ const SetupBookingFacility = () => {
     <div className="flex bg-gray-100">
       <Navbar />
       <div className="w-full flex mx-3 flex-col overflow-hidden">
+        {/* <div
+          className="absolute top-3 right-3 text-blue-600 text-xl"
+          onClick={toggleCalendar}
+        >
+          <FaCalendarCheck size={30} />
+        </div> */}
         <div className="flex justify-center my-2">
           <div className="sm:flex grid grid-cols-2 sm:flex-row gap-5 font-medium p-2 sm:rounded-full rounded-md opacity-90 bg-gray-200 ">
             <h2
@@ -259,6 +306,15 @@ const SetupBookingFacility = () => {
               onClick={() => setPage("HotelBooking")}
             >
               Hotel
+            </h2>
+            <h2
+              className={`p-1 ${
+                page === "Calendar" &&
+                "bg-white text-blue-500 shadow-custom-all-sides"
+              } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
+              onClick={() => setPage("Calendar")}
+            >
+              <FaCalendarCheck size={25} />
             </h2>
           </div>
         </div>
@@ -360,6 +416,11 @@ const SetupBookingFacility = () => {
           </>
         )}
 
+        {page === "Calendar" && (
+          <div className="p-4 mb-10 relative">
+            <AmenitiesCalendar />
+          </div>
+        )}
         {page === "seatBooking" && <SetupSeatBooking />}
       </div>
     </div>

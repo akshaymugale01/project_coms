@@ -37,7 +37,9 @@ const RequestListPage = () => {
   const [bookingFacility, setBookingFacility] = useState([]);
   const [originalBookings, setOriginalBookings] = useState([]);
   const themeColor = useSelector((state) => state.theme.color);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalPageCount, setTotalPageCount] = useState(0);
   const userName = useState("Name");
   const LastName = useState("LASTNAME");
 
@@ -47,11 +49,11 @@ const RequestListPage = () => {
         setLoading(true);
 
         // Fetch Bookings
-        const Response = await getFitoutRequest();
+        const Response = await getFitoutRequest(currentPage, perPage);
         console.log("Fitout Response:", Response);
-        setBookings(Response?.data || []);
-        setOriginalBookings(Response?.data || []);
-
+        setBookings(Response?.data?.fitout_requests || []);
+        setOriginalBookings(Response?.data?.fitout_requests || []);
+        setTotalPageCount(Response?.data?.total_pages || 0);
         // Fetch Facility Setup
         //   const facilityResponse = await getFacitilitySetup();
         //   console.log("Facility Setup Response:", facilityResponse);
@@ -66,7 +68,10 @@ const RequestListPage = () => {
     };
     fetchData();
     fetchDetails();
-  }, []);
+  }, [currentPage,perPage]);
+
+console.log("Bookings length:", bookings.length, "Total count:", totalPageCount);
+  console.log("Current Page:", currentPage, "Per Page:", perPage);
 
   // Handle Search
   const handleSearch = (event) => {
@@ -215,6 +220,7 @@ const RequestListPage = () => {
     }
   };
 
+  console.log("Builddingggsss data", buildings);
   return (
     <section className="flex">
       <FitOutList />
@@ -251,7 +257,21 @@ const RequestListPage = () => {
                 <p className="text-center text-red-500">{error}</p>
               ) : (
                 <div className="w-full">
-                  <DataTable columns={columns} data={bookings} pagination />
+                  <DataTable
+                    columns={columns}
+                    data={bookings}
+                    pagination
+                    paginationServer
+                    paginationTotalRows={totalPageCount}
+                    paginationPerPage={perPage}
+                    onChangeRowsPerPage={(newPerPage, page) => {
+                      setPerPage(newPerPage);
+                      setCurrentPage(page);
+                    }}
+                    onChangePage={(page) => {
+                      setCurrentPage(page);
+                    }}
+                  />
                 </div>
               )}
             </div>
