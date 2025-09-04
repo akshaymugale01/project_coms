@@ -224,10 +224,10 @@ export const servicePricingService = {
 };
 
 export const serviceBookingService = {
-  getAll: () => {
+  getAll: (page = 1, perPage = 10) => {
     const token = getItemInLocalStorage("TOKEN");
     const cleanToken = token ? token.replace('Bearer ', '') : '';
-    return axiosInstance.get(`/service_bookings.json?token=${cleanToken}`);
+    return axiosInstance.get(`/service_bookings.json?token=${cleanToken}&page=${page}&per_page=${perPage}`);
   },
   getById: (id) => {
     const token = getItemInLocalStorage("TOKEN");
