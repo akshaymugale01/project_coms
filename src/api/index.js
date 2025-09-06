@@ -1192,7 +1192,13 @@ export const postAmenitiesBooking = async (data) =>
       token: token,
     },
   });
-
+//Calendar
+export const getCalendarBooking = async (data) =>
+  axiosInstance.get(`amenity_bookings/calender_booking.json`,{
+    params: {
+      token: token,
+    },
+  });
 export const postOtherProject = async (data) =>
   axiosInstance.post(`/other_projects.json`, data, {
     params: {

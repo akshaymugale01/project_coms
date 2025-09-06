@@ -1,5 +1,4 @@
-// CalendarView.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
@@ -7,6 +6,7 @@ import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { enIN } from "date-fns/locale";
+import { getCalendarBooking } from "../../api";
 
 const locales = {
   "en-IN": enIN,
@@ -20,69 +20,69 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-// Sample booking data
-const bookings = [
-  {
-    title: "Pool - Unit 101",
-    start: new Date(2025, 7, 30, 10, 0),
-    end: new Date(2025, 7, 30, 11, 0),
-  },
-  {
-    title: "Pool - Unit 102",
-    start: new Date(2025, 7, 30, 12, 30),
-    end: new Date(2025, 7, 30, 1, 30),
-  },
-  {
-    title: "Gym - Unit 203",
-    start: new Date(2025, 7, 30, 17, 0),
-    end: new Date(2025, 7, 30, 18, 0),
-  },
-  {
-    title: "Conference Room - Unit 305",
-    start: new Date(2025, 7, 31, 14, 0),
-    end: new Date(2025, 7, 31, 16, 0),
-  },
-];
-
-// const calendarData = [
-//   ...filteredBookings.map((booking) => {
-//     const facility = bookingFacility.find(
-//       (fac) => fac.id === booking.amenity_id
-//     );
-//     if (!facility || facility.is_hotel) return null;
-
-//     return {
-//       title: `${facility.fac_name} - ${booking.book_by_user || "Guest"}`,
-//       start: new Date(booking.checkin_at.replace(" ", "T")),
-//       end: new Date(booking.checkin_at.replace(" ", "T")),
-//       type: "amenity",
-//     };
-//   }),
-//   ...filteredHotelBookings.map((booking) => {
-//     const facility = bookingFacility.find(
-//       (fac) => fac.id === booking.amenity_id
-//     );
-//     if (!facility || !facility.is_hotel) return null;
-
-//     return {
-//       title: `${facility.fac_name} - ${booking.book_by_user || "Guest"}`,
-//       start: new Date(booking.checkin_at.replace(" ", "T")),
-//       end: new Date(booking.checkout_at.replace(" ", "T")),
-//       type: "hotel",
-//     };
-//   }),
-// ].filter((event) => event !== null);
-
 const AmenitiesCalendar = () => {
+  const [bookings, setBookings] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const transformBookings = (rawBookings) => {
+    return rawBookings.map((booking) => ({
+      id: booking.id,
+      title: `${booking.title} - ${booking.booked_by}`,
+      start: new Date(booking.start),
+      end: new Date(booking.end),
+      resource: {
+        color: booking.color,
+        url: booking.url,
+      },
+    }));
+  };
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      try {
+        const response = await getCalendarBooking();
+        const rawData = response.data.bookings;
+        const transformed = transformBookings(rawData);
+        setBookings(transformed);
+        console.log("Response",  response.data.bookings)
+      } catch (error) {
+        console.error("Error fetching facilities", error);
+        setError("Failed to fetch booking facilities. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooking();
+  }, []);
+
+  const eventStyleGetter = (event) => {
+    return {
+      style: {
+        backgroundColor: event.resource?.color || "#3174ad",
+        color: "white",
+        borderRadius: "5px",
+        padding: "2px",
+      },
+    };
+  };
+
   return (
-    <div style={{ height: "80vh", padding: "10px", marginTop:"35px", }}>
-      <Calendar
-        localizer={localizer}
-        events={bookings}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: "100%" }}
-      />
+    <div style={{ height: "80vh", padding: "10px", marginTop: "35px" }}>
+      {error && <div style={{ color: "red" }}>{error}</div>}
+      {loading ? (
+        <div>Loading bookings...</div>
+      ) : (
+        <Calendar
+          localizer={localizer}
+          events={bookings}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: "100%" }}
+          eventPropGetter={eventStyleGetter}
+        />
+      )}
     </div>
   );
 };
