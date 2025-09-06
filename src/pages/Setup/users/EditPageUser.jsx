@@ -5,6 +5,7 @@ import {
   getAllUnits,
   getFilterUsers,
   getSetupUsers,
+  getAllFloors,
   getSites,
   getFloors,
   getUnits,
@@ -43,18 +44,9 @@ const EditPageUser = () => {
     no_of_pets: "",
     birth_date: "",
     occupancy_type: "",
-    user_sites: [
-      {
-        unit_id: "",
-        site_id: "",
-        ownership: "",
-        ownership_type: "",
-        is_approved: true,
-        lives_here: "",
-      },
-    ],
+    user_sites: [],
     user_members: [],
-    user_vendors: [],
+    user_vendor: [],
   });
   const [originalData, setOriginalData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,24 +55,24 @@ const EditPageUser = () => {
   const [floors, setFloors] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState("");
   const [filteredBuildings, setFilteredBuildings] = useState([]);
-  const [vendorList, setVendorList] = useState([
-      { service_type: "", name: "", contact: "" },
-    ]);
+  const [vendorList, setVendorList] = useState([]);
+  const [hydratedSite, setHydratedSite] = useState(false);
 
   console.log("id", id);
 
   const fetchUsers = async () => {
     try {
       setLoading(true); // Start loading
-      const [userResp, unitsResp, sitesResp] = await Promise.all([
+      const [userResp, sitesResp] = await Promise.all([
         getFilterUsers(id),
-        getAllUnits(),
         getSites(),
       ]);
       setFormData(userResp?.data || {});
       setOriginalData(userResp?.data || {});
-      setUnits(unitsResp.data);
       setUserSites(sitesResp.data);
+      // console.log("API response user_members:", userResp?.data?.user_members);
+      console.log("API response user_vendor:", userResp?.data?.user_vendor);
+      console.log("API response", userResp?.data?.user_sites);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -92,25 +84,44 @@ const EditPageUser = () => {
   }, []);
 
   useEffect(() => {
-  if (formData.user_sites && formData.user_sites.length > 0) {
-    const site = formData.user_sites[0];
-    setSelectedBuilding(site.building_id || "");
-    setSelectedFloorId(site.floor_id || "");
-    setSelectedUnit(site.unit_id || "");
-  }
-}, [formData]);
-
-useEffect(() => {
-  setFormData((prev) => {
-    const updatedSites = [...prev.user_sites];
-    if (updatedSites.length > 0) {
-      updatedSites[0].building_id = selectedBuilding;
-      updatedSites[0].floor_id = selectedFloorId;
-      updatedSites[0].unit_id = selectedUnit;
+    if (!hydratedSite && Array.isArray(formData.user_sites) && formData.user_sites.length > 0)
+    {
+      const site = formData.user_sites[0];
+      console.log("Hydrating site:", site);
+       setSelectedUnit(String(site.unit_id ?? ""));
+       setSelectedBuilding(String(site.build_id ?? ""));
+       setSelectedFloorId(String(site.floor_id ?? ""));
+      setHydratedSite(true); // prevent rehydration
     }
-    return { ...prev, user_sites: updatedSites };
-  });
-}, [selectedBuilding, selectedFloorId, selectedUnit]);
+  }, [formData.user_sites, hydratedSite]);
+
+  useEffect(() => {
+    const currentSite = formData.user_sites?.[0] || {};
+    const needsUpdate =
+      currentSite.build_id !== selectedBuilding ||
+      currentSite.floor_id !== selectedFloorId ||
+      currentSite.unit_id !== selectedUnit;
+
+    if (needsUpdate) {
+      setFormData((prev) => {
+        const updatedSites = [...prev.user_sites];
+        if (updatedSites.length > 0) {
+          updatedSites[0] = {
+            ...updatedSites[0],
+            build_id: selectedBuilding ? parseInt(selectedBuilding, 10) : null,
+            floor_id: selectedFloorId ? parseInt(selectedFloorId, 10) : null,
+            unit_id: selectedUnit ? parseInt(selectedUnit, 10) : null,
+          };
+        }
+        // Sync occupancy_type from ownership if available
+        const occupancy = updatedSites[0]?.ownership ?? "";
+        console.log("Selected Unit:", selectedUnit);
+
+        return { ...prev, user_sites: updatedSites, occupancy_type: occupancy };
+      });
+    }
+  }, [selectedBuilding, selectedFloorId, selectedUnit]);
+
   const navigate = useNavigate();
 
   // const handleAddSite = () => {
@@ -155,9 +166,8 @@ useEffect(() => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sitesResp, unitsResp, buildResp] = await Promise.all([
+        const [sitesResp , buildResp] = await Promise.all([
           getSites(),
-          getAllUnits(),
           getBuildings(),
         ]);
         setSites(
@@ -166,19 +176,163 @@ useEffect(() => {
             label: site.name,
           }))
         );
-        setUnits(unitsResp.data);
-        setFilteredBuildings(buildResp.data)
+        setFilteredBuildings(buildResp.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-
     fetchData();
   }, []);
 
+  const [hasHydratedUserData, setHasHydratedUserData] = useState(false);
+
+  useEffect(() => {
+    if (
+      !hasHydratedUserData &&
+      Array.isArray(formData.user_members) &&
+      formData.user_members.length > 0
+    ) {
+      const hydratedMembers = formData.user_members.map((m) => ({
+        id: m.id ?? null,
+        member_type: m.member_type ?? "",
+        member_name: m.member_name ?? "",
+        contact_no: m.contact_no ?? "",
+        relation: m.relation ?? "",
+      }));
+      console.log("Hydrating members from formData:", hydratedMembers);
+      setMembers(hydratedMembers);
+
+      const hydratedVendors = Array.isArray(formData.user_vendor)
+        ? formData.user_vendor.map((v) => ({
+            id: v.id ?? null,
+            service_type: v.service_type ?? "",
+            name: v.name ?? "",
+            contact_no: v.contact_no ?? "",
+          }))
+        : [];
+
+      console.log("Hydrating vendors from formData:", hydratedVendors);
+      setVendorList(hydratedVendors);
+
+      setHasHydratedUserData(true);
+    }
+  }, [formData.user_members, formData.user_vendor, hasHydratedUserData]);
+
+  useEffect(() => {
+    if (!hasHydratedUserData) return;
+
+    const syncedMembers = members.map((m) => ({
+      id: m.id ?? undefined,
+      member_type: m.member_type,
+      member_name: m.member_name,
+      contact_no: m.contact_no,
+      relation: m.relation,
+    }));
+
+    const syncedVendors = vendorList.map((v) => ({
+      id: v.id ?? undefined,
+      service_type: v.service_type,
+      name: v.name,
+      contact_no: v.contact_no,
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      user_members: syncedMembers,
+      user_vendors: syncedVendors,
+    }));
+  }, [members, vendorList, hasHydratedUserData]);
+
+  useEffect(() => {
+    const fetchFloorsAndUnits = async () => {
+      if (selectedBuilding) {
+        try {
+          const floorResp = await getFloors(selectedBuilding);
+          setFloors(floorResp.data);
+        } catch (error) {
+          console.error("Error fetching floors:", error);
+          setFloors([]);
+        }
+      }
+
+      if (selectedFloorId) {
+        try {
+          const unitResp = await getUnits(selectedFloorId);
+          setUnits(unitResp.data);
+        } catch (error) {
+          console.error("Error fetching units:", error);
+          setUnits([]);
+        }
+      }
+    };
+
+    if (hydratedSite) {
+      fetchFloorsAndUnits();
+    }
+  }, [hydratedSite, selectedBuilding, selectedFloorId]);
+  
+  const handleUnitChange = (e) => {
+    setSelectedUnit(e.target.value);
+    // Optional: log or trigger side effects
+    console.log("Selected unit ID:", e.target.value);
+  };
+
+  const handleAddMember = () => {
+    setMembers((prev) => [
+      ...prev,
+      {
+        id: null,
+        member_type: "",
+        member_name: "",
+        contact_no: "",
+        relation: "",
+      },
+    ]);
+  };
+
+  const handleDeleteMember = (index) => {
+    setMembers((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMemberChange = (index, field, value) => {
+    setMembers((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      return updated;
+    });
+  };
+
+  const handleAddVendor = () => {
+    setVendorList((prev) => [
+      ...prev,
+      { id: null, service_type: "", name: "", contact: "" },
+    ]);
+  };
+
+  const handleDeleteVendor = (index) => {
+    setVendorList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleVendorChange = (index, field, value) => {
+    setVendorList((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      return updated;
+    });
+  };
+
+  const validateMobileInput = (input) => {
+    return input.replace(/\D/g, "").slice(0, 10);
+  };
+
   const handleAddUser = async () => {
     const changedFields = getChangedFields(originalData, formData);
-
     // Convert user_sites to user_sites_attributes always
     const postData = {
       user: {
@@ -191,7 +345,7 @@ useEffect(() => {
           };
         }),
         user_members: formData.user_members,
-        user_vendors: formData.user_vendors,
+        user_vendor: formData.user_vendor,
       },
     };
 
@@ -219,34 +373,6 @@ useEffect(() => {
     });
     return changed;
   };
-
-    const handleUnitChange = (e) => {
-      setSelectedUnit(e.target.value);
-      // Optional: log or trigger side effects
-      console.log("Selected unit ID:", e.target.value);
-    };
-
-      const handleAddVendor = () => {
-        setVendorList([...vendorList, { service: "", name: "", contact: "" }]);
-      };
-
-      const handleDeleteVendor = (index) => {
-        const updated = [...vendorList];
-        updated.splice(index, 1);
-        setVendorList(updated);
-      };
-
-      const handleVendorChange = (index, field, value) => {
-        const updated = [...vendorList];
-        updated[index][field] = value;
-        setVendorList(updated);
-      };
-
-    const handleAddMember = () => {
-      setMembers((prev) => [...prev, { name: "", contact: "", relation: "" }]);
-    };
-
-
 
   console.log("fomrData", formData);
   return (
@@ -644,88 +770,91 @@ useEffect(() => {
             </button>
 
             {/* 👨‍👩‍👧 Member Rows */}
-            {members.map((member, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
-              >
-                {/* Member Type Dropdown */}
-                <div className="flex flex-col mt-2 gap-2">
-                  <label className="font-semibold">Member Type:</label>
-                  <select
-                    className="border p-2 rounded border-gray-300"
-                    value={member.type}
-                    onChange={(e) =>
-                      handleMemberChange(index, "type", e.target.value)
-                    }
-                  >
-                    <option value="">-- Select --</option>
-                    <option value="Primary">Primary</option>
-                    <option value="Secondary">Secondary</option>
-                  </select>
-                </div>
-
-                {/* Name */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Member's Name:</label>
-                  <input
-                    type="text"
-                    className="border p-2 rounded border-gray-300"
-                    value={member.name}
-                    onChange={(e) => {
-                      const validated = e.target.value.replace(
-                        /[^a-zA-Z ]/g,
-                        ""
-                      );
-                      handleMemberChange(index, "name", validated);
-                    }}
-                  />
-                </div>
-
-                {/* Contact */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Contact Details:</label>
-                  <input
-                    type="tel"
-                    className="border p-2 rounded border-gray-300"
-                    value={member.contact}
-                    onChange={(e) => {
-                      const input = e.target.value;
-                      const digitsOnly = input.replace(/\D/g, "");
-                      if (digitsOnly.length <= 10) {
-                        handleMemberChange(index, "contact", digitsOnly);
+            {members.map((member, index) => {
+              console.log("Rendering member:", member);
+              return (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
+                >
+                  {/* Member Type Dropdown */}
+                  <div className="flex flex-col mt-2 gap-2">
+                    <label className="font-semibold">Member Type:</label>
+                    <select
+                      className="border p-2 rounded border-gray-300"
+                      value={member.member_type ?? ""}
+                      onChange={(e) =>
+                        handleMemberChange(index, "member_type", e.target.value)
                       }
-                    }}
-                    placeholder="Enter 10-digit mobile number"
-                    maxLength={10}
-                  />
-                </div>
+                    >
+                      <option value="">-- Select --</option>
+                      <option value="Primary">Primary</option>
+                      <option value="Secondary">Secondary</option>
+                    </select>
+                  </div>
 
-                {/* Relation */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Relation:</label>
-                  <input
-                    type="text"
-                    className="border p-2 rounded border-gray-300"
-                    value={member.relation}
-                    onChange={(e) =>
-                      handleMemberChange(index, "relation", e.target.value)
-                    }
-                  />
-                </div>
+                  {/* Name */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">Member's Name:</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded border-gray-300"
+                      value={member.member_name ?? ""}
+                      onChange={(e) => {
+                        const validated = e.target.value.replace(
+                          /[^a-zA-Z ]/g,
+                          ""
+                        );
+                        handleMemberChange(index, "member_name", validated);
+                      }}
+                    />
+                  </div>
 
-                {/* ❌ Delete Button */}
-                <div className="inline-block">
-                  <button
-                    type="button"
-                    className="px-2 py-1 rounded hover:bg-red-100"
-                    onClick={() => handleDeleteMember(index)}
-                  >
-                    <RiDeleteBinLine className="text-red-600 w-7 h-7" />
-                  </button>
+                  {/* Contact */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">Contact Details:</label>
+                    <input
+                      type="tel"
+                      className="border p-2 rounded border-gray-300"
+                      value={member.contact_no ?? ""}
+                      onChange={(e) => {
+                        const input = e.target.value;
+                        const digitsOnly = input.replace(/\D/g, "");
+                        if (digitsOnly.length <= 10) {
+                          handleMemberChange(index, "contact_no", digitsOnly);
+                        }
+                      }}
+                      placeholder="Enter 10-digit mobile number"
+                      maxLength={10}
+                    />
+                  </div>
+
+                  {/* Relation */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">Relation:</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded border-gray-300"
+                      value={member.relation ?? ""}
+                      onChange={(e) =>
+                        handleMemberChange(index, "relation", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* ❌ Delete Button */}
+                  <div className="inline-block">
+                    <button
+                      type="button"
+                      className="px-2 py-1 rounded hover:bg-red-100"
+                      onClick={() => handleDeleteMember(index)}
+                    >
+                      <RiDeleteBinLine className="text-red-600 w-7 h-7" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Section Header */}
@@ -855,9 +984,13 @@ useEffect(() => {
                     </label>
                     <select
                       className="border p-2 rounded border-gray-300"
-                      value={vendor.service}
+                      value={vendor.service_type ?? ""}
                       onChange={(e) =>
-                        handleVendorChange(index, "service", e.target.value)
+                        handleVendorChange(
+                          index,
+                          "service_type",
+                          e.target.value
+                        )
                       }
                     >
                       <option value="">-- Select --</option>
@@ -877,7 +1010,7 @@ useEffect(() => {
                     <input
                       type="text"
                       className="border p-2 rounded border-gray-300"
-                      value={vendor.name}
+                      value={vendor.name ?? ""}
                       onChange={(e) =>
                         handleVendorChange(index, "name", e.target.value)
                       }
@@ -892,11 +1025,11 @@ useEffect(() => {
                     <input
                       type="tel"
                       className="border p-2 rounded border-gray-300"
-                      value={vendor.contact}
+                      value={vendor.contact_no ?? ""}
                       onChange={(e) =>
                         handleVendorChange(
                           index,
-                          "contact",
+                          "contact_no",
                           validateMobileInput(e.target.value)
                         )
                       }

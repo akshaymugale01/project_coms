@@ -19,8 +19,8 @@ const SetupUserDetails = () => {
     lease_expiry: "",
     lives_here: "",
     profession: "",
-    mgl_cust_number: "",
-    adani_account: "",
+    mgl_customer_number: "",
+    adani_electricity_account_no: "",
     net_provider_name: "",
     net_provider_id: "",
     blood_group: "",
@@ -28,7 +28,7 @@ const SetupUserDetails = () => {
     birth_date: "",
     user_sites: [],
     user_members: [],
-    user_vendors: [],
+    user_vendor: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,9 @@ const SetupUserDetails = () => {
                   <div className="grid grid-cols-2 gap-4 mb-2">
                     <p>
                       <span className="font-semibold">Moving date:</span>{" "}
-                      {formData.moving_date || "N/A"}
+                      {formData.moving_date
+                        ? formData.moving_date.slice(0, 10)
+                        : "N/A"}
                     </p>
                     <p>
                       <span className="font-semibold">Occupancy Type:</span>{" "}
@@ -218,13 +220,13 @@ const SetupUserDetails = () => {
           <div className="grid grid-cols-2 shadow-lg rounded-lg p-6 mb-3 w-full max-w-3xl mt-5 border bg-gray-50">
             <p>
               <span className="font-semibold">MGL Customer Number:</span>{" "}
-              {formData.mgl_cust_number || "N/A"}
+              {formData.mgl_customer_number || "N/A"}
             </p>
             <p>
               <span className="font-semibold">
                 Adani Electricity Account Number:
               </span>{" "}
-              {formData.adani_account || "N/A"}
+              {formData.adani_electricity_account_no || "N/A"}
             </p>
             <p>
               <span className="font-semibold">Internet Provider Name:</span>{" "}
@@ -235,12 +237,12 @@ const SetupUserDetails = () => {
               {formData.net_provider_id || "N/A"}
             </p>
           </div>
-          {formData.user_vendors && formData.user_vendors.length > 0 && (
+          {formData.user_vendor && formData.user_vendor.length > 0 && (
             <div className="rounded-lg p-6 mb-3 w-full max-w-3xl mt-5 border bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800">
                 Vendor Services
               </h3>
-              {formData.user_vendors.map((vendor, idx) => (
+              {formData.user_vendor.map((vendor, idx) => (
                 <div
                   key={idx}
                   className="mt-4 p-4 border rounded-md bg-gray-50"
@@ -256,14 +258,14 @@ const SetupUserDetails = () => {
                     </p>
                     <p>
                       <span className="font-semibold">Contact:</span>{" "}
-                      {vendor.contact || "N/A"}
+                      {vendor.contact_no || "N/A"}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-          {!formData.user_vendors && (
+          {!formData.user_vendor && (
             <div className="rounded-lg p-6 mb-3 w-full max-w-3xl mt-5 border bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800">
                 Vendor Services
