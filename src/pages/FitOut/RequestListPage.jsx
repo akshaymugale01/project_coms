@@ -39,7 +39,14 @@ const RequestListPage = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [totalPageCount, setTotalPageCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0); // Total number of records
+  const [totalPages, setTotalPages] = useState(0); // Total number of pages
+
+  // // Add useEffect to monitor state changes
+  // useEffect(() => {
+  //   console.log("State changed - totalCount:", totalCount, "totalPages:", totalPages);
+  // }, [totalCount, totalPages]);
+  
   const userName = useState("Name");
   const LastName = useState("LASTNAME");
 
@@ -47,13 +54,23 @@ const RequestListPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
+        
+        // console.log("Fetching data with params - page:", currentPage, "perPage:", perPage);
+        
         // Fetch Bookings
         const Response = await getFitoutRequest(currentPage, perPage);
-        console.log("Fitout Response:", Response);
+       
         setBookings(Response?.data?.fitout_requests || []);
         setOriginalBookings(Response?.data?.fitout_requests || []);
-        setTotalPageCount(Response?.data?.total_pages || 0);
+        // Store both total count and total pages
+        const apiTotalCount = Response?.data?.total_count || 0;
+        const apiTotalPages = Response?.data?.total_pages || 0;
+        
+        
+        setTotalCount(apiTotalCount);
+        setTotalPages(apiTotalPages);
+        
+        // Immediately log after setting to verify
         // Fetch Facility Setup
         //   const facilityResponse = await getFacitilitySetup();
         //   console.log("Facility Setup Response:", facilityResponse);
@@ -70,8 +87,6 @@ const RequestListPage = () => {
     fetchDetails();
   }, [currentPage,perPage]);
 
-console.log("Bookings length:", bookings.length, "Total count:", totalPageCount);
-  console.log("Current Page:", currentPage, "Per Page:", perPage);
 
   // Handle Search
   const handleSearch = (event) => {
@@ -133,6 +148,11 @@ console.log("Bookings length:", bookings.length, "Total count:", totalPageCount)
     {
       name: "Building Name",
       selector: (row) => {
+        // First try to use the nested building object from API
+        if (row.building && row.building.name) {
+          return row.building.name;
+        }
+        // Fall back to looking up from buildings array if nested data is not available
         const building = buildings.find((b) => b.id === row.building_id);
         return building ? building.name : "NA";
       },
@@ -141,6 +161,11 @@ console.log("Bookings length:", bookings.length, "Total count:", totalPageCount)
     {
       name: "Floor Name",
       selector: (row) => {
+        // First try to use the nested floor object from API
+        if (row.floor && row.floor.name) {
+          return row.floor.name;
+        }
+        // Fall back to looking up from floors array if nested data is not available
         const floor = floors.find((f) => f.id === row.floor_id);
         return floor ? floor.name : "NA";
       },
@@ -211,16 +236,13 @@ console.log("Bookings length:", bookings.length, "Total count:", totalPageCount)
 
       const usersRes = await getSetupUsers();
       setUsers(usersRes.data);
-      console.log("userResp", usersRes);
       const vendorsRes = await getAllVendors();
       setVendors(vendorsRes.data);
-      console.log("vendor", vendorsRes);
     } catch (error) {
       console.error("Error fetching details:", error);
     }
   };
 
-  console.log("Builddingggsss data", buildings);
   return (
     <section className="flex">
       <FitOutList />
@@ -262,11 +284,16 @@ console.log("Bookings length:", bookings.length, "Total count:", totalPageCount)
                     data={bookings}
                     pagination
                     paginationServer
-                    paginationTotalRows={totalPageCount}
+                    paginationTotalRows={parseInt(totalCount) || 10} // Force to integer and provide fallback
                     paginationPerPage={perPage}
-                    onChangeRowsPerPage={(newPerPage, page) => {
+                    paginationDefaultPage={currentPage}
+                    paginationComponentOptions={{
+                      noRowsPerPage: false,
+                      rowsPerPageText: 'Rows per page:',
+                    }}
+                    onChangeRowsPerPage={(newPerPage) => {
                       setPerPage(newPerPage);
-                      setCurrentPage(page);
+                      setCurrentPage(1); // Reset to first page when changing rows per page
                     }}
                     onChangePage={(page) => {
                       setCurrentPage(page);
