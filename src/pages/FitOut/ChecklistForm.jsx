@@ -8,6 +8,9 @@ import {
   X,
   Image,
   Send,
+  FileX,
+  Building2,
+  Tag,
 } from "lucide-react";
 import {
   Card,
@@ -26,7 +29,12 @@ import {
   FormHelperText,
   Paper,
 } from "@mui/material";
-import { getSnagChecklistByCategory, postSnagAnswer } from "../../api";
+import { 
+  getSnagChecklistByCategory, 
+  postSnagAnswer,
+  getFitoutCategoriesSetupDetails,
+  getSiteDetails,
+} from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
 import PropTypes from "prop-types";
@@ -47,6 +55,8 @@ const ChecklistForm = ({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [searchParams] = useSearchParams();
+  const [siteName, setSiteName] = useState("");
+  const [categoryName, setCategoryName] = useState("");
 
   const { id } = useParams();
   const searchChecklistId = searchParams.get("checklist_id");
@@ -70,8 +80,37 @@ const ChecklistForm = ({
         
         // Extract the first checklist object from the array
         if (Array.isArray(response.data) && response.data.length > 0) {
-          setChecklistData(response.data[0]);
-          console.log("Using first checklist:", response.data[0]);
+          const checklist = response.data[0];
+          setChecklistData(checklist);
+          console.log("Using first checklist:", checklist);
+          
+          // Fetch site name using site_id from checklist
+          if (checklist.site_id) {
+            try {
+              const siteResponse = await getSiteDetails(checklist.site_id);
+              if (siteResponse && siteResponse.data) {
+                setSiteName(siteResponse.data.name || "Unknown Site");
+                console.log("Site name fetched:", siteResponse.data.name);
+              }
+            } catch (siteError) {
+              console.error("Error fetching site details:", siteError);
+              setSiteName("Site Not Found");
+            }
+          }
+          
+          // Fetch category name using category_id from checklist
+          if (categoryId) {
+            try {
+              const categoryResponse = await getFitoutCategoriesSetupDetails(categoryId);
+              if (categoryResponse && categoryResponse.data) {
+                setCategoryName(categoryResponse.data.name || "Unknown Category");
+                console.log("Category name fetched:", categoryResponse.data.name);
+              }
+            } catch (categoryError) {
+              console.error("Error fetching category details:", categoryError);
+              setCategoryName("Category Not Found");
+            }
+          }
         } else {
           console.error("No checklist found in response array");
           setChecklistData(null);
@@ -456,26 +495,43 @@ const ChecklistForm = ({
                     <Typography variant="body1" color="text.secondary">
                       Checklist ID: #{checklistData.id} •{" "}
                       {checklistData.total_questions} Questions
-                      {resourceId && (
-                        <>
-                          {" • "}
-                          <Chip
-                            label={`Category ID: ${resourceId}`}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        </>
-                      )}
                     </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
+                      {categoryName && (
+                        <Chip
+                          icon={<Tag size={14} />}
+                          label={categoryName}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      )}
+                      {/* {siteName && (
+                        <Chip
+                          icon={<Building2 size={14} />}
+                          label={siteName}
+                          size="small"
+                          color="secondary"
+                          variant="outlined"
+                        />
+                      )} */}
+                      {/* {resourceId && (
+                        <Chip
+                          label={`Category ID: ${resourceId}`}
+                          size="small"
+                          color="default"
+                          variant="outlined"
+                        />
+                      )} */}
+                    </Box>
                   </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Chip
                       label={checklistData.active ? "Active" : "Inactive"}
                       color={checklistData.active ? "success" : "default"}
                       variant={checklistData.active ? "filled" : "outlined"}
                     />
-                  </Box>
+                  </Box> */}
                 </Box>
               </>
             )}
@@ -511,7 +567,7 @@ const ChecklistForm = ({
                 </CardHeader>
                 <CardContent>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                       <Typography
                         variant="subtitle1"
                         fontWeight="semibold"
@@ -527,26 +583,69 @@ const ChecklistForm = ({
                           gap: 1,
                         }}
                       >
+                        {/* Category Name */}
                         <Box
                           sx={{
                             display: "flex",
                             justifyContent: "space-between",
+                            alignItems: "center",
                           }}
                         >
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: '100px' }}>
+                            Category:
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
+                            <Tag size={14} color="#6366f1" />
+                            <Typography variant="body2" fontWeight="medium">
+                              {categoryName || "Unknown Category"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        {/* Category ID */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: '100px' }}>
                             Category ID:
                           </Typography>
                           <Typography variant="body2" fontWeight="medium">
                             {checklistData.snag_audit_category_id}
                           </Typography>
                         </Box>
+                        
+                        {/* Site Name */}
                         <Box
                           sx={{
                             display: "flex",
                             justifyContent: "space-between",
+                            alignItems: "center",
                           }}
                         >
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: '100px' }}>
+                            Site:
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
+                            <Building2 size={14} color="#6366f1" />
+                            <Typography variant="body2" fontWeight="medium">
+                              {siteName || "Unknown Site"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        {/* Site ID */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: '100px' }}>
                             Site ID:
                           </Typography>
                           <Typography variant="body2" fontWeight="medium">
@@ -569,7 +668,7 @@ const ChecklistForm = ({
                       </Box>
                     </Grid>
 
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={6}>
                       <Typography
                         variant="subtitle1"
                         fontWeight="semibold"
@@ -604,7 +703,7 @@ const ChecklistForm = ({
                       </Box>
                     </Grid>
 
-                    <Grid item xs={12} md={4}>
+                    {/* <Grid item xs={12} md={4}>
                       <Typography
                         variant="subtitle1"
                         fontWeight="semibold"
@@ -625,7 +724,7 @@ const ChecklistForm = ({
                           {checklistData.active ? "Active" : "Inactive"}
                         </Typography>
                       </Box>
-                    </Grid>
+                    </Grid> */}
                   </Grid>
                 </CardContent>
               </Card>

@@ -42,7 +42,10 @@ const FitOutChecklistPage = () => {
   ]);
 
   console.log("questions", questions);
-  const SiteId = getItemInLocalStorage("siteId");
+  // Get site ID from local storage
+  const SiteId = getItemInLocalStorage("SITEID");
+  console.log("Current Site ID from localStorage:", SiteId);
+  
   const [formData, setFormData] = useState({
     title: "",
     snag_audit_category_id: "",
@@ -97,6 +100,17 @@ const FitOutChecklistPage = () => {
     fetchCatData();
     fetchSubCatData(category);
   }, []);
+  
+  // Update site_id in formData if the value in localStorage changes
+  useEffect(() => {
+    const currentSiteId = getItemInLocalStorage("SITEID");
+    if (currentSiteId !== formData.site_id) {
+      setFormData(prev => ({
+        ...prev,
+        site_id: currentSiteId
+      }));
+    }
+  }, [formData.site_id]); // This will check when component renders if site_id needs updating
 
   const addQuestion = () => {
     if (questions.length < 5) {
@@ -163,6 +177,9 @@ const FitOutChecklistPage = () => {
   };
 
   const handleSubmit = async () => {
+    // Always get the latest site ID from local storage when submitting
+    const currentSiteId = getItemInLocalStorage("SITEID");
+    
     const data = new FormData();
     data.append("snag_checklist[name]", formData.title);
     data.append(
@@ -173,7 +190,7 @@ const FitOutChecklistPage = () => {
       "snag_checklist[snag_audit_sub_category_id]",
       formData.snag_audit_sub_category_id
     );
-    data.append("snag_checklist[site_id]", formData.site_id);
+    data.append("snag_checklist[site_id]", currentSiteId || formData.site_id);
     data.append("snag_checklist[user_id]", formData.user_id);
     data.append("snag_checklist[check_type]", formData.check_type);
     data.append("snag_checklist[resource_id]", formData.resource_id);
