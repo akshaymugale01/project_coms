@@ -17,8 +17,18 @@ export const API_URL = "https://app.myciti.life";
 export const vibeMedia = "https://app.myciti.life/api/media/";
 export const hrmsDomain = "https://api.hrms.app.myciti.life/";
 // export const hrmsDomain = "http://13.126.205.205";
-const token = getItemInLocalStorage("TOKEN");
-console.log(token);
+
+// Helper function to safely get token
+const getToken = () => {
+  try {
+    return getItemInLocalStorage("TOKEN") || "";
+  } catch (error) {
+    console.warn("Error getting token from localStorage:", error);
+    return "";
+  }
+};
+
+const token = getToken();
 export const domainPrefix = "https://app.myciti.life";
 // export const domainPrefix = "http://localhost:3000";
 
@@ -363,7 +373,7 @@ export const EditVendors = async (id, data) =>
 export const getSnagChecklistByCategory = async (categoryId) => {
   return axiosInstance.get("/snag_checklists.json", {
     params: {
-      token: token,
+      token: getToken(),
       "q[snag_audit_category_id_eq]": categoryId,
     },
   });
@@ -372,14 +382,14 @@ export const getSnagChecklistByCategory = async (categoryId) => {
 export const getSnagChecklistID = async (data) =>
   axiosInstance.post(`/snag_checklists.json`, data, {
     params: {
-      token: token,
+      token: getToken(),
     },
   });
 
 export const postSnagAnswer = async (data) =>
   axiosInstance.post(`/snag_answers.json`, data, {
     params: {
-      token: token,
+      token: getToken(),
     },
   });
 
@@ -447,14 +457,14 @@ export const getFitoutRequest = async (page, per_page) =>
 export const getFitoutRequestById = async (id) =>
   axiosInstance.get(`/fitout_request/${id}.json`, {
     params: {
-      token: token,
+      token: getToken(),
     },
   });
 
 export const updateStatusFitoutRequest = async (id, data) =>
   axiosInstance.put(`/fitout_request/${id}.json`, data, {
     params: {
-      token: token,
+      token: getToken(),
     },
   });
 
@@ -465,17 +475,34 @@ export const getFitOutCategoriesSetup = async () =>
     },
   });
 
+export const postFitoutDocsUpload = async (data) =>
+  axiosInstance.post(`/fitout_documents.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getFitoutDocs = async () =>
+  axiosInstance.get(`/fitout_documents.json`, {
+    params: {
+      token: token,
+    },
+  });
+
 // ticket download section
-export const getTicketStatusDownload = async (startDate = null, endDate = null) => {
+export const getTicketStatusDownload = async (
+  startDate = null,
+  endDate = null
+) => {
   const params = {
     token: token,
   };
-  
+
   if (startDate && endDate) {
     params.start_date = startDate;
     params.end_date = endDate;
   }
-  
+
   return axiosInstance.get(`/pms/admin/complaints/export_complaints.xlsx`, {
     params,
     responseType: "blob",
@@ -627,7 +654,7 @@ export const getHelpDeskStatusSetup = async () =>
 export const getFitoutStatusSetup = async () =>
   axiosInstance.get(`/fitout_statuses.json`, {
     params: {
-      token: token,
+      token: getToken(),
     },
   });
 export const getHelpDeskStatusDetailsSetup = async (id) =>
@@ -678,7 +705,7 @@ export const postFitOutStatus = async (data) =>
     },
   });
 
-export const getAdminComplaints = async (queryParams = '') =>
+export const getAdminComplaints = async (queryParams = "") =>
   axiosInstance.get(`/pms/admin/complaints.json${queryParams}`, {
     params: {
       token: token,
@@ -1194,7 +1221,7 @@ export const postAmenitiesBooking = async (data) =>
   });
 //Calendar
 export const getCalendarBooking = async (data) =>
-  axiosInstance.get(`amenity_bookings/calender_booking.json`,{
+  axiosInstance.get(`amenity_bookings/calender_booking.json`, {
     params: {
       token: token,
     },
@@ -1317,7 +1344,7 @@ export const getAmenitiesBookedByUserId = async (id) => {
   return axiosInstance.get(`/amenity_bookings.json`, {
     params: {
       token: token,
-      "q[user_id_eq]":id,
+      "q[user_id_eq]": id,
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -1351,7 +1378,7 @@ export const getAmenitiesBookingById = async (id) => {
     const response = await axiosInstance.get(`/amenity_bookings.json`, {
       params: {
         token: token,
-        'q[id_eq]': id,
+        "q[id_eq]": id,
       },
       headers: {
         "Cache-Control": "no-cache",
@@ -1360,12 +1387,11 @@ export const getAmenitiesBookingById = async (id) => {
       },
     });
     return response.data;
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching amenity bookings:", error);
     throw error;
   }
-}
+};
 
 export const updateAmenityBook = async (id, data) =>
   axiosInstance.put(`/amenity_bookings/${id}.json`, data, {
@@ -1392,20 +1418,19 @@ export const getPaymentBookings = async () =>
 //   Parking Api
 
 //vehicle
-export const getVehicle = async ()=>
+export const getVehicle = async () =>
   axiosInstance.get(`/vehicle.json`, {
     params: {
       token: token,
     },
   });
 
-export const postVehicle = async (data)=>
-  axiosInstance.post(`/vehicle.json`,data, {
+export const postVehicle = async (data) =>
+  axiosInstance.post(`/vehicle.json`, data, {
     params: {
       token: token,
     },
   });
-
 
 export const postParking = async (data) =>
   axiosInstance.post(`/booking_parkings.json`, data, {
@@ -1416,10 +1441,11 @@ export const postParking = async (data) =>
 
 //posting the data for parking slot
 export const postParkingSlots = async (parkingSlotData) =>
-  axiosInstance.post(`/parking_slots.json`, 
+  axiosInstance.post(
+    `/parking_slots.json`,
     { parking_slot: parkingSlotData },
     {
-      params: { token: token }
+      params: { token: token },
     }
   );
 
@@ -1430,7 +1456,7 @@ export const getParkingSlots = async () =>
     },
   });
 
-  export const updateParkingSlot = async ({ id, parking_slot }) => {
+export const updateParkingSlot = async ({ id, parking_slot }) => {
   try {
     const response = await axiosInstance.put(`/parking_slots/${id}.json`, {
       parking_slot,
@@ -1481,7 +1507,7 @@ export const getFacitilitySetup = async (page, per_page) => {
       params: {
         token: token,
         page,
-        per_page
+        per_page,
       },
       headers: {
         "Cache-Control": "no-cache",
@@ -1496,12 +1522,12 @@ export const getFacitilitySetup = async (page, per_page) => {
   }
 };
 
-export const getAmenityBooking = async()=>
-  axiosInstance.get(`/amenity_bookings/all_records_of_amenity.json?`,{
+export const getAmenityBooking = async () =>
+  axiosInstance.get(`/amenity_bookings/all_records_of_amenity.json?`, {
     params: {
       token: token,
     },
-  })
+  });
 
 export const getFacitilitySetupId = async (id) =>
   axiosInstance.get(`/amenities/${id}.json`, {
@@ -1510,19 +1536,22 @@ export const getFacitilitySetupId = async (id) =>
     },
   });
 
-export const getHotelSetupList = async()=>{
+export const getHotelSetupList = async () => {
   try {
-    const response = await axiosInstance.get(`/amenities.json?q[is_hotel_eq]=true`, {
-      params: {
-        token: token,
-      },
-    });
+    const response = await axiosInstance.get(
+      `/amenities.json?q[is_hotel_eq]=true`,
+      {
+        params: {
+          token: token,
+        },
+      }
+    );
     return response;
   } catch (error) {
     console.error("Error fetching facility setup:", error);
     throw error;
   }
-}
+};
 
 export const getFacilitySlots = async (facilityId, selectedDate) =>
   axiosInstance.get(`/slots/available.json`, {
@@ -1547,7 +1576,7 @@ export const updateFacitilitySetup = async (data, id) =>
     },
   });
 
-  //hotel
+//hotel
 export const getHotelSetup = async (isHotel, page, per_page) => {
   try {
     const response = await axiosInstance.get(`/amenities.json`, {
@@ -1555,7 +1584,7 @@ export const getHotelSetup = async (isHotel, page, per_page) => {
         token: token,
         "q[is_hotel_eq]": isHotel,
         page,
-        per_page
+        per_page,
       },
       headers: {
         "Cache-Control": "no-cache",
@@ -1760,7 +1789,7 @@ export const getSetupUsers = async () =>
   });
 
 export const getSetupUsersByUnit = async (type, unit_id) =>
-  axiosInstance.get("users/user_dropdown.json",{
+  axiosInstance.get("users/user_dropdown.json", {
     params: {
       token: token,
       type,
@@ -1773,8 +1802,8 @@ export const getSetupUsersByUnit = async (type, unit_id) =>
     },
   });
 
-  export const getSetupUsersByFloor = async (type, floor_id) =>
-  axiosInstance.get("users/user_dropdown.json",{
+export const getSetupUsersByFloor = async (type, floor_id) =>
+  axiosInstance.get("users/user_dropdown.json", {
     params: {
       token: token,
       type,
@@ -1787,8 +1816,8 @@ export const getSetupUsersByUnit = async (type, unit_id) =>
     },
   });
 
-  export const getSetupUsersByBuilding = async (type, building_id) =>
-  axiosInstance.get("users/user_dropdown.json",{
+export const getSetupUsersByBuilding = async (type, building_id) =>
+  axiosInstance.get("users/user_dropdown.json", {
     params: {
       token: token,
       type,
@@ -1801,8 +1830,8 @@ export const getSetupUsersByUnit = async (type, unit_id) =>
     },
   });
 
-   export const getSetupUsersByMemberType = async (type,building_id,ownership) =>
-  axiosInstance.get("users/user_dropdown.json",{
+export const getSetupUsersByMemberType = async (type, building_id, ownership) =>
+  axiosInstance.get("users/user_dropdown.json", {
     params: {
       token: token,
       type,
@@ -1839,7 +1868,7 @@ export const getUsersByID = async (id) =>
   axiosInstance.get(`/users.json`, {
     params: {
       token: token,
-      "q[id_eq]":id,
+      "q[id_eq]": id,
     },
   });
 
@@ -2132,7 +2161,7 @@ export const getPatrollings = async (params = {}) =>
   axiosInstance.get("/patrollings.json", {
     params: {
       token: token,
-      ...params
+      ...params,
     },
   });
 export const getPatrollingDetails = async (id) =>
@@ -2191,16 +2220,16 @@ export const postNewGoods = async (data) =>
       token: token,
     },
   });
-export const getStaff = async (per_page,page) =>
+export const getStaff = async (per_page, page) =>
   axiosInstance.get(`/staffs.json`, {
     params: {
       token: token,
-      per_page : per_page,
-      page : page
+      per_page: per_page,
+      page: page,
     },
   });
 
- export const getPendingStaff = async () =>
+export const getPendingStaff = async () =>
   axiosInstance.get("/staffs.json", {
     params: {
       token: token,
@@ -2227,7 +2256,7 @@ export const postStaff = async (data) =>
     },
   });
 
-export const putStaffApproval = async (id,data) =>
+export const putStaffApproval = async (id, data) =>
   axiosInstance.put(`/staffs/${id}.json`, data, {
     params: {
       token: token,
@@ -2279,12 +2308,12 @@ export const postEvents = async (data) =>
     },
   });
 
- //user tree event 
- export const getEventsCreatedByUserId = async (id) =>
+//user tree event
+export const getEventsCreatedByUserId = async (id) =>
   axiosInstance.get(`/events.json`, {
     params: {
       token: token,
-      "q[created_by_id_eq]":id,
+      "q[created_by_id_eq]": id,
     },
   });
 export const postGroups = async (data) =>
@@ -2595,7 +2624,7 @@ export const getBroadCastCreatedByUserId = async (id) =>
   axiosInstance.get("/notices.json", {
     params: {
       token: token,
-      "created_by_id":id
+      created_by_id: id,
       // token: "775d6ae27272741669a65456ea10cc56cd4cce2bb99287b6",
     },
   });
@@ -2923,13 +2952,17 @@ export const getServicesRoutineDetails = async (id) =>
       token: token,
     },
   });
-export const getExpectedVisitor = async (page = 1, perPage = 10, filters = {}) =>
+export const getExpectedVisitor = async (
+  page = 1,
+  perPage = 10,
+  filters = {}
+) =>
   axiosInstance.get(`/visitors.json`, {
     params: {
       token: token,
       page: page,
       per_page: perPage,
-      ...filters
+      ...filters,
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -2939,11 +2972,11 @@ export const getExpectedVisitor = async (page = 1, perPage = 10, filters = {}) =
   });
 
 //usertree visitors
-export const getAllVisitorsByUserId =async (id) =>
+export const getAllVisitorsByUserId = async (id) =>
   axiosInstance.get(`/visitors.json`, {
     params: {
       token: token,
-      "q[hosts_user_id_eq]" : id,
+      "q[hosts_user_id_eq]": id,
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -2974,7 +3007,7 @@ export const getPatrollingHistory = async (params = {}) =>
   axiosInstance.get(`/patrolling_histories.json`, {
     params: {
       token: token,
-      ...params
+      ...params,
     },
   });
 export const editRegisteredVehicleDetails = async (id, data) =>
@@ -3125,33 +3158,36 @@ export const getVisitorDetails = async (id) =>
     },
   });
 
-  export const getExportVisitors = async (startDate = null, endDate = null, filterType = null) => {
-    const params = {
-      token: token,
-    };
-    
-    // Add date parameters if provided
-    if (startDate && endDate) {
-      params.start_date = startDate;
-      params.end_date = endDate;
-    }
-    
-    // Add filter type parameter if provided
-    if (filterType) {
-      params.filter_type = filterType;
-    }
-    
-    return axiosInstance.get(`/visitors/export_visitors.xlsx`, {
-      params: params,
-      headers: {
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-      responseType: 'blob', // Important for Excel file download
-    });
+export const getExportVisitors = async (
+  startDate = null,
+  endDate = null,
+  filterType = null
+) => {
+  const params = {
+    token: token,
   };
-  
+
+  // Add date parameters if provided
+  if (startDate && endDate) {
+    params.start_date = startDate;
+    params.end_date = endDate;
+  }
+
+  // Add filter type parameter if provided
+  if (filterType) {
+    params.filter_type = filterType;
+  }
+
+  return axiosInstance.get(`/visitors/export_visitors.xlsx`, {
+    params: params,
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+    responseType: "blob", // Important for Excel file download
+  });
+};
 
 export const editVisitorDetails = async (id, data) =>
   axiosInstance.put(`/visitors/${id}.json`, data, {
