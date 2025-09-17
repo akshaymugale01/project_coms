@@ -6,13 +6,14 @@ import {
   updateStatusFitoutRequest,
   getSnagAnswer,
   getSnagAnswersByResource,
+  getFitoutStatusSetup,
 } from "../../api";
+import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
 import {
   ArrowLeft,
   Building2,
   Calendar,
-  CheckCircle,
   Edit,
   FileText,
   ImageIcon,
@@ -35,12 +36,13 @@ const FitOutRequestDetails = () => {
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [fitoutStatuses, setFitoutStatuses] = useState([]);
   const [openDialog, setOpenDialog] = useState(null);
   const [updating, setUpdating] = useState(false);
   const [loadingAnswers, setLoadingAnswers] = useState(true);
   const [answers, setAnswers] = useState("");
   const [formData, setFormData] = useState({
-    status: "approved",
+    status: "",
     comments: "",
   });
   const [checklistModal, setChecklistModal] = useState({
@@ -52,8 +54,18 @@ const FitOutRequestDetails = () => {
   const [submissionStatus, setSubmissionStatus] = useState({}); // Track which categories have submissions
 
   const [fitOutData, setFitOutData] = useState([]);
+  const [mainStatusDialog, setMainStatusDialog] = useState(false);
+  const [mainStatusFormData, setMainStatusFormData] = useState({
+    status: "",
+    comments: "",
+  });
+  const [updatingMainStatus, setUpdatingMainStatus] = useState(false);
 
   const navigate = useNavigate();
+
+  // Get user type and user id from local storage
+  const userType = getItemInLocalStorage("USERTYPE");
+  const userId = getItemInLocalStorage("UserId");
 
   // Function to check existing submissions for all categories
   const checkExistingSubmissions = async (categories) => {
@@ -98,6 +110,32 @@ const FitOutRequestDetails = () => {
       }
     };
     fetchRequest();
+
+    const fetchFitoutStatus = async () => {
+      try {
+        const resp = await getFitoutStatusSetup();
+        console.log("Fitout statuses response:", resp.data);
+
+        // Convert the response data to an array if it's an object
+        const statusArray = Array.isArray(resp.data)
+          ? resp.data
+          : Object.values(resp.data || {});
+
+        setFitoutStatuses(statusArray);
+
+        // Set default status to the first status if available
+        if (statusArray.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            status: statusArray[0].name || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching fitout statuses:", error);
+        toast.error("Failed to load statuses");
+      }
+    };
+    fetchFitoutStatus();
   }, [id]);
 
   const formatDate = (dateString) => {
@@ -124,6 +162,45 @@ const FitOutRequestDetails = () => {
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
+  const handleMainStatusUpdate = async () => {
+    if (!mainStatusFormData.comments.trim()) {
+      toast.error("Comments are required");
+      return;
+    }
+
+    setUpdatingMainStatus(true);
+    try {
+      // Prepare data for API call, include status_updated_by
+      const updateData = {
+        status: mainStatusFormData.status,
+        comments: mainStatusFormData.comments,
+        status_updated_by: userId,
+      };
+
+      // Call API to update main fitout request status
+      await updateStatusFitoutRequest(fitOutData.id, updateData);
+
+      // Update local state after successful API call
+      setFitOutData(prev => ({
+        ...prev,
+        status: mainStatusFormData.status
+      }));
+
+      toast.success(`Fitout request has been ${mainStatusFormData.status} successfully.`);
+      setMainStatusDialog(false);
+      // Reset form data after successful update
+      setMainStatusFormData({
+        status: fitoutStatuses.length > 0 ? fitoutStatuses[0].name : "",
+        comments: "",
+      });
+    } catch (error) {
+      console.error("Error updating main status:", error);
+      toast.error("Failed to update status. Please try again.");
+    } finally {
+      setUpdatingMainStatus(false);
+    }
+  };
+
   const handleStatusUpdate = async (categoryId) => {
     if (!formData.comments.trim()) {
       toast.error("Comments are required");
@@ -132,11 +209,12 @@ const FitOutRequestDetails = () => {
 
     setUpdating(true);
     try {
-      // Prepare data for API call
+      // Prepare data for API call, include updated_by_id
       const updateData = {
         category_id: categoryId,
         status: formData.status,
         comments: formData.comments,
+        updated_by_id: userId,
       };
 
       // Call API to update status
@@ -153,7 +231,11 @@ const FitOutRequestDetails = () => {
 
       toast.success(`Category has been ${formData.status} successfully.`);
       setOpenDialog(null);
-      setFormData({ status: "approved", comments: "" });
+      // Reset form data after successful update
+      setFormData({
+        status: fitoutStatuses.length > 0 ? fitoutStatuses[0].name : "",
+        comments: "",
+      });
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status. Please try again.");
@@ -285,14 +367,31 @@ const FitOutRequestDetails = () => {
                 </p>
               </div>
               <div className="text-right">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
-                    categories[0]?.status || "pending"
-                  )}`}
-                >
-                  <Clock className="h-4 w-4 mr-1" />
-                  {categories[0]?.status || "Pending"}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                      fitOutData.status  || "pending"
+                    )}`}
+                  >
+                    <Clock className="h-4 w-4 mr-1" />
+                    {fitOutData.status || "pending"}
+                  </span>
+                  {userType === "pms_admin" && (
+                    <button
+                      onClick={() => {
+                        setMainStatusDialog(true);
+                        setMainStatusFormData({
+                          status: fitOutData.status || (fitoutStatuses.length > 0 ? fitoutStatuses[0].name : ""),
+                          comments: fitOutData.comments || ""
+                        });
+                      }}
+                      className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 flex items-center"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Fitout Sttaus Status
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -418,15 +517,29 @@ const FitOutRequestDetails = () => {
                               >
                                 {category.status}
                               </span>
-                              {category.status === "pending" && (
+                              {/* Show Update Status button only for admin users */}
+                              {userType === "pms_admin" && (
                                 <button
-                                  onClick={() => setOpenDialog(category.id)}
+                                  onClick={() => {
+                                    setOpenDialog(category.id);
+                                    // Pre-select the current status when opening the modal
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      status:
+                                        category.status ||
+                                        (fitoutStatuses.length > 0
+                                          ? fitoutStatuses[0].name
+                                          : ""),
+                                      comments: category.comments || "",
+                                    }));
+                                  }}
                                   className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 flex items-center"
                                 >
                                   <Edit className="h-4 w-4 mr-1" />
                                   Update Status
                                 </button>
                               )}
+                              {/* )} */}
                             </div>
                           </div>
 
@@ -597,6 +710,132 @@ const FitOutRequestDetails = () => {
             </div>
           </div>
 
+          {/* Main Status Update Modal */}
+          {mainStatusDialog && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Update Fitout Request Status
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setMainStatusDialog(false);
+                      // Reset form data when closing modal
+                      setMainStatusFormData({
+                        status:
+                          fitoutStatuses.length > 0
+                            ? fitoutStatuses[0].name
+                            : "",
+                        comments: "",
+                      });
+                    }}
+                    disabled={updatingMainStatus}
+                    className={`${
+                      updatingMainStatus
+                        ? "text-gray-300 cursor-not-allowed"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    <XCircle className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Status Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <div className="space-y-2">
+                      {fitoutStatuses.map((status) => (
+                        <label key={status.id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name="mainStatus"
+                            value={status.name}
+                            checked={mainStatusFormData.status === status.name}
+                            onChange={(e) =>
+                              setMainStatusFormData({ ...mainStatusFormData, status: e.target.value })
+                            }
+                            className="mr-2"
+                          />
+                          <div 
+                            className="h-4 w-4 rounded mr-2" 
+                            style={{ backgroundColor: status.color_code || '#666' }}
+                          ></div>
+                          <span>{status.name}</span>
+                        </label>
+                      ))}
+                      
+                      {/* Fallback if no statuses are loaded */}
+                      {fitoutStatuses.length === 0 && (
+                        <div className="text-gray-500 text-sm">
+                          Loading statuses...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Comments */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Comments
+                    </label>
+                    <textarea
+                      value={mainStatusFormData.comments}
+                      onChange={(e) =>
+                        setMainStatusFormData({ ...mainStatusFormData, comments: e.target.value })
+                      }
+                      placeholder="Enter your comments..."
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows="3"
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end space-x-3 pt-2">
+                    <button
+                      onClick={() => {
+                        setMainStatusDialog(false);
+                        // Reset form data when canceling
+                        setMainStatusFormData({
+                          status:
+                            fitoutStatuses.length > 0
+                              ? fitoutStatuses[0].name
+                              : "",
+                          comments: "",
+                        });
+                      }}
+                      disabled={updatingMainStatus}
+                      className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                        updatingMainStatus
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleMainStatusUpdate}
+                      disabled={updatingMainStatus}
+                      className={`px-4 py-2 text-white rounded-lg flex items-center ${
+                        updatingMainStatus
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      }`}
+                    >
+                      {updatingMainStatus && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      )}
+                      {updatingMainStatus ? "Updating..." : "Update Status"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Status Update Modal */}
           {openDialog && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -606,7 +845,17 @@ const FitOutRequestDetails = () => {
                     Update Category Status
                   </h3>
                   <button
-                    onClick={() => setOpenDialog(null)}
+                    onClick={() => {
+                      setOpenDialog(null);
+                      // Reset form data when closing modal
+                      setFormData({
+                        status:
+                          fitoutStatuses.length > 0
+                            ? fitoutStatuses[0].name
+                            : "",
+                        comments: "",
+                      });
+                    }}
                     disabled={updating}
                     className={`${
                       updating
@@ -625,34 +874,37 @@ const FitOutRequestDetails = () => {
                       Status
                     </label>
                     <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="approved"
-                          checked={formData.status === "approved"}
-                          onChange={(e) =>
-                            setFormData({ ...formData, status: e.target.value })
-                          }
-                          className="mr-2"
-                        />
-                        <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                        <span>Approved</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="rejected"
-                          checked={formData.status === "rejected"}
-                          onChange={(e) =>
-                            setFormData({ ...formData, status: e.target.value })
-                          }
-                          className="mr-2"
-                        />
-                        <XCircle className="h-4 w-4 text-red-600 mr-2" />
-                        <span>Rejected</span>
-                      </label>
+                      {fitoutStatuses.map((status) => (
+                        <label key={status.id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name="status"
+                            value={status.name}
+                            checked={formData.status === status.name}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                status: e.target.value,
+                              })
+                            }
+                            className="mr-2"
+                          />
+                          <div
+                            className="h-4 w-4 rounded mr-2"
+                            style={{
+                              backgroundColor: status.color_code || "#666",
+                            }}
+                          ></div>
+                          <span>{status.name}</span>
+                        </label>
+                      ))}
+
+                      {/* Fallback if no statuses are loaded */}
+                      {fitoutStatuses.length === 0 && (
+                        <div className="text-gray-500 text-sm">
+                          Loading statuses...
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -675,7 +927,17 @@ const FitOutRequestDetails = () => {
                   {/* Action Buttons */}
                   <div className="flex justify-end space-x-3 pt-2">
                     <button
-                      onClick={() => setOpenDialog(null)}
+                      onClick={() => {
+                        setOpenDialog(null);
+                        // Reset form data when canceling
+                        setFormData({
+                          status:
+                            fitoutStatuses.length > 0
+                              ? fitoutStatuses[0].name
+                              : "",
+                          comments: "",
+                        });
+                      }}
                       disabled={updating}
                       className={`px-4 py-2 border border-gray-300 rounded-lg ${
                         updating
@@ -704,7 +966,7 @@ const FitOutRequestDetails = () => {
               </div>
             </div>
           )}
-
+          
           {/* Checklist Form Modal */}
           {checklistModal.open && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -734,7 +996,7 @@ const FitOutRequestDetails = () => {
                     />
                   ) : (
                     <ChecklistForm
-                      resourceId={checklistModal.categoryId}
+                      resourceId={String(checklistModal.categoryId)}
                       onClose={handleCloseChecklistForm}
                       isModal={true}
                       checklistId={getChecklistIdForCategory(

@@ -19,6 +19,7 @@ import {
   editHelpDeskCategoriesSetupDetails,
   getFitOutCategoriesSetup,
   getFitoutCategoriesSetupDetails,
+  getFitoutDocs,
   getFitoutSubCategoriesSetup,
   getFitoutSubCategoriesSetupDetails,
   getSetupUsers,
@@ -30,6 +31,7 @@ import TicketSubCategory from "../Setup/TicketSetup/TicketSubCategory";
 import SubCatPage from "./SubCatPage";
 import DataTable from "react-data-table-component";
 import toast from "react-hot-toast";
+import FitoutDocs from "./FitoutDocs";
 
 const CategoryPage = () => {
   const [page, setPage] = useState("Category");
@@ -149,12 +151,9 @@ const CategoryPage = () => {
     };
     const fetchSubCategory = async () => {
       try {
-        const subCatResp = await getFitoutSubCategoriesSetup();
+        const subCatResp = await getFitoutDocs();
         console.log("subcat", subCatResp);
-        const sortedSubCat = subCatResp.data.sort((a, b) => {
-          return new Date(b.created_at) - new Date(a.created_at);
-        });
-        setSubCategories(sortedSubCat);
+        setSubCategories(subCatResp.data);
       } catch (error) {
         console.log(error);
       }
@@ -282,7 +281,7 @@ const CategoryPage = () => {
     setIsCatEditModalOpen(true);
   };
   const openSubCatEditModal = async (id) => {
-    const fetchCatDetails = await getFitoutSubCategoriesSetupDetails(id);
+    const fetchCatDetails = await getFitoutDocs(id);
     console.log("fetch", fetchCatDetails);
     setSubCatId(id);
     // setFormData({
@@ -303,15 +302,40 @@ const CategoryPage = () => {
       sortable: true,
     },
     {
-      name: "Category Type",
-      selector: (row) => row.fitout_category_name,
-      sortable: true,
-    },
-    {
-      name: "Sub Category Type",
+      name: "Name",
       selector: (row) => row.name,
       sortable: true,
     },
+    {
+      name: "Documents",
+      cell: (row) =>
+        row.fitout_docs && row.fitout_docs.length > 0 ? (
+          <div className="flex flex-col gap-1">
+            {row.fitout_docs.map((doc, index) => (
+              <div key={index} className="flex gap-2">
+                <a
+                  href={domainPrefix + doc.document_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  View {index + 1}
+                </a>
+                <a
+                  href={domainPrefix + doc.document_url}
+                  download
+                  className="text-green-600 underline"
+                >
+                  Download
+                </a>
+              </div>
+            ))}
+          </div>
+        ) : (
+          "No File"
+        ),
+    },
+
     // {
     //   name: "Building",
     //   selector: (row) => row.Building,
@@ -348,7 +372,7 @@ const CategoryPage = () => {
     //       </button>
     //        <button>
     //         <FaTrash size={15} />
-    //       </button> 
+    //       </button>
     //     </div>
     //   ),
     // },
@@ -393,15 +417,15 @@ const CategoryPage = () => {
           >
             Category
           </h2>
-          {/* <h2
+          <h2
             className={`p-1 ${
-              page === "Sub Category" &&
+              page === "Documents" &&
               "bg-white font-medium text-blue-500 shadow-custom-all-sides"
             } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
-            onClick={() => setPage("Sub Category")}
+            onClick={() => setPage("Documents")}
           >
-            Sub Category
-          </h2> */}
+            Documents
+          </h2>
         </div>
       </div>
 
@@ -434,7 +458,7 @@ const CategoryPage = () => {
             />
           </div>
         )}
-        {page === "Sub Category" && (
+        {page === "Documents" && (
           <div>
             <div className="flex justify-end">
               <button
@@ -442,11 +466,11 @@ const CategoryPage = () => {
                 onClick={handleToggleCategoryPage1}
                 className="p-2 my-2 bg-blue-500 text-white rounded-md"
               >
-                Add SubCategory
+                Add Documents
               </button>
             </div>
             {showSubCategoryPage && (
-              <SubCatPage
+              <FitoutDocs
                 handleToggleCategoryPage1={handleToggleCategoryPage1}
                 setCAtAdded={setCatAdded}
               />
