@@ -577,7 +577,7 @@ const VisitorPage = () => {
     },
     {
       name: "Tower-Floor-Unit",
-      selector: (row) => row.hosts[0].unit_name,
+      selector: (row) => row.hosts[0]?.unit_name,
       sortable: true,
     },
     {
