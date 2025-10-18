@@ -6,6 +6,7 @@ import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteo
 import { FaBilibili, FaDiagramProject, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaTimeline } from 'react-icons/fa6';
 import { FcAbout } from 'react-icons/fc';
 import { ImTree } from "react-icons/im";
+import { GrSystem } from 'react-icons/gr';
 
 const SetupNavbar = () => {
   const themeColor = useSelector((state) => state.theme.color);
@@ -109,6 +110,12 @@ const SetupNavbar = () => {
           {feat.includes("setup_parking") && (
             <Link to="/admin/parking-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaCar /> Parking
+            </Link>
+          )}
+
+          {feat.includes('purchase_order') && (
+            <Link to={'/admin/sac-hsn-setup'} className='hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2'>
+            <GrSystem /> SAC/HSN Setup
             </Link>
           )}
 

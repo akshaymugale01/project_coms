@@ -764,6 +764,9 @@ import ModernParkingConfig from "./pages/Setup/ParkingSetupPages/ModernParkingCo
 import EditHotelSetup from "./pages/SubPages/EditHotelSetup.jsx";
 import UserSetupTree from "./pages/Setup/UserSetupTree.jsx";
 import UserSetupTreeView from "./pages/Setup/UserSetupTreeView.jsx";
+import AddMasters from "./pages/SubPages/AddMasters.jsx";
+import EditMasters from "./pages/SubPages/EditMaster.jsx";
+import MasterDetails from "./pages/SubPages/MasterDetails.jsx";
 
 // new admin hrms
 
@@ -1780,6 +1783,22 @@ function App() {
             }
           />
           <Route
+            path="/admin/edit-masters/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <EditMasters />
+              </ProtectedAdminRoutes>
+            }
+          />
+           <Route
+          path="/admin/master-details/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <MasterDetails />
+            </ProtectedAdminRoutes>
+          }
+        />
+          <Route
             path="/admin/stock-details/:id"
             element={
               <ProtectedAdminRoutes>
@@ -2073,7 +2092,6 @@ function App() {
             }
           />
           {/* Admin transport */}
-
           <Route
             path="/admin/transportation"
             element={
@@ -2419,6 +2437,16 @@ function App() {
             }
           />
 
+          {/* INventory */}
+          <Route
+            path="/admin/add-masters"
+            element={
+              <ProtectedAdminRoutes>
+                <AddMasters />
+              </ProtectedAdminRoutes>
+            }
+          />
+
           {/* employee meeting */}
           {/* <Route
             path="/meetings"
@@ -2555,7 +2583,7 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-           <Route
+          <Route
             path="/asset/edit-ppm/:id"
             element={
               <ProtectedAdminRoutes>
@@ -2583,14 +2611,8 @@ function App() {
             path="/admin/unit-configurations"
             element={<UnitConfigurations />}
           />
-          <Route
-            path="/admin/bookings"
-            element={<AdminBookings />}
-          />
-           <Route
-            path="/residential/bookings"
-            element={<MyBookings />}
-          />
+          <Route path="/admin/bookings" element={<AdminBookings />} />
+          <Route path="/residential/bookings" element={<MyBookings />} />
           <Route path="/fitout/setup" element={<FitOutSetup />} />
           <Route path="/fitout/setup/page" element={<FitOutSetup />} />
           <Route
@@ -3867,14 +3889,14 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-           <Route
-          path="/cam_bill/create-invoice-receipt/:id"
-          element={
-            <ProtectedAdminRoutes>
-              <CreateInvoiceReceipt />
-            </ProtectedAdminRoutes>
-          }
-        />
+          <Route
+            path="/cam_bill/create-invoice-receipt/:id"
+            element={
+              <ProtectedAdminRoutes>
+                <CreateInvoiceReceipt />
+              </ProtectedAdminRoutes>
+            }
+          />
           <Route
             path="/admin/billing-address"
             element={

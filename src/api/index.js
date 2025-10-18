@@ -1012,10 +1012,12 @@ export const postTicketAddItems = async (data) =>
 //       token: token,
 //     },
 //   });
-export const getInventory = async () =>
+export const getInventory = async (page = 1, perPage = 10) =>
   axiosInstance.get("/items.json", {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
     },
   });
 export const postInventory = async (data) =>
@@ -1174,6 +1176,38 @@ export const postGRN = async (data) =>
       token: token,
     },
   });
+  
+export const postHsn = async (data) =>
+  axiosInstance.post(`/hsns.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+export const getHsns = async (page = 1, perPage = 10) =>
+  axiosInstance.get(`/hsns.json`, {
+    params: {
+      token: token,
+      page: page,
+      per_page: perPage,
+    },
+  });
+
+// HSN details (show)
+export const getHsnDetails = async (id) =>
+  axiosInstance.get(`/hsns/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+// HSN update
+export const editHsn = async (id, data) =>
+  axiosInstance.put(`/hsns/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
 export const postMasters = async (data) =>
   axiosInstance.post(`/inventories.json`, data, {
     params: {
@@ -1186,10 +1220,12 @@ export const ImportMasters = async (file) =>
       token: token,
     },
   });
-export const getMasters = async () =>
+export const getMasters = async (page = 1, perPage = 10) =>
   axiosInstance.get("/inventories.json", {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
     },
   });
 export const getMastersDetails = async (id) =>

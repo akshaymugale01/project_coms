@@ -1,19 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import { API_URL, getInventory, getMasters, getVibeBackground, ImportMasters } from "../api";
 import Table from "../components/table/Table";
 import { BiEdit } from "react-icons/bi";
-import { FiDelete } from "react-icons/fi";
-import { MdDeleteForever } from "react-icons/md";
 import AssetNav from "../components/navbars/AssetNav";
 import Navbar from "../components/Navbar";
 import { getItemInLocalStorage } from "../utils/localStorage";
 import GRN from "./GRN";
 import GDN from "./GDN";
 import { BsEye } from "react-icons/bs";
-import * as XLSX from "xlsx";
-import { useSelector } from "react-redux";
 import FileInputBox from "../containers/Inputs/FileInputBox";
 
 const Inventory = () => {
@@ -22,38 +18,58 @@ const Inventory = () => {
   const [searchText, setSearchText] = useState("")
   const [filteredData, setFilteredData] = useState([])
   const [page, setPage] = useState("Masters");
+  // Masters pagination state
+  const [mastersPage, setMastersPage] = useState(1);
+  const [mastersPerPage, setMastersPerPage] = useState(10);
+  const [mastersTotal, setMastersTotal] = useState(0);
+  const [mastersLoading, setMastersLoading] = useState(false);
+  // Stocks pagination state
+  const [stocksPage, setStocksPage] = useState(1);
+  const [stocksPerPage, setStocksPerPage] = useState(10);
+  const [stocksTotal, setStocksTotal] = useState(0);
+  const [stocksLoading, setStocksLoading] = useState(false);
+  // Stocks: server-side pagination
   useEffect(() => {
-    const fetchInventory = async () => {
-     try {
-       const invResp = await getInventory();
-       const sortedInvData = invResp.data.sort((a, b) => {
-         
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
-       setStocks(sortedInvData);
-       setFilteredData(sortedInvData)
-       console.log(invResp);
-     } catch (error) {
-      console.log(error)
-     }
+    const fetchStocks = async () => {
+      setStocksLoading(true);
+      try {
+        const invResp = await getInventory(stocksPage, stocksPerPage);
+        const payload = invResp?.data || {};
+        const rows = Array.isArray(payload) ? payload : (payload?.items || payload?.data || []);
+        const total = payload?.total_count ?? rows.length;
+        const sorted = rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setStocks(sorted);
+        setFilteredData(sorted);
+        setStocksTotal(Number(total) || sorted.length || 0);
+      } catch (error) {
+        console.log(error)
+      } finally {
+        setStocksLoading(false);
+      }
     };
-    fetchInventory();
-  }, []);
+    fetchStocks();
+  }, [stocksPage, stocksPerPage]);
+
+  // Masters: server-side pagination
   useEffect(() => {
-    const fetchInventory = async () => {
-     try {
-       const invResp = await getMasters();
-       const sortedInvData = invResp.data.sort((a, b) => {
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
-       setMasters(sortedInvData);
-       console.log(invResp);
-     } catch (error) {
-      console.log(error)
-     }
+    const fetchMasters = async () => {
+      setMastersLoading(true);
+      try {
+        const invResp = await getMasters(mastersPage, mastersPerPage);
+        const payload = invResp?.data || {};
+        const rows = Array.isArray(payload) ? payload : (payload?.inventories || payload?.data || []);
+        const total = payload?.total_count ?? rows.length;
+        const sorted = rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setMasters(sorted);
+        setMastersTotal(Number(total) || sorted.length || 0);
+      } catch (error) {
+        console.log(error)
+      } finally {
+        setMastersLoading(false);
+      }
     };
-    fetchInventory();
-  }, []);
+    fetchMasters();
+  }, [mastersPage, mastersPerPage]);
 
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
@@ -70,6 +86,41 @@ const Inventory = () => {
   const handleFileChange = (files) => {
     setSelectedFiles(files);
   };
+  const fetchMasters = useCallback(async () => {
+    setMastersLoading(true);
+    try {
+      const invResp = await getMasters(mastersPage, mastersPerPage);
+      const payload = invResp?.data || {};
+      const rows = Array.isArray(payload) ? payload : (payload?.inventories || payload?.data || []);
+      const total = payload?.total_count ?? rows.length;
+      const sorted = rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setMasters(sorted);
+      setMastersTotal(Number(total) || sorted.length || 0);
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setMastersLoading(false);
+    }
+  }, [mastersPage, mastersPerPage]);
+
+  const fetchStocks = useCallback(async () => {
+    setStocksLoading(true);
+    try {
+      const invResp = await getInventory(stocksPage, stocksPerPage);
+      const payload = invResp?.data || {};
+      const rows = Array.isArray(payload) ? payload : (payload?.items || payload?.data || []);
+      const total = payload?.total_count ?? rows.length;
+      const sorted = rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setStocks(sorted);
+      setFilteredData(sorted);
+      setStocksTotal(Number(total) || sorted.length || 0);
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setStocksLoading(false);
+    }
+  }, [stocksPage, stocksPerPage]);
+
   const handleImportMasters = async () => {
     if (selectedFiles.length === 0) {
       setImportStatus("No files selected.");
@@ -85,8 +136,7 @@ const Inventory = () => {
       const response = await ImportMasters(formData);
       if (response.status === 200) {
         setImportStatus("Masters successfully imported!");
-        // Optionally, refresh checklist data
-        await getChecklist();
+        await fetchMasters();
       } else {
         setImportStatus("Failed to import checklist.");
       }
@@ -114,10 +164,10 @@ const Inventory = () => {
     { name: "Code", selector: (row) => row.code, sortable: true },
     { name: "Serial number", selector: (row) => row.serial_number, sortable: true },
     { name: "Type", selector: (row) => row.inventory_type==1?"Spares":"Consumable", sortable: true },
-    { name: "Group", selector: (row) => row.asset_group, sortable: true },
-    { name: "Sub Group", selector: (row) => row.asset_sub_group, sortable: true },
+    { name: "Group", selector: (row) => row.group_name, sortable: true },
+    { name: "Sub Group", selector: (row) => row.sub_group_name, sortable: true },
     { name: "Category", selector: (row) => row.category, sortable: true },
-    { name: "Manufacturer", selector: (row) => row.Manufacturer, sortable: true },
+    // { name: "Manufacturer", selector: (row) => row.Manufacturer, sortable: true },
     { name: "Criticality", selector: (row) => row.criticality==1?"Critical":"Non-Critical", sortable: true },
     { name: "Unit", selector: (row) => row.unit, sortable: true },
     { name: "Cost", selector: (row) => row.cost, sortable: true },
@@ -131,7 +181,7 @@ const Inventory = () => {
       sortable: true,
     },
     // { name: "Rate", selector: (row) => row.rate, sortable: true },
-    { name: "Asset", selector: (row) => row.asset_id, sortable: true },
+    // { name: "Asset", selector: (row) => row.asset_id, sortable: true },
     { name: "Status", selector: (row) => (row.active==true)?"Active":"Inactive", sortable: true },
     { name: "Expiry Date", selector: (row) => dateFormat(row.expiry_date), sortable: true },
 
@@ -253,11 +303,8 @@ const Inventory = () => {
   ];
 
   const defaultImage = { index: 0, src: "" };
-  let selectedImageSrc = defaultImage.src;
-  let selectedImageIndex = defaultImage.index;
   const [selectedImage, setSelectedImage] = useState(defaultImage);
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  const Get_Background = async () => {
+  const Get_Background = useCallback(async () => {
     try {
       // const params = {
       //   user_id: user_id,
@@ -270,19 +317,16 @@ const Inventory = () => {
         console.log("sucess");
 
         console.log(data.data);
-        selectedImageSrc = API_URL + data.data.image;
-
-        selectedImageIndex = data.data.index;
+  const selectedImageSrc = API_URL + data.data.image;
+  const selectedImageIndex = data.data.index;
 
         // Now, you can use selectedImageSrc and selectedImageIndex as needed
         console.log("Received response:", data);
 
         // For example, update state or perform any other actions
         setSelectedImage(selectedImageSrc);
-        setSelectedIndex(selectedImageIndex);
         console.log("Received selectedImageSrc:", selectedImageSrc);
-        console.log("Received selectedImageIndex:", selectedImageIndex);
-        console.log(selectedImage);
+  console.log("Received selectedImageIndex:", selectedImageIndex);
         // dispatch(setBackground(selectedImageSrc));
       } else {
         console.log("Something went wrong");
@@ -290,41 +334,41 @@ const Inventory = () => {
     } catch (error) {
       console.error("Error:", error);
     }
-  };
+  }, []);
   useEffect(() => {
     // Call the function to get the background image when the component mounts
     Get_Background();
-  }, []);
+  }, [Get_Background]);
 
+  // Fetch lists when pagination changes
+  useEffect(() => {
+    fetchStocks();
+  }, [fetchStocks]);
+  useEffect(() => {
+    fetchMasters();
+  }, [fetchMasters]);
+
+  const activeList = useMemo(() => (page === "stocks" ? stocks : masters), [page, stocks, masters]);
+  // Keep filtered data in sync when switching tabs or new data arrives and no search query
+  useEffect(() => {
+    if (!searchText.trim()) {
+      setFilteredData(activeList);
+    }
+  }, [activeList, searchText]);
   const handleSearch = (event) => {
     const searchValue = event.target.value;
     setSearchText(searchValue);
     if (searchValue.trim() === "") {
-      setFilteredData(stocks);
+      setFilteredData(activeList);
     } else {
-      const filteredResults = stocks.filter((item) =>
-        item.name.toLowerCase().includes(searchValue.toLowerCase())
+      const filteredResults = activeList.filter((item) =>
+        (item.name || "").toLowerCase().includes(searchValue.toLowerCase())
       );
       setFilteredData(filteredResults);
-      console.log(filteredResults);
-      
     }
   };
 
-  const exportToExcel = () => {
-    const fileType =
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
-    const fileName = "Stocks Data.xlsx";
-    const ws = XLSX.utils.json_to_sheet(stocks);
-    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: fileType });
-    const url = URL.createObjectURL(data);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    link.click();
-  };
+  // const exportToExcel = () => { /* ... */ };
 const themeColor = "rgb(3 19 37)"
   return (
     <section
@@ -452,7 +496,18 @@ const themeColor = "rgb(3 19 37)"
       )}
               </div>
             </div>
-            <Table columns={columnsmaster} data={masters} />
+            <Table
+              columns={columnsmaster}
+              data={filteredData}
+              pagination
+              paginationServer
+              progressPending={mastersLoading}
+              paginationPerPage={mastersPerPage}
+              paginationTotalRows={mastersTotal}
+              currentPage={mastersPage}
+              onChangePage={(p) => setMastersPage(p)}
+              onChangeRowsPerPage={(newPerPage) => { setMastersPerPage(newPerPage); setMastersPage(1); }}
+            />
           </>
         )}
         {page === "stocks" && (
@@ -489,7 +544,18 @@ const themeColor = "rgb(3 19 37)"
     </button> */}
               </div>
             </div>
-            <Table columns={columns} data={filteredData} />
+            <Table
+              columns={columns}
+              data={filteredData}
+              pagination
+              paginationServer
+              progressPending={stocksLoading}
+              paginationPerPage={stocksPerPage}
+              paginationTotalRows={stocksTotal}
+              currentPage={stocksPage}
+              onChangePage={(p) => setStocksPage(p)}
+              onChangeRowsPerPage={(newPerPage) => { setStocksPerPage(newPerPage); setStocksPage(1); }}
+            />
           </>
         )}
         {page === "grn" && <GRN />}
