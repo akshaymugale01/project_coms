@@ -38,7 +38,7 @@ const themeColor = useSelector((state)=> state.theme.color)
   return (
     <section>
       <div className="m-2">
-        <h2 style={{background: themeColor}} className="text-center text-xl font-bold p-2 bg-black rounded-full text-white">
+        <h2 style={{background: 'rgb(3 19 35)'}} className="text-center text-xl font-bold p-2 bg-black rounded-full text-white">
            Stock Details
         </h2>
         <div className="flex justify-end my-2">

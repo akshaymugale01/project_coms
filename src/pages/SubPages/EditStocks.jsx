@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { editInventory, getAssetSubGroups, getInventoryDetails, getStockGroupsList, postInventory } from "../../api";
+import { useEffect, useState } from "react";
+import { editInventory, getAssetSubGroups, getInventoryDetails, getAssetGroups } from "../../api";
 import { useParams } from "react-router-dom";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
-import { useSelector } from "react-redux";
 
 const EditStocks = () => {
   const { id } = useParams();
@@ -45,56 +44,51 @@ const EditStocks = () => {
       }
     };
     fetchStockDetails();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
-    const fetchStockGroup = async () => {
-        try {
-        const stockResp = await getStockGroupsList();
-        console.log(stockResp.data);
-        setGroupList(stockResp.data);
-      
-    } catch (error) {
-      console.log(error);
-    }
-  }
-      fetchStockGroup();
+    const fetchAssetGroups = async () => {
+      try {
+        const resp = await getAssetGroups();
+        const payload = resp?.data;
+        const rows = Array.isArray(payload)
+          ? payload
+          : payload?.data || payload?.asset_groups || [];
+        setGroupList(rows);
+      } catch (error) {
+        console.log("Failed to fetch asset groups", error);
+      }
+    };
+    fetchAssetGroups();
   }, []);
 
 
 
   const handleChange = async (e) => {
-    const fetchSubGroups = async (groupID) => {
+    const { name, value, type } = e.target;
+    const loadSubGroups = async (groupID) => {
       try {
         const subGroupResponse = await getAssetSubGroups(groupID);
-        console.log(subGroupResponse);
-        setSubGroupList(
-          subGroupResponse.map((item) => ({
-            name: item.name,
-            id: item.id,
-          }))
-        );
-        console.log(subGroupResponse);
+        const list = Array.isArray(subGroupResponse)
+          ? subGroupResponse
+          : subGroupResponse?.data || subGroupResponse?.sub_groups || [];
+        setSubGroupList(list.map((item) => ({ name: item.name, id: item.id })));
       } catch (error) {
-        console.log(error);
+        console.log("Failed to fetch sub groups", error);
       }
     };
 
-    if (e.target.type === "select-one" && e.target.name === "group_id") {
-      const groupID = Number(e.target.value);
-      console.log("groupID:" + groupID);
-      await fetchSubGroups(groupID);
-
-      setFormData({
-        ...formData,
-        group_id: groupID,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
+    if (type === "select-one" && name === "group_id") {
+      const groupID = value ? Number(value) : "";
+      setFormData((prev) => ({ ...prev, group_id: groupID, sub_group_id: "" }));
+      setSubGroupList([]);
+      if (groupID && !Number.isNaN(groupID)) {
+        await loadSubGroups(groupID);
+      }
+      return;
     }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const siteId = getItemInLocalStorage("SITEID");
@@ -119,11 +113,10 @@ const EditStocks = () => {
       console.log(error)
     }
   };
-const themeColor= useSelector((state)=>state.theme.color )
   return (
     <section>
       <div className="m-2">
-        <h2 style={{background: themeColor}} className="text-center text-xl font-bold p-2 rounded-full text-white">
+        <h2 style={{background: 'rgb(3 19 35)'}} className="text-center text-xl font-bold p-2 rounded-full text-white">
           Edit Stock
         </h2>
         <div className="md:mx-20 my-5 mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg sm:shadow-xl">
@@ -181,7 +174,7 @@ const themeColor= useSelector((state)=>state.theme.color )
                   onChange={handleChange}
                   className="border p-1 px-4 border-gray-500 rounded-md"
                 >
-                  <option>Select Group</option>
+                  <option value="">Select Group</option>
                   {groupList.map((group) => (
                     <option value={group.id} key={group.id}>
                       {group.name}
@@ -198,8 +191,9 @@ const themeColor= useSelector((state)=>state.theme.color )
                   value={formData.sub_group_id}
                   onChange={handleChange}
                   className="border p-1 px-4 border-gray-500 rounded-md"
+                  disabled={!formData.group_id}
                 >
-                  <option>Select Sub Group</option>
+                  <option value="">Select Sub Group</option>
                   {subGroupList.map((subGroup) => (
                     <option value={subGroup.id} key={subGroup.id}>
                       {subGroup.name}
