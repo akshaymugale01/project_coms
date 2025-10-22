@@ -617,6 +617,13 @@ export const getGRN = async (page = 1, per_page = 10) =>
     },
   });
 
+export const getGRNDetails = async (id) =>
+  axiosInstance.get(`/grn_details/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
 export const postHelpDeskResolutionEscalationSetup = async (data) =>
   axiosInstance.post(`/pms/admin/create_escalation.json`, data, {
     params: {
@@ -2759,8 +2766,22 @@ export const postGDN = async (data) =>
       token: token,
     },
   });
-export const getGDN = async () =>
+export const getGDN = async (page = 1, per_page = 10) =>
   axiosInstance.get("/gdn_details.json", {
+    params: {
+      token: token,
+      page: page,
+      per_page: per_page,
+    },
+  });
+export const getGDNDetails = async (id) =>
+  axiosInstance.get(`/gdn_details/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const updateGDN = async (id, data) =>
+  axiosInstance.put(`/gdn_details/${id}.json`, data, {
     params: {
       token: token,
     },
@@ -5468,6 +5489,17 @@ export const getMyHRMSEmployeesAllData = async (orgId) => {
     throw error;
   }
 };
+
+// Alias for getting employees list
+export const getEmployees = async (orgId) => {
+  try {
+    return await getMyHRMSEmployees(orgId);
+  } catch (error) {
+    console.error("Error fetching employees via users API:", error);
+    throw error;
+  }
+};
+
 export const deleteHRMSEmployee = async (empId) => {
   try {
     const response = await HrmsAuth.delete(`/employee/${empId}/`, {

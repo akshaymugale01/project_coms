@@ -3325,7 +3325,7 @@ function App() {
           />
 
           <Route
-            path="/admin/gnd-detail/:id"
+            path="/admin/gdn-detail/:id"
             element={
               <ProtectedAdminRoutes>
                 <GdnViewDetails />

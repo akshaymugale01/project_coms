@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import Table from '../../../components/table/Table';
-import { getGDNDetails } from '../../../api';
+import { getGRNDetails } from '../../../api';
 import toast from 'react-hot-toast';
 
 const GdnViewDetails = () => {
@@ -13,7 +13,7 @@ const GdnViewDetails = () => {
         const fetchGDNDetails = async () => {
             try {
                 setLoading(true);
-                const response = await getGDNDetails(id);
+                const response = await getGRNDetails(id);
                 const data = response?.data?.gdn_detail || response?.data;
                 console.log("GDN Details:", data);
                 setGdnData(data);
