@@ -15,8 +15,8 @@ import Navbar from "../../components/Navbar";
 import toast from "react-hot-toast";
 
 const AddMatertialPR = () => {
-  const themeColor = useSelector((state) => state.theme.color);
-  const [showEntityList, setShowEntityList] = useState(false);
+  const themeColor = 'rgb(3 19 37)';
+  // const [showEntityList, setShowEntityList] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [stocks, setStocks] = useState([]);
@@ -65,8 +65,14 @@ const AddMatertialPR = () => {
   };
   useEffect(() => {
     const fetchStandardUnits = async () => {
-      const unitResp = await getStandardUnits();
-      setUnits(unitResp.data);
+      try {
+        const unitResp = await getStandardUnits();
+        const unitData = unitResp?.data || [];
+        setUnits(Array.isArray(unitData) ? unitData : []);
+      } catch (error) {
+        console.log(error);
+        setUnits([]);
+      }
     };
     fetchStandardUnits();
   }, []);
@@ -160,26 +166,40 @@ const AddMatertialPR = () => {
     const fetchSuppliers = async () => {
       try {
         const supplierResp = await getVendors();
-        setSuppliers(supplierResp.data);
+        const supplierData = supplierResp?.data || [];
+        // Normalize response - handle both array and wrapped payload
+        const normalizedSuppliers = Array.isArray(supplierData)
+          ? supplierData
+          : supplierData?.vendors || supplierData?.suppliers || [];
+        setSuppliers(normalizedSuppliers);
       } catch (error) {
         console.log(error);
+        setSuppliers([]);
       }
     };
     const fetchAddress = async () => {
       try {
         const addressResp = await getAllAddress();
-        setAddresses(addressResp.data);
+        const addressData = addressResp?.data || [];
+        setAddresses(Array.isArray(addressData) ? addressData : []);
       } catch (error) {
         console.log(error);
+        setAddresses([]);
       }
     };
     const fetchInventory = async () => {
       try {
         const inventoryResp = await getInventory();
         console.log(inventoryResp);
-        setStocks(inventoryResp.data);
+        const inventoryData = inventoryResp?.data?.items || [];
+        // Normalize response - handle both array and wrapped payload
+        const normalizedStocks = Array.isArray(inventoryData)
+          ? inventoryData
+          : inventoryData?.stocks || inventoryData?.inventory || [];
+        setStocks(normalizedStocks);
       } catch (error) {
         console.log(error);
+        setStocks([]);
       }
     };
     fetchAddress();
@@ -620,7 +640,7 @@ const AddMatertialPR = () => {
                           approved: !formData.approved,
                         })
                       } className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm cursor-pointer "/>
-                      <label  htmlFor="approved" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300 cursor-pointer"> Approved</label>
+                      <label  htmlFor="approved" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300 cursor-pointer"> Approved</label>
                   </div>
                 </div>
                 <div className="col-span-1">

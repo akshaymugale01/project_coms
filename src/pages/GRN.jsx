@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import { BiFilterAlt } from "react-icons/bi";
 import { IoMdAdd } from "react-icons/io";
@@ -11,22 +11,52 @@ import { getGRN } from "../api";
 function GRN() {
   const [filter, setFilter] = useState(false);
   const [grns, setGrns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [searchText, setSearchText] = useState("");
+
+  const fetchGRN = useCallback(async (currentPage = page, itemsPerPage = perPage) => {
+    try {
+      setLoading(true);
+      const resp = await getGRN(currentPage, itemsPerPage);
+      const grnData = resp?.data;
+      // Normalize response - handle both array and wrapped payload
+      const normalizedGrns = Array.isArray(grnData)
+        ? grnData
+        : grnData?.grn_details || grnData?.data || [];
+      
+      // Get total count for pagination
+      const totalCount = resp?.data?.total_count || resp?.total_count || normalizedGrns.length;
+      
+      setGrns(normalizedGrns);
+      setTotal(totalCount);
+      console.log("Fetched GRN data:", normalizedGrns);
+    } catch (error) {
+      console.log("Error fetching GRN:", error);
+      setGrns([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, perPage]);
 
   useEffect(() => {
-    const fetchGRN = async () => {
-      try {
-        const resp = await getGRN();
-        setGrns(resp.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchGRN();
-  }, []);
+    fetchGRN(page, perPage);
+  }, [page, perPage, fetchGRN]);
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handlePerRowsChange = (newPerPage, newPage) => {
+    setPerPage(newPerPage);
+    setPage(newPage);
+  };
   const column = [
     {
-      name: "view",
-
+      name: "View",
       cell: (row) => (
         <div className="flex items-center gap-4">
           <Link to={`/admin/grn-detail/${row.id}`}>
@@ -35,208 +65,84 @@ function GRN() {
         </div>
       ),
     },
-
-    { name: "Id", selector: (row) => row.Id, sortable: true },
-    { name: "Inventory", selector: (row) => row.Inventory, sortable: true },
-    { name: "Supplier", selector: (row) => row.Supplier, sortable: true },
+    { name: "ID", selector: (row) => row.id || "-", sortable: true },
+    { 
+      name: "Vendor", 
+      selector: (row) => row.vendor_name || row.vendor || "-", 
+      sortable: true 
+    },
     {
       name: "Invoice Number",
-      selector: (row) => row.invoice_number,
+      selector: (row) => row.invoice_number || "-",
       sortable: true,
     },
     {
-      name: "Reference No",
-      selector: (row) => row.ReferenceNo,
-      sortable: true,
-    },
-    { name: "P.O. Number", selector: (row) => row.PONumber, sortable: true },
-    {
-      name: "P.O Reference Number",
-      selector: (row) => row.POReferenceNumber,
+      name: "Invoice Date",
+      selector: (row) => row.invoice_date ? new Date(row.invoice_date).toLocaleDateString() : "-",
       sortable: true,
     },
     {
-      name: "Approved Status",
-      selector: (row) => row.ApprovedStatus,
-      sortable: true,
-    },
-    {
-      name: "Last Approved By",
-      selector: (row) => row.LastApprovedBy,
-      sortable: true,
-    },
-    { name: "PO Amount", selector: (row) => row.POAmount, sortable: true },
-    {
-      name: "Total GRN Amount",
-      selector: (row) => row.TotalGRNAmount,
-      sortable: true,
-    },
-    {
-      name: "Payable Amount",
-      selector: (row) => row.PayableAmount,
-      sortable: true,
-    },
-    {
-      name: "Retention Amount",
-      selector: (row) => row.RetentionAmount,
-      sortable: true,
-    },
-    { name: "TDS Amount", selector: (row) => row.TDSAmount, sortable: true },
-    { name: "QC Amount", selector: (row) => row.QCAmount, sortable: true },
-    {
-      name: "Invoice Date	",
-      selector: (row) => row.InvoiceDate,
+      name: "Posting Date",
+      selector: (row) => row.posting_date ? new Date(row.posting_date).toLocaleDateString() : "-",
       sortable: true,
     },
     {
       name: "Payment Mode",
-      selector: (row) => row.PaymentMode,
+      selector: (row) => row.payment_mode || "-",
       sortable: true,
     },
     {
-      name: "Other Expense",
-      selector: (row) => row.OtherExpense,
+      name: "Related To",
+      selector: (row) => row.related_to || "-",
       sortable: true,
     },
     {
-      name: "Loading Expense	",
-      selector: (row) => row.LoadingExpense,
+      name: "Invoice Amount",
+      selector: (row) => row.invoice_amount ? `₹${parseFloat(row.invoice_amount).toFixed(2)}` : "-",
+      sortable: true,
+    },
+    {
+      name: "Other Expenses",
+      selector: (row) => row.other_expenses ? `₹${parseFloat(row.other_expenses).toFixed(2)}` : "-",
+      sortable: true,
+    },
+    {
+      name: "Loading Expenses",
+      selector: (row) => row.loading_expenses ? `₹${parseFloat(row.loading_expenses).toFixed(2)}` : "-",
       sortable: true,
     },
     {
       name: "Adjustment Amount",
-      selector: (row) => row.AdjustmentAmount,
+      selector: (row) => row.adjustment_amount ? `₹${parseFloat(row.adjustment_amount).toFixed(2)}` : "-",
       sortable: true,
     },
     {
-      name: "Physical Invoice Sent to Accounts",
-      selector: (row) => row.PhysicalInvoiceSenttoAccounts,
+      name: "Status",
+      selector: (row) => row.status || "Pending",
       sortable: true,
+      cell: (row) => (
+        <span className={`px-2 py-1 rounded-full text-xs ${
+          row.status === "Approved" ? "bg-green-100 text-green-800" : 
+          row.status === "Rejected" ? "bg-red-100 text-red-800" : 
+          "bg-yellow-100 text-yellow-800"
+        }`}>
+          {row.status || "Pending"}
+        </span>
+      ),
     },
-    {
-      name: "Physical Invoice Received by Accounts",
-      selector: (row) => row.PhysicalInvoiceReceivedbyAccounts,
-      sortable: true,
+    { 
+      name: "Created On", 
+      selector: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString() : "-", 
+      sortable: true 
     },
-    { name: "Days Passed", selector: (row) => row.DaysPassed, sortable: true },
-    { name: "Amount Paid", selector: (row) => row.AmountPaid, sortable: true },
-    {
-      name: "Balance Amount",
-      selector: (row) => row.BalanceAmount,
-      sortable: true,
+    { 
+      name: "Created By", 
+      selector: (row) => row.created_by_name || row.created_by || "-", 
+      sortable: true 
     },
-    {
-      name: "Payment Status",
-      selector: (row) => row.PaymentStatus,
-      sortable: true,
-    },
-    { name: "Aging", selector: (row) => row.Aging, sortable: true },
-    { name: "Created On", selector: (row) => row.CreatedOn, sortable: true },
-    { name: "Created By", selector: (row) => row.CreatedBy, sortable: true },
   ];
 
-  const data = [
-    {
-      id: 1,
-      Id: 3386,
-      Inventory: "HI SPEE...",
-      Supplier: "Bharat Service Centre",
-      InvoiceNumber: "340",
-      ReferenceNo: "5000044129",
-      PONumber: "4500002676",
-      POReferenceNumber: " 12241",
-      ApprovedStatus: "Approved ",
-      LastApprovedBy: "SUSHMA PADALE ",
-      POAmount: " 90290.0",
-      TotalGRNAmount: "90290.0 ",
-      PayableAmount: "90290.0",
-      RetentionAmount: " 0.0",
-      TDSAmount: "0.0 ",
-      QCAmount: "0.0 ",
-      InvoiceDate: " 15/05/24",
-      PaymentMode: " ",
-      OtherExpense: " ",
-      LoadingExpense: " ",
-      AdjustmentAmount: "",
-      PhysicalInvoiceSenttoAccounts: "No",
-      PhysicalInvoiceReceivedbyAccounts: "No",
-      DaysPassed: "",
-      AmountPaid: "0.0",
-      BalanceAmount: "90290.0",
-      PaymentStatus: "Unpaid",
-      Aging: "7 Days",
-      CreatedOn: "24/ 05/2024",
-      CreatedBy: "TUSHAR BONDRE",
-      action: <BsEye />,
-    },
-    {
-      id: 2,
-      Id: 3360,
-      Inventory: "GREASE,...",
-      Supplier: "Mukesh Trading Company",
-      InvoiceNumber: "160",
-      ReferenceNo: "5000043707",
-      PONumber: "4500002529",
-      POReferenceNumber: " 12133",
-      ApprovedStatus: "Approved ",
-      LastApprovedBy: "SUSHMA PADALE ",
-      POAmount: " 82952.82	",
-      TotalGRNAmount: "82952.82 ",
-      PayableAmount: "12653.82",
-      RetentionAmount: " 0.0",
-      TDSAmount: "0.0 ",
-      QCAmount: "0.0 ",
-      InvoiceDate: " 14/05/24",
-      PaymentMode: " ",
-      OtherExpense: " ",
-      LoadingExpense: " ",
-      AdjustmentAmount: "70299.0",
-      PhysicalInvoiceSenttoAccounts: "No",
-      PhysicalInvoiceReceivedbyAccounts: "No",
-      DaysPassed: "",
-      AmountPaid: "0.0",
-      BalanceAmount: "82952.82",
-      PaymentStatus: "Unpaid",
-      Aging: "8 Days",
-      CreatedOn: "23/ 05/2024",
-      CreatedBy: "Aniruddha Mane",
-      action: <BsEye />,
-    },
-    {
-      id: 3,
-      Id: 3352,
-      Inventory: "DIGITAL...",
-      Supplier: "Pelican Telecom Private Limited",
-      InvoiceNumber: "J-0237",
-      ReferenceNo: "5000043664",
-      PONumber: "4500002470",
-      POReferenceNumber: " 12086",
-      ApprovedStatus: "Approved ",
-      LastApprovedBy: "SUSHMA PADALE ",
-      POAmount: "12744.0",
-      TotalGRNAmount: "12744.0",
-      PayableAmount: "12744.0",
-      RetentionAmount: " 0.0",
-      TDSAmount: "0.0 ",
-      QCAmount: "0.0 ",
-      InvoiceDate: " 06/05/24	",
-      PaymentMode: " ",
-      OtherExpense: " ",
-      LoadingExpense: " ",
-      AdjustmentAmount: "70299.0",
-      PhysicalInvoiceSenttoAccounts: "No",
-      PhysicalInvoiceReceivedbyAccounts: "No",
-      DaysPassed: "",
-      AmountPaid: "0.0",
-      BalanceAmount: "12744.0",
-      PaymentStatus: "Unpaid",
-      Aging: "9 Days",
-      CreatedOn: "22/ 05/2024",
-      CreatedBy: "SANDIP CHITTE",
-      action: <BsEye />,
-    },
-  ];
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = 'rgb(3 19 37)'
   return (
     <section className="flex">
       {/* <Navbar /> */}
@@ -275,7 +181,9 @@ function GRN() {
             <div>
               <input
                 type="text"
-                placeholder="search"
+                placeholder="Search by Invoice Number, Vendor, etc."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
                 className="border-2 p-2  border-gray-300 rounded-lg  w-96"
               />
             </div>
@@ -299,7 +207,37 @@ function GRN() {
             </div>
           </div>
         </div>
-        <Table columns={column} data={grns} isPagination={true} />
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-500">Loading GRN data...</p>
+          </div>
+        ) : grns.length === 0 ? (
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-500">No GRN records found</p>
+          </div>
+        ) : (
+          <Table 
+            columns={column} 
+            data={grns.filter((grn) => {
+              if (!searchText) return true;
+              const search = searchText.toLowerCase();
+              return (
+                grn.invoice_number?.toLowerCase().includes(search) ||
+                grn.vendor_name?.toLowerCase().includes(search) ||
+                grn.related_to?.toLowerCase().includes(search) ||
+                grn.payment_mode?.toLowerCase().includes(search)
+              );
+            })} 
+            isPagination={true}
+            pagination
+            paginationServer
+            paginationTotalRows={total}
+            onChangePage={handlePageChange}
+            onChangeRowsPerPage={handlePerRowsChange}
+            paginationPerPage={perPage}
+            paginationDefaultPage={page}
+          />
+        )}
       </div>
     </section>
   );

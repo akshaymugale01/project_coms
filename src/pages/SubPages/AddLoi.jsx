@@ -13,14 +13,14 @@ import {
 import toast from "react-hot-toast";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import LOIChanges from "./LOIChanges";
-import LOIProceed from "./LOIProceed";
+// import LOIProceed from "./LOIProceed"x;
 import LOIPOProceed from "./LOIPOProceed";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 const AddLoi = () => {
   const [scheduleFor, setScheduleFor] = useState("PO");
-  const themeColor = useSelector((state) => state.theme.color);
-  const [showEntityList, setShowEntityList] = useState(false);
+  const themeColor = "rgb(3 19 37)";
+  // const [showEntityList, setShowEntityList] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [units, setUnits] = useState([]);
@@ -49,15 +49,21 @@ const AddLoi = () => {
     deliveryAddress: "",
     terms: "",
     vendor_id: "",
-    attachments:[]
+    attachments: [],
   });
   console.log("formData", formData);
   console.log("activities", activities);
 
   useEffect(() => {
     const fetchStandardUnits = async () => {
-      const unitResp = await getStandardUnits();
-      setUnits(unitResp.data);
+      try {
+        const unitResp = await getStandardUnits();
+        const unitData = unitResp?.data || [];
+        setUnits(Array.isArray(unitData) ? unitData : []);
+      } catch (error) {
+        console.log(error);
+        setUnits([]);
+      }
     };
     fetchStandardUnits();
   }, []);
@@ -81,27 +87,34 @@ const AddLoi = () => {
   };
 
   useEffect(() => {
-    
     const fetchAllAddress = async () => {
       try {
         const addressResp = await getAllAddress();
-        setAddresses(addressResp.data);
+        const addressData = addressResp?.data || [];
+        setAddresses(Array.isArray(addressData) ? addressData : []);
         console.log(addressResp);
       } catch (error) {
         console.log(error);
+        setAddresses([]);
       }
     };
     const fetchInventory = async () => {
       try {
         const inventoryResp = await getInventory();
-        console.log(inventoryResp);
-        setStocks(inventoryResp.data);
+        console.log("STOCKS", inventoryResp);
+        const inventoryData = inventoryResp?.data?.items || [];
+        // Normalize response - handle both array and wrapped payload
+        const normalizedStocks = Array.isArray(inventoryData)
+          ? inventoryData
+          : inventoryData?.stocks || inventoryData?.inventory || [];
+        setStocks(normalizedStocks);
       } catch (error) {
         console.log(error);
+        setStocks([]);
       }
     };
     fetchAllAddress();
-    
+
     fetchInventory();
   }, []);
 
@@ -170,9 +183,9 @@ const AddLoi = () => {
       "loi_detail[delivery_address_id]",
       formData.deliveryAddress
     );
-    formData.attachments.forEach((file)=>{
-      sendData.append("attachfiles[]", file)
-    })
+    formData.attachments.forEach((file) => {
+      sendData.append("attachfiles[]", file);
+    });
     activities.forEach((item) => {
       sendData.append("loi_detail[loi_items][][item_id]", item.inventory);
       sendData.append("loi_detail[loi_items][][quantity]", item.quantity);
@@ -180,7 +193,7 @@ const AddLoi = () => {
       sendData.append("loi_detail[loi_items][][rate]", item.rate);
       sendData.append("loi_detail[loi_items][][amount]", item.Amount);
     });
-    
+
     try {
       const resp = await postLOI(sendData);
       navigate("/admin/purchase/loi");
@@ -191,7 +204,6 @@ const AddLoi = () => {
     }
   };
   const handleFileChange = (files, fieldName) => {
-    
     setFormData({
       ...formData,
       [fieldName]: files,
@@ -741,9 +753,13 @@ const AddLoi = () => {
                   ATTACHMENTS
                 </h3>
                 {/* <input type="file" /> */}
-                <FileInputBox  handleChange={(files) => handleFileChange(files, "attachments")}
-                fieldName={"attachments"}
-                isMulti={true} />
+                <FileInputBox
+                  handleChange={(files) =>
+                    handleFileChange(files, "attachments")
+                  }
+                  fieldName={"attachments"}
+                  isMulti={true}
+                />
                 <div className="sm:flex justify-center grid gap-2 my-5 ">
                   {/* <button
                     onClick={() => setIsModalOpen(true)}
