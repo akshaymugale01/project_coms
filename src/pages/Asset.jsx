@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import DataTable from "react-data-table-component";
 import { IoAddCircleOutline, IoFilterOutline } from "react-icons/io5";
 import { BsEye, BsFilterLeft } from "react-icons/bs";
@@ -267,12 +267,17 @@ const Asset = () => {
 
     try {
       const response = await getSiteSearchedAsset(searchValue);
+      const payload = response?.data;
+      const rows = payload?.site_assets || [];
+      const totalCount = payload?.total_count || 0;
 
-      setFilteredData(response.data.site_assets);
-      setTotal(response.data.total_count);
+      setFilteredData(rows);
+      setTotal(totalCount);
       console.log(response);
     } catch (error) {
       console.error("Error fetching search data:", error);
+      setFilteredData([]);
+      setTotal(0);
     }
   };
 
@@ -280,14 +285,19 @@ const Asset = () => {
     const fetchData = async () => {
       try {
         const response = await getPerPageSiteAsset(pageNo, perPage);
+        const payload = response?.data;
+        const rows = payload?.site_assets || [];
+        const totalCount = payload?.total_count || 0;
 
-        setFilteredData(response.data.site_assets);
-
-        setAssets(response.data.site_assets);
-        setTotal(response.data.total_count);
+        setFilteredData(rows);
+        setAssets(rows);
+        setTotal(totalCount);
         console.log(response);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setAssets([]);
+        setFilteredData([]);
+        setTotal(0);
       }
     };
     fetchData();
@@ -298,6 +308,8 @@ const Asset = () => {
     setPerPage(pageSize);
   };
 
+  // Export to Excel - currently not used but kept for future feature
+  // eslint-disable-next-line no-unused-vars
   const exportToExcel = () => {
     const mappedData = filteredData.map((asset) => ({
       "Asset Name": asset.name,
@@ -337,6 +349,8 @@ const Asset = () => {
     link.click();
   };
 
+  // Row selection handler - kept for future feature
+  // eslint-disable-next-line no-unused-vars
   const handleRowSelected = (state) => {
     setSelectedRows(state.selectedRows);
   };
@@ -404,8 +418,9 @@ const Asset = () => {
   let selectedImageSrc = defaultImage.src;
   let selectedImageIndex = defaultImage.index;
   const [selectedImage, setSelectedImage] = useState(defaultImage);
+  // eslint-disable-next-line no-unused-vars
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const Get_Background = async () => {
+  const Get_Background = useCallback(async () => {
     try {
       // const params = {
       //   user_id: user_id,
@@ -438,11 +453,11 @@ const Asset = () => {
     } catch (error) {
       console.error("Error:", error);
     }
-  };
+  }, []);
   useEffect(() => {
     // Call the function to get the background image when the component mounts
     Get_Background();
-  }, []);
+  }, [Get_Background]);
 
   console.log(uploadModal);
 

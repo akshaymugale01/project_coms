@@ -608,10 +608,12 @@ export const deleteHelpDeskCategorySetup = async (id) =>
       token: token,
     },
   });
-export const getGRN = async () =>
+export const getGRN = async (page = 1, per_page = 10) =>
   axiosInstance.get(`/grn_details.json`, {
     params: {
       token: token,
+      page: page,
+      per_page: per_page,
     },
   });
 

@@ -17,7 +17,7 @@ import Purchase from "../Purchase";
 const LOIPOTable = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = 'rgb(3 19 37)';
   const [loi, setLoi] = useState([]);
 
   useEffect(() => {

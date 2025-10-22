@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import FileInputBox from "../../containers/Inputs/FileInputBox";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import MultiSelect from "../AdminHrms/Components/MultiSelect";
 const AddSupplier = () => {
   const siteId = getItemInLocalStorage("SITEID");
   const [types, setTypes] = useState([]);
@@ -35,6 +36,7 @@ const AddSupplier = () => {
     vtype: "",
     type: "",
     category: "",
+    complianceApplicable: false,
     // firstanme: "abc",
     // lastname: "wer",
   });
@@ -84,7 +86,7 @@ const AddSupplier = () => {
   };
   const navigate = useNavigate();
   const handleSubmit = async () => {
-    if (!formData.company_name ) {
+    if (!formData.company_name) {
       return toast.error("Company Name is Required");
     }
     if (!formData.vendor_name) {
@@ -142,7 +144,23 @@ const AddSupplier = () => {
       toast.error("Error Adding New Supplier");
     }
   };
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = 'rgb(3 19 37)'
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [options, setOptions] = useState([
+    { label: "Child Labour Prohibition And Regulation Act 1986", value: "1" },
+    { label: "The payment of bonus Act, 1965", value: "2" },
+    { label: "Shops And Commercial Establishments Act", value: "3" },
+    { label: "The Professional Tax Act, 1975", value: "4" },
+  ]);
+
+  const handleSelect = (value) => {
+    if (selectedOptions.includes(value)) {
+      setSelectedOptions(selectedOptions.filter((option) => option !== value));
+    } else {
+      setSelectedOptions([...selectedOptions, value]);
+    }
+  };
+
   return (
     <section>
       <div className="m-2">
@@ -344,6 +362,36 @@ const AddSupplier = () => {
                 placeholder="Enter GST Number"
               />
             </div>
+            {/* <div className="flex items-center mt-5 gap-2">
+              <input
+                type="checkbox"
+                name=""
+                id=""
+                value={formData.complianceApplicable}
+                onChange={() =>
+                  setFormData({
+                    ...formData,
+                    complianceApplicable: !formData.complianceApplicable,
+                  })
+                }
+              />
+              <label htmlFor="" className="font-medium">
+                Compliance applicable :
+              </label>
+            </div> */}
+            {formData.complianceApplicable && (
+              <MultiSelect
+                title="Select Compliance Categories"
+                options={options}
+                selectedOptions={selectedOptions}
+                setSelectedOptions={setSelectedOptions}
+                handleSelect={handleSelect}
+                disabled={false} // Set to true if you want to disable the dropdown
+                setOptions={setOptions}
+                searchOptions={options} // Pass the original options for search filtering
+                compTitle="Select Compliance Categories" // Default title when no option is selected
+              />
+            )}
           </div>
           <h2 className="border-b text-center text-xl my-5 border-black mb-6 font-semibold">
             Address

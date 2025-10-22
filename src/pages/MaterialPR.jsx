@@ -15,7 +15,7 @@ import { Switch } from "antd";
 import Purchase from "./Purchase";
 //import Modal from "../containers/modals/Modal";
 const MaterialPR = () => {
-  const themeColor = useSelector((state) => state.theme.color);
+  const themeColor = 'rgb(3 19 37)';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loi, setLoi] = useState([]);
   const handleButtonClick = () => {
