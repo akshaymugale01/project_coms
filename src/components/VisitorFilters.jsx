@@ -1,51 +1,56 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { getVisitorPurposes, getVisitorHosts, getUnitsByUserId } from '../api';
+import { getVisitorPurposes, getBuildings, getFloors, getUnits, getSetupUsersByUnit } from '../api';
 import { FaFilter, FaTimes } from 'react-icons/fa';
 
 const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
   const [showFilters, setShowFilters] = useState(false);
-  const [purposes, setPurposes] = useState([]);
-  const [hosts, setHosts] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [floors, setFloors] = useState([]);
   const [units, setUnits] = useState([]);
+  const [hosts, setHosts] = useState([]);
+  const [purposes, setPurposes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingFloors, setLoadingFloors] = useState(false);
   const [loadingUnits, setLoadingUnits] = useState(false);
+  const [loadingHosts, setLoadingHosts] = useState(false);
   
   // Filter states
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
     mobile: '',
-    hostId: '',
+    buildingId: '',
+    floorId: '',
     unitId: '',
+    hostId: '',
     hostApproval: '',
     purpose: ''
   });
 
   useEffect(() => {
-    fetchFilterOptions();
+    fetchInitialData();
   }, []);
 
-  const fetchFilterOptions = async () => {
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
       
+      // Fetch buildings
+      const buildingsRes = await getBuildings();
+      if (buildingsRes?.data) {
+        setBuildings(Array.isArray(buildingsRes.data) ? buildingsRes.data : []);
+      }
+
       // Fetch purposes
       const purposesRes = await getVisitorPurposes();
       if (purposesRes?.data) {
         setPurposes(Array.isArray(purposesRes.data) ? purposesRes.data : []);
       }
-
-      // Fetch hosts
-      const hostsRes = await getVisitorHosts();
-      if (hostsRes?.data) {
-        const hostsList = Array.isArray(hostsRes.data) ? hostsRes.data : hostsRes.data.users || [];
-        setHosts(hostsList);
-      }
       
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching filter options:", error);
+      console.error("Error fetching initial data:", error);
       setLoading(false);
     }
   };
@@ -56,35 +61,91 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
       [field]: value
     }));
 
-    // When host changes, fetch units for that host and reset unit filter
-    if (field === 'hostId') {
+    // Building changed - fetch floors and reset dependent fields
+    if (field === 'buildingId') {
       setFilters(prev => ({
         ...prev,
-        hostId: value,
-        unitId: '' // Reset unit when host changes
+        buildingId: value,
+        floorId: '',
+        unitId: '',
+        hostId: ''
       }));
       
+      setFloors([]);
+      setUnits([]);
+      setHosts([]);
+      
       if (value) {
-        fetchUnitsByHost(value);
-      } else {
-        setUnits([]);
+        fetchFloorsByBuilding(value);
+      }
+    }
+
+    // Floor changed - fetch units and reset dependent fields
+    if (field === 'floorId') {
+      setFilters(prev => ({
+        ...prev,
+        floorId: value,
+        unitId: '',
+        hostId: ''
+      }));
+      
+      setUnits([]);
+      setHosts([]);
+      
+      if (value) {
+        fetchUnitsByFloor(value);
+      }
+    }
+
+    // Unit changed - fetch hosts and reset dependent fields
+    if (field === 'unitId') {
+      setFilters(prev => ({
+        ...prev,
+        unitId: value,
+        hostId: ''
+      }));
+      
+      setHosts([]);
+      
+      if (value) {
+        fetchHostsByUnit(value);
       }
     }
   };
 
-  const fetchUnitsByHost = async (userId) => {
+  const fetchFloorsByBuilding = async (buildingId) => {
+    try {
+      setLoadingFloors(true);
+      const floorsRes = await getFloors(buildingId);
+      console.log("Floors for building:", floorsRes);
+      
+      if (floorsRes?.data) {
+        const floorsList = Array.isArray(floorsRes.data) 
+          ? floorsRes.data 
+          : floorsRes.data.floors || [];
+        
+        setFloors(floorsList);
+      }
+      
+      setLoadingFloors(false);
+    } catch (error) {
+      console.error("Error fetching floors:", error);
+      setFloors([]);
+      setLoadingFloors(false);
+    }
+  };
+
+  const fetchUnitsByFloor = async (floorId) => {
     try {
       setLoadingUnits(true);
-      const unitsRes = await getUnitsByUserId(userId);
-      console.log("Units for user:", unitsRes);
+      const unitsRes = await getUnits(floorId);
+      console.log("Units for floor:", unitsRes);
       
       if (unitsRes?.data) {
-        // The API returns units directly or in a units array
         const unitsList = Array.isArray(unitsRes.data) 
           ? unitsRes.data 
           : unitsRes.data.units || [];
         
-        console.log("Extracted units:", unitsList);
         setUnits(unitsList);
       }
       
@@ -93,6 +154,29 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
       console.error("Error fetching units:", error);
       setUnits([]);
       setLoadingUnits(false);
+    }
+  };
+
+  const fetchHostsByUnit = async (unitId) => {
+    try {
+      setLoadingHosts(true);
+      // type should be 'users' to fetch users/hosts
+      const hostsRes = await getSetupUsersByUnit('users', unitId);
+      console.log("Hosts for unit:", hostsRes);
+      
+      if (hostsRes?.data) {
+        const hostsList = Array.isArray(hostsRes.data) 
+          ? hostsRes.data 
+          : hostsRes.data.users || [];
+        
+        setHosts(hostsList);
+      }
+      
+      setLoadingHosts(false);
+    } catch (error) {
+      console.error("Error fetching hosts:", error);
+      setHosts([]);
+      setLoadingHosts(false);
     }
   };
 
@@ -112,12 +196,20 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
       apiFilters['q[contact_no_cont]'] = filters.mobile;
     }
     
-    if (filters.hostId) {
-      apiFilters['q[hosts_user_id_eq]'] = filters.hostId;
+    if (filters.buildingId) {
+      apiFilters['q[hosts_unit_building_id_eq]'] = filters.buildingId;
+    }
+    
+    if (filters.floorId) {
+      apiFilters['q[hosts_unit_floor_id_eq]'] = filters.floorId;
     }
     
     if (filters.unitId) {
       apiFilters['q[hosts_unit_id_eq]'] = filters.unitId;
+    }
+    
+    if (filters.hostId) {
+      apiFilters['q[hosts_user_id_eq]'] = filters.hostId;
     }
     
     if (filters.hostApproval !== '') {
@@ -141,12 +233,16 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
       dateFrom: '',
       dateTo: '',
       mobile: '',
-      hostId: '',
+      buildingId: '',
+      floorId: '',
       unitId: '',
+      hostId: '',
       hostApproval: '',
       purpose: ''
     });
+    setFloors([]);
     setUnits([]);
+    setHosts([]);
     onResetFilters();
   };
 
@@ -192,7 +288,7 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
               {/* Date Range Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date Range
+                  Expected Date Range
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -227,27 +323,58 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
                 />
               </div>
 
-              {/* Host Filter */}
+              {/* Building Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Host
+                  Building
                 </label>
                 <select
-                  value={filters.hostId}
-                  onChange={(e) => handleFilterChange('hostId', e.target.value)}
+                  value={filters.buildingId}
+                  onChange={(e) => handleFilterChange('buildingId', e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                 >
-                  <option value="">All Hosts</option>
-                  {hosts.map((host) => (
-                    <option key={host.id} value={host.id}>
-                      {host.firstname} {host.lastname}
+                  <option value="">Select Building</option>
+                  {buildings.map((building) => (
+                    <option key={building.id} value={building.id}>
+                      {building.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Unit Filter - Only shown when a host is selected */}
-              {filters.hostId && (
+              {/* Floor Filter - Only shown when building is selected */}
+              {filters.buildingId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Floor
+                  </label>
+                  {loadingFloors ? (
+                    <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-500">
+                      Loading floors...
+                    </div>
+                  ) : (
+                    <select
+                      value={filters.floorId}
+                      onChange={(e) => handleFilterChange('floorId', e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      disabled={floors.length === 0}
+                    >
+                      <option value="">Select Floor</option>
+                      {floors.map((floor) => (
+                        <option key={floor.id} value={floor.id}>
+                          {floor.name || floor.floor_name || `Floor ${floor.id}`}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {!loadingFloors && floors.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">No floors found for this building</p>
+                  )}
+                </div>
+              )}
+
+              {/* Unit Filter - Only shown when floor is selected */}
+              {filters.floorId && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Unit
@@ -263,7 +390,7 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                       disabled={units.length === 0}
                     >
-                      <option value="">All Units</option>
+                      <option value="">Select Unit</option>
                       {units.map((unit) => (
                         <option key={unit.id} value={unit.id}>
                           {unit.name || unit.unit_name || unit.unit_number || `Unit ${unit.id}`}
@@ -272,7 +399,38 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
                     </select>
                   )}
                   {!loadingUnits && units.length === 0 && (
-                    <p className="text-xs text-gray-500 mt-1">No units found for this host</p>
+                    <p className="text-xs text-gray-500 mt-1">No units found for this floor</p>
+                  )}
+                </div>
+              )}
+
+              {/* Host Filter - Only shown when unit is selected */}
+              {filters.unitId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Host
+                  </label>
+                  {loadingHosts ? (
+                    <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-500">
+                      Loading hosts...
+                    </div>
+                  ) : (
+                    <select
+                      value={filters.hostId}
+                      onChange={(e) => handleFilterChange('hostId', e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      disabled={hosts.length === 0}
+                    >
+                      <option value="">Select Host</option>
+                      {hosts.map((host) => (
+                        <option key={host.id} value={host.id}>
+                          {host.good_name || `${host.firstname} ${host.lastname}` || host.email || `User ${host.id}`}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {!loadingHosts && hosts.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">No hosts found for this unit</p>
                   )}
                 </div>
               )}
@@ -292,28 +450,6 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
                   <option value="not_required">Not Required</option>
                 </select>
               </div>
-
-              {/* Purpose Filter */}
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Purpose
-                </label>
-                <select
-                  value={filters.purpose}
-                  onChange={(e) => handleFilterChange('purpose', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                >
-                  <option value="">All Purposes</option>
-                  {purposes.map((purpose) => (
-                    <option key={purpose.id} value={purpose.info_value || purpose.name}>
-                      {purpose.info_value || purpose.name}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-
-
-
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4 border-t">
