@@ -75,10 +75,67 @@ const SoftServiceHighCharts = () => {
     return {
       chart: {
         type: "pie",
+        backgroundColor: "transparent",
         borderRadius: 30,
       },
       title: {
         text: title,
+        style: { 
+          color: "#ffffff", 
+          fontSize: "18px",
+          fontWeight: "bold"
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        style: {
+          color: "#ffffff"
+        },
+        pointFormat: "{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)",
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: "pointer",
+          dataLabels: {
+            enabled: true,
+            format: "<b>{point.name}</b>: {point.y}",
+            style: { 
+              color: "#ffffff", 
+              fontSize: "13px",
+              fontWeight: "600",
+              textOutline: "2px contrast"
+            },
+            distance: 15
+          },
+          showInLegend: true,
+        },
+      },
+      legend: {
+        itemStyle: { 
+          color: "#e0e0e0",
+          fontSize: "13px",
+          fontWeight: "500"
+        },
+        itemHoverStyle: {
+          color: "#ffffff"
+        }
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            },
+            symbolStroke: "#ffffff"
+          }
+        }
       },
       series: [
         {
@@ -137,38 +194,93 @@ const SoftServiceHighCharts = () => {
     return {
       chart: {
         type: "bar",
+        backgroundColor: "transparent",
         borderRadius: 30,
       },
       title: {
         text: title,
+        style: { 
+          color: "#ffffff", 
+          fontSize: "18px",
+          fontWeight: "bold"
+        },
       },
       xAxis: {
         categories: Object.keys(sortedData),
         title: {
           text: null,
         },
+        labels: {
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "12px",
+            fontWeight: "500"
+          },
+        },
       },
       yAxis: {
         min: 0,
         title: {
           text: "Services",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "13px",
+            fontWeight: "600"
+          },
         },
         labels: {
           overflow: "justify",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "12px"
+          },
         },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#e0e0e0",
+          fontSize: "13px",
+          fontWeight: "500"
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        style: {
+          color: "#ffffff"
+        }
       },
       plotOptions: {
         bar: {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#ffffff",
+              textOutline: "none",
+              fontSize: "12px",
+              fontWeight: "600"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            },
+            symbolStroke: "#ffffff"
+          }
+        }
       },
       series: [
         {
@@ -188,20 +300,33 @@ const SoftServiceHighCharts = () => {
     return {
       chart: {
         type: "column",
+        backgroundColor: "transparent",
         borderRadius: 30,
       },
       title: {
         text: title,
+        style: { 
+          color: "#ffffff", 
+          fontSize: "18px",
+          fontWeight: "bold"
+        },
       },
       xAxis: {
         categories: TicketsType,
         title: {
           text: "Building",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "13px",
+            fontWeight: "600"
+          },
         },
         labels: {
-          rotation: 0, // Ensures the text is straight (no rotation)
+          rotation: 0,
           style: {
-            fontSize: "11px", // Adjust the font size for better readability
+            color: "#e0e0e0",
+            fontSize: "12px",
+            fontWeight: "500"
           },
         },
       },
@@ -209,20 +334,64 @@ const SoftServiceHighCharts = () => {
         min: 0,
         title: {
           text: "Services",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "13px",
+            fontWeight: "600"
+          },
         },
+        labels: {
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "12px"
+          },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#e0e0e0",
+          fontSize: "13px",
+          fontWeight: "500"
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        style: {
+          color: "#ffffff"
+        }
       },
       plotOptions: {
         column: {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#ffffff",
+              textOutline: "none",
+              fontSize: "12px",
+              fontWeight: "600"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            },
+            symbolStroke: "#ffffff"
+          }
+        }
       },
       series: [
         {
@@ -245,14 +414,16 @@ const SoftServiceHighCharts = () => {
     return {
       chart: {
         type: "column",
+        backgroundColor: "transparent",
         borderRadius: 30,
-        // scrollablePlotArea: {
-        //   minWidth: 700,
-        //   scrollPositionX: 1
-        // }
       },
       title: {
         text: title,
+        style: { 
+          color: "#ffffff", 
+          fontSize: "18px",
+          fontWeight: "bold"
+        },
       },
       max: 10,
       scrollbar: {
@@ -262,11 +433,18 @@ const SoftServiceHighCharts = () => {
         categories: floorTickets,
         title: {
           text: "Floors",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "13px",
+            fontWeight: "600"
+          },
         },
         labels: {
-          rotation: 0, // Ensures the text is straight (no rotation)
+          rotation: 0,
           style: {
-            fontSize: "12px", // Adjust the font size for better readability
+            color: "#e0e0e0",
+            fontSize: "12px",
+            fontWeight: "500"
           },
         },
       },
@@ -274,20 +452,64 @@ const SoftServiceHighCharts = () => {
         min: 0,
         title: {
           text: "Services",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "13px",
+            fontWeight: "600"
+          },
         },
+        labels: {
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "12px"
+          },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#e0e0e0",
+          fontSize: "13px",
+          fontWeight: "500"
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        style: {
+          color: "#ffffff"
+        }
       },
       plotOptions: {
         column: {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#ffffff",
+              textOutline: "none",
+              fontSize: "12px",
+              fontWeight: "600"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            },
+            symbolStroke: "#ffffff"
+          }
+        }
       },
       series: [
         {
@@ -299,34 +521,47 @@ const SoftServiceHighCharts = () => {
     };
   };
   const generateUnitColumnChartOptions = (title, data, order = "ascending") => {
-    const sortedData = sortData(data, order); // Sort the data
+    const sortedData = sortData(data, order);
     const unitTickets = Object.keys(sortedData);
     const ticketValues = Object.values(sortedData);
 
     return {
       chart: {
         type: "column",
+        backgroundColor: "transparent",
         borderRadius: 30,
         scrollablePlotArea: {
-          minWidth: unitTickets.length * 100, // Dynamically adjust scrollable area based on number of units
-          scrollPositionX: 0, // Start the scroll from the left
+          minWidth: unitTickets.length * 100,
+          scrollPositionX: 0,
         },
       },
       title: {
         text: title,
+        style: { 
+          color: "#ffffff", 
+          fontSize: "18px",
+          fontWeight: "bold"
+        },
       },
       xAxis: {
         categories: unitTickets,
         title: {
           text: "Units",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "13px",
+            fontWeight: "600"
+          },
         },
         scrollbar: {
-          enabled: unitTickets.length > 10, // Enable scrollbar if there are more than 10 units
+          enabled: unitTickets.length > 10,
         },
         labels: {
-          rotation: 0, // Ensures the text is straight (no rotation)
+          rotation: 0,
           style: {
-            fontSize: "12px", // Adjust the font size for better readability
+            color: "#e0e0e0",
+            fontSize: "12px",
+            fontWeight: "500"
           },
         },
       },
@@ -334,20 +569,64 @@ const SoftServiceHighCharts = () => {
         min: 0,
         title: {
           text: "Services",
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "13px",
+            fontWeight: "600"
+          },
         },
+        labels: {
+          style: { 
+            color: "#e0e0e0",
+            fontSize: "12px"
+          },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#e0e0e0",
+          fontSize: "13px",
+          fontWeight: "500"
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        style: {
+          color: "#ffffff"
+        }
       },
       plotOptions: {
         column: {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#ffffff",
+              textOutline: "none",
+              fontSize: "12px",
+              fontWeight: "600"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            },
+            symbolStroke: "#ffffff"
+          }
+        }
       },
       series: [
         {
@@ -361,11 +640,11 @@ const SoftServiceHighCharts = () => {
 
   return (
     <div>
-      <div className="grid md:grid-cols-2 mr-2  gap-2">
-        <div className=" shadow-custom-all-sides rounded-md">
+      <div className="grid md:grid-cols-2 mr-2 gap-2">
+        <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
           <div className="flex justify-end p-3">
             <button
-              className="rounded-md bg-gray-200 py-1 px-5"
+              className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
               onClick={handleSoftServiceDownload}
             >
               <FaDownload />
@@ -393,10 +672,10 @@ const SoftServiceHighCharts = () => {
           )}
         </div>
 
-        <div className="bg-white shadow-custom-all-sides rounded-md">
+        <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
           <div className="flex justify-end p-3">
             <button
-              className="rounded-md bg-gray-200 py-1 px-5"
+              className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
               onClick={handleSoftServiceDownload}
             >
               <FaDownload />
@@ -425,7 +704,7 @@ const SoftServiceHighCharts = () => {
           )}
         </div>
 
-        <div className="bg-white shadow-custom-all-sides rounded-md">
+        <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
           {ticketTypes ? (
             <HighchartsReact
               highcharts={Highcharts}
@@ -449,7 +728,7 @@ const SoftServiceHighCharts = () => {
           )}
         </div>
       </div>
-      <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
+      <div className="bg-gray-800 shadow-custom-all-sides rounded-md my-2 mr-2">
         {categoryData ? (
           <HighchartsReact
             highcharts={Highcharts}
@@ -472,10 +751,10 @@ const SoftServiceHighCharts = () => {
           </div>
         )}
       </div>
-      <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
+      <div className="bg-gray-800 shadow-custom-all-sides rounded-md my-2 mr-2">
         <div className="flex justify-end p-3">
           <button
-            className="rounded-md bg-gray-200 py-1 px-5"
+            className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
             onClick={handleSoftServiceDownload}
           >
             <FaDownload />
@@ -502,15 +781,15 @@ const SoftServiceHighCharts = () => {
           </div>
         )}
       </div>
-      <div className="flex justify-end p-3">
-        <button
-          className="rounded-md bg-gray-200 py-1 px-5"
-          onClick={handleSoftServiceDownload}
-        >
-          <FaDownload />
-        </button>
-      </div>
-      <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
+      <div className="bg-gray-800 shadow-custom-all-sides rounded-md my-2 mr-2">
+        <div className="flex justify-end p-3">
+          <button
+            className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
+            onClick={handleSoftServiceDownload}
+          >
+            <FaDownload />
+          </button>
+        </div>
         {unitTickets ? (
           <HighchartsReact
             highcharts={Highcharts}
