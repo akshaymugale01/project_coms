@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import { getServicesTaskList, getSoftServiceDownload} from "../api";
+import { getServicesTaskList, getSoftServiceDownload } from "../api";
 import { useSelector } from "react-redux";
 import { CirclesWithBar, DNA, ThreeDots } from "react-loader-spinner";
 import { FaDownload } from "react-icons/fa";
@@ -425,13 +425,17 @@ const SoftServiceHighCharts = () => {
           )}
         </div>
 
-        {/* <div className="bg-white shadow-custom-all-sides rounded-md">
-          {ticketTypes ? <HighchartsReact
-            highcharts={Highcharts}
-            options={generateColumnChartOptions("Tickets by Type", ticketTypes)}
+        <div className="bg-white shadow-custom-all-sides rounded-md">
+          {ticketTypes ? (
+            <HighchartsReact
+              highcharts={Highcharts}
+              options={generateColumnChartOptions(
+                "Tickets by Type",
+                ticketTypes
+              )}
               order="ascending"
-
-          /> : (
+            />
+          ) : (
             <div className="flex justify-center items-center h-full">
               <DNA
                 visible={true}
@@ -443,27 +447,31 @@ const SoftServiceHighCharts = () => {
               />
             </div>
           )}
-        </div> */}
+        </div>
       </div>
-      {/* <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
-          {categoryData ? <HighchartsReact
+      <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
+        {categoryData ? (
+          <HighchartsReact
             highcharts={Highcharts}
-            options={generateColumnChartOptions("Soft Services by Building", categoryData)}
-              order="ascending"
-
-          /> : (
-            <div className="flex justify-center items-center h-full">
-              <DNA
-                visible={true}
-                height="120"
-                width="120"
-                ariaLabel="dna-loading"
-                wrapperStyle={{}}
-                wrapperClass="dna-wrapper"
-              />
-            </div>
-          )}
-        </div> */}
+            options={generateColumnChartOptions(
+              "Soft Services by Building",
+              categoryData
+            )}
+            order="ascending"
+          />
+        ) : (
+          <div className="flex justify-center items-center h-full">
+            <DNA
+              visible={true}
+              height="120"
+              width="120"
+              ariaLabel="dna-loading"
+              wrapperStyle={{}}
+              wrapperClass="dna-wrapper"
+            />
+          </div>
+        )}
+      </div>
       <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
         <div className="flex justify-end p-3">
           <button
@@ -499,7 +507,7 @@ const SoftServiceHighCharts = () => {
           className="rounded-md bg-gray-200 py-1 px-5"
           onClick={handleSoftServiceDownload}
         >
-          <FaDownload  />
+          <FaDownload />
         </button>
       </div>
       <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">

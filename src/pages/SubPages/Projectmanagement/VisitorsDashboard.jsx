@@ -155,10 +155,10 @@ const VisitorsDashboard = () => {
 
   return (
     <div>
-      <div className="flex items-center gap-6 overflow-auto p-2 ">
-        <div className="bg-gradient-to-br from-blue-600 to-blue-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
-          <div className="flex gap-2 items-center">
-            <span> Total Visitors </span>
+      <div className="grid md:grid-cols-4 gap-5">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 shadow-custom-all-sides border py-2 px-5 rounded-md flex flex-col text-white text-sm font-medium h-32">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-xl">Total Visitors</h2>
             <button 
               onClick={openDownloadModal}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-full transition-all duration-200 hover:scale-110"
@@ -167,84 +167,70 @@ const VisitorsDashboard = () => {
               <FaDownload className="text-white" />
             </button>
           </div>
-          <span className="font-medium text-base text-white">
-            {totalTickets}
-          </span>{" "}
+          <div className="my-5 flex items-center justify-center">
+            <span className="text-3xl">{totalTickets}</span>
+          </div>
         </div>
-        <div className="bg-gradient-to-br from-gray-600 to-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
-          <div className="flex gap-2 items-center">
-            <span> Total In </span>
+        <div className="bg-gray-700 shadow-custom-all-sides border py-2 px-5 rounded-md flex flex-col text-white text-sm font-medium h-32">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-xl">Total In</h2>
             <button 
               onClick={() => handleGenericDownload("Total In")}
-              className="bg-orange-500 hover:bg-orange-600 p-1.5 rounded-full transition-all duration-200 hover:scale-110"
+              className="bg-orange-500 hover:bg-orange-600 p-2 rounded-full transition-all duration-200 hover:scale-110"
               title="Direct download"
             >
-              <FaDownload className="text-white text-xs" />
+              <FaDownload className="text-white" />
             </button>
           </div>
-          <span className="font-medium text-base text-white">
-            {totalIn}
-          </span>{" "}
+          <div className="my-5 flex items-center justify-center">
+            <span className="text-3xl">{totalIn}</span>
+          </div>
         </div>
-        <div className="bg-gradient-to-br from-gray-600 to-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
-          <div className="flex gap-2 items-center">
-            <span> Total Out </span>
+        <div className="bg-gray-700 shadow-custom-all-sides border py-2 px-5 rounded-md flex flex-col text-white text-sm font-medium h-32">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-xl">Total Out</h2>
             <button 
               onClick={() => handleGenericDownload("Total Out")}
-              className="bg-orange-500 hover:bg-orange-600 p-1.5 rounded-full transition-all duration-200 hover:scale-110"
+              className="bg-orange-500 hover:bg-orange-600 p-2 rounded-full transition-all duration-200 hover:scale-110"
               title="Direct download"
             >
-              <FaDownload className="text-white text-xs" />
+              <FaDownload className="text-white" />
             </button>
           </div>
-          <span className="font-medium text-base text-white">
-            {totalOut}
-          </span>{" "}
+          <div className="my-5 flex items-center justify-center">
+            <span className="text-3xl">{totalOut}</span>
+          </div>
         </div>
-        <div className="bg-gradient-to-br from-gray-600 to-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
-          <div className="flex gap-2 items-center">
-            <span> Today&apos;s In </span>
+        <div className="bg-gray-700 shadow-custom-all-sides border py-2 px-5 rounded-md flex flex-col text-white text-sm font-medium h-32">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-xl">Today&apos;s In</h2>
             <button 
               onClick={() => handleGenericDownload("Today's In")}
-              className="bg-orange-500 hover:bg-orange-600 p-1.5 rounded-full transition-all duration-200 hover:scale-110"
+              className="bg-orange-500 hover:bg-orange-600 p-2 rounded-full transition-all duration-200 hover:scale-110"
               title="Direct download"
             >
-              <FaDownload className="text-white text-xs" />
+              <FaDownload className="text-white" />
             </button>
           </div>
-          <span className="font-medium text-base text-white">
-            {todaysIn}
-          </span>{" "}
+          <div className="my-5 flex items-center justify-center">
+            <span className="text-3xl">{todaysIn}</span>
+          </div>
         </div>
-        <div className="bg-gradient-to-br from-gray-600 to-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
-          <div className="flex gap-2 items-center">
-            <span> Today&apos;s Out</span>
+        <div className="bg-gray-700 shadow-custom-all-sides border py-2 px-5 rounded-md flex flex-col text-white text-sm font-medium h-32">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium text-xl">Today&apos;s Out</h2>
             <button 
               onClick={() => handleGenericDownload("Today's Out")}
-              className="bg-orange-500 hover:bg-orange-600 p-1.5 rounded-full transition-all duration-200 hover:scale-110"
+              className="bg-orange-500 hover:bg-orange-600 p-2 rounded-full transition-all duration-200 hover:scale-110"
               title="Direct download"
             >
-              <FaDownload className="text-white text-xs" />
+              <FaDownload className="text-white" />
             </button>
           </div>
-          <span className="font-medium text-base text-white">
-            {todaysOut}
-          </span>{" "}
-        </div>
-        {/* {Object.entries(statusData).map(([key, value]) => (
-          <div
-            key={key}
-            className="bg-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium"
-          >
-            <div className="flex gap-2">
-              <span>{key} </span>
-              <button onClick={() => handleStatusDownload(key)}>
-                <FaDownload />
-              </button>
-            </div>
-            <span className="font-medium text-base text-white">{value}</span>
+          <div className="my-5 flex items-center justify-center">
+            <span className="text-3xl">{todaysOut}</span>
           </div>
-        ))} */}
+        </div>
       </div>
 
       {/* Download Options Modal */}

@@ -4,7 +4,7 @@ import {
   getStatusDownload,
   getTicketStatusDownload,
 } from "../../api";
-import { FaDownload } from "react-icons/fa";
+import { FaDownload, FaSpinner } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 const TicketDashboard = () => {
@@ -13,13 +13,16 @@ const TicketDashboard = () => {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTicketInfo = async (retry = 0) => {
       try {
+        setLoading(true);
         const ticketInfoResp = await getTicketDashboard();
         setTotalTickets(ticketInfoResp.data.total);
         setStatusData(ticketInfoResp.data.by_status);
+        setLoading(false);
         // console.log(ticketInfoResp);
       } catch (error) {
         if (retry < 1) {
@@ -29,6 +32,7 @@ const TicketDashboard = () => {
           }, 100);
         } else {
           console.error("Error fetching dashboard ticket  info:", error);
+          setLoading(false);
         }
       }
     };
@@ -107,12 +111,33 @@ const TicketDashboard = () => {
     setEndDate("");
   };
 
+  // Calculate metrics
+  const totalResolved = Object.entries(statusData)
+    .filter(([key]) => key.toLowerCase().includes('resolved') || key.toLowerCase().includes('closed') || key.toLowerCase().includes('complete'))
+    .reduce((sum, [, value]) => sum + value, 0);
+  
+  const totalPending = Object.entries(statusData)
+    .filter(([key]) => key.toLowerCase().includes('pending') || key.toLowerCase().includes('open') || key.toLowerCase().includes('new'))
+    .reduce((sum, [, value]) => sum + value, 0);
+
+  const totalInProgress = Object.entries(statusData)
+    .filter(([key]) => key.toLowerCase().includes('progress') || key.toLowerCase().includes('assigned'))
+    .reduce((sum, [, value]) => sum + value, 0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <FaSpinner className="animate-spin text-white text-4xl" />
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div className="flex items-center gap-6 overflow-auto p-2 ">
-        <div className="bg-gradient-to-br from-blue-600 to-blue-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium">
-          <div className="flex gap-2 items-center">
-            <span>Tickets Created </span>
+    <div className="space-y-5">{/* Summary Cards */}
+      <div className="grid md:grid-cols-4 gap-5">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Total Tickets</h3>
             <button
               onClick={handleDownloadClick}
               className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-full transition-all duration-200 hover:scale-110"
@@ -121,26 +146,53 @@ const TicketDashboard = () => {
               <FaDownload className="text-white" />
             </button>
           </div>
-          <span className="font-medium text-base text-white">
-            {totalTickets}
-          </span>{" "}
+          <p className="text-4xl font-bold my-2">{totalTickets}</p>
+          <p className="text-sm opacity-80">All tickets in system</p>
         </div>
+        <div className="bg-gradient-to-br from-green-600 to-green-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Resolved</h3>
+            <div className="text-3xl opacity-80">✓</div>
+          </div>
+          <p className="text-4xl font-bold my-2">{totalResolved}</p>
+          <p className="text-sm opacity-80">Successfully resolved</p>
+        </div>
+        <div className="bg-gradient-to-br from-orange-600 to-orange-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">In Progress</h3>
+            <div className="text-3xl opacity-80">⏳</div>
+          </div>
+          <p className="text-4xl font-bold my-2">{totalInProgress}</p>
+          <p className="text-sm opacity-80">Currently working on</p>
+        </div>
+        <div className="bg-gradient-to-br from-purple-600 to-purple-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Pending</h3>
+            <div className="text-3xl opacity-80">⏸</div>
+          </div>
+          <p className="text-4xl font-bold my-2">{totalPending}</p>
+          <p className="text-sm opacity-80">Awaiting action</p>
+        </div>
+      </div>
+
+      {/* Status Cards */}
+      <div className="grid md:grid-cols-4 gap-5">
         {Object.entries(statusData).map(([key, value]) => (
           <div
             key={key}
-            className="bg-gradient-to-br from-gray-600 to-gray-700 min-w-44 shadow-custom-all-sides p-4 rounded-md flex flex-col items-center text-white text-sm w-fit font-medium"
+            className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white"
           >
-            <div className="flex gap-2 items-center">
-              <span>{key} </span>
+            <div className="flex justify-between items-start mb-2">
+              <h2 className="font-medium text-base">{key}</h2>
               <button
                 onClick={() => handleStatusDownload(key)}
                 className="bg-orange-500 hover:bg-orange-600 p-1.5 rounded-full transition-all duration-200 hover:scale-110"
-                title="Direct download"
+                title="Download this status"
               >
                 <FaDownload className="text-white text-xs" />
               </button>
             </div>
-            <span className="font-medium text-base text-white">{value}</span>
+            <p className="text-3xl font-bold my-1">{value}</p>
           </div>
         ))}
       </div>

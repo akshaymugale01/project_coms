@@ -8909,3 +8909,25 @@ export const getComplaintMode = async () =>
       token: token,
     },
   });
+
+// Visitor filter options APIs
+export const getVisitorPurposes = async () =>
+  axiosInstance.get(`/generic_infos.json?q[info_type_eq]=VisitorPurpose`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getVisitorHosts = async () =>
+  axiosInstance.get(`/users.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const getUnitsByUserId = async (userId) =>
+  axiosInstance.get(`/units/user_units/${userId}`, {
+    params: {
+      token: token,
+    },
+  });
