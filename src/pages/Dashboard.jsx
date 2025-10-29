@@ -18,6 +18,14 @@ import { MdExpandLess, MdExpandMore } from "react-icons/md";
 import { FaBuilding } from "react-icons/fa";
 import AssetDashboard from "./SubPages/AssetDashboard";
 import VisitorsDashboard from "./SubPages/Projectmanagement/VisitorsDashboard";
+import VisitorsAnalyticsDashboard from "./SubPages/Projectmanagement/VisitorsAnalyticsDashboard";
+import ChecklistAnalyticsDashboard from "./SubPages/ChecklistAnalyticsDashboard";
+import TicketAnalyticsDashboard from "./SubPages/TicketAnalyticsDashboard";
+import AssetAnalyticsDashboard from "./SubPages/AssetAnalyticsDashboard";
+import CommunicationAnalyticsDashboard from "./SubPages/CommunicationAnalyticsDashboard";
+import HRMSDashboard from "./AdminHrms/HRMSDashboard";
+import OSRDashboard from "./OSR/OSRDashboard";
+import SkillGrowDashboard from "./SkillGrow/SkillGrowDashboard";
 const Dashboard = () => {
   const themeColor = useSelector((state) => state.theme.color);
   // const vibeUserId = getItemInLocalStorage("UserId");
@@ -189,36 +197,124 @@ const Dashboard = () => {
             )}
           </div>
         </header>
+        {/* Tickets Dashboard */}
         <div className="m-5">
-          <TicketDashboard />
-        </div>
-        <div className="m-5">
-          <VisitorsDashboard />
-        </div>
-        <div className="w-full flex mx-3 flex-col p-2  ">
-          <HighchartsComponent />
-        </div>
-        {feat.includes("soft_services") && (
-          <div className="w-full flex mx-3 flex-col p-2  ">
-            <h2 className="border-b-2 border-black font-medium mb-10">
-              Soft Services-part1
-            </h2>
-            <SoftServiceHighCharts />
+          <h2 className="text-white text-xl font-semibold mb-3">Tickets Dashboard</h2>
+          <div className="bg-gray-800 p-5 rounded-lg shadow-custom-all-sides">
+            <TicketDashboard />
           </div>
-        )}
-        {feat.includes("assets") && (
-          <div className="w-full flex flex-col p-2  ">
-            <h2 className="border-b-2 border-black font-medium mb-2">Asset</h2>
+        </div>
+
+        {/* Ticket Analytics Dashboard */}
+        {/* <div className="m-5">
+          <h2 className="text-white text-xl font-semibold mb-3">Ticket Analytics</h2>
+          <div className="bg-gray-900 p-5 rounded-lg shadow-custom-all-sides">
+            <TicketAnalyticsDashboard />
+          </div>
+        </div> */}
+
+           {/* Highcharts Component */}
+        <div className="m-5">
+          <h2 className="text-white text-xl font-semibold mb-3">Tickect Analytics</h2>
+          <div className="bg-gray-800 p-5 rounded-lg shadow-custom-all-sides">
+            <HighchartsComponent />
+          </div>
+        </div>
+        {/* Visitors Dashboard */}
+        <div className="m-5">
+          <h2 className="text-white text-xl font-semibold mb-3">Visitors Dashboard</h2>
+          <div className="bg-gray-800 p-5 rounded-lg shadow-custom-all-sides">
+            <VisitorsDashboard />
+          </div>
+        </div>
+
+        {/* Visitors Analytics Dashboard - Comprehensive Charts */}
+        <div className="m-5">
+          <h2 className="text-white text-xl font-semibold mb-3">Visitors Analytics</h2>
+          <div className="bg-gray-900 p-5 rounded-lg shadow-custom-all-sides">
+            <VisitorsAnalyticsDashboard />
+          </div>
+        </div>
+
+        {/* Checklist Analytics Dashboard */}
+        <div className="m-5">
+          <h2 className="text-white text-xl font-semibold mb-3">Checklist Analytics</h2>
+          <div className="bg-gray-900 p-5 rounded-lg shadow-custom-all-sides">
+            <ChecklistAnalyticsDashboard />
+          </div>
+        </div>
+
+        {/* Assets Dashboard - includes charts */}
+        {/* {feat.includes("assets") && (
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">Assets Dashboard</h2>
             <AssetDashboard />
+          </div>
+        )} */}
+
+        {/* Asset Analytics Dashboard */}
+        {feat.includes("assets") && (
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">Asset Analytics</h2>
+            <div className="bg-gray-900 p-5 rounded-lg shadow-custom-all-sides">
+              <AssetAnalyticsDashboard />
+            </div>
           </div>
         )}
 
+        {/* HRMS Dashboard - includes charts */}
+        {feat.includes("hrms") && (
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">HRMS Dashboard</h2>
+            <HRMSDashboard />
+          </div>
+        )}
+
+        {/* OSR Dashboard - includes info cards and tables */}
+        {feat.includes("osr") && (
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">OSR (On-Site Request)</h2>
+            <OSRDashboard />
+          </div>
+        )}
+
+        {/* SkillGrow Dashboard - includes charts and cards */}
+        {feat.includes("skill_grow") && (
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">SkillGrow Dashboard</h2>
+            <SkillGrowDashboard />
+          </div>
+        )}
+
+     
+
+        {/* Soft Services Dashboard */}
+        {feat.includes("soft_services") && (
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">Soft Services</h2>
+            <div className="bg-gray-800 p-5 rounded-lg shadow-custom-all-sides">
+              <SoftServiceHighCharts />
+            </div>
+          </div>
+        )}
+
+        {/* Communication Dashboard */}
+        {/* {feat.includes("communication") && (
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">Communication</h2>
+            <div className="bg-gray-800 p-5 rounded-lg shadow-custom-all-sides">
+              <CommunicationDashboard />
+            </div>
+          </div>
+        )} */}
+
+        {/* Communication Analytics Dashboard */}
         {feat.includes("communication") && (
-          <div className="w-full flex mx-3 flex-col p-2 mb-10 ">
-            <h2 className="border-b-2 border-black font-medium">
-              Communication
-            </h2>
-            <CommunicationDashboard />
+          <div className="m-5">
+            <h2 className="text-white text-xl font-semibold mb-3">Communication Analytics</h2>
+            <div className="bg-gray-900 p-5 rounded-lg shadow-custom-all-sides">
+              <CommunicationAnalyticsDashboard />
+            </div>
           </div>
         )}
       </div>

@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Passes from "../Passes";
 import Navbar from "../../components/Navbar";
 import Table from "../../components/table/Table";
+import VisitorFilters from "../../components/VisitorFilters";
 import {
   getAllVisitorLogs,
   getExpectedVisitor,
@@ -71,6 +72,22 @@ const VisitorPage = () => {
   const [logsPerPage, setLogsPerPage] = useState(10);
   const [logsTotalRows, setLogsTotalRows] = useState(0);
   const [logsTotalPages, setLogsTotalPages] = useState(1);
+  
+  // Filter states
+  const [appliedFilters, setAppliedFilters] = useState({});
+  
+  const handleApplyFilters = (filters) => {
+    console.log("Applying filters:", filters);
+    setAppliedFilters(filters);
+    setCurrentPage(1); // Reset to first page when applying filters
+  };
+
+  const handleResetFilters = () => {
+    console.log("Resetting filters");
+    setAppliedFilters({});
+    setCurrentPage(1); // Reset to first page when resetting filters
+  };
+  
   const handleClick = (visitorType) => {
     setSelectedVisitor(visitorType);
   };
@@ -162,7 +179,8 @@ const VisitorPage = () => {
         setLoading(true);
         
         // Prepare filters based on current page and visitor type
-        let filters = {};
+        let filters = { ...appliedFilters }; // Include applied filters from VisitorFilters component
+        
         if (page === "Visitor In") {
           filters['q[visitor_in_out_eq]'] = 'IN';
         } else if (page === "Visitor Out") {
@@ -326,7 +344,7 @@ const VisitorPage = () => {
     if (page === "all" || page === "Visitor In" || page === "Visitor Out") {
       fetchExpectedVisitor();
     }
-  }, [currentPage, perPage, page, selectedVisitor]); // Added selectedVisitor dependency
+  }, [currentPage, perPage, page, selectedVisitor, appliedFilters]); // Added appliedFilters dependency
 
   // Separate useEffect for History tab
   useEffect(() => {
@@ -1095,17 +1113,11 @@ const VisitorPage = () => {
                   &nbsp; <span>Unexpected visitor</span>
                 </span>
               </div>
-              {/* <div className="flex justify-end">
-                <Link
-                  to={"/admin/add-new-visitor"}
-                  style={{ background: themeColor }}
-                  className=" font-semibold  hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-                >
-                  <PiPlusCircle size={20} />
-                  Add New Visitor
-                </Link>
-              </div> */}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                <VisitorFilters 
+                  onApplyFilters={handleApplyFilters}
+                  onResetFilters={handleResetFilters}
+                />
                 <button
                   style={{ background: "rgb(3 19 37)" }}
                   className="font-semibold hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
@@ -1150,6 +1162,12 @@ const VisitorPage = () => {
                 >
                   &nbsp; <span>Unexpected visitor</span>
                 </span>
+              </div>
+              <div className="flex justify-end">
+                <VisitorFilters 
+                  onApplyFilters={handleApplyFilters}
+                  onResetFilters={handleResetFilters}
+                />
               </div>
             </div>
           )}
@@ -1224,6 +1242,13 @@ const VisitorPage = () => {
                   >
                     &nbsp; <span>Unexpected visitor</span>
                   </span>
+                </div>
+                
+                <div className="flex justify-end">
+                  <VisitorFilters 
+                    onApplyFilters={handleApplyFilters}
+                    onResetFilters={handleResetFilters}
+                  />
                 </div>
               </div>
               

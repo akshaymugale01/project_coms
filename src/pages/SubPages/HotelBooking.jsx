@@ -40,7 +40,7 @@ const HotelBooking = () => {
     "No cancellation policy available."
   );
   const [paymentMode, setPaymentMode] = useState("post");
-  const siteId = getItemInLocalStorage("SITEID");
+  const siteId = getItemInLocalStorage("SITEID") || "";
   const [memberTotalWithoutTax, setMemberTotalWithoutTax]= useState(0)
   const [guestTotalWithoutTax, setGuestTotalWithoutTax] = useState(0);
   const [tenantTotalWithoutTax, setTenantTotalWithoutTax] = useState(0);

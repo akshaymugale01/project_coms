@@ -196,13 +196,56 @@ const TicketHighCharts = () => {
     return {
       chart: {
         type: "pie",
+        backgroundColor: "transparent",
         borderRadius: 30,
       },
       title: {
         text: title,
+        style: { 
+          color: "#fff", 
+          fontSize: "16px",
+          fontWeight: "600"
+        },
+      },
+      tooltip: {
+        pointFormat: "{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)",
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: "pointer",
+          dataLabels: {
+            enabled: true,
+            format: "<b>{point.name}</b>: {point.y}",
+            style: { 
+              color: "#fff", 
+              fontSize: "12px",
+              textOutline: "none"
+            },
+          },
+          showInLegend: true,
+        },
+      },
+      legend: {
+        itemStyle: { 
+          color: "#fff",
+          fontSize: "12px"
+        },
       },
       exporting:{
         enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            }
+          }
+        }
       },
       series: [
         {
@@ -260,24 +303,51 @@ const TicketHighCharts = () => {
     return {
       chart: {
         type: "bar",
+        backgroundColor: "transparent",
         borderRadius: 30,
       },
       title: {
         text: title,
+        style: { 
+          color: "#fff", 
+          fontSize: "16px",
+          fontWeight: "600"
+        },
       },
       xAxis: {
         categories: Object.keys(sortedData),
         title: {
           text: null,
         },
+        labels: {
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
+        },
       },
       yAxis: {
         min: 0,
         title: {
           text: "Tickets",
+          style: { 
+            color: "#fff",
+            fontSize: "12px"
+          },
         },
         labels: {
           overflow: "justify",
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#fff",
+          fontSize: "12px"
         },
       },
       plotOptions: {
@@ -285,13 +355,30 @@ const TicketHighCharts = () => {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#fff",
+              textOutline: "none",
+              fontSize: "11px"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            }
+          }
+        }
       },
       series: [
         {
@@ -311,21 +398,54 @@ const TicketHighCharts = () => {
     return {
       chart: {
         type: "column",
+        backgroundColor: "transparent",
         borderRadius: 30,
       },
       title: {
         text: title,
+        style: { 
+          color: "#fff", 
+          fontSize: "16px",
+          fontWeight: "600"
+        },
       },
       xAxis: {
         categories: TicketsType,
         title: {
           text: "Ticket Types",
+          style: { 
+            color: "#fff",
+            fontSize: "12px"
+          },
+        },
+        labels: {
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
         },
       },
       yAxis: {
         min: 0,
         title: {
           text: "Tickets",
+          style: { 
+            color: "#fff",
+            fontSize: "12px"
+          },
+        },
+        labels: {
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#fff",
+          fontSize: "12px"
         },
       },
       plotOptions: {
@@ -333,13 +453,30 @@ const TicketHighCharts = () => {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#fff",
+              textOutline: "none",
+              fontSize: "11px"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            }
+          }
+        }
       },
       series: [
         {
@@ -362,14 +499,16 @@ const TicketHighCharts = () => {
     return {
       chart: {
         type: "column",
+        backgroundColor: "transparent",
         borderRadius: 30,
-        // scrollablePlotArea: {
-        //   minWidth: 700,
-        //   scrollPositionX: 1
-        // }
       },
       title: {
         text: title,
+        style: { 
+          color: "#fff", 
+          fontSize: "16px",
+          fontWeight: "600"
+        },
       },
       max: 10,
       scrollbar: {
@@ -379,12 +518,39 @@ const TicketHighCharts = () => {
         categories: floorTickets,
         title: {
           text: "Floors",
+          style: { 
+            color: "#fff",
+            fontSize: "12px"
+          },
+        },
+        labels: {
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
         },
       },
       yAxis: {
         min: 0,
         title: {
           text: "Tickets",
+          style: { 
+            color: "#fff",
+            fontSize: "12px"
+          },
+        },
+        labels: {
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#fff",
+          fontSize: "12px"
         },
       },
       plotOptions: {
@@ -392,13 +558,30 @@ const TicketHighCharts = () => {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#fff",
+              textOutline: "none",
+              fontSize: "11px"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            }
+          }
+        }
       },
       series: [
         {
@@ -417,6 +600,7 @@ const TicketHighCharts = () => {
     return {
       chart: {
         type: "column",
+        backgroundColor: "transparent",
         borderRadius: 30,
         scrollablePlotArea: {
           minWidth: 700,
@@ -425,6 +609,11 @@ const TicketHighCharts = () => {
       },
       title: {
         text: title,
+        style: { 
+          color: "#fff", 
+          fontSize: "16px",
+          fontWeight: "600"
+        },
       },
       max: 10,
       scrollbar: {
@@ -434,12 +623,39 @@ const TicketHighCharts = () => {
         categories: unitTickets,
         title: {
           text: " Units",
+          style: { 
+            color: "#fff",
+            fontSize: "12px"
+          },
+        },
+        labels: {
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
         },
       },
       yAxis: {
         min: 0,
         title: {
           text: "Tickets",
+          style: { 
+            color: "#fff",
+            fontSize: "12px"
+          },
+        },
+        labels: {
+          style: { 
+            color: "#fff",
+            fontSize: "11px"
+          },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      legend: {
+        itemStyle: { 
+          color: "#fff",
+          fontSize: "12px"
         },
       },
       plotOptions: {
@@ -447,13 +663,30 @@ const TicketHighCharts = () => {
           dataLabels: {
             enabled: true,
             formatter: function () {
-              return this.y; // Display the y value (data value) on the bar
+              return this.y;
             },
             style: {
-              textOutline: false, // Remove text outline (optional)
+              color: "#fff",
+              textOutline: "none",
+              fontSize: "11px"
             },
           },
         },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            }
+          }
+        }
       },
       series: [
         {
@@ -468,17 +701,18 @@ const TicketHighCharts = () => {
   return (
     <div>
       {/* Date Filter Section */}
-      <div className="bg-white shadow-custom-all-sides rounded-md p-4 mr-2 mb-4">
-        <div className="flex items-end justify-end gap-4">
+      {/* <div className="bg-white shadow-custom-all-sides rounded-md p-4 mr-2 mb-4"> */}
+        {/* <div className="flex items-end justify-end gap-4"> */}
           {/* {(startDate || endDate) && (
             // <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
             //   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
             //   <span>Filters Active</span>
             // </div>
           )} */}
-          <div className="flex flex-wrap items-end gap-3">
+
+          <div className="flex flex-wrap items-end gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-600">From:</label>
+              <label className="text-sm font-medium text-white/100">From:</label>
               <DatePicker
                 selected={startDate}
                 onChange={(date) => handleDateChange(date, "start")}
@@ -489,7 +723,7 @@ const TicketHighCharts = () => {
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-600">To:</label>
+              <label className="text-sm font-medium text-white/100">To:</label>
               <DatePicker
                 selected={endDate}
                 onChange={(date) => handleDateChange(date, "end")}
@@ -515,17 +749,17 @@ const TicketHighCharts = () => {
               Clear
             </button>
           </div>
-        </div>
-      </div>
+        {/* </div> */}
+      {/* // </div> */}
 
-      <div className="bg-white grid md:grid-cols-2 mr-2  gap-2">
-        <div className=" shadow-custom-all-sides rounded-md">
+      <div className="grid md:grid-cols-2 mr-2 gap-2">
+        <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
           <div className="flex justify-end p-3">
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
-                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-700 text-white hover:bg-gray-600"
               }`}
               // onClick={handleTicketStatusDownload}
               onClick={() => handleTicketStatusDownload("ticket-status-chart")}
@@ -559,13 +793,13 @@ const TicketHighCharts = () => {
           )}
         </div>
 
-        <div className="bg-white shadow-custom-all-sides rounded-md">
+        <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
           <div className="flex justify-end p-3">
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
-                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-700 text-white hover:bg-gray-600"
               }`}
               onClick={() =>
                 handleTicketStatusDownload("ticket-category-chart")
@@ -603,13 +837,13 @@ const TicketHighCharts = () => {
             </div>
           )}
         </div>
-        <div className="bg-white shadow-custom-all-sides rounded-md">
+        <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
           <div className="flex justify-end p-3">
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
-                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-700 text-white hover:bg-gray-600"
               }`}
               onClick={() => handleTicketStatusDownload("ticket-type-chart")}
               title={
@@ -645,13 +879,13 @@ const TicketHighCharts = () => {
             </div>
           )}
         </div>
-        <div className="bg-white shadow-custom-all-sides rounded-md">
+        <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
           <div className="flex justify-end p-3">
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
-                  ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-700 text-white hover:bg-gray-600"
               }`}
               onClick={() => handleTicketStatusDownload("ticket-floor-chart")}
               title={
@@ -687,13 +921,13 @@ const TicketHighCharts = () => {
           )}
         </div>
       </div>
-      <div className="bg-white shadow-custom-all-sides rounded-md my-2 mr-2">
+      <div className="bg-gray-800 shadow-custom-all-sides rounded-md my-2 mr-2">
         <div className="flex justify-end p-3">
           <button
             className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
               startDate || endDate
-                ? "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-700 text-white hover:bg-gray-600"
             }`}
             onClick={() => handleTicketStatusDownload("ticket-unit-chart")}
             title={
