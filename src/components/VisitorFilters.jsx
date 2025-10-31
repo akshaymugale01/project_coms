@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { getVisitorPurposes, getBuildings, getFloors, getUnits, getSetupUsersByUnit } from '../api';
+import { getVisitorPurposes, getBuildings, getFloors, getUnits, getSetupUsersByUnit, getSetupUsersByFloor, getSetupUsersByBuilding } from '../api';
 import { FaFilter, FaTimes } from 'react-icons/fa';
 
 const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
@@ -160,8 +160,23 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
   const fetchHostsByUnit = async (unitId) => {
     try {
       setLoadingHosts(true);
-      // type should be 'users' to fetch users/hosts
-      const hostsRes = await getSetupUsersByUnit('users', unitId);
+      // Determine which API to call based on available ids (unit > floor > building)
+      let hostsRes = null;
+      // prefer explicit unitId passed
+      if (unitId) {
+        hostsRes = await getSetupUsersByUnit('users', unitId);
+      } else if (filters.unitId) {
+        hostsRes = await getSetupUsersByUnit('users', filters.unitId);
+      } else if (filters.floorId) {
+        hostsRes = await getSetupUsersByFloor('users', filters.floorId);
+      } else if (filters.buildingId) {
+        hostsRes = await getSetupUsersByBuilding('users', filters.buildingId);
+      } else {
+        // nothing selected, clear hosts
+        setHosts([]);
+        setLoadingHosts(false);
+        return;
+      }
       console.log("Hosts for unit:", hostsRes);
       
       if (hostsRes?.data) {
@@ -196,20 +211,16 @@ const VisitorFilters = ({ onApplyFilters, onResetFilters }) => {
       apiFilters['q[contact_no_cont]'] = filters.mobile;
     }
     
-    if (filters.buildingId) {
-      apiFilters['q[hosts_unit_building_id_eq]'] = filters.buildingId;
-    }
-    
-    if (filters.floorId) {
-      apiFilters['q[hosts_unit_floor_id_eq]'] = filters.floorId;
-    }
-    
-    if (filters.unitId) {
-      apiFilters['q[hosts_unit_id_eq]'] = filters.unitId;
-    }
-    
+    // Use simple params depending on the most-specific selection
+    // Priority: host > unit > floor > building
     if (filters.hostId) {
-      apiFilters['q[hosts_user_id_eq]'] = filters.hostId;
+      apiFilters['host_id'] = filters.hostId;
+    } else if (filters.unitId) {
+      apiFilters['unit_id'] = filters.unitId;
+    } else if (filters.floorId) {
+      apiFilters['floor_id'] = filters.floorId;
+    } else if (filters.buildingId) {
+      apiFilters['building_id'] = filters.buildingId;
     }
     
     if (filters.hostApproval !== '') {
