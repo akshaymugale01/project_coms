@@ -28,6 +28,13 @@ const TicketHighCharts = () => {
   const [endDate, setEndDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const themeColor = useSelector((state) => state.theme.color);
+  
+  // Chart type states for each chart
+  const [statusChartType, setStatusChartType] = useState('pie');
+  const [categoryChartType, setCategoryChartType] = useState('bar');
+  const [typeChartType, setTypeChartType] = useState('column');
+  const [floorChartType, setFloorChartType] = useState('column');
+  const [unitChartType, setUnitChartType] = useState('column');
 
   // Format date for API call
   const formatDateForAPI = (date) => {
@@ -190,6 +197,243 @@ const TicketHighCharts = () => {
       order === "ascending" ? b - a : a - b
     );
     return Object.fromEntries(sortedEntries);
+  };
+
+  // Universal chart generator based on chart type
+  const generateChartOptions = (title, data, chartType, order = "ascending") => {
+    const sortedData = sortData(data, order);
+    const categories = Object.keys(sortedData);
+    const values = Object.values(sortedData);
+
+    const baseConfig = {
+      chart: {
+        type: chartType,
+        backgroundColor: "transparent",
+        borderRadius: 30,
+      },
+      title: {
+        text: title,
+        style: { 
+          color: "#fff", 
+          fontSize: "16px",
+          fontWeight: "600"
+        },
+      },
+      legend: {
+        itemStyle: { 
+          color: "#fff",
+          fontSize: "12px"
+        },
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              symbolStroke: "#ffffff",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            }
+          }
+        }
+      },
+    };
+
+    // Pie chart specific config
+    if (chartType === 'pie') {
+      return {
+        ...baseConfig,
+        tooltip: {
+          pointFormat: "{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)",
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          style: { color: "#fff" }
+        },
+        plotOptions: {
+          pie: {
+            allowPointSelect: true,
+            cursor: "pointer",
+            dataLabels: {
+              enabled: true,
+              format: "<b>{point.name}</b>: {point.y}",
+              style: { 
+                color: "#fff", 
+                fontSize: "12px",
+                textOutline: "none"
+              },
+            },
+            showInLegend: true,
+          },
+        },
+        series: [
+          {
+            name: title,
+            colorByPoint: true,
+            data: categories.map((key, index) => ({
+              name: key,
+              y: values[index],
+            })),
+          },
+        ],
+      };
+    }
+
+    // Line chart config
+    if (chartType === 'line') {
+      return {
+        ...baseConfig,
+        xAxis: {
+          categories: categories,
+          labels: {
+            style: { color: "#fff", fontSize: "11px" },
+          },
+        },
+        yAxis: {
+          min: 0,
+          title: {
+            text: "Count",
+            style: { color: "#fff", fontSize: "12px" },
+          },
+          labels: {
+            style: { color: "#fff", fontSize: "11px" },
+          },
+          gridLineColor: "rgba(255, 255, 255, 0.1)",
+        },
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          style: { color: "#fff" }
+        },
+        plotOptions: {
+          line: {
+            dataLabels: {
+              enabled: true,
+              style: {
+                color: "#fff",
+                textOutline: "none",
+                fontSize: "11px"
+              },
+            },
+            marker: {
+              enabled: true,
+              radius: 4
+            }
+          },
+        },
+        series: [
+          {
+            name: title,
+            data: values,
+            color: themeColor,
+          },
+        ],
+      };
+    }
+
+    // Area chart config
+    if (chartType === 'area') {
+      return {
+        ...baseConfig,
+        xAxis: {
+          categories: categories,
+          labels: {
+            style: { color: "#fff", fontSize: "11px" },
+          },
+        },
+        yAxis: {
+          min: 0,
+          title: {
+            text: "Count",
+            style: { color: "#fff", fontSize: "12px" },
+          },
+          labels: {
+            style: { color: "#fff", fontSize: "11px" },
+          },
+          gridLineColor: "rgba(255, 255, 255, 0.1)",
+        },
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          style: { color: "#fff" }
+        },
+        plotOptions: {
+          area: {
+            fillOpacity: 0.5,
+            dataLabels: {
+              enabled: true,
+              style: {
+                color: "#fff",
+                textOutline: "none",
+                fontSize: "11px"
+              },
+            },
+            marker: {
+              enabled: true,
+              radius: 4
+            }
+          },
+        },
+        series: [
+          {
+            name: title,
+            data: values,
+            color: themeColor,
+          },
+        ],
+      };
+    }
+
+    // Bar/Column chart config
+    return {
+      ...baseConfig,
+      xAxis: {
+        categories: categories,
+        title: {
+          text: null,
+        },
+        labels: {
+          style: { color: "#fff", fontSize: "11px" },
+        },
+      },
+      yAxis: {
+        min: 0,
+        title: {
+          text: "Count",
+          style: { color: "#fff", fontSize: "12px" },
+        },
+        labels: {
+          style: { color: "#fff", fontSize: "11px" },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        style: { color: "#fff" }
+      },
+      plotOptions: {
+        [chartType]: {
+          dataLabels: {
+            enabled: true,
+            formatter: function () {
+              return this.y;
+            },
+            style: {
+              color: "#fff",
+              textOutline: "none",
+              fontSize: "11px"
+            },
+          },
+        },
+      },
+      series: [
+        {
+          name: title,
+          data: values,
+          color: themeColor,
+        },
+      ],
+    };
   };
 
   const generatePieChartOptions = (title, data) => {
@@ -754,14 +998,24 @@ const TicketHighCharts = () => {
 
       <div className="grid md:grid-cols-2 mr-2 gap-2">
         <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
-          <div className="flex justify-end p-3">
+          <div className="flex justify-between items-center p-3">
+            <select
+              value={statusChartType}
+              onChange={(e) => setStatusChartType(e.target.value)}
+              className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+            >
+              <option value="pie">Pie</option>
+              <option value="column">Column</option>
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="area">Area</option>
+            </select>
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "bg-gray-700 text-white hover:bg-gray-600"
               }`}
-              // onClick={handleTicketStatusDownload}
               onClick={() => handleTicketStatusDownload("ticket-status-chart")}
               title={
                 startDate || endDate
@@ -776,7 +1030,7 @@ const TicketHighCharts = () => {
           {statusData && Object.keys(statusData).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
-              options={generatePieChartOptions("Tickets by Status", statusData)}
+              options={generateChartOptions("Tickets by Status", statusData, statusChartType)}
               containerProps={{ id: "ticket-status-chart" }}
             />
           ) : (
@@ -794,7 +1048,18 @@ const TicketHighCharts = () => {
         </div>
 
         <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
-          <div className="flex justify-end p-3">
+          <div className="flex justify-between items-center p-3">
+            <select
+              value={categoryChartType}
+              onChange={(e) => setCategoryChartType(e.target.value)}
+              className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+            >
+              <option value="pie">Pie</option>
+              <option value="column">Column</option>
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="area">Area</option>
+            </select>
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
@@ -817,12 +1082,13 @@ const TicketHighCharts = () => {
           {categoryData && Object.keys(categoryData).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
-              options={generateBarChartOptions(
+              options={generateChartOptions(
                 "Tickets by Category",
-                categoryData
+                categoryData,
+                categoryChartType,
+                "descending"
               )}
               containerProps={{ id: "ticket-category-chart" }}
-              order="descending"
             />
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -838,7 +1104,18 @@ const TicketHighCharts = () => {
           )}
         </div>
         <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
-          <div className="flex justify-end p-3">
+          <div className="flex justify-between items-center p-3">
+            <select
+              value={typeChartType}
+              onChange={(e) => setTypeChartType(e.target.value)}
+              className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+            >
+              <option value="pie">Pie</option>
+              <option value="column">Column</option>
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="area">Area</option>
+            </select>
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
@@ -859,12 +1136,13 @@ const TicketHighCharts = () => {
           {ticketTypes && Object.keys(ticketTypes).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
-              options={generateColumnChartOptions(
+              options={generateChartOptions(
                 "Tickets by Type",
-                ticketTypes
+                ticketTypes,
+                typeChartType,
+                "ascending"
               )}
               containerProps={{ id: "ticket-type-chart" }}
-              order="ascending"
             />
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -880,7 +1158,18 @@ const TicketHighCharts = () => {
           )}
         </div>
         <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
-          <div className="flex justify-end p-3">
+          <div className="flex justify-between items-center p-3">
+            <select
+              value={floorChartType}
+              onChange={(e) => setFloorChartType(e.target.value)}
+              className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+            >
+              <option value="pie">Pie</option>
+              <option value="column">Column</option>
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="area">Area</option>
+            </select>
             <button
               className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
                 startDate || endDate
@@ -901,9 +1190,10 @@ const TicketHighCharts = () => {
           {floorTickets && Object.keys(floorTickets).length > 0 && !loading ? (
             <HighchartsReact
               highcharts={Highcharts}
-              options={generateFloorColumnChartOptions(
+              options={generateChartOptions(
                 "Tickets by Floor",
-                floorTickets
+                floorTickets,
+                floorChartType
               )}
               containerProps={{ id: "ticket-floor-chart" }}
             />
@@ -922,7 +1212,18 @@ const TicketHighCharts = () => {
         </div>
       </div>
       <div className="bg-gray-800 shadow-custom-all-sides rounded-md my-2 mr-2">
-        <div className="flex justify-end p-3">
+        <div className="flex justify-between items-center p-3">
+          <select
+            value={unitChartType}
+            onChange={(e) => setUnitChartType(e.target.value)}
+            className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+          >
+            <option value="pie">Pie</option>
+            <option value="column">Column</option>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="area">Area</option>
+          </select>
           <button
             className={`rounded-md py-1 px-5 flex items-center gap-2 text-sm font-medium transition-colors ${
               startDate || endDate
@@ -943,9 +1244,10 @@ const TicketHighCharts = () => {
         {unitTickets && Object.keys(unitTickets).length > 0 && !loading ? (
           <HighchartsReact
             highcharts={Highcharts}
-            options={generateUnitColumnChartOptions(
+            options={generateChartOptions(
               "Tickets by Unit",
-              unitTickets
+              unitTickets,
+              unitChartType
             )}
             containerProps={{ id: "ticket-unit-chart" }}
           />
