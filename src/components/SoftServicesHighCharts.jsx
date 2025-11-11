@@ -15,6 +15,12 @@ const SoftServiceHighCharts = () => {
   const [floorTickets, setFloorTickets] = useState({});
   const [unitTickets, setUnitTickets] = useState({});
   const themeColor = useSelector((state) => state.theme.color);
+  
+  // Chart type states
+  const [statusChartType, setStatusChartType] = useState('pie');
+  const [buildingChartType, setBuildingChartType] = useState('bar');
+  const [floorChartType, setFloorChartType] = useState('column');
+  const [unitChartType, setUnitChartType] = useState('column');
   useEffect(() => {
     const fetchTicketInfo = async () => {
       try {
@@ -63,6 +69,259 @@ const SoftServiceHighCharts = () => {
       order === "ascending" ? b - a : a - b
     );
     return Object.fromEntries(sortedEntries);
+  };
+
+  // Universal chart generator based on chart type
+  const generateChartOptions = (title, data, chartType, order = "ascending") => {
+    const sortedData = sortData(data, order);
+    const categories = Object.keys(sortedData);
+    const values = Object.values(sortedData);
+
+    const baseConfig = {
+      chart: {
+        type: chartType,
+        backgroundColor: "transparent",
+        borderRadius: 30,
+      },
+      title: {
+        text: title,
+        style: { 
+          color: "#ffffff", 
+          fontSize: "18px",
+          fontWeight: "bold"
+        },
+      },
+      legend: {
+        itemStyle: { 
+          color: "#e0e0e0",
+          fontSize: "13px",
+          fontWeight: "500"
+        },
+        itemHoverStyle: {
+          color: "#ffffff"
+        }
+      },
+      exporting:{
+        enabled:true,
+        buttons: {
+          contextButton: {
+            theme: {
+              fill: "transparent",
+              symbolStroke: "#ffffff",
+              states: {
+                hover: {
+                  fill: "#444"
+                }
+              }
+            }
+          }
+        }
+      },
+    };
+
+    // Pie chart specific config
+    if (chartType === 'pie') {
+      const colors = {
+        overdue: "#fbc02d",
+        complete: "#4caf50",
+        pending: "#f44336",
+      };
+
+      return {
+        ...baseConfig,
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          style: { color: "#ffffff" },
+          pointFormat: "{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)",
+        },
+        plotOptions: {
+          pie: {
+            allowPointSelect: true,
+            cursor: "pointer",
+            dataLabels: {
+              enabled: true,
+              format: "<b>{point.name}</b>: {point.y}",
+              style: { 
+                color: "#ffffff", 
+                fontSize: "13px",
+                fontWeight: "600",
+                textOutline: "2px contrast"
+              },
+              distance: 15
+            },
+            showInLegend: true,
+          },
+        },
+        series: [
+          {
+            name: title,
+            colorByPoint: true,
+            data: categories.map((key, index) => ({
+              name: key,
+              y: values[index],
+              color: colors[key.toLowerCase()] || "#607d8b",
+            })),
+          },
+        ],
+      };
+    }
+
+    // Line chart config
+    if (chartType === 'line') {
+      return {
+        ...baseConfig,
+        xAxis: {
+          categories: categories,
+          labels: {
+            style: { color: "#e0e0e0", fontSize: "12px" },
+          },
+        },
+        yAxis: {
+          min: 0,
+          title: {
+            text: "Count",
+            style: { color: "#ffffff", fontSize: "13px", fontWeight: "600" },
+          },
+          labels: {
+            style: { color: "#e0e0e0", fontSize: "12px" },
+          },
+          gridLineColor: "rgba(255, 255, 255, 0.1)",
+        },
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          style: { color: "#ffffff" }
+        },
+        plotOptions: {
+          line: {
+            dataLabels: {
+              enabled: true,
+              style: {
+                color: "#ffffff",
+                textOutline: "none",
+                fontSize: "12px",
+                fontWeight: "600"
+              },
+            },
+            marker: {
+              enabled: true,
+              radius: 4
+            }
+          },
+        },
+        series: [
+          {
+            name: title,
+            data: values,
+            color: themeColor,
+          },
+        ],
+      };
+    }
+
+    // Area chart config
+    if (chartType === 'area') {
+      return {
+        ...baseConfig,
+        xAxis: {
+          categories: categories,
+          labels: {
+            style: { color: "#e0e0e0", fontSize: "12px" },
+          },
+        },
+        yAxis: {
+          min: 0,
+          title: {
+            text: "Count",
+            style: { color: "#ffffff", fontSize: "13px", fontWeight: "600" },
+          },
+          labels: {
+            style: { color: "#e0e0e0", fontSize: "12px" },
+          },
+          gridLineColor: "rgba(255, 255, 255, 0.1)",
+        },
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          style: { color: "#ffffff" }
+        },
+        plotOptions: {
+          area: {
+            fillOpacity: 0.5,
+            dataLabels: {
+              enabled: true,
+              style: {
+                color: "#ffffff",
+                textOutline: "none",
+                fontSize: "12px",
+                fontWeight: "600"
+              },
+            },
+            marker: {
+              enabled: true,
+              radius: 4
+            }
+          },
+        },
+        series: [
+          {
+            name: title,
+            data: values,
+            color: themeColor,
+          },
+        ],
+      };
+    }
+
+    // Bar/Column chart config
+    return {
+      ...baseConfig,
+      xAxis: {
+        categories: categories,
+        title: {
+          text: null,
+        },
+        labels: {
+          style: { color: "#e0e0e0", fontSize: "12px" },
+        },
+      },
+      yAxis: {
+        min: 0,
+        title: {
+          text: "Count",
+          style: { color: "#ffffff", fontSize: "13px", fontWeight: "600" },
+        },
+        labels: {
+          style: { color: "#e0e0e0", fontSize: "12px" },
+        },
+        gridLineColor: "rgba(255, 255, 255, 0.1)",
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        style: { color: "#ffffff" }
+      },
+      plotOptions: {
+        [chartType]: {
+          dataLabels: {
+            enabled: true,
+            formatter: function () {
+              return this.y;
+            },
+            style: {
+              color: "#ffffff",
+              textOutline: "none",
+              fontSize: "12px",
+              fontWeight: "600"
+            },
+          },
+        },
+      },
+      series: [
+        {
+          name: title,
+          data: values,
+          color: themeColor,
+        },
+      ],
+    };
   };
 
   const generatePieChartOptions = (title, data) => {
@@ -642,7 +901,18 @@ const SoftServiceHighCharts = () => {
     <div>
       <div className="grid md:grid-cols-2 mr-2 gap-2">
         <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
-          <div className="flex justify-end p-3">
+          <div className="flex justify-between items-center p-3">
+            <select
+              value={statusChartType}
+              onChange={(e) => setStatusChartType(e.target.value)}
+              className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+            >
+              <option value="pie">Pie</option>
+              <option value="column">Column</option>
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="area">Area</option>
+            </select>
             <button
               className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
               onClick={handleSoftServiceDownload}
@@ -653,9 +923,10 @@ const SoftServiceHighCharts = () => {
           {statusData ? (
             <HighchartsReact
               highcharts={Highcharts}
-              options={generatePieChartOptions(
+              options={generateChartOptions(
                 "Soft Services by Status",
-                statusData
+                statusData,
+                statusChartType
               )}
             />
           ) : (
@@ -673,7 +944,18 @@ const SoftServiceHighCharts = () => {
         </div>
 
         <div className="bg-gray-800 shadow-custom-all-sides rounded-md">
-          <div className="flex justify-end p-3">
+          <div className="flex justify-between items-center p-3">
+            <select
+              value={buildingChartType}
+              onChange={(e) => setBuildingChartType(e.target.value)}
+              className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+            >
+              <option value="pie">Pie</option>
+              <option value="column">Column</option>
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="area">Area</option>
+            </select>
             <button
               className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
               onClick={handleSoftServiceDownload}
@@ -684,11 +966,12 @@ const SoftServiceHighCharts = () => {
           {categoryData ? (
             <HighchartsReact
               highcharts={Highcharts}
-              options={generateBarChartOptions(
+              options={generateChartOptions(
                 "Soft Services by Building",
-                categoryData
+                categoryData,
+                buildingChartType,
+                "descending"
               )}
-              order="descending"
             />
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -752,7 +1035,18 @@ const SoftServiceHighCharts = () => {
         )}
       </div>
       <div className="bg-gray-800 shadow-custom-all-sides rounded-md my-2 mr-2">
-        <div className="flex justify-end p-3">
+        <div className="flex justify-between items-center p-3">
+          <select
+            value={floorChartType}
+            onChange={(e) => setFloorChartType(e.target.value)}
+            className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+          >
+            <option value="pie">Pie</option>
+            <option value="column">Column</option>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="area">Area</option>
+          </select>
           <button
             className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
             onClick={handleSoftServiceDownload}
@@ -763,9 +1057,10 @@ const SoftServiceHighCharts = () => {
         {floorTickets ? (
           <HighchartsReact
             highcharts={Highcharts}
-            options={generateFloorColumnChartOptions(
+            options={generateChartOptions(
               "Soft Services by Floor",
-              floorTickets
+              floorTickets,
+              floorChartType
             )}
           />
         ) : (
@@ -782,7 +1077,18 @@ const SoftServiceHighCharts = () => {
         )}
       </div>
       <div className="bg-gray-800 shadow-custom-all-sides rounded-md my-2 mr-2">
-        <div className="flex justify-end p-3">
+        <div className="flex justify-between items-center p-3">
+          <select
+            value={unitChartType}
+            onChange={(e) => setUnitChartType(e.target.value)}
+            className="bg-gray-700 text-white rounded-md px-3 py-1.5 text-sm border border-gray-600 focus:outline-none focus:border-blue-500"
+          >
+            <option value="pie">Pie</option>
+            <option value="column">Column</option>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="area">Area</option>
+          </select>
           <button
             className="rounded-md bg-gray-700 text-white py-1 px-5 hover:bg-gray-600 flex items-center gap-2"
             onClick={handleSoftServiceDownload}
@@ -793,9 +1099,10 @@ const SoftServiceHighCharts = () => {
         {unitTickets ? (
           <HighchartsReact
             highcharts={Highcharts}
-            options={generateUnitColumnChartOptions(
+            options={generateChartOptions(
               "Soft Services by Unit",
-              unitTickets
+              unitTickets,
+              unitChartType
             )}
           />
         ) : (
