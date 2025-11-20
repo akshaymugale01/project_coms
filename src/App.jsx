@@ -768,6 +768,20 @@ import AddMasters from "./pages/SubPages/AddMasters.jsx";
 import EditMasters from "./pages/SubPages/EditMaster.jsx";
 import MasterDetails from "./pages/SubPages/MasterDetails.jsx";
 
+// import AccountingDashboard from "./pages/Accounting/AccountingDashboard";
+// // Accounting Module Imports
+// import {
+//   AccountingDashboard,
+//   Invoices,
+//   CreateInvoice,
+//   Ledgers,
+//   JournalEntries,
+//   CreateJournalEntry,
+//   Reports,
+//   AccountingSettings
+// } from "./pages/Accounting";
+// import TrialBalanceReport from "./pages/Accounting/Reports/TrialBalanceReport.jsx";
+
 // new admin hrms
 
 function App() {
@@ -7178,6 +7192,75 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+            {/* Accounting Module Routes */}
+        
+        {/* <Route
+          path="/accounting/invoices"
+          element={
+            <ProtectedAdminRoutes>
+              <Invoices />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/accounting/invoices/create"
+          element={
+            <ProtectedAdminRoutes>
+              <CreateInvoice />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/accounting/ledgers"
+          element={
+            <ProtectedAdminRoutes>
+              <Ledgers />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/accounting/journal-entries"
+          element={
+            <ProtectedAdminRoutes>
+              <JournalEntries />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/accounting/journal-entries/create"
+          element={
+            <ProtectedAdminRoutes>
+              <CreateJournalEntry />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/accounting/reports"
+          element={
+            <ProtectedAdminRoutes>
+              <Reports />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/accounting/reports/trial-balance"
+          element={
+            <ProtectedAdminRoutes>
+              <TrialBalanceReport />
+            </ProtectedAdminRoutes>
+          }
+        />
+        <Route
+          path="/accounting/settings"
+          element={
+            <ProtectedAdminRoutes>
+              <AccountingSettings />
+            </ProtectedAdminRoutes>
+          }
+        />  */}
+
+
         </Routes>
         <Footer />
       </Router>

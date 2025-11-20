@@ -120,19 +120,16 @@ const Patrolling = () => {
         let patrollings = [];
         let totalCount = 0;
         
-        // First check if the response has top-level pagination properties (current format)
         if (patrollingResp.patrollings && Array.isArray(patrollingResp.patrollings)) {
           patrollings = patrollingResp.patrollings;
           totalCount = patrollingResp.total_count || patrollings.length;
           console.log('Using top-level patrollings format for schedule');
           console.log('Extracted total_count:', totalCount);
         }
-        // Check if response has the expected pagination structure nested in data
         else if (patrollingResp.data) {
           const responseData = patrollingResp.data;
           console.log('Schedule response data keys:', Object.keys(responseData));
           
-          // Option 1: Server-side pagination format (current_page, patrollings, total_count, total_pages)
           if (responseData.patrollings && Array.isArray(responseData.patrollings)) {
             patrollings = responseData.patrollings;
             totalCount = responseData.total_count || responseData.patrollings.length;
