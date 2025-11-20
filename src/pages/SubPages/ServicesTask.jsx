@@ -1,216 +1,281 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { getServicesRoutineList, getSoftServiceStatus } from '../../api';
 import Table from '../../components/table/Table';
 import { Link } from 'react-router-dom';
-import { BiEdit } from 'react-icons/bi';
 import Services from '../Services';
 import Navbar from '../../components/Navbar';
-import * as XLSX from "xlsx";
+import * as XLSX from 'xlsx';
 import { BsEye } from 'react-icons/bs';
 import { DNA } from 'react-loader-spinner';
 import { useSelector } from 'react-redux';
-import { Pagination } from "antd";
+import { Pagination } from 'antd';
 
 const ServicesTask = () => {
-  const [selectedStatus, setSelectedStatus] = useState("all");
-    const [routines, setRoutines]= useState([])
-    const [filter, setFilter] = useState(false);
-    const [searchRoutineText, setSearchRoutineCheck] = useState("")
-    const [filteredRoutineData, setFilteredRoutineData] = useState([]);
-    const [RoutineData, setRoutineData] = useState([]);
-    const [pageNo, setPageNo] = useState(1);
-    const [total, setTotal] = useState(0);
-    const [perPage, setPerPage] = useState(10)
-    const dateFormat = (dateString) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short", // or 'long' for full month names
-        year: "numeric",
-        // hour: "2-digit",
-        // minute: "2-digit",
-        // // second: '2-digit'
-        // hour12: true,
-      });
-    };
-   
-    const routineColumn = [
-        {
-          name: "Action",
-          cell: (row) => (
-            <div className="flex items-center gap-4">
-              <Link to={`/service/checklist/${row.soft_service_id}/${row.id}`}>
-                <BsEye size={15} />
-              </Link>
-              {/* <Link to={`/services/edit-routine/${row.id}`}>
-                <BiEdit size={15} />
-              </Link> */}
-            </div>
-          ),
-        },
-        {
-          name: "Service Name",
-          selector: (row) => row.soft_service_name,
-          sortable: true,
-        },
-        {
-          name: "Checklist Name",
-          selector: (row) => row.checklist_name,
-          sortable: true,
-        },
-        
-        {
-          name: "Start Date",
-          selector: (row) => dateFormat(row.start_time),
-          sortable: true,
-        },
-        // {
-        //   name: "End Time",
-        //   selector: (row) => row.end_time,
-        //   sortable: true,
-        // },
-        {
-          name: "Status",
-          selector: (row) => row.status,
-          sortable: true,
-        },
-        {
-          name: "Assigned To",
-          selector: (row) => row.assigned_to_name,
-          sortable: true,
-        },  
-        
-      ];
-      const themeColor = useSelector((state)=> state.theme.color)
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [routines, setRoutines] = useState([]);
+  const [filter, setFilter] = useState(false);
+  const [searchRoutineText, setSearchRoutineCheck] = useState('');
+  const [filteredRoutineData, setFilteredRoutineData] = useState([]);
+  const [pageNo, setPageNo] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [perPage, setPerPage] = useState(10);
 
-      useEffect(() => {
-        try {
-          const fetchServiceRoutine = async () => {
-            const ServiceRoutineResponse = await getServicesRoutineList(pageNo, perPage);
-            const filteredServiceTask = ServiceRoutineResponse.data.activities.filter(asset => asset.soft_service_name);
-            console.log("task data",filteredServiceTask)
-            console.log("task data resp",ServiceRoutineResponse)
-            setFilteredRoutineData(filteredServiceTask);
-            setTotal(ServiceRoutineResponse.data.total_pages);
-            setRoutineData(filteredServiceTask)
-            setRoutines(filteredServiceTask)
-          };
-          fetchServiceRoutine();
-        } catch (error) {
-          console.log(error);
-        }
-      }, [pageNo, perPage]);
-         
-      const handlePageChange = (page, pageSize) => {
-        setPageNo(page);
-        setPerPage(pageSize)
-      };
-      const handleStatusChange = async (status) => {
-        setSelectedStatus(status);
-        if(status==="all"){
-          setFilteredRoutineData(RoutineData)
-        }else{
-        try {
-          const respdata = await getSoftServiceStatus(status);
-          const filteredServiceTask = respdata.data.activities.filter(asset => asset.soft_service_name);
-          setFilteredRoutineData(filteredServiceTask);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      }
-      };
-      const handleRoutineSearch = (event) => {
-        const searchValue = event.target.value;
-        setSearchRoutineCheck(searchValue);
-        if (searchValue.trim() === "") {
-          setFilteredRoutineData(routines);
-        } else {
-        const filteredResults = filteredRoutineData.filter((item) =>
-         {item.soft_service_name && item.soft_service_name.toLowerCase().includes(searchValue.toLowerCase())}
+  // Date filter states
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const themeColor = useSelector((state) => state.theme.color);
+
+  // Helper: Format date for display
+  const dateFormat = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const routineColumn = [
+    {
+      name: 'Action',
+      cell: (row) => (
+        <div className="flex items-center gap-4">
+          <Link to={`/service/checklist/${row.soft_service_id}/${row.id}`}>
+            <BsEye size={15} />
+          </Link>
+        </div>
+      ),
+    },
+    {
+      name: 'Service Name',
+      selector: (row) => row.soft_service_name,
+      sortable: true,
+    },
+    {
+      name: 'Checklist Name',
+      selector: (row) => row.checklist_name,
+      sortable: true,
+    },
+    {
+      name: 'Start Date',
+      selector: (row) => dateFormat(row.start_time),
+      sortable: true,
+    },
+    {
+      name: 'Status',
+      selector: (row) => row.status,
+      sortable: true,
+    },
+    {
+      name: 'Assigned To',
+      selector: (row) => row.assigned_to_name,
+      sortable: true,
+    },
+  ];
+
+  // Initial data fetching & pagination
+  useEffect(() => {
+    const fetchServiceRoutine = async () => {
+      try {
+        const ServiceRoutineResponse = await getServicesRoutineList(pageNo, perPage);
+        const filteredServiceTask = ServiceRoutineResponse.data.activities.filter(
+          (asset) => asset.soft_service_name
         );
-        setFilteredRoutineData(filteredResults);
-        console.log(filteredResults)
-        
+        setRoutines(filteredServiceTask);
+        setFilteredRoutineData(filteredServiceTask);
+        setTotal(ServiceRoutineResponse.data.total_pages * perPage);
+      } catch (error) {
+        console.error('Error fetching service routines:', error);
       }
-      };
-    
-      const exportToExcel = () => {
-        
-        const fileType =
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
-        const fileName = "service Task Data.xlsx";
-        const ws = XLSX.utils.json_to_sheet(filteredRoutineData);
-        const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
-        const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-        const data = new Blob([excelBuffer], { type: fileType });
-        const url = URL.createObjectURL(data);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        link.click();
-      };
+    };
+    fetchServiceRoutine();
+  }, [pageNo, perPage]);
+
+  // Pagination handler
+  const handlePageChange = (page, pageSize) => {
+    setPageNo(page);
+    setPerPage(pageSize);
+  };
+
+  // Update filtered data based on combined filters: status, search, and date range
+  const applyFilters = (status = selectedStatus, searchText = searchRoutineText, fromDate = startDate, toDate = endDate, baseData = routines) => {
+    let filtered = baseData;
+
+    // Status filter
+    if (status !== 'all') {
+      filtered = filtered.filter((item) => item.status?.toLowerCase() === status.toLowerCase());
+    }
+
+    // Search filter
+    if (searchText.trim() !== '') {
+      filtered = filtered.filter(
+        (item) =>
+          item.soft_service_name &&
+          item.soft_service_name.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    // Date filter
+    if (fromDate || toDate) {
+      const from = fromDate ? new Date(fromDate).setHours(0, 0, 0, 0) : null;
+      const to = toDate ? new Date(toDate).setHours(23, 59, 59, 999) : null;
+      filtered = filtered.filter((item) => {
+        if (!item.start_time) return false;
+        const itemDate = new Date(item.start_time).getTime();
+        if (from && to) return itemDate >= from && itemDate <= to;
+        if (from) return itemDate >= from;
+        if (to) return itemDate <= to;
+        return true;
+      });
+    }
+
+    return filtered;
+  };
+
+  // When user changes status radio buttons
+  const handleStatusChange = async (status) => {
+    setSelectedStatus(status);
+
+    // If 'all', no API fetch, just filter existing routines for other criteria
+    if (status === 'all') {
+      const updatedFiltered = applyFilters('all', searchRoutineText, startDate, endDate, routines);
+      setFilteredRoutineData(updatedFiltered);
+    } else {
+      // For other statuses, try fetching fresh data but apply search and date filter locally
+      try {
+        const respdata = await getSoftServiceStatus(status);
+        const filteredServiceTask = respdata.data.activities.filter(
+          (asset) => asset.soft_service_name
+        );
+        const updatedFiltered = applyFilters(status, searchRoutineText, startDate, endDate, filteredServiceTask);
+        setFilteredRoutineData(updatedFiltered);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+  };
+
+  // Search input handler
+  const handleRoutineSearch = (event) => {
+    const searchValue = event.target.value;
+    setSearchRoutineCheck(searchValue);
+    const updatedFiltered = applyFilters(selectedStatus, searchValue, startDate, endDate, routines);
+    setFilteredRoutineData(updatedFiltered);
+  };
+
+  // Apply date filter button handler
+  const handleApplyDateFilter = () => {
+    const updatedFiltered = applyFilters(selectedStatus, searchRoutineText, startDate, endDate, routines);
+    setFilteredRoutineData(updatedFiltered);
+  };
+
+  // Clear date filter button handler - clears only dates and reapplies filters without date
+  const handleClearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    const updatedFiltered = applyFilters(selectedStatus, searchRoutineText, '', '', routines);
+    setFilteredRoutineData(updatedFiltered);
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileName = 'service Task Data.xlsx';
+    const ws = XLSX.utils.json_to_sheet(filteredRoutineData);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: fileType });
+    const url = URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+  };
+
   return (
-    <section className="flex "> 
-    <Navbar /> 
-   <div className="p-4 overflow-hidden w-full my-2 flex mx-3 flex-col">
-     
-     <Services />
-       
-      {filter && (
-        <div className="flex items-center justify-center gap-2">
-          <div>
-            <label htmlFor="" className="font-medium">
-              Service Name:{" "}
+    <section className="flex">
+      <Navbar />
+      <div className="p-4 overflow-hidden w-full my-2 flex mx-3 flex-col">
+        <Services />
+
+        {/* Optional filter toggle toggle can be added here if required */}
+        {/* {filter && ( */}
+        {/* Filter inputs for Service Name, Area, Building can be implemented if needed */}
+        {/* )} */}
+
+        {/* Date Filter Section */}
+        <div className="flex items-center justify-start gap-4 my-4 p-4 bg-gray-50 rounded-md border">
+          <div className="flex items-center gap-2">
+            <label htmlFor="startDate" className="font-medium text-sm">
+              Start:
             </label>
             <input
-              type="text"
-              name=""
-              id=""
-              placeholder="Enter Service Name"
-              className="border p-1 placeholder:text-sm px-4 border-gray-500 rounded-md"
+              type="date"
+              id="startDate"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <select className="border p-1 px-4 border-gray-500 rounded-md">
-            <option value="">Select Area</option>
-            <option value="unit1">Area 1</option>
-            <option value="unit2">Area 2</option>
-            <option value="unit2">Area 3</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <label htmlFor="endDate" className="font-medium text-sm">
+              End:
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <select className="border p-1 px-4 border-gray-500 rounded-md">
-            <option value="">Select Building</option>
-            <option value="unit1">Building 1</option>
-            <option value="unit2">Building 2</option>
-            <option value="unit2">Building 3</option>
-          </select>
-          <button className="bg-black p-1 px-4 text-white rounded-md">
+          <button
+            onClick={handleApplyDateFilter}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
+            style={{ background: themeColor }}
+          >
             Apply
           </button>
+
+          <button
+            onClick={handleClearDateFilter}
+            className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
+          >
+            Clear
+          </button>
+
+          <button
+            onClick={exportToExcel}
+            className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
+          >
+            Export ({filteredRoutineData.length})
+          </button>
         </div>
-      )}
-      <div className="flex sm:flex-row flex-col justify-between gap-2 my-5">
-       <div className="md:flex justify-between grid grid-cols-2 items-center  gap-2 border border-gray-300 rounded-md px-3 p-2 w-auto">
+
+        <div className="flex sm:flex-row flex-col justify-between gap-2 my-5">
+          <div className="md:flex justify-between grid grid-cols-2 items-center gap-2 border border-gray-300 rounded-md px-3 p-2 w-auto">
             <div className="flex items-center gap-2">
               <input
                 type="radio"
                 id="all"
                 name="status"
-                checked={selectedStatus === "all"}
-                onChange={() => handleStatusChange("all")}
+                checked={selectedStatus === 'all'}
+                onChange={() => handleStatusChange('all')}
               />
               <label htmlFor="all" className="text-sm">
                 All
               </label>
             </div>
-           
             <div className="flex items-center gap-2">
               <input
                 type="radio"
                 id="pending"
                 name="status"
-                checked={selectedStatus === "pending"}
-                onChange={() => handleStatusChange("pending")}
+                checked={selectedStatus === 'pending'}
+                onChange={() => handleStatusChange('pending')}
               />
               <label htmlFor="pending" className="text-sm">
                 Pending
@@ -221,20 +286,20 @@ const ServicesTask = () => {
                 type="radio"
                 id="completed"
                 name="status"
-                checked={selectedStatus === "complete"}
-                onChange={() => handleStatusChange("complete")}
+                checked={selectedStatus === 'completed'} // fix here
+                onChange={() => handleStatusChange('completed')}
               />
               <label htmlFor="completed" className="text-sm">
-                Completed
+                Complete
               </label>
             </div>
             <div className="flex items-center gap-2">
               <input
                 type="radio"
-                id="completed"
+                id="overdue"
                 name="status"
-                checked={selectedStatus === "overdue"}
-                onChange={() => handleStatusChange("overdue")}
+                checked={selectedStatus === 'overdue'}
+                onChange={() => handleStatusChange('overdue')}
               />
               <label htmlFor="overdue" className="text-sm">
                 Overdue
@@ -244,43 +309,24 @@ const ServicesTask = () => {
           <div className="flex lg:flex-row flex-col gap-2">
             <input
               type="text"
-             placeholder="Search By name"
+              placeholder="Search By name"
               className="border border-gray-400 md:w-96 placeholder:text-xs rounded-lg p-2"
               value={searchRoutineText}
-          onChange={handleRoutineSearch}
-            /></div>
+              onChange={handleRoutineSearch}
+            />
           </div>
-      <div className="flex flex-wrap justify-between items-center  ">
-        {/* <input
-          type="text"
-          placeholder="Search By name"
-          className="border-2 p-2 w-96 border-gray-300 rounded-lg "
-          value={searchRoutineText}
-          onChange={handleRoutineSearch}
-        /> */}
-        <div className="flex flex-wrap gap-2">
-        
-          {/* <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onClick={exportToExcel}
-style={{background: themeColor}}
-          >
-            Export
-          </button> */}
-          {/* <button
-    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    onClick={handleDownloadQRCode}
-    disabled={selectedRows.length === 0}
-  >
-    Download QR Code
-  </button> */}
         </div>
-      </div> 
-      {routines.length !== 0 ?(
-        <>
-        <Table selectableRows columns={routineColumn} data={filteredRoutineData}  fixedHeader
-        pagination={false}/>
-<div className="bg-white mb-10 p-2 flex justify-end">
+
+        {routines.length !== 0 ? (
+          <>
+            <Table
+              selectableRows
+              columns={routineColumn}
+              data={filteredRoutineData}
+              fixedHeader
+              pagination={false}
+            />
+            <div className="bg-white mb-10 p-2 flex justify-end">
               <Pagination
                 current={pageNo}
                 total={total}
@@ -289,28 +335,24 @@ style={{background: themeColor}}
                 responsive
                 showSizeChanger
                 onShowSizeChange={handlePageChange}
-                
-               
               />
             </div>
-            </>
-      ):(
-        <div className="flex justify-center items-center h-full">
-        <DNA
-          visible={true}
-          height="120"
-          width="120"
-          ariaLabel="dna-loading"
-          wrapperStyle={{}}
-          wrapperClass="dna-wrapper"
-        />
+          </>
+        ) : (
+          <div className="flex justify-center items-center h-full">
+            <DNA
+              visible={true}
+              height="120"
+              width="120"
+              ariaLabel="dna-loading"
+              wrapperStyle={{}}
+              wrapperClass="dna-wrapper"
+            />
+          </div>
+        )}
       </div>
-      )}
-    
-      
-    </div>
-  </section>
-  )
-}
+    </section>
+  );
+};
 
-export default ServicesTask
+export default ServicesTask;
