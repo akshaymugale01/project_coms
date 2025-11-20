@@ -99,6 +99,7 @@ const Staff = () => {
     }
   };
 
+  
   useEffect(() => {
     if (page === "approval") {
       const timer = setTimeout(() => {
