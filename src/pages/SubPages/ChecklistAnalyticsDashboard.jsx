@@ -6,6 +6,8 @@ import { FaSpinner, FaCheckCircle, FaTimesCircle, FaClipboardList } from "react-
 
 const ChecklistAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [selectedChart, setSelectedChart] = useState("technical_pie");
+  const [chartType, setChartType] = useState("pie");
   const [checklistData, setChecklistData] = useState({
     total: 0,
     technical: 0,
@@ -140,10 +142,10 @@ const ChecklistAnalyticsDashboard = () => {
     }
   };
 
-  // Pie Chart - Technical vs Non-Technical
+  // Dynamic Chart - Technical vs Non-Technical
   const technicalPieChart = {
     chart: {
-      type: "pie",
+      type: chartType,
       backgroundColor: "transparent",
     },
     title: {
@@ -560,8 +562,84 @@ const ChecklistAnalyticsDashboard = () => {
         </div>
       </div>
 
-      {/* Pie Charts Row */}
-      <div className="grid md:grid-cols-2 gap-5">
+      {/* Chart Type Selector and Chart Selection */}
+      <div className="flex flex-wrap items-center gap-4 mb-5">
+        <select
+          value={chartType}
+          onChange={(e) => setChartType(e.target.value)}
+          className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
+        >
+          <option value="pie">Pie</option>
+          <option value="column">Column</option>
+          <option value="bar">Bar</option>
+          <option value="line">Line</option>
+          <option value="area">Area</option>
+        </select>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedChart("technical_pie")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "technical_pie"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📊 Technical vs Non-Technical
+          </button>
+          <button
+            onClick={() => setSelectedChart("status_pie")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "status_pie"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            🔄 Status Distribution
+          </button>
+          <button
+            onClick={() => setSelectedChart("category_bar")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "category_bar"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📂 By Category
+          </button>
+          <button
+            onClick={() => setSelectedChart("department_bar")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "department_bar"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            🏢 By Department
+          </button>
+          <button
+            onClick={() => setSelectedChart("monthly_column")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "monthly_column"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📅 Monthly Trend
+          </button>
+        </div>
+      </div>
+
+      {/* Selected Chart Display */}
+      <div className="bg-gray-800 p-6 rounded-lg shadow-custom-all-sides mb-5">
+        {selectedChart === "technical_pie" && <HighchartsReact highcharts={Highcharts} options={technicalPieChart} />}
+        {selectedChart === "status_pie" && <HighchartsReact highcharts={Highcharts} options={statusPieChart} />}
+        {selectedChart === "category_bar" && <HighchartsReact highcharts={Highcharts} options={categoryBarChart} />}
+        {selectedChart === "department_bar" && <HighchartsReact highcharts={Highcharts} options={departmentBarChart} />}
+        {selectedChart === "monthly_column" && <HighchartsReact highcharts={Highcharts} options={monthlyColumnChart} />}
+      </div>
+
+      {/* Additional Charts Row (Hidden) */}
+      <div className="hidden md:grid-cols-2 gap-5">
         <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
           <HighchartsReact highcharts={Highcharts} options={technicalPieChart} />
         </div>

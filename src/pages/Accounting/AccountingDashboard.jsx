@@ -7,6 +7,7 @@ import {
   getJournalEntries,
   getOverdueInvoices,
 } from "../../api/accountingApi";
+import AccountingAnalyticsDashboard from "./AccountingAnalyticsDashboard";
 
 const AccountingDashboard = () => {
   const [stats, setStats] = useState({
@@ -350,6 +351,14 @@ const AccountingDashboard = () => {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Analytics Dashboard */}
+      <div className="mt-6">
+        <h2 className="text-2xl font-bold mb-4">Accounting Analytics</h2>
+        <div className="bg-gray-900 p-5 rounded-lg shadow-custom-all-sides">
+          <AccountingAnalyticsDashboard />
         </div>
       </div>
     </div>

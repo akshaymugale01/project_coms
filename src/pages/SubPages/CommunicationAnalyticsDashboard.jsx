@@ -5,6 +5,8 @@ import { FaSpinner, FaBullhorn, FaEnvelope, FaUsers, FaChartLine } from "react-i
 
 const CommunicationAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [selectedChart, setSelectedChart] = useState("comm_types");
+  const [chartType, setChartType] = useState("pie");
   const [commData, setCommData] = useState({
     totalAnnouncements: 0,
     totalNotifications: 0,
@@ -99,10 +101,10 @@ const CommunicationAnalyticsDashboard = () => {
     ? Math.round((commData.readUnread.Read / (commData.readUnread.Read + commData.readUnread.Unread + commData.readUnread.Archived)) * 100)
     : 0;
 
-  // Pie Chart - Communication Types
+  // Dynamic Chart - Communication Types
   const commTypePieChart = {
     chart: {
-      type: "pie",
+      type: chartType,
       backgroundColor: "transparent",
     },
     title: {
@@ -507,8 +509,95 @@ const CommunicationAnalyticsDashboard = () => {
         </div>
       </div>
 
-      {/* Pie Charts Row */}
-      <div className="grid md:grid-cols-3 gap-5">
+      {/* Chart Type Selector and Chart Selection */}
+      <div className="flex flex-wrap items-center gap-4 mb-5">
+        <select
+          value={chartType}
+          onChange={(e) => setChartType(e.target.value)}
+          className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
+        >
+          <option value="pie">Pie</option>
+          <option value="column">Column</option>
+          <option value="bar">Bar</option>
+          <option value="line">Line</option>
+          <option value="area">Area</option>
+        </select>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedChart("comm_types")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "comm_types"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📊 Communication Types
+          </button>
+          <button
+            onClick={() => setSelectedChart("read_status")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "read_status"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📧 Read Status
+          </button>
+          <button
+            onClick={() => setSelectedChart("engagement")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "engagement"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📈 User Engagement
+          </button>
+          <button
+            onClick={() => setSelectedChart("category")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "category"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📂 By Category
+          </button>
+          <button
+            onClick={() => setSelectedChart("department")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "department"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            🏢 By Department
+          </button>
+          <button
+            onClick={() => setSelectedChart("monthly")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "monthly"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📅 Monthly Trend
+          </button>
+        </div>
+      </div>
+
+      {/* Selected Chart Display */}
+      <div className="bg-gray-800 p-6 rounded-lg shadow-custom-all-sides mb-5">
+        {selectedChart === "comm_types" && <HighchartsReact highcharts={Highcharts} options={commTypePieChart} />}
+        {selectedChart === "read_status" && <HighchartsReact highcharts={Highcharts} options={readStatusPieChart} />}
+        {selectedChart === "engagement" && <HighchartsReact highcharts={Highcharts} options={engagementDonutChart} />}
+        {selectedChart === "category" && <HighchartsReact highcharts={Highcharts} options={categoryBarChart} />}
+        {selectedChart === "department" && <HighchartsReact highcharts={Highcharts} options={departmentBarChart} />}
+        {selectedChart === "monthly" && <HighchartsReact highcharts={Highcharts} options={monthlyTrendChart} />}
+      </div>
+
+      {/* Additional Charts Row (Hidden) */}
+      <div className="hidden md:grid-cols-3 gap-5">
         <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
           <HighchartsReact highcharts={Highcharts} options={commTypePieChart} />
         </div>
