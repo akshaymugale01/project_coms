@@ -18,6 +18,8 @@ import { FaSpinner, FaCube, FaCheckCircle, FaTools, FaExclamationCircle } from "
 
 const AssetAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [selectedChart, setSelectedChart] = useState("asset_status");
+  const [chartType, setChartType] = useState("pie");
   const [assetData, setAssetData] = useState({
     totalAssets: 0,
     inUse: 0,
@@ -94,10 +96,10 @@ const AssetAnalyticsDashboard = () => {
     ? Math.round((assetData.inUse / assetData.totalAssets) * 100) 
     : 0;
 
-  // Pie Chart - Asset Status
+  // Dynamic Chart - Asset Status
   const assetStatusPieChart = {
     chart: {
-      type: "pie",
+      type: chartType,
       backgroundColor: "transparent",
     },
     title: {
@@ -442,8 +444,84 @@ const AssetAnalyticsDashboard = () => {
         </div>
       </div>
 
-      {/* Pie Charts Row */}
-      <div className="grid md:grid-cols-3 gap-5">
+      {/* Chart Type Selector and Chart Selection */}
+      <div className="flex flex-wrap items-center gap-4 mb-5">
+        <select
+          value={chartType}
+          onChange={(e) => setChartType(e.target.value)}
+          className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
+        >
+          <option value="pie">Pie</option>
+          <option value="column">Column</option>
+          <option value="bar">Bar</option>
+          <option value="line">Line</option>
+          <option value="area">Area</option>
+        </select>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedChart("asset_status")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "asset_status"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📊 Asset Status
+          </button>
+          <button
+            onClick={() => setSelectedChart("ppm_status")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "ppm_status"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            🔧 PPM Status
+          </button>
+          <button
+            onClick={() => setSelectedChart("routine_status")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "routine_status"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            ⚙️ Routine Tasks
+          </button>
+          <button
+            onClick={() => setSelectedChart("comparison")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "comparison"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📈 PPM vs Routine
+          </button>
+          <button
+            onClick={() => setSelectedChart("tasks_overview")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              selectedChart === "tasks_overview"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            📋 Tasks Overview
+          </button>
+        </div>
+      </div>
+
+      {/* Selected Chart Display */}
+      <div className="bg-gray-800 p-6 rounded-lg shadow-custom-all-sides mb-5">
+        {selectedChart === "asset_status" && <HighchartsReact highcharts={Highcharts} options={assetStatusPieChart} />}
+        {selectedChart === "ppm_status" && <HighchartsReact highcharts={Highcharts} options={ppmStatusPieChart} />}
+        {selectedChart === "routine_status" && <HighchartsReact highcharts={Highcharts} options={routineStatusPieChart} />}
+        {selectedChart === "comparison" && <HighchartsReact highcharts={Highcharts} options={comparisonBarChart} />}
+        {selectedChart === "tasks_overview" && <HighchartsReact highcharts={Highcharts} options={totalTasksDonutChart} />}
+      </div>
+
+      {/* Additional Charts Row (Hidden) */}
+      <div className="hidden md:grid-cols-3 gap-5">
         <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
           <HighchartsReact highcharts={Highcharts} options={assetStatusPieChart} />
         </div>

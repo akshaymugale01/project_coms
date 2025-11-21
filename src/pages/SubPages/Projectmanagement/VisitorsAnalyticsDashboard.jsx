@@ -6,6 +6,8 @@ import { FaSpinner } from "react-icons/fa";
 
 const VisitorsAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [selectedChart, setSelectedChart] = useState("visitor_type_pie");
+  const [chartType, setChartType] = useState("pie");
   const [dashboardData, setDashboardData] = useState({
     total: 0,
     today_in: 0,
@@ -105,10 +107,10 @@ const VisitorsAnalyticsDashboard = () => {
     }
   };
 
-  // Pie Chart - Visitor Type Distribution
+  // Dynamic Chart - Visitor Type Distribution
   const visitorTypePieChart = {
     chart: {
-      type: "pie",
+      type: chartType,
       backgroundColor: "transparent",
     },
     title: {
@@ -459,6 +461,37 @@ const VisitorsAnalyticsDashboard = () => {
     );
   }
 
+  const chartOptions = [
+    { id: "visitor_type_pie", label: "Visitor Type", icon: "📊", type: "pie" },
+    { id: "in_out_pie", label: "In/Out Status", icon: "🔄", type: "pie" },
+    { id: "staff_pie", label: "Staff Distribution", icon: "👥", type: "pie" },
+    { id: "delivery_column", label: "Delivery Platforms", icon: "📦", type: "column" },
+    { id: "purpose_bar", label: "Visit Purpose", icon: "📝", type: "bar" },
+    { id: "hourly_line", label: "Hourly Trend", icon: "📈", type: "line" },
+    { id: "monthly_column", label: "Monthly Trend", icon: "📅", type: "column" },
+  ];
+
+  const renderSelectedChart = () => {
+    switch (selectedChart) {
+      case "visitor_type_pie":
+        return <HighchartsReact highcharts={Highcharts} options={visitorTypePieChart} />;
+      case "in_out_pie":
+        return <HighchartsReact highcharts={Highcharts} options={inOutPieChart} />;
+      case "staff_pie":
+        return <HighchartsReact highcharts={Highcharts} options={staffPieChart} />;
+      case "delivery_column":
+        return <HighchartsReact highcharts={Highcharts} options={deliveryBarChart} />;
+      case "purpose_bar":
+        return <HighchartsReact highcharts={Highcharts} options={purposeBarChart} />;
+      case "hourly_line":
+        return <HighchartsReact highcharts={Highcharts} options={hourlyLineChart} />;
+      case "monthly_column":
+        return <HighchartsReact highcharts={Highcharts} options={monthlyColumnChart} />;
+      default:
+        return <HighchartsReact highcharts={Highcharts} options={visitorTypePieChart} />;
+    }
+  };
+
   return (
     <div className="space-y-5">
       {/* Summary Cards */}
@@ -485,37 +518,42 @@ const VisitorsAnalyticsDashboard = () => {
         </div>
       </div>
 
-      {/* Pie Charts Row */}
-      <div className="grid md:grid-cols-3 gap-5">
-        <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
-          <HighchartsReact highcharts={Highcharts} options={visitorTypePieChart} />
+      {/* Chart Type Selector and Chart Selection Buttons */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <select
+            value={chartType}
+            onChange={(e) => setChartType(e.target.value)}
+            className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
+          >
+            <option value="pie">Pie</option>
+            <option value="column">Column</option>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="area">Area</option>
+          </select>
         </div>
-        <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
-          <HighchartsReact highcharts={Highcharts} options={inOutPieChart} />
-        </div>
-        <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
-          <HighchartsReact highcharts={Highcharts} options={staffPieChart} />
+        <div className="flex flex-wrap gap-2">
+          {chartOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setSelectedChart(option.id)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                selectedChart === option.id
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <span className="mr-2">{option.icon}</span>
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Delivery Breakdown Bar Chart */}
-      <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
-        <HighchartsReact highcharts={Highcharts} options={deliveryBarChart} />
-      </div>
-
-      {/* Purpose and Hourly Charts */}
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
-          <HighchartsReact highcharts={Highcharts} options={purposeBarChart} />
-        </div>
-        <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
-          <HighchartsReact highcharts={Highcharts} options={hourlyLineChart} />
-        </div>
-      </div>
-
-      {/* Monthly Trend Chart */}
-      <div className="bg-gray-800 p-4 rounded-lg shadow-custom-all-sides">
-        <HighchartsReact highcharts={Highcharts} options={monthlyColumnChart} />
+      {/* Selected Chart Display */}
+      <div className="bg-gray-800 p-6 rounded-lg shadow-custom-all-sides">
+        {renderSelectedChart()}
       </div>
 
       {/* Additional Stats Cards */}
