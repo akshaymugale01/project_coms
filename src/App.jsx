@@ -768,19 +768,15 @@ import AddMasters from "./pages/SubPages/AddMasters.jsx";
 import EditMasters from "./pages/SubPages/EditMaster.jsx";
 import MasterDetails from "./pages/SubPages/MasterDetails.jsx";
 
-// import AccountingDashboard from "./pages/Accounting/AccountingDashboard";
-// // Accounting Module Imports
-// import {
-//   AccountingDashboard,
-//   Invoices,
-//   CreateInvoice,
-//   Ledgers,
-//   JournalEntries,
-//   CreateJournalEntry,
-//   Reports,
-//   AccountingSettings
-// } from "./pages/Accounting";
-// import TrialBalanceReport from "./pages/Accounting/Reports/TrialBalanceReport.jsx";
+// Accounting Module Imports
+import AccountingDashboard from "./pages/Accounting/AccountingDashboard";
+import AccountGroups from "./pages/Accounting/AccountGroups";
+import Ledgers from "./pages/Accounting/Ledgers";
+import TaxRates from "./pages/Accounting/TaxRates";
+import JournalEntries from "./pages/Accounting/JournalEntries";
+import AccountingInvoices from "./pages/Accounting/AccountingInvoices";
+import AccountingPayments from "./pages/Accounting/AccountingPayments";
+import AccountingReports from "./pages/Accounting/AccountingReports";
 
 // new admin hrms
 
@@ -7193,72 +7189,71 @@ function App() {
             }
           />
 
-            {/* Accounting Module Routes */}
-        
-        {/* <Route
-          path="/accounting/invoices"
-          element={
-            <ProtectedAdminRoutes>
-              <Invoices />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/accounting/invoices/create"
-          element={
-            <ProtectedAdminRoutes>
-              <CreateInvoice />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/accounting/ledgers"
-          element={
-            <ProtectedAdminRoutes>
-              <Ledgers />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/accounting/journal-entries"
-          element={
-            <ProtectedAdminRoutes>
-              <JournalEntries />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/accounting/journal-entries/create"
-          element={
-            <ProtectedAdminRoutes>
-              <CreateJournalEntry />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/accounting/reports"
-          element={
-            <ProtectedAdminRoutes>
-              <Reports />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/accounting/reports/trial-balance"
-          element={
-            <ProtectedAdminRoutes>
-              <TrialBalanceReport />
-            </ProtectedAdminRoutes>
-          }
-        />
-        <Route
-          path="/accounting/settings"
-          element={
-            <ProtectedAdminRoutes>
-              <AccountingSettings />
-            </ProtectedAdminRoutes>
-          }
-        />  */}
+          {/* Accounting Module Routes */}
+          <Route
+            path="/accounting"
+            element={
+              <ProtectedAdminRoutes>
+                <AccountingDashboard />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/accounting/account-groups"
+            element={
+              <ProtectedAdminRoutes>
+                <AccountGroups />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/accounting/ledgers"
+            element={
+              <ProtectedAdminRoutes>
+                <Ledgers />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/accounting/tax-rates"
+            element={
+              <ProtectedAdminRoutes>
+                <TaxRates />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/accounting/journal-entries"
+            element={
+              <ProtectedAdminRoutes>
+                <JournalEntries />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/accounting/invoices"
+            element={
+              <ProtectedAdminRoutes>
+                <AccountingInvoices />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/accounting/payments"
+            element={
+              <ProtectedAdminRoutes>
+                <AccountingPayments />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/accounting/reports"
+            element={
+              <ProtectedAdminRoutes>
+                <AccountingReports />
+              </ProtectedAdminRoutes>
+            }
+          />
 
 
         </Routes>

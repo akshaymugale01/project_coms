@@ -25,6 +25,7 @@ import {
   BsXCircle,
 } from "react-icons/bs";
 import {
+  MdAccountTree,
   MdFastfood,
   MdManageAccounts,
   MdOutlineDashboard,
@@ -559,9 +560,9 @@ const Navbar = () => {
 
                   {/* Accounting */}
                 
-                {feat.includes("service_tickets") && (
+                {feat.includes("accounting") && (
                   <NavLink
-                    to={"/Accounting"}
+                    to={"/accounting"}
                     className={({ isActive }) =>
                       ` ${
                         isActive
@@ -571,7 +572,7 @@ const Navbar = () => {
                     }
                   >
                     <div>
-                      {React.createElement(BsTicketPerforated, { size: "20" })}
+                      {React.createElement(MdAccountTree, { size: "20" })}
                     </div>
                     <h2
                       className={`whitespace-pre duration-300 ${
@@ -588,10 +589,7 @@ const Navbar = () => {
                       Accounting
                     </h2>
                   </NavLink>
-                )}
-
-                
-                
+                )}                
                 {/* {feat.includes("additional-services") && (
                   <NavLink
                     to={"/additional-services"}
