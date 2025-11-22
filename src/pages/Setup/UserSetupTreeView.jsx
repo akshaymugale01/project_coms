@@ -32,11 +32,28 @@ const UserSetupTreeView = () => {
   const { id } = useParams();
 
   console.log(id);
+  
+  // Convert DD/MM/YYYY to readable format
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not provided";
+    // If in DD/MM/YYYY format
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      return dateString;
+    }
+    // If in YYYY-MM-DD format, convert to DD/MM/YYYY
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split("-");
+      return `${day}/${month}/${year}`;
+    }
+    return dateString;
+  };
+  
   const fetchUserById = async () => {
     try {
-      const user = await getUsersByID(id); // example ID
+      const user = await getUsersByID(id);
       console.log("Fetched user:", user.data);
-      setUserData(user.data[0]); // or whatever state you're updating
+      console.log("User members:", user.data[0]?.user_members);
+      setUserData(user.data[0] || {}); // or whatever state you're updating
     } catch (err) {
       console.error("Error fetching user:", err);
     }
@@ -49,6 +66,7 @@ const UserSetupTreeView = () => {
   }, [id]);
 
   console.log("User data", userData);
+  console.log("User members in state:", userData?.user_members);
   return (
     <section className="flex">
       {/* Navbar stays visible */}
@@ -151,7 +169,7 @@ const UserSetupTreeView = () => {
                       {userData.lastname || ""}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      {userData.department || "No department"}
+                      {userData.user_type ? userData.user_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : "No user type"}
                     </p>
                   </div>
                 </div>
@@ -176,18 +194,18 @@ const UserSetupTreeView = () => {
                       </div>
                       <div className="flex items-start">
                         <span className="font-semibold text-gray-600 w-32 flex-shrink-0">🎂 Birth Date:</span>
-                        <span className="text-gray-800">{userData.birth_date || "Not provided"}</span>
+                        <span className="text-gray-800">{formatDate(userData.birth_date)}</span>
                       </div>
-                      <div className="flex items-start">
+                      {/* <div className="flex items-start">
                         <span className="font-semibold text-gray-600 w-32 flex-shrink-0">💼 Occupation:</span>
                         <span className="text-gray-800">{userData.occupation || "Not provided"}</span>
-                      </div>
+                      </div> */}
                       <div className="flex items-start">
                         <span className="font-semibold text-gray-600 w-32 flex-shrink-0">✅ Status:</span>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          userData.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                          userData.status === true ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
                         }`}>
-                          {userData.status || "Unknown"}
+                          {userData.status || "True" ? "Active" : "Inactive"}
                         </span>
                       </div>
                     </div>
@@ -203,14 +221,29 @@ const UserSetupTreeView = () => {
                     </h3>
                   </div>
                   <div className="bg-white border border-gray-200 rounded-b-lg p-4 shadow-sm">
-                    {userData.family_member ? (
+                    {userData.user_member && userData.user_member.length > 0 ? (
                       <ul className="space-y-2">
-                        <li className="flex items-center p-3 bg-gray-50 rounded-lg">
-                          <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-3">
-                            👤
-                          </span>
-                          <span className="text-gray-700">{userData.family_member}</span>
-                        </li>
+                        {userData.user_member.map((member, index) => (
+                          <li key={index} className="flex flex-col p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex items-center mb-2">
+                              <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-3">
+                                👤
+                              </span>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-800">{member.member_name || "N/A"}</p>
+                                <p className="text-sm text-gray-600">{member.relation || ""}</p>
+                              </div>
+                            </div>
+                            <div className="ml-11 text-sm space-y-1">
+                              {member.member_type && (
+                                <p className="text-gray-600"><span className="font-medium">Type:</span> {member.member_type}</p>
+                              )}
+                              {member.contact_no && (
+                                <p className="text-gray-600"><span className="font-medium">Contact:</span> {member.contact_no}</p>
+                              )}
+                            </div>
+                          </li>
+                        ))}
                       </ul>
                     ) : (
                       <p className="text-gray-500 text-center py-4 italic">

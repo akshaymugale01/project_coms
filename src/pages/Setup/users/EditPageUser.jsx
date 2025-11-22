@@ -63,6 +63,19 @@ const EditPageUser = () => {
 
   console.log("id", id);
 
+  // Convert DD/MM/YYYY to YYYY-MM-DD for HTML5 date input
+  const convertToISODate = (dateString) => {
+    if (!dateString) return "";
+    // Check if already in ISO format (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+    // Convert DD/MM/YYYY to YYYY-MM-DD
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      const [day, month, year] = dateString.split("/");
+      return `${year}-${month}-${day}`;
+    }
+    return dateString;
+  };
+
   const fetchUsers = async () => {
     try {
       setLoading(true); // Start loading
@@ -70,12 +83,22 @@ const EditPageUser = () => {
         getFilterUsers(id),
         getSites(),
       ]);
-      setFormData(userResp?.data || {});
-      setOriginalData(userResp?.data || {});
+      console.log("Full API response:", userResp?.data);
+      console.log("moving_date from API:", userResp?.data?.moving_date);
+      console.log("vehicle_details from API:", userResp?.data?.vehicle_details);
+      
+      const userData = userResp?.data || {};
+      // Convert date formats for HTML5 date inputs
+      const formattedData = {
+        ...userData,
+        moving_date: convertToISODate(userData.moving_date),
+        lease_expiry: convertToISODate(userData.lease_expiry),
+        birth_date: convertToISODate(userData.birth_date),
+      };
+      
+      setFormData(formattedData);
+      setOriginalData(formattedData);
       setUserSites(sitesResp.data);
-      // console.log("API response user_members:", userResp?.data?.user_members);
-      console.log("API response user_vendor:", userResp?.data?.user_vendor);
-      console.log("API response", userResp?.data?.user_sites);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -231,7 +254,7 @@ const EditPageUser = () => {
 
       setHasHydratedUserData(true);
     }
-  }, [formData.firstname, formData.user_members, formData.user_vendor, formData.vehicle_details, hasHydratedUserData]);
+  }, [formData.firstname, hasHydratedUserData]);
 
   useEffect(() => {
     if (!hasHydratedUserData) return;
@@ -746,7 +769,7 @@ const EditPageUser = () => {
                   id="moving_date"
                   name="moving_date"
                   className="border p-2 rounded border-gray-300"
-                  value={formData.moving_date || ""}
+                  value={formData?.moving_date || ""}
                   onChange={(e) =>
                     handleInputChange("moving_date", e.target.value)
                   }
@@ -1195,7 +1218,7 @@ const EditPageUser = () => {
                   key={index}
                   className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
                 >
-                  {/* Vehicle Type */}
+                  {/*    Type */}
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-700 mb-1">
                       Vehicle Type
