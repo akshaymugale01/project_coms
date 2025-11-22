@@ -219,7 +219,7 @@ const EditPageUser = () => {
 
       // Hydrate vehicles
       const hydratedVehicles = Array.isArray(formData.vehicle_details)
-        ? formData.vehicle_details.map((v) => ({
+        ? formData.vehicle_details?.map((v) => ({
             id: v.id ?? null,
             vehicle_type: v.vehicle_type ?? "",
             vehicle_no: v.vehicle_no ?? "",
@@ -252,7 +252,7 @@ const EditPageUser = () => {
       contact_no: v.contact_no,
     }));
 
-    const syncedVehicles = vehicleList.map((v) => ({
+    const syncedVehicles = vehicleList?.map((v) => ({
       id: v.id ?? undefined,
       vehicle_type: v.vehicle_type,
       vehicle_no: v.vehicle_no,
@@ -455,7 +455,7 @@ const EditPageUser = () => {
           name: v.name,
           contact_no: v.contact_no,
         })),
-        vehicle_details_attributes: formData.vehicle_details.map((v) => ({
+        vehicle_details_attributes: formData.vehicle_details?.map((v) => ({
           id: v.id ?? undefined,
           vehicle_type: v.vehicle_type,
           vehicle_no: v.vehicle_no,
