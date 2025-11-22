@@ -22,7 +22,7 @@ const ServicesTask = () => {
 
   // Date filter states
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [endDate, setEndDate] = useState(''); 
 
   const themeColor = useSelector((state) => state.theme.color);
 
