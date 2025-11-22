@@ -41,14 +41,14 @@ const UserSetupTree = () => {
   const filteredOptions = memberOptions.filter((opt) =>
     opt.toLowerCase().includes(searchText.toLowerCase())
   );
-const [openBuilding, setOpenBuilding] = useState(false);
-const [searchBuilding, setSearchBuilding] = useState("");
+  const [openBuilding, setOpenBuilding] = useState(false);
+  const [searchBuilding, setSearchBuilding] = useState("");
 
   const [openUnit, setOpenUnit] = useState(false);
-const [searchUnit, setSearchUnit] = useState("");
+  const [searchUnit, setSearchUnit] = useState("");
 
-const [openFloor, setOpenFloor] = useState(false);
-const [searchFloor, setSearchFloor] = useState("");
+  const [openFloor, setOpenFloor] = useState(false);
+  const [searchFloor, setSearchFloor] = useState("");
 
 
   // Fetch buildings + sites
@@ -184,255 +184,255 @@ const [searchFloor, setSearchFloor] = useState("");
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end mt-6">
           {/* Building */}
-{/* Building - Searchable Dropdown */}
-<div className="flex flex-col w-full relative">
-  <label className="font-semibold mb-1">Building *</label>
+          {/* Building - Searchable Dropdown */}
+          <div className="flex flex-col w-full relative">
+            <label className="font-semibold mb-1">Building *</label>
 
-  {/* Selected Box */}
-  <div
-    className="border p-2 px-4 rounded-md cursor-pointer bg-white"
-    onClick={() => setOpenBuilding((prev) => !prev)}
-  >
-    {selectedBuilding
-      ? filteredBuildings.find((b) => b.id == selectedBuilding)?.name
-      : "-- Choose Building --"}
-  </div>
-
-  {/* Dropdown */}
-  {openBuilding && (
-    <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
-
-      {/* Search Input */}
-      <input
-        type="text"
-        placeholder="Search building..."
-        className="border-b p-2 w-full text-sm outline-none"
-        value={searchBuilding}
-        onChange={(e) => setSearchBuilding(e.target.value)}
-      />
-
-      {/* Options */}
-      <div className="max-h-40 overflow-y-auto">
-        {filteredBuildings
-          .filter((building) =>
-            building.name.toLowerCase().includes(searchBuilding.toLowerCase())
-          )
-          .map((building) => (
+            {/* Selected Box */}
             <div
-              key={building.id}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={async () => {
-                setSelectedBuilding(building.id);
-                setOpenBuilding(false);
-                setSearchBuilding("");
-
-                // Reset dependent dropdowns
-                setSelectedFloorId("");
-                setSelectedUnitId("");
-                setFloors([]);
-                setUnits([]);
-
-                // Fetch floors for building
-                try {
-                  const response = await getFloors(building.id);
-                  setFloors(response.data);
-                } catch (error) {
-                  console.error("Error fetching floors:", error);
-                }
-              }}
+              className="border p-2 px-4 rounded-md cursor-pointer bg-white"
+              onClick={() => setOpenBuilding((prev) => !prev)}
             >
-              {building.name}
+              {selectedBuilding
+                ? filteredBuildings.find((b) => b.id == selectedBuilding)?.name
+                : "-- Choose Building --"}
             </div>
-          ))}
 
-        {/* No match */}
-        {filteredBuildings.filter((b) =>
-          b.name.toLowerCase().includes(searchBuilding.toLowerCase())
-        ).length === 0 && (
-          <div className="p-2 text-gray-400">No match found</div>
-        )}
-      </div>
-    </div>
-  )}
-</div>
+            {/* Dropdown */}
+            {openBuilding && (
+              <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
+
+                {/* Search Input */}
+                <input
+                  type="text"
+                  placeholder="Search building..."
+                  className="border-b p-2 w-full text-sm outline-none"
+                  value={searchBuilding}
+                  onChange={(e) => setSearchBuilding(e.target.value)}
+                />
+
+                {/* Options */}
+                <div className="max-h-40 overflow-y-auto">
+                  {filteredBuildings
+                    .filter((building) =>
+                      building.name.toLowerCase().includes(searchBuilding.toLowerCase())
+                    )
+                    .map((building) => (
+                      <div
+                        key={building.id}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={async () => {
+                          setSelectedBuilding(building.id);
+                          setOpenBuilding(false);
+                          setSearchBuilding("");
+
+                          // Reset dependent dropdowns
+                          setSelectedFloorId("");
+                          setSelectedUnitId("");
+                          setFloors([]);
+                          setUnits([]);
+
+                          // Fetch floors for building
+                          try {
+                            const response = await getFloors(building.id);
+                            setFloors(response.data);
+                          } catch (error) {
+                            console.error("Error fetching floors:", error);
+                          }
+                        }}
+                      >
+                        {building.name}
+                      </div>
+                    ))}
+
+                  {/* No match */}
+                  {filteredBuildings.filter((b) =>
+                    b.name.toLowerCase().includes(searchBuilding.toLowerCase())
+                  ).length === 0 && (
+                      <div className="p-2 text-gray-400">No match found</div>
+                    )}
+                </div>
+              </div>
+            )}
+          </div>
 
 
           {/* Floor */}
-<div className="flex flex-col w-full relative">
-  <label className="font-semibold mb-1">Floor *</label>
+          <div className="flex flex-col w-full relative">
+            <label className="font-semibold mb-1">Floor *</label>
 
-  {/* Selected Box */}
-  <div
-    className="border p-2 px-4 rounded-md cursor-pointer bg-white"
-    onClick={() => setOpenFloor((prev) => !prev)}
-  >
-    {selectedFloorId
-      ? floors.find((f) => f.id == selectedFloorId)?.name
-      : "-- Choose Floor --"}
-  </div>
-
-  {/* Dropdown */}
-  {openFloor && (
-    <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
-
-      {/* Search Input */}
-      <input
-        type="text"
-        placeholder="Search floor..."
-        className="border-b p-2 w-full text-sm outline-none"
-        value={searchFloor}
-        onChange={(e) => setSearchFloor(e.target.value)}
-      />
-
-      {/* Options */}
-      <div className="max-h-40 overflow-y-auto">
-        {floors
-          .filter((floor) =>
-            floor.name.toLowerCase().includes(searchFloor.toLowerCase())
-          )
-          .map((floor) => (
+            {/* Selected Box */}
             <div
-              key={floor.id}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={async () => {
-                setSelectedFloorId(floor.id);
-                setOpenFloor(false);
-                setSearchFloor("");
-
-                // Reset units
-                setSelectedUnitId("");
-                try {
-                  const response = await getUnits(floor.id);
-                  setUnits(response.data);
-                } catch (error) {
-                  console.error("Error fetching units:", error);
-                }
-              }}
+              className="border p-2 px-4 rounded-md cursor-pointer bg-white"
+              onClick={() => setOpenFloor((prev) => !prev)}
             >
-              {floor.name}
+              {selectedFloorId
+                ? floors.find((f) => f.id == selectedFloorId)?.name
+                : "-- Choose Floor --"}
             </div>
-          ))}
 
-        {/* No match */}
-        {floors.filter((floor) =>
-          floor.name.toLowerCase().includes(searchFloor.toLowerCase())
-        ).length === 0 && (
-          <div className="p-2 text-gray-400">No match found</div>
-        )}
-      </div>
-    </div>
-  )}
-</div>
+            {/* Dropdown */}
+            {openFloor && (
+              <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
+
+                {/* Search Input */}
+                <input
+                  type="text"
+                  placeholder="Search floor..."
+                  className="border-b p-2 w-full text-sm outline-none"
+                  value={searchFloor}
+                  onChange={(e) => setSearchFloor(e.target.value)}
+                />
+
+                {/* Options */}
+                <div className="max-h-40 overflow-y-auto">
+                  {floors
+                    .filter((floor) =>
+                      floor.name.toLowerCase().includes(searchFloor.toLowerCase())
+                    )
+                    .map((floor) => (
+                      <div
+                        key={floor.id}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={async () => {
+                          setSelectedFloorId(floor.id);
+                          setOpenFloor(false);
+                          setSearchFloor("");
+
+                          // Reset units
+                          setSelectedUnitId("");
+                          try {
+                            const response = await getUnits(floor.id);
+                            setUnits(response.data);
+                          } catch (error) {
+                            console.error("Error fetching units:", error);
+                          }
+                        }}
+                      >
+                        {floor.name}
+                      </div>
+                    ))}
+
+                  {/* No match */}
+                  {floors.filter((floor) =>
+                    floor.name.toLowerCase().includes(searchFloor.toLowerCase())
+                  ).length === 0 && (
+                      <div className="p-2 text-gray-400">No match found</div>
+                    )}
+                </div>
+              </div>
+            )}
+          </div>
 
 
 
 
           {/* Unit */}
-<div className="flex flex-col w-full relative">
-  <label className="font-semibold mb-1">Unit</label>
+          <div className="flex flex-col w-full relative">
+            <label className="font-semibold mb-1">Unit</label>
 
-  {/* Selected Box */}
-  <div
-    className="border p-2 px-4 rounded-md cursor-pointer bg-white"
-    onClick={() => setOpenUnit((prev) => !prev)}
-  >
-    {selectedUnitId
-      ? units.find((u) => u.id == selectedUnitId)?.name
-      : "-- Choose Unit --"}
-  </div>
-
-  {/* Dropdown */}
-  {openUnit && (
-    <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
-
-      {/* Search Input */}
-      <input
-        type="text"
-        placeholder="Search unit..."
-        className="border-b p-2 w-full text-sm outline-none"
-        value={searchUnit}
-        onChange={(e) => setSearchUnit(e.target.value)}
-      />
-
-      {/* Options */}
-      <div className="max-h-40 overflow-y-auto">
-        {units
-          .filter((unit) =>
-            unit.name.toLowerCase().includes(searchUnit.toLowerCase())
-          )
-          .map((unit) => (
+            {/* Selected Box */}
             <div
-              key={unit.id}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => {
-                setSelectedUnitId(unit.id);
-                setOpenUnit(false);
-                setSearchUnit(""); // clear search after select
-              }}
+              className="border p-2 px-4 rounded-md cursor-pointer bg-white"
+              onClick={() => setOpenUnit((prev) => !prev)}
             >
-              {unit.name}
+              {selectedUnitId
+                ? units.find((u) => u.id == selectedUnitId)?.name
+                : "-- Choose Unit --"}
             </div>
-          ))}
 
-        {units.filter((unit) =>
-          unit.name.toLowerCase().includes(searchUnit.toLowerCase())
-        ).length === 0 && (
-          <div className="p-2 text-gray-400">No match found</div>
-        )}
-      </div>
-    </div>
-  )}
-</div>
+            {/* Dropdown */}
+            {openUnit && (
+              <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
+
+                {/* Search Input */}
+                <input
+                  type="text"
+                  placeholder="Search unit..."
+                  className="border-b p-2 w-full text-sm outline-none"
+                  value={searchUnit}
+                  onChange={(e) => setSearchUnit(e.target.value)}
+                />
+
+                {/* Options */}
+                <div className="max-h-40 overflow-y-auto">
+                  {units
+                    .filter((unit) =>
+                      unit.name.toLowerCase().includes(searchUnit.toLowerCase())
+                    )
+                    .map((unit) => (
+                      <div
+                        key={unit.id}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setSelectedUnitId(unit.id);
+                          setOpenUnit(false);
+                          setSearchUnit(""); // clear search after select
+                        }}
+                      >
+                        {unit.name}
+                      </div>
+                    ))}
+
+                  {units.filter((unit) =>
+                    unit.name.toLowerCase().includes(searchUnit.toLowerCase())
+                  ).length === 0 && (
+                      <div className="p-2 text-gray-400">No match found</div>
+                    )}
+                </div>
+              </div>
+            )}
+          </div>
 
 
-{/* Member Type with Search */}
-<div className="flex flex-col w-full relative">
-  <label className="font-semibold mb-1">Member Type:</label>
+          {/* Member Type with Search */}
+          <div className="flex flex-col w-full relative">
+            <label className="font-semibold mb-1">Member Type:</label>
 
-  {/* Selected Box */}
-  <div
-    className="border p-2 px-4 rounded-md cursor-pointer bg-white"
-    onClick={() => setOpen((prev) => !prev)}
-  >
-    {memberType ? memberType : "-- Choose Member Type --"}
-  </div>
-
-  {/* Dropdown */}
-  {open && (
-    <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
-
-      {/* Search Input */}
-      <input
-        type="text"
-        placeholder="Search member type..."
-        className="border-b p-2 w-full text-sm outline-none"
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-      />
-
-      {/* Options */}
-      <div className="max-h-40 overflow-y-auto">
-        {filteredOptions.length > 0 ? (
-          filteredOptions.map((opt) => (
+            {/* Selected Box */}
             <div
-              key={opt}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => {
-                setMemberType(opt);
-                setOpen(false);
-                setSearchText(""); // clear search
-              }}
+              className="border p-2 px-4 rounded-md cursor-pointer bg-white"
+              onClick={() => setOpen((prev) => !prev)}
             >
-              {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              {memberType ? memberType : "-- Choose Member Type --"}
             </div>
-          ))
-        ) : (
-          <div className="p-2 text-gray-400">No match found</div>
-        )}
-      </div>
-    </div>
-  )}
-</div>
+
+            {/* Dropdown */}
+            {open && (
+              <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 z-20 shadow-lg">
+
+                {/* Search Input */}
+                <input
+                  type="text"
+                  placeholder="Search member type..."
+                  className="border-b p-2 w-full text-sm outline-none"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+
+                {/* Options */}
+                <div className="max-h-40 overflow-y-auto">
+                  {filteredOptions.length > 0 ? (
+                    filteredOptions.map((opt) => (
+                      <div
+                        key={opt}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setMemberType(opt);
+                          setOpen(false);
+                          setSearchText(""); // clear search
+                        }}
+                      >
+                        {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-2 text-gray-400">No match found</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
 
 
@@ -440,7 +440,7 @@ const [searchFloor, setSearchFloor] = useState("");
           <div className="flex flex-col h-full justify-end">
             <button
               type="button"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
               onClick={fetchUsers}
             >
               Search
