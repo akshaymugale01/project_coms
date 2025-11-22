@@ -455,7 +455,7 @@ const EditPageUser = () => {
           name: v.name,
           contact_no: v.contact_no,
         })),
-        vehicle_details_attributes: formData.vehicle_details?.map((v) => ({
+        vehicle_details_attributes: (formData.vehicle_details || vehicleList || []).map((v) => ({
           id: v.id ?? undefined,
           vehicle_type: v.vehicle_type,
           vehicle_no: v.vehicle_no,
