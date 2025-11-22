@@ -64,8 +64,10 @@ const SetupUserDetails = () => {
   return (
     <section className="flex flex-col items-center p-5 bg-gray-700">
       {/* Page Title */}
-      <div className="flex mx-1 bg-white rounded-md flex-col gap-1 overflow-hidden my-1 w-full rounded-md bg-white max-w-2xl p-5 mt-2 mb-3">
-        <div className="bg-gray-900 text-white p-3 rounded-full w-full max-w-2xl flex items-center justify-between">
+      <div class="flex mx-1 bg-white rounded-md flex-col gap-1 overflow-hidden my-1 w-full p-5 mt-2 mb-3">
+
+        <div className="bg-gray-900 text-white p-3 rounded-full w-full flex items-center justify-between">
+
           <h2 className="text-xl font-bold text-center w-full">User Details</h2>
           <Link
             to={`/setup/users-edit-page/${id}`}
@@ -77,7 +79,8 @@ const SetupUserDetails = () => {
 
         {/* <div className="w-full rounded-md bg-white max-w-2xl p-10 mt-3 mb-3"> */}
         {/* User Details Card */}
-        <div className="bg-white shadow-lg p-2 rounded-lg p-6 w-full max-w-3xl mt-3 mb-3 border border-gray-900">
+        <div className="bg-white shadow-lg p-2 rounded-lg p-6 w-full mt-3 mb-3 border border-gray-900">
+
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-800">
               User Information
@@ -104,13 +107,14 @@ const SetupUserDetails = () => {
         </div>
         {/* Associated Units */}
         {formData.user_sites.length > 0 && (
-          <div className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full max-w-3xl mt-5 border border-gray-900">
+          <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+
             {formData.user_sites.map((site, index) => {
               const unit = units.find((u) => u.id === site.unit_id);
               return (
                 <div
                   key={index}
-                  className="mt-4 p-4 border rounded-md bg-gray-50"
+                  className="bg-white shadow-lg p-6 w-full mt-3 mb-3 border rounded-md bg-gray-50"
                 >
                   {/* <h4 className="font-bold text-gray-700 mb-2">
                     Unit {index + 1}
@@ -176,9 +180,11 @@ const SetupUserDetails = () => {
           </div>
         )}
 
-        <div className="shadow-lg p-2 rounded-lg p-6 w-full max-w-3xl mt-3 mb-3 border border-gray-900">
+        <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+
           {formData.user_members && formData.user_members.length > 0 && (
-            <div className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full max-w-3xl mt-5 border bg-gray-50">
+            <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+
               <h3 className="text-lg font-semibold text-gray-800">
                 Family Members
               </h3>
@@ -217,7 +223,8 @@ const SetupUserDetails = () => {
               No members found
             </div>
           )}
-          <div className="grid grid-cols-2 shadow-lg rounded-lg p-6 mb-3 w-full max-w-3xl mt-5 border bg-gray-50">
+          <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+
             <p>
               <span className="font-semibold">MGL Customer Number:</span>{" "}
               {formData.mgl_customer_number || "N/A"}
@@ -238,7 +245,8 @@ const SetupUserDetails = () => {
             </p>
           </div>
           {formData.user_vendor && formData.user_vendor.length > 0 && (
-            <div className="rounded-lg p-6 mb-3 w-full max-w-3xl mt-5 border bg-gray-50">
+            <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+
               <h3 className="text-lg font-semibold text-gray-800">
                 Vendor Services
               </h3>

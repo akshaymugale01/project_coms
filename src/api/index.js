@@ -1912,7 +1912,7 @@ export const getFilterUsers = async (id) =>
 export const getUsersByID = async (id) =>
   axiosInstance.get(`/users.json`, {
     params: {
-      token: token,
+      token: token, 
       "q[id_eq]": id,
     },
   });
