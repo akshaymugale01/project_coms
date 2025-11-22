@@ -43,6 +43,10 @@ const AddUser = () => {
     { service_type: "", name: "", contact: "" },
   ]);
 
+  const [vehicleList, setVehicleList] = useState([
+    { vehicle_type: "", vehicle_no: "", parking_slot_no: "" },
+  ]);
+
   const [occupancy_type, setOccupancy_type] = useState("");
 
   const [formData, setFormData] = useState({
@@ -100,6 +104,22 @@ const AddUser = () => {
     const updated = [...vendorList];
     updated[index][field] = value;
     setVendorList(updated);
+  };
+
+  const handleAddVehicle = () => {
+    setVehicleList([...vehicleList, { vehicle_type: "", vehicle_no: "", parking_slot_no: "" }]);
+  };
+
+  const handleDeleteVehicle = (index) => {
+    const updated = [...vehicleList];
+    updated.splice(index, 1);
+    setVehicleList(updated);
+  };
+
+  const handleVehicleChange = (index, field, value) => {
+    const updated = [...vehicleList];
+    updated[index][field] = value.toUpperCase();
+    setVehicleList(updated);
   };
 
   console.log("formData", formData);
@@ -296,28 +316,34 @@ const AddUser = () => {
         no_of_pets,
         birth_date,
         user_sites: [
-        {
-          unit_id: selectedUnit,
-          site_id: siteId,
-          ownership: occupancy_type,
-          ownership_type: "primary",
-          is_approved: true,
-          lives_here,
-        },
-      ],
+          {
+            unit_id: selectedUnit,
+            site_id: siteId,
+            ownership: occupancy_type,
+            ownership_type: "primary",
+            is_approved: true,
+            lives_here,
+          },
+        ],
 
-      user_members: members.map((member) => ({
-        member_type: member.type,
-        member_name: member.name,
-        contact: member.contact,
-        relation: member.relation,
-      })),
+        user_members: members.map((member) => ({
+          member_type: member.type,
+          member_name: member.name,
+          contact: member.contact,
+          relation: member.relation,
+        })),
 
-      user_vendors: vendorList.map((vendor) => ({
-        service_type: vendor.service,
-        name: vendor.name,
-        contact: vendor.contact,
-      })),
+        user_vendors: vendorList.map((vendor) => ({
+          service_type: vendor.service,
+          name: vendor.name,
+          contact: vendor.contact,
+        })),
+
+        vehicle_details: vehicleList.map((vehicle) => ({
+          vehicle_type: vehicle.vehicle_type,
+          vehicle_no: vehicle.vehicle_no,
+          parking_slot_no: vehicle.parking_slot_no,
+        })),
       },
       site_ids,
     };
@@ -603,7 +629,7 @@ const AddUser = () => {
             {/* ➕ Add Button */}
             <button
               type="button"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
               onClick={handleAddMember}
             >
               Add Family Member
@@ -793,13 +819,13 @@ const AddUser = () => {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
               Resident Services / Vendor Details
             </h2>
-            <hr className="border-t border-gray-300 mb-6" />
+            <hr className="border-t border-gray-300 " />
 
             <div className="mt-5 space-y-4" style={{ marginTop: "30px" }}>
               {/* ➕ Add Button */}
               <button
                 type="button"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-blue-700"
                 onClick={handleAddVendor}
               >
                 Add Vendor Service
@@ -875,6 +901,99 @@ const AddUser = () => {
                       className="px-2 py-1 rounded hover:bg-red-100"
                       onClick={() => handleDeleteVendor(index)}
                       aria-label="Delete vendor"
+                    >
+                      <RiDeleteBinLine className="text-red-600 w-7 h-7" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+
+          <div className="mt-10 space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
+              Vehicle Details
+            </h2>
+            <hr className="border-t border-gray-300 mb-6" />
+
+            <div className="mt-5 space-y-4">
+              {/* ➕ Add Button */}
+              <button
+                type="button"
+                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+                onClick={handleAddVehicle}
+              >
+                Add Vehicle
+              </button>
+
+              {/* Vehicle Entries */}
+              {vehicleList.map((vehicle, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  {/* Vehicle Type Dropdown */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-1">
+                      Vehicle Type
+                    </label>
+                    <select
+                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+                      value={vehicle.vehicle_type}
+                      onChange={(e) =>
+                        handleVehicleChange(index, "vehicle_type", e.target.value)
+                      }
+                    >
+                      <option value="">-- Select --</option>
+                      <option value="Car">Car</option>
+                      <option value="Bike">Bike</option>
+                      <option value="Scooter">Scooter</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Truck">Truck</option>
+                    </select>
+                  </div>
+
+                  {/* Vehicle Number */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-1">
+                      Vehicle Number
+                    </label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
+                      value={vehicle.vehicle_no}
+                      onChange={(e) =>
+                        handleVehicleChange(index, "vehicle_no", e.target.value)
+                      }
+                      placeholder="e.g. MH01AB1234"
+                      maxLength={15}
+                    />
+                  </div>
+
+                  {/* Parking Slot */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-1">
+                      Parking Slot No.
+                    </label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
+                      value={vehicle.parking_slot_no}
+                      onChange={(e) =>
+                        handleVehicleChange(index, "parking_slot_no", e.target.value)
+                      }
+                      placeholder="e.g. P-101"
+                    />
+                  </div>
+
+                  {/* ❌ Delete Button */}
+                  <div className="inline-block">
+                    <button
+                      type="button"
+                      className="px-2 py-1 rounded hover:bg-red-100 transition-colors"
+                      onClick={() => handleDeleteVehicle(index)}
+                      aria-label="Delete vehicle"
                     >
                       <RiDeleteBinLine className="text-red-600 w-7 h-7" />
                     </button>
@@ -997,7 +1116,7 @@ const AddUser = () => {
           </button> */}
 
           {/* Submit Button */}
-          <div className="flex justify-center my-5">
+          <div className="flex justify-center mt-10">
             <button
               onClick={handleAddUser}
               className="bg-black text-white p-2 px-4 rounded-md font-medium"

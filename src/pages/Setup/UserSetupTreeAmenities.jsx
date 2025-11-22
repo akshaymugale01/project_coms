@@ -172,13 +172,7 @@ const UserSetupTreeAmenities = () => {
                       [key]: e.target.value,
                     }))
                   }
-                  style={{
-                    padding: "4px",
-                    fontSize: "0.8rem",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                    width: "100%",
-                  }}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               );
             }
@@ -214,99 +208,86 @@ const UserSetupTreeAmenities = () => {
       style: {
         background: "rgb(17, 24, 39)",
         color: "white",
-        fontSize: "10px",
+        fontSize: "12px",
+        fontWeight: "600",
+        borderBottom: "2px solid rgb(55, 65, 81)",
       },
     },
     headCells: {
       style: {
         textTransform: "uppercase",
+        padding: "12px 8px",
+      },
+    },
+    rows: {
+      style: {
+        minHeight: "50px",
+        "&:hover": {
+          backgroundColor: "rgb(243, 244, 246)",
+          cursor: "pointer",
+        },
       },
     },
     cells: {
       style: {
         fontSize: "14px",
+        padding: "8px",
       },
     },
   };
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "10px",
-          position: "relative",
-        }}
-      >
+    <div className="w-full">
+      <div className="flex gap-3 mb-4 items-center">
         <button
           onClick={() => setShowSearch((prev) => !prev)}
-          style={{
-            padding: "6px 12px",
-            backgroundColor: "#1f2937",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+            showSearch
+              ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
+              : "bg-gray-800 text-white hover:bg-gray-700"
+          }`}
         >
           {showSearch ? "Hide Search" : "Show Search"}
         </button>
 
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           <button
             onClick={() => setShowColumnDropdown((prev) => !prev)}
-            style={{
-              padding: "6px 12px",
-              backgroundColor: "#1f2937",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
+            className="px-4 py-2 bg-gray-800 text-white rounded-md font-medium hover:bg-gray-700 transition-all duration-200 shadow-md"
           >
             Column Visibility
           </button>
 
           {showColumnDropdown && (
-            <div
-              style={{
-                position: "absolute",
-                top: "110%",
-                left: 0,
-                backgroundColor: "white",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                padding: "10px",
-                zIndex: 1000,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                maxHeight: "300px",
-                overflowY: "auto",
-              }}
-            >
-              {rawColumns.map((col) => (
-                <label
-                  key={col.name}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "6px",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={columnVisibility[col.name]}
-                    onChange={(e) =>
-                      setColumnVisibility((prev) => ({
-                        ...prev,
-                        [col.name]: e.target.checked,
-                      }))
-                    }
-                    style={{ marginRight: "8px" }}
-                  />
-                  {col.name}
-                </label>
-              ))}
+            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 max-h-96 overflow-y-auto">
+              <div className="p-3 border-b border-gray-200 bg-gray-50">
+                <h3 className="font-semibold text-gray-700 text-sm">
+                  Select Columns to Display
+                </h3>
+              </div>
+              <div className="p-2">
+                {rawColumns.map((col) => (
+                  <label
+                    key={col.name}
+                    className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={columnVisibility[col.name]}
+                      onChange={(e) =>
+                        setColumnVisibility((prev) => ({
+                          ...prev,
+                          [col.name]: e.target.checked,
+                        }))
+                      }
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="ml-3 text-sm text-gray-700">
+                      {col.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -323,6 +304,13 @@ const UserSetupTreeAmenities = () => {
         highlightOnHover
         progressPending={loading}
         pagination
+        paginationPerPage={10}
+        paginationRowsPerPageOptions={[10, 20, 30, 50]}
+        noDataComponent={
+          <div className="text-center py-10 text-gray-500">
+            There are no records to display
+          </div>
+        }
       />
     </div>
   );
