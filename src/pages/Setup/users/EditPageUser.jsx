@@ -49,6 +49,7 @@ const EditPageUser = () => {
     user_sites: [],
     user_members: [],
     user_vendor: [],
+    vehicle_details: [],
   });
   const [originalData, setOriginalData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,7 @@ const EditPageUser = () => {
   const [selectedUnit, setSelectedUnit] = useState("");
   const [filteredBuildings, setFilteredBuildings] = useState([]);
   const [vendorList, setVendorList] = useState([]);
+  const [vehicleList, setVehicleList] = useState([]);
   const [hydratedSite, setHydratedSite] = useState(false);
 
   console.log("id", id);
@@ -216,9 +218,22 @@ const EditPageUser = () => {
       console.log("Hydrating vendors from formData:", hydratedVendors);
       setVendorList(hydratedVendors);
 
+      // Hydrate vehicles
+      const hydratedVehicles = Array.isArray(formData.vehicle_details)
+        ? formData.vehicle_details.map((v) => ({
+            id: v.id ?? null,
+            vehicle_type: v.vehicle_type ?? "",
+            vehicle_no: v.vehicle_no ?? "",
+            parking_slot_no: v.parking_slot_no ?? "",
+          }))
+        : [{ id: null, vehicle_type: "", vehicle_no: "", parking_slot_no: "" }];
+
+      console.log("Hydrating vehicles from formData:", hydratedVehicles);
+      setVehicleList(hydratedVehicles);
+
       setHasHydratedUserData(true);
     }
-  }, [formData.user_members, formData.user_vendor, hasHydratedUserData]);
+  }, [formData.user_members, formData.user_vendor, formData.vehicle_details, hasHydratedUserData]);
 
   useEffect(() => {
     if (!hasHydratedUserData) return;
@@ -238,12 +253,20 @@ const EditPageUser = () => {
       contact_no: v.contact_no,
     }));
 
+    const syncedVehicles = vehicleList.map((v) => ({
+      id: v.id ?? undefined,
+      vehicle_type: v.vehicle_type,
+      vehicle_no: v.vehicle_no,
+      parking_slot_no: v.parking_slot_no,
+    }));
+
     setFormData((prev) => ({
       ...prev,
       user_members: syncedMembers,
       user_vendors: syncedVendors,
+      vehicle_details: syncedVehicles,
     }));
-  }, [members, vendorList, hasHydratedUserData]);
+  }, [members, vendorList, vehicleList, hasHydratedUserData]);
 
   useEffect(() => {
     const fetchFloorsAndUnits = async () => {
@@ -329,6 +352,28 @@ const EditPageUser = () => {
     });
   };
 
+  const handleAddVehicle = () => {
+    setVehicleList((prev) => [
+      ...prev,
+      { id: null, vehicle_type: "", vehicle_no: "", parking_slot_no: "" },
+    ]);
+  };
+
+  const handleDeleteVehicle = (index) => {
+    setVehicleList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleVehicleChange = (index, field, value) => {
+    setVehicleList((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value.toUpperCase(),
+      };
+      return updated;
+    });
+  };
+
   const validateMobileInput = (input) => {
     return input.replace(/\D/g, "").slice(0, 10);
   };
@@ -348,6 +393,7 @@ const EditPageUser = () => {
         }),
         user_members: formData.user_members,
         user_vendor: formData.user_vendor,
+        vehicle_details: formData.vehicle_details,
       },
     };
 
@@ -1045,6 +1091,97 @@ const EditPageUser = () => {
                       className="px-2 py-1 rounded hover:bg-red-100"
                       onClick={() => handleDeleteVendor(index)}
                       aria-label="Delete vendor"
+                    >
+                      <RiDeleteBinLine className="text-red-600 w-7 h-7" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Vehicle Details Section */}
+          <div className="mt-10 space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
+              Vehicle Details
+            </h2>
+            <hr className="border-t border-gray-300 mb-6" />
+
+            <div className="mt-5 space-y-4">
+              <button
+                type="button"
+                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+                onClick={handleAddVehicle}
+              >
+                Add Vehicle
+              </button>
+
+              {vehicleList.map((vehicle, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  {/* Vehicle Type */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-1">
+                      Vehicle Type
+                    </label>
+                    <select
+                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+                      value={vehicle.vehicle_type ?? ""}
+                      onChange={(e) =>
+                        handleVehicleChange(index, "vehicle_type", e.target.value)
+                      }
+                    >
+                      <option value="">-- Select --</option>
+                      <option value="Car">Car</option>
+                      <option value="Bike">Bike</option>
+                      <option value="Scooter">Scooter</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Truck">Truck</option>
+                    </select>
+                  </div>
+
+                  {/* Vehicle Number */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-1">
+                      Vehicle Number
+                    </label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
+                      value={vehicle.vehicle_no ?? ""}
+                      onChange={(e) =>
+                        handleVehicleChange(index, "vehicle_no", e.target.value)
+                      }
+                      placeholder="e.g. MH01AB1234"
+                      maxLength={15}
+                    />
+                  </div>
+
+                  {/* Parking Slot */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-1">
+                      Parking Slot No.
+                    </label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
+                      value={vehicle.parking_slot_no ?? ""}
+                      onChange={(e) =>
+                        handleVehicleChange(index, "parking_slot_no", e.target.value)
+                      }
+                      placeholder="e.g. P-101"
+                    />
+                  </div>
+
+                  {/* Delete Button */}
+                  <div className="inline-block">
+                    <button
+                      type="button"
+                      className="px-2 py-1 rounded hover:bg-red-100 transition-colors"
+                      onClick={() => handleDeleteVehicle(index)}
+                      aria-label="Delete vehicle"
                     >
                       <RiDeleteBinLine className="text-red-600 w-7 h-7" />
                     </button>
