@@ -190,22 +190,21 @@ const EditPageUser = () => {
   const [hasHydratedUserData, setHasHydratedUserData] = useState(false);
 
   useEffect(() => {
-    if (
-      !hasHydratedUserData &&
-      Array.isArray(formData.user_members) &&
-      formData.user_members.length > 0
-    ) {
-      const hydratedMembers = formData.user_members.map((m) => ({
-        id: m.id ?? null,
-        member_type: m.member_type ?? "",
-        member_name: m.member_name ?? "",
-        contact_no: m.contact_no ?? "",
-        relation: m.relation ?? "",
-      }));
+    if (!hasHydratedUserData && formData.firstname) {
+      const hydratedMembers = Array.isArray(formData.user_members) && formData.user_members.length > 0
+        ? formData.user_members.map((m) => ({
+            id: m.id ?? null,
+            member_type: m.member_type ?? "",
+            member_name: m.member_name ?? "",
+            contact_no: m.contact_no ?? "",
+            relation: m.relation ?? "",
+          }))
+        : [];
+
       console.log("Hydrating members from formData:", hydratedMembers);
       setMembers(hydratedMembers);
 
-      const hydratedVendors = Array.isArray(formData.user_vendor)
+      const hydratedVendors = Array.isArray(formData.user_vendor) && formData.user_vendor.length > 0
         ? formData.user_vendor.map((v) => ({
             id: v.id ?? null,
             service_type: v.service_type ?? "",
@@ -218,21 +217,21 @@ const EditPageUser = () => {
       setVendorList(hydratedVendors);
 
       // Hydrate vehicles
-      const hydratedVehicles = Array.isArray(formData.vehicle_details)
-        ? formData.vehicle_details?.map((v) => ({
+      const hydratedVehicles = Array.isArray(formData.vehicle_details) && formData.vehicle_details.length > 0
+        ? formData.vehicle_details.map((v) => ({
             id: v.id ?? null,
             vehicle_type: v.vehicle_type ?? "",
             vehicle_no: v.vehicle_no ?? "",
             parking_slot_no: v.parking_slot_no ?? "",
           }))
-        : [{ id: null, vehicle_type: "", vehicle_no: "", parking_slot_no: "" }];
+        : [];
 
       console.log("Hydrating vehicles from formData:", hydratedVehicles);
       setVehicleList(hydratedVehicles);
 
       setHasHydratedUserData(true);
     }
-  }, [formData.user_members, formData.user_vendor, formData.vehicle_details, hasHydratedUserData]);
+  }, [formData.firstname, formData.user_members, formData.user_vendor, formData.vehicle_details, hasHydratedUserData]);
 
   useEffect(() => {
     if (!hasHydratedUserData) return;
@@ -262,7 +261,7 @@ const EditPageUser = () => {
     setFormData((prev) => ({
       ...prev,
       user_members: syncedMembers,
-      user_vendors: syncedVendors,
+      user_vendor: syncedVendors,
       vehicle_details: syncedVehicles,
     }));
   }, [members, vendorList, vehicleList, hasHydratedUserData]);
