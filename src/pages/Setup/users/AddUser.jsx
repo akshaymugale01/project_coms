@@ -819,7 +819,7 @@ const AddUser = () => {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
               Resident Services / Vendor Details
             </h2>
-            <hr className="border-t border-gray-300 " />
+            <hr className="border-t border-gray-300 mb-6" />
 
             <div className="mt-5 space-y-4" style={{ marginTop: "30px" }}>
               {/* ➕ Add Button */}
@@ -924,7 +924,7 @@ const AddUser = () => {
                 className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
                 onClick={handleAddVehicle}
               >
-                Add Vehicle
+                🚗 Add Vehicle
               </button>
 
               {/* Vehicle Entries */}

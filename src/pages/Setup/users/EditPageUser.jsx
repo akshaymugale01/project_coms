@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Navbar from "../../../components/Navbar";
-
 import {
   editSetupUsers,
   getAllUnits,
@@ -378,26 +376,93 @@ const EditPageUser = () => {
     return input.replace(/\D/g, "").slice(0, 10);
   };
 
+  const handleInputChange = (key, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
   const handleAddUser = async () => {
-    const changedFields = getChangedFields(originalData, formData);
-    // Convert user_sites to user_sites_attributes always
+    // Validate required fields
+    if (
+      !formData.firstname ||
+      !formData.lastname ||
+      !formData.email ||
+      !formData.mobile ||
+      !formData.moving_date ||
+      !formData.occupancy_type ||
+      !selectedBuilding ||
+      !selectedFloorId ||
+      !selectedUnit
+    ) {
+      return toast.error("Please fill all mandatory fields marked with *");
+    }
+
+    // Conditional check for lease expiry
+    if (formData.occupancy_type === "tenant" && !formData.lease_expiry) {
+      return toast.error("Lease expiry date is required for tenants");
+    }
+
+    // Validate mobile number format (Indian 10-digit starting with 6-9)
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(formData.mobile)) {
+      return toast.error("Please enter a valid 10-digit mobile number");
+    }
+
     const postData = {
       user: {
-        ...changedFields,
-        user_sites_attributes: formData.user_sites.map((site, index) => {
-          const existingSite = originalData.user_sites?.[index];
-          return {
-            ...site,
-            id: existingSite?.id, // include ID if it's an existing site
-          };
-        }),
-        user_members: formData.user_members,
-        user_vendor: formData.user_vendor,
-        vehicle_details: formData.vehicle_details,
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        mobile: formData.mobile,
+        moving_date: formData.moving_date,
+        lease_expiry: formData.lease_expiry,
+        lives_here: formData.lives_here,
+        profession: formData.profession,
+        mgl_customer_number: formData.mgl_customer_number,
+        adani_electricity_account_no: formData.adani_electricity_account_no,
+        net_provider_name: formData.net_provider_name,
+        net_provider_id: formData.net_provider_id,
+        blood_group: formData.blood_group,
+        no_of_pets: formData.no_of_pets,
+        birth_date: formData.birth_date,
+        user_sites_attributes: [
+          {
+            id: formData.user_sites?.[0]?.id,
+            unit_id: parseInt(selectedUnit, 10),
+            build_id: parseInt(selectedBuilding, 10),
+            floor_id: parseInt(selectedFloorId, 10),
+            ownership: formData.occupancy_type,
+            ownership_type: "primary",
+            is_approved: true,
+            lives_here: formData.lives_here,
+          },
+        ],
+        user_members_attributes: formData.user_members.map((m) => ({
+          id: m.id ?? undefined,
+          member_type: m.member_type,
+          member_name: m.member_name,
+          contact_no: m.contact_no,
+          relation: m.relation,
+        })),
+        user_vendor_attributes: formData.user_vendor.map((v) => ({
+          id: v.id ?? undefined,
+          service_type: v.service_type,
+          name: v.name,
+          contact_no: v.contact_no,
+        })),
+        vehicle_details_attributes: formData.vehicle_details.map((v) => ({
+          id: v.id ?? undefined,
+          vehicle_type: v.vehicle_type,
+          vehicle_no: v.vehicle_no,
+          parking_slot_no: v.parking_slot_no,
+        })),
       },
     };
 
     try {
+      console.log("Sending update data:", postData);
       await editSetupUsers(id, postData);
       toast.success("User Updated successfully!");
       navigate("/setup/users-setup");
@@ -422,20 +487,10 @@ const EditPageUser = () => {
     return changed;
   };
 
-  const handleInputChange = (key, value) => {
-  setFormData((prev) => ({
-    ...prev,
-    [key]: value,
-  }));
-};
-
   console.log("fomrData", formData);
   return (
-    
-    <section className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
-        
+    <section className="flex flex-col items-center p-2 bg-gray-700">
       <div className="flex mx-1 bg-white rounded-md flex-col gap-1 overflow-hidden my-1">
-        
         {/* {loading ? (
           <div className="flex justify-center items-center h-96">
             <span className="text-lg font-semibold">Loading...</span>
@@ -454,9 +509,12 @@ const EditPageUser = () => {
             {["First Name", "Last Name", "Email", "Mobile", "Password"].map(
               (field, idx) => {
                 const isDisabled = field === "Email" || field === "Password";
+                const isRequired = ["First Name", "Last Name", "Email", "Mobile"].includes(field);
                 return (
                   <div key={idx} className="flex flex-col gap-1">
-                    <label className="font-semibold">{field}:</label>
+                    <label className="font-semibold">
+                      {field}:{isRequired && <span style={{ color: "red" }}> *</span>}
+                    </label>
                     <input
                       type="text"
                       name={field.toLowerCase().replace(" ", "")}
@@ -586,230 +644,242 @@ const EditPageUser = () => {
               >
                 Add Another Unit
               </button> */}
-<div className="mt-10 space-y-4">
-  <div className="grid mt-10 md:grid-cols-3">
 
+          <div className="mt-10 space-y-4">
+            <div className="grid mt-10 md:grid-cols-3">
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">
+                  Tower: <span style={{ color: "red" }}>*</span>
+                </label>
+                <select
+                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
+                  value={selectedBuilding}
+                  onChange={async (e) => {
+                    const buildingId = e.target.value;
+                    setSelectedBuilding(buildingId);
+                    if (buildingId) {
+                      try {
+                        const response = await getFloors(buildingId);
+                        setFloors(response.data);
+                      } catch (error) {
+                        console.error("Error fetching floors:", error);
+                        setFloors([]);
+                      }
+                    } else {
+                      setFloors([]);
+                    }
+                  }}
+                >
+                  <option value="">-- Choose Building --</option>
+                  {filteredBuildings.map((building) => (
+                    <option key={building.id} value={building.id}>
+                      {building.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">
+                  Floor: <span style={{ color: "red" }}>*</span>
+                </label>
+                <select
+                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
+                  value={selectedFloorId}
+                  onChange={async (e) => {
+                    const floorId = e.target.value;
+                    setSelectedFloorId(floorId);
 
-{/* vishal */}
-    {/* TOWER / BUILDING */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">
-        Tower: <span style={{ color: "red" }}>*</span>
-      </label>
+                    if (floorId) {
+                      try {
+                        const response = await getUnits(floorId);
+                        setUnits(response.data);
+                      } catch (error) {
+                        console.error("Error fetching units:", error);
+                        setUnits([]);
+                      }
+                    } else {
+                      setUnits([]);
+                    }
+                  }}
+                >
+                  <option value="">-- Choose Floor --</option>
+                  {floors.map((floor) => (
+                    <option key={floor.id} value={floor.id}>
+                      {floor.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">
+                  Units: <span style={{ color: "red" }}>*</span>
+                </label>
+                <select
+                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
+                  value={selectedUnit}
+                  onChange={handleUnitChange}
+                >
+                  <option value="">-- Choose Unit --</option>
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
 
-      <select
-        className="border p-2 px-4 border-gray-300 rounded-md"
-        value={selectedBuilding}
-        onChange={async (e) => {
-          const buildingId = e.target.value;
-          setSelectedBuilding(buildingId);
+          <div className="mt-10 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 🗓️ Moving Date */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="moving_date" className="font-semibold">
+                  Moving Date: <span style={{ color: "red" }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  id="moving_date"
+                  name="moving_date"
+                  className="border p-2 rounded border-gray-300"
+                  value={formData.moving_date || ""}
+                  onChange={(e) =>
+                    handleInputChange("moving_date", e.target.value)
+                  }
+                />
+              </div>
 
-          setSelectedFloorId("");
-          setSelectedUnit("");
-          setFloors([]);
-          setUnits([]);
+              {/* 🏠 Owner/Tenant Dropdown */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="occupancy_type" className="font-semibold">
+                  Occupancy Type: <span style={{ color: "red" }}>*</span>
+                </label>
+                <select
+                  id="occupancy_type"
+                  name="occupancy_type"
+                  className="border p-2 rounded border-gray-300"
+                  value={formData.occupancy_type}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleInputChange("occupancy_type", value);
 
-          if (!buildingId) return;
+                    //Clear lease_expiry if switching to owner
+                    if (value !== "tenant") {
+                      handleInputChange("lease_expiry", "");
+                    }
+                  }}
+                >
+                  <option value="">-- Select --</option>
+                  <option value="owner">Owner</option>
+                  <option value="tenant">Tenant</option>
+                </select>
+              </div>
+              {/* 📅 Lease Expiry Date (only if Tenant) */}
+              {formData.occupancy_type === "tenant" && (
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="lease_expiry" className="font-semibold">
+                    Lease Expiry Date: <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="date"
+                    id="lease_expiry"
+                    name="lease_expiry"
+                    className="border p-2 rounded border-gray-300 w-40"
+                    value={formData.lease_expiry}
+                    onChange={(e) =>
+                      handleInputChange("lease_expiry", e.target.value)
+                    }
+                  />
+                </div>
+              )}
 
-          try {
-            const response = await getFloors(buildingId);
-            setFloors(response.data);
-          } catch (error) {
-            console.error("Error fetching floors:", error);
-          }
-        }}
-      >
-        <option value="">-- Choose Building --</option>
-        {filteredBuildings.map((b) => (
-          <option key={b.id} value={b.id}>{b.name}</option>
-        ))}
-      </select>
-    </div>
+              {/* 💼 Pets */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="profession" className="font-semibold">
+                  Pets(if any):
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  id="no_of_pets"
+                  name="no_of_pets"
+                  className="border p-2 rounded border-gray-300"
+                  placeholder="Number of pets"
+                  value={formData.no_of_pets || ""}
+                  onChange={(e) =>
+                    handleInputChange("no_of_pets", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+          </div>
 
-    {/* FLOOR */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">
-        Floor: <span style={{ color: "red" }}>*</span>
-      </label>
+          <div className="mt-10 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              {/* 🩸 Blood Group (2 characters max) */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="blood_group" className="font-semibold">
+                  Blood Group:
+                </label>
+                <input
+                  type="text"
+                  id="blood_group"
+                  name="blood_group"
+                  maxLength={3}
+                  className="border p-2 rounded border-gray-300"
+                  placeholder="e.g. A+, B-"
+                  value={formData.blood_group || ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "blood_group",
+                      e.target.value.toUpperCase()
+                    )
+                  }
+                />
+              </div>
 
-      <select
-        className="border p-2 px-4 border-gray-300 rounded-md"
-        value={selectedFloorId}
-        onChange={async (e) => {
-          const floorId = e.target.value;
-          setSelectedFloorId(floorId);
+              {/* 🎂 Date of Birth */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="dob" className="font-semibold">
+                  Date of Birth:
+                </label>
+                <input
+                  type="date"
+                  id="birth_date"
+                  name="birth_date"
+                  className="border p-2 rounded border-gray-300"
+                  value={formData.birth_date || ""}
+                  onChange={(e) =>
+                    handleInputChange("birth_date", e.target.value)
+                  }
+                />
+              </div>
 
-          setSelectedUnit("");
-          setUnits([]);
-
-          if (!floorId) return;
-
-          try {
-            const response = await getUnits(floorId);
-            setUnits(response.data);
-          } catch (error) {
-            console.error("Error fetching units:", error);
-          }
-        }}
-      >
-        <option value="">-- Choose Floor --</option>
-        {floors.map((f) => (
-          <option key={f.id} value={f.id}>{f.name}</option>
-        ))}
-      </select>
-    </div>
-
-    {/* UNITS */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">
-        Units: <span style={{ color: "red" }}>*</span>
-      </label>
-
-      <select
-        className="border p-2 rounded-md border-gray-300"
-        value={selectedUnit}
-        onChange={(e) => setSelectedUnit(e.target.value)}
-      >
-        <option value="">-- Choose Unit --</option>
-        {units.map((u) => (
-          <option key={u.id} value={u.id}>{u.name}</option>
-        ))}
-      </select>
-    </div>
-  </div>
-</div>
-
-{/* MOVING DATE / OCCUPANCY / LEASE */}
-<div className="mt-10 space-y-4">
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-    {/* Moving Date */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">
-        Moving Date: <span style={{ color: "red" }}>*</span>
-      </label>
-
-      <input
-        type="date"
-        className="border p-2 rounded border-gray-300"
-        value={formData.moving_date || ""}
-        onChange={(e) => handleInputChange("moving_date", e.target.value)}
-        
-      />
-    </div>
-
-    {/* Occupancy Type */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">
-        Occupancy Type: <span style={{ color: "red" }}>*</span>
-      </label>
-
-      <select
-        className="border p-2 rounded border-gray-300"
-        value={formData.occupancy_type || ""}
-        onChange={(e) => {
-          const v = e.target.value;
-          handleInputChange("occupancy_type", v);
-
-          if (v !== "tenant") {
-            handleInputChange("lease_expiry", "");
-          }
-        }}
-      >
-        <option value="">-- Select --</option>
-        <option value="owner">Owner</option>
-        <option value="tenant">Tenant</option>
-      </select>
-    </div>
-
-    {/* Lease Expiry */}
-    {formData.occupancy_type === "tenant" && (
-      <div className="flex flex-col gap-2">
-        <label className="font-semibold">
-          Lease Expiry Date: <span style={{ color: "red" }}>*</span>
-        </label>
-
-        <input
-          type="date"
-          className="border p-2 rounded border-gray-300"
-          value={formData.lease_expiry || ""}
-          onChange={(e) =>
-            handleInputChange("lease_expiry", e.target.value)
-          }
-        />
-      </div>
-    )}
-
-    {/* Pets */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">Pets (if any):</label>
-
-      <input
-        type="number"
-        min={0}
-        className="border p-2 rounded border-gray-300"
-        value={formData.no_of_pets || ""}
-        onChange={(e) => handleInputChange("no_of_pets", e.target.value)}
-      />
-    </div>
-  </div>
-</div>
-
-{/* BLOOD GROUP / DOB / PROFESSION */}
-<div className="mt-10 space-y-4">
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-    {/* Blood Group */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">Blood Group:</label>
-
-      <input
-        type="text"
-        maxLength={3}
-        className="border p-2 rounded border-gray-300"
-        value={formData.blood_group || ""}
-        onChange={(e) =>
-          handleInputChange("blood_group", e.target.value.toUpperCase())
-        }
-      />
-    </div>
-
-    {/* Date of Birth */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">Date of Birth:</label>
-
-      <input
-        type="date"
-        className="border p-2 rounded border-gray-300"
-        value={formData.birth_date || ""}
-        onChange={(e) =>
-          handleInputChange("birth_date", e.target.value)
-        }
-      />
-    </div>
-
-    {/* Profession */}
-    <div className="flex flex-col gap-2">
-      <label className="font-semibold">Profession:</label>
-
-      <input
-        type="text"
-        className="border p-2 rounded border-gray-300"
-        value={formData.profession || ""}
-        onChange={(e) =>
-          handleInputChange("profession", e.target.value)
-        }
-      />
-    </div>
-  </div>
-</div>
-{/* Vishal */}
+              {/* 💼 Profession */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="profession" className="font-semibold">
+                  Profession:
+                </label>
+                <input
+                  type="text"
+                  id="profession"
+                  name="profession"
+                  className="border p-2 rounded border-gray-300"
+                  placeholder="Enter profession"
+                  value={formData.profession || ""}
+                  onChange={(e) =>
+                    handleInputChange("profession", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="mt-10 space-y-4">
             {/* ➕ Add Button */}
             <button
               type="button"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
               onClick={handleAddMember}
             >
               Add Family Member
@@ -1011,7 +1081,7 @@ const EditPageUser = () => {
               {/* ➕ Add Button */}
               <button
                 type="button"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
                 onClick={handleAddVendor}
               >
                 Add Vendor Service
@@ -1110,7 +1180,7 @@ const EditPageUser = () => {
             <div className="mt-5 space-y-4">
               <button
                 type="button"
-                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
                 onClick={handleAddVehicle}
               >
                 Add Vehicle
