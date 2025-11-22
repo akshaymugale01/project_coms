@@ -337,7 +337,7 @@ const AddUser = () => {
         user_vendors: vendorList.map((vendor) => ({
           service_type: vendor.service,
           name: vendor.name,
-          contact: vendor.contact,
+          contact_no: vendor.contact_no,
         })),
 
         vehicle_details: vehicleList.map((vehicle) => ({
