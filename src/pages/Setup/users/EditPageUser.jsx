@@ -59,6 +59,7 @@ const EditPageUser = () => {
   const [vendorList, setVendorList] = useState([]);
   const [vehicleList, setVehicleList] = useState([]);
   const [hydratedSite, setHydratedSite] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   console.log("id", id);
 
@@ -366,7 +367,7 @@ const EditPageUser = () => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        [field]: value.toUpperCase(),
+        [field]: field === "vehicle_type" ? value : value.toUpperCase(),
       };
       return updated;
     });
@@ -409,6 +410,8 @@ const EditPageUser = () => {
     if (!mobileRegex.test(formData.mobile)) {
       return toast.error("Please enter a valid 10-digit mobile number");
     }
+
+    setIsUpdating(true);
 
     const postData = {
       user: {
@@ -469,6 +472,8 @@ const EditPageUser = () => {
     } catch (error) {
       console.error("Error updating user:", error);
       toast.error("Failed to update user.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -1183,7 +1188,7 @@ const EditPageUser = () => {
                 className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
                 onClick={handleAddVehicle}
               >
-                Add Vehicle
+                🚗 Add Vehicle
               </button>
 
               {vehicleList.map((vehicle, index) => (
@@ -1265,9 +1270,40 @@ const EditPageUser = () => {
           <div className="flex justify-center my-5">
             <button
               onClick={handleAddUser}
-              className="bg-black text-white p-2 px-4 rounded-md font-medium"
+              disabled={isUpdating}
+              className={`text-white p-2 px-4 rounded-md font-medium ${
+                isUpdating
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-black hover:bg-gray-800"
+              }`}
             >
-              Submit
+              {isUpdating ? (
+                <span className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Updating...
+                </span>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         </div>
