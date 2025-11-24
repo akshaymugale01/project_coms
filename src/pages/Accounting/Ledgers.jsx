@@ -10,23 +10,27 @@ import {
   getLedgerBalanceSheet,
 } from "../../api/accountingApi";
 import { getAccountGroups } from "../../api/accountingApi";
+import { getAllUnits } from "../../api";
 import LedgerModal from "./LedgerModal";
 import LedgerBalanceSheet from "./LedgerBalanceSheet";
 
 const Ledgers = () => {
   const [ledgers, setLedgers] = useState([]);
   const [accountGroups, setAccountGroups] = useState([]);
+  const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLedger, setSelectedLedger] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterGroupId, setFilterGroupId] = useState("");
+  const [filterUnitId, setFilterUnitId] = useState("");
   const [balanceSheetData, setBalanceSheetData] = useState(null);
   const [showBalanceSheet, setShowBalanceSheet] = useState(false);
 
   useEffect(() => {
     fetchLedgers();
     fetchAccountGroups();
+    fetchUnits();
   }, []);
 
   const fetchLedgers = async () => {
@@ -48,6 +52,16 @@ const Ledgers = () => {
       setAccountGroups(response.data.data || response.data);
     } catch (error) {
       console.error("Failed to fetch account groups", error);
+    }
+  };
+
+  const fetchUnits = async () => {
+    try {
+      const response = await getAllUnits();
+      setUnits(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch units", error);
+      setUnits([]);
     }
   };
 
@@ -135,9 +149,11 @@ const Ledgers = () => {
     }
   };
 
-  const filteredLedgers = ledgers.filter((ledger) =>
-    ledger.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLedgers = ledgers.filter((ledger) => {
+    const matchesSearch = ledger.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesUnit = !filterUnitId || ledger.unit_id === parseInt(filterUnitId);
+    return matchesSearch && matchesUnit;
+  });
 
   return (
     <div className="p-6">
@@ -159,7 +175,7 @@ const Ledgers = () => {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex gap-4 flex-wrap">
         <input
           type="text"
           placeholder="Search ledgers..."
@@ -176,6 +192,18 @@ const Ledgers = () => {
           {accountGroups.map((group) => (
             <option key={group.id} value={group.id}>
               {group.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filterUnitId}
+          onChange={(e) => setFilterUnitId(e.target.value)}
+          className="px-4 py-2 border rounded"
+        >
+          <option value="">All Units</option>
+          {units.map((unit) => (
+            <option key={unit.id} value={unit.id}>
+              {unit.name}
             </option>
           ))}
         </select>
@@ -197,6 +225,9 @@ const Ledgers = () => {
                   Account Group
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Unit
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Code
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -210,7 +241,7 @@ const Ledgers = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredLedgers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
                     No ledgers found
                   </td>
                 </tr>
@@ -222,6 +253,9 @@ const Ledgers = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {ledger.account_group?.name || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {ledger.unit?.name || <span className="text-gray-400 text-xs">Organization-wide</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {ledger.code || "-"}
@@ -261,6 +295,7 @@ const Ledgers = () => {
         <LedgerModal
           ledger={selectedLedger}
           accountGroups={accountGroups}
+          units={units}
           onClose={() => setIsModalOpen(false)}
           onSave={handleSave}
         />

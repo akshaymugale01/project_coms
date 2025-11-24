@@ -777,6 +777,7 @@ import JournalEntries from "./pages/Accounting/JournalEntries";
 import AccountingInvoices from "./pages/Accounting/AccountingInvoices";
 import AccountingPayments from "./pages/Accounting/AccountingPayments";
 import AccountingReports from "./pages/Accounting/AccountingReports";
+import SnagAnswerDetails from "./pages/FitOut/SnagAnswerDetails.jsx";
 
 // new admin hrms
 
@@ -2640,11 +2641,11 @@ function App() {
           />
           <Route
             path="/fitout/checklist/answer-details/:id"
-            element={<SnagAnsweDetails />}
+            element={<SnagAnswerDetails />}
           />
           <Route
             path="/fitout/snag-answer-details/:id"
-            element={<SnagAnsweDetails />}
+            element={<SnagAnswerDetails />}
           />
 
           <Route
