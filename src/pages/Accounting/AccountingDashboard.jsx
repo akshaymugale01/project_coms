@@ -43,13 +43,13 @@ const AccountingDashboard = () => {
       const overdueInvoices = overdueRes.data.data || overdueRes.data || [];
 
       const totalRevenue = payments.reduce(
-        (sum, payment) => sum + (payment.amount || 0),
+        (sum, payment) => sum + parseFloat(payment.amount || 0),
         0
       );
 
       const pendingAmount = invoices
         .filter((inv) => inv.status !== "paid")
-        .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+        .reduce((sum, inv) => sum + parseFloat(inv.total_amount || 0), 0);
 
       setStats({
         totalInvoices: invoices.length,
@@ -222,7 +222,7 @@ const AccountingDashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-medium">
-                      ${(invoice.total_amount || 0).toFixed(2)}
+                      ${parseFloat(invoice.total_amount || 0).toFixed(2)}
                     </p>
                     <span
                       className={`text-xs px-2 py-1 rounded ${
@@ -270,7 +270,7 @@ const AccountingDashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-green-600">
-                      ${(payment.amount || 0).toFixed(2)}
+                      ${parseFloat(payment.amount || 0).toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">
                       {new Date(payment.payment_date).toLocaleDateString()}
@@ -333,7 +333,7 @@ const AccountingDashboard = () => {
                       {entry.description || "-"}
                     </td>
                     <td className="px-4 py-3">
-                      ${(entry.total_amount || 0).toFixed(2)}
+                      ${parseFloat(entry.total_amount || 0).toFixed(2)}
                     </td>
                     <td className="px-4 py-3">
                       <span
