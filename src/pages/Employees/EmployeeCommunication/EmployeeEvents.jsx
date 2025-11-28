@@ -84,6 +84,11 @@ const EmployeeEvents = () => {
       selector: (row) => dateFormat(row.created_at),
       sortable: true,
     },
+    {
+  name: "Status",
+  selector: (row) => (row.enabled ? "Enabled" : "Disabled"),
+  sortable: true,
+},
     // {
     //   name: "Attachments",
     //   selector: (row) => row.bookingStatus,
