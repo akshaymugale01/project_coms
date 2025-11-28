@@ -1,17 +1,17 @@
-
 import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { ImEye } from "react-icons/im";
 import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { getEvents } from "../../api";
+import { getEvents} from "../../api";
 import { BsEye } from "react-icons/bs";
 import Table from "../../components/table/Table";
 import Communication from "../Communication";
 import Navbar from "../../components/Navbar";
 import { BiEdit } from "react-icons/bi";
 import { DNA } from "react-loader-spinner";
+import toast from "react-hot-toast";
 
 const Events = () => {
   const [searchText, setSearchText] = useState("");
@@ -45,20 +45,33 @@ const Events = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
+const handleToggle = async (id) => {
+  const eventToUpdate = events.find((e) => e.id === id);
+  const newStatus = !eventToUpdate.enabled;
 
-  const handleToggle = (id) => {
+  try {
+    await updateEventEnableStatus(id, newStatus);
+
+    toast.success(newStatus ? "Event Enabled" : "Event Disabled");
+
     setEvents(prev =>
       prev.map(item =>
-        item.id === id ? { ...item, enabled: !item.enabled } : item
+        item.id === id ? { ...item, enabled: newStatus } : item
       )
     );
 
     setFilteredData(prev =>
       prev.map(item =>
-        item.id === id ? { ...item, enabled: !item.enabled } : item
+        item.id === id ? { ...item, enabled: newStatus } : item
       )
     );
-  };
+
+  } catch (error) {
+    console.log("Enable/Disable failed", error);
+    toast.error("Failed to update status");
+  }
+};
+
 
   const column = [
     {
@@ -109,7 +122,6 @@ const Events = () => {
       selector: (row) => dateFormat(row.created_at),
       sortable: true,
     },
-
     {
       name: "Enable / Disable",
       cell: (row) => (
@@ -122,7 +134,6 @@ const Events = () => {
           />
 
           <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-600 transition-all"></div>
-
           <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-full transition-all"></div>
         </label>
       ),
