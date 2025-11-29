@@ -125,7 +125,6 @@ const UserSetupTree = () => {
           <Link to={`/setup/users-tree/${row.id}`}>
             <BsEye size={15} />
           </Link>
-          
           <Link to={`/setup/users-edit-page/${row.id}`}>
             <BiEdit size={15} />
           </Link>
