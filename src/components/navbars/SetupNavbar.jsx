@@ -3,17 +3,17 @@ import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from '../../utils/localStorage';
 import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill, FaProjectDiagram, FaWizardsOfTheCoast, FaRProject } from 'react-icons/fa';
-import { FaBilibili, FaDiagramProject, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaTimeline } from 'react-icons/fa6';
+import { FaBilibili, FaDiagramProject, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaMoneyBillTrendUp, FaTimeline } from 'react-icons/fa6';
 import { FcAbout } from 'react-icons/fc';
 import { ImTree } from "react-icons/im";
 import { GrSystem } from 'react-icons/gr';
+import { RiSettings4Line } from 'react-icons/ri';
 
 const SetupNavbar = () => {
   const themeColor = useSelector((state) => state.theme.color);
   const [feat, setFeat] = useState([]);
   const siteId = getItemInLocalStorage("SITEID");
   const userId = getItemInLocalStorage("UserId");
-
 
   const getAllowedFeatures = () => {
     const storedFeatures = getItemInLocalStorage("FEATURES");
@@ -94,10 +94,15 @@ const SetupNavbar = () => {
               <FaTachometerAlt /> Meter Category Type
             </Link>
           )}
-
           {feat.includes("setup_bills") && (
             <Link to="/admin/invoice-approval-setup" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
               <FaFileInvoice /> Invoice Approval
+            </Link>
+          )}
+
+          {feat.includes("accounting") && (
+            <Link to="/setup/accounting" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+              <RiSettings4Line /> Accounting Setup
             </Link>
           )}
 
