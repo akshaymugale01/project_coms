@@ -207,7 +207,7 @@ const Unit = () => {
   const handleUnitChange = (e) => {
     const { value } = e.target;
     // Allow only alphabets and numbers, no spaces or special characters
-    const filteredValue = value.replace(/[^a-zA-Z0-9]/g, "");
+    const filteredValue = value.replace();
     setUnit(filteredValue);
   };
   return (
