@@ -556,7 +556,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     };
     
     let amountInWords = '';
-    const rupees = Math.floor(amount);
+    let rupees = Math.floor(amount);
     const paise = Math.round((amount - rupees) * 100);
     
     // Convert rupees
