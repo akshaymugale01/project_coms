@@ -44,18 +44,6 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
             { ledger_id: "", debit: 0, credit: 0, description: "" },
           ];
       setFormData({
-<<<<<<< HEAD
-        entry_date: entry.entry_date?.split("T")[0] || "",
-        reference: entry.reference || "",
-        description: entry.description || "",
-        journal_lines:
-          entry.journal_lines?.length > 0
-            ? entry.journal_lines
-            : [
-                { ledger_id: "", debit: 0, credit: 0, description: "" },
-                { ledger_id: "", debit: 0, credit: 0, description: "" },
-              ],
-=======
         entry_date:
           entry.entry_date?.split("T")[0] ||
           entry.date?.split("T")[0] ||
@@ -63,7 +51,6 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
         reference: entry.reference || entry.entry_number || "",
         description: entry.description || entry.narration || "",
         entries: normalizedLines,
->>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
       });
     }
   }, [entry]);
@@ -131,12 +118,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
       alert("Debit and Credit must be equal!");
       return;
     }
-<<<<<<< HEAD
 
-    console.log("FINAL PAYLOAD SENT:", formData);
-
-    onSave(formData);
-=======
     // Shape payload for backend: { journal_entry: { entry_date, reference, description, lines: [...] } }
     const payload = {
       journal_entry: {
@@ -153,7 +135,6 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
     };
     console.log("[JournalEntryModal] Save payload:", payload);
     onSave(payload);
->>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
   };
 
   return (

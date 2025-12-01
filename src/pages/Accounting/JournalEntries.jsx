@@ -382,31 +382,23 @@ const JournalEntries = () => {
   };
 
   const filteredEntries = journalEntries.filter((entry) => {
-<<<<<<< HEAD
-    const matchesSearch =
-      entry.entry_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.narration?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter
-      ? entry.status === statusFilter
-      : true;
-
-    return matchesSearch && matchesStatus;
-=======
-    const statusOk = statusFilter ? entry.status === statusFilter : true;
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return statusOk; // show all when no search
+    const matchesStatus = statusFilter ? entry.status === statusFilter : true;
+    
+    if (!term) return matchesStatus;
+    
     const haystack = [
       entry.reference,
       entry.entry_number,
       entry.description,
+      entry.narration,
       entry.entry_type,
     ]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
-    return statusOk && haystack.includes(term);
->>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
+    
+    return matchesStatus && haystack.includes(term);
   });
 
   return (
@@ -470,13 +462,8 @@ const JournalEntries = () => {
               ) : (
                 filteredEntries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-gray-50">
-<<<<<<< HEAD
-                    <td className="px-6 py-4 font-medium">
-                      {entry.entry_number}
-=======
                     <td className="px-6 py-4 whitespace-nowrap font-medium">
                       {entry.reference || entry.entry_number || "-"}
->>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
                     </td>
 
                     <td className="px-6 py-4">
@@ -484,16 +471,6 @@ const JournalEntries = () => {
                     </td>
 
                     <td className="px-6 py-4 text-sm text-gray-500">
-<<<<<<< HEAD
-                      {entry.narration || "-"}
-                    </td>
-
-                    <td className="px-6 py-4 font-medium">
-                      ₹
-                      {(
-                        parseFloat(entry.total_debit || 0) ||
-                        parseFloat(entry.total_credit || 0)
-=======
                       {entry.description || entry.narration || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -504,7 +481,6 @@ const JournalEntries = () => {
                             entry.total_credit ??
                             0
                         ) || 0
->>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
                       ).toFixed(2)}
                     </td>
 
