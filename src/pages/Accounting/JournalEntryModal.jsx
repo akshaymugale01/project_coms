@@ -3,11 +3,13 @@ import { getLedgers } from "../../api/accountingApi";
 
 const JournalEntryModal = ({ entry, onClose, onSave }) => {
   const [ledgers, setLedgers] = useState([]);
+
+  // ✅ Correct payload structure
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split("T")[0],
     reference: "",
     description: "",
-    entries: [
+    journal_lines: [
       { ledger_id: "", debit: 0, credit: 0, description: "" },
       { ledger_id: "", debit: 0, credit: 0, description: "" },
     ],
@@ -15,15 +17,20 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
   useEffect(() => {
     fetchLedgers();
+
+    // If editing → load entry
     if (entry) {
       setFormData({
         entry_date: entry.entry_date?.split("T")[0] || "",
         reference: entry.reference || "",
         description: entry.description || "",
-        entries: entry.entries || [
-          { ledger_id: "", debit: 0, credit: 0, description: "" },
-          { ledger_id: "", debit: 0, credit: 0, description: "" },
-        ],
+        journal_lines:
+          entry.journal_lines?.length > 0
+            ? entry.journal_lines
+            : [
+                { ledger_id: "", debit: 0, credit: 0, description: "" },
+                { ledger_id: "", debit: 0, credit: 0, description: "" },
+              ],
       });
     }
   }, [entry]);
@@ -42,37 +49,42 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Ledger row update
   const handleEntryChange = (index, field, value) => {
-    const newEntries = [...formData.entries];
-    newEntries[index][field] = value;
-    setFormData((prev) => ({ ...prev, entries: newEntries }));
+    const newLines = [...formData.journal_lines];
+    newLines[index][field] = value;
+    setFormData((prev) => ({ ...prev, journal_lines: newLines }));
   };
 
   const addEntry = () => {
     setFormData((prev) => ({
       ...prev,
-      entries: [
-        ...prev.entries,
+      journal_lines: [
+        ...prev.journal_lines,
         { ledger_id: "", debit: 0, credit: 0, description: "" },
       ],
     }));
   };
 
   const removeEntry = (index) => {
-    if (formData.entries.length <= 2) return;
-    const newEntries = formData.entries.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, entries: newEntries }));
+    if (formData.journal_lines.length <= 2) return;
+
+    const newLines = formData.journal_lines.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, journal_lines: newLines }));
   };
 
+  // ✅ Calculate totals
   const calculateTotals = () => {
-    const totalDebit = formData.entries.reduce(
-      (sum, entry) => sum + parseFloat(entry.debit || 0),
+    const totalDebit = formData.journal_lines.reduce(
+      (sum, line) => sum + parseFloat(line.debit || 0),
       0
     );
-    const totalCredit = formData.entries.reduce(
-      (sum, entry) => sum + parseFloat(entry.credit || 0),
+
+    const totalCredit = formData.journal_lines.reduce(
+      (sum, line) => sum + parseFloat(line.credit || 0),
       0
     );
+
     return { totalDebit, totalCredit, difference: totalDebit - totalCredit };
   };
 
@@ -80,10 +92,15 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Must be balanced
     if (Math.abs(difference) > 0.01) {
       alert("Debit and Credit must be equal!");
       return;
     }
+
+    console.log("FINAL PAYLOAD SENT:", formData);
+
     onSave(formData);
   };
 
@@ -103,6 +120,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Top fields */}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -114,7 +132,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                 value={formData.entry_date}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded"
               />
             </div>
 
@@ -128,11 +146,12 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                 value={formData.reference}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded"
               />
             </div>
           </div>
 
+          {/* Description */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description
@@ -142,17 +161,18 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
               value={formData.description}
               onChange={handleChange}
               rows="2"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded"
             />
           </div>
 
+          {/* Journal Lines */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold">Journal Entry Lines</h3>
               <button
                 type="button"
                 onClick={addEntry}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                className="px-3 py-1 text-sm bg-green-600 text-white rounded"
               >
                 + Add Line
               </button>
@@ -179,17 +199,18 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {formData.entries.map((entryLine, index) => (
+                  {formData.journal_lines.map((line, index) => (
                     <tr key={index} className="border-t">
                       <td className="px-4 py-2">
                         <select
-                          value={entryLine.ledger_id}
+                          value={line.ledger_id}
                           onChange={(e) =>
                             handleEntryChange(index, "ledger_id", e.target.value)
                           }
+                          className="w-full px-2 py-1 border rounded"
                           required
-                          className="w-full px-2 py-1 border rounded text-sm"
                         >
                           <option value="">Select Ledger</option>
                           {ledgers.map((ledger) => (
@@ -199,46 +220,50 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                           ))}
                         </select>
                       </td>
+
                       <td className="px-4 py-2">
                         <input
                           type="text"
-                          value={entryLine.description}
+                          value={line.description}
                           onChange={(e) =>
                             handleEntryChange(index, "description", e.target.value)
                           }
-                          className="w-full px-2 py-1 border rounded text-sm"
+                          className="w-full px-2 py-1 border rounded"
                         />
                       </td>
+
                       <td className="px-4 py-2">
                         <input
                           type="number"
-                          value={entryLine.debit}
+                          value={line.debit}
                           onChange={(e) =>
                             handleEntryChange(index, "debit", e.target.value)
                           }
-                          step="0.01"
+                          className="w-full px-2 py-1 border rounded"
                           min="0"
-                          className="w-full px-2 py-1 border rounded text-sm"
+                          step="0.01"
                         />
                       </td>
+
                       <td className="px-4 py-2">
                         <input
                           type="number"
-                          value={entryLine.credit}
+                          value={line.credit}
                           onChange={(e) =>
                             handleEntryChange(index, "credit", e.target.value)
                           }
-                          step="0.01"
+                          className="w-full px-2 py-1 border rounded"
                           min="0"
-                          className="w-full px-2 py-1 border rounded text-sm"
+                          step="0.01"
                         />
                       </td>
+
                       <td className="px-4 py-2">
-                        {formData.entries.length > 2 && (
+                        {formData.journal_lines.length > 2 && (
                           <button
                             type="button"
                             onClick={() => removeEntry(index)}
-                            className="text-red-600 hover:text-red-900 text-sm"
+                            className="text-red-600 text-sm"
                           >
                             Remove
                           </button>
@@ -246,6 +271,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                       </td>
                     </tr>
                   ))}
+
+                  {/* Totals Row */}
                   <tr className="border-t bg-gray-50 font-semibold">
                     <td colSpan="2" className="px-4 py-2 text-right">
                       Totals:
@@ -265,24 +292,26 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
             </div>
           </div>
 
+          {/* Warning */}
           {Math.abs(difference) > 0.01 && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-              Warning: Debit and Credit totals must be equal!
+            <div className="mb-4 p-3 bg-red-50 text-red-700 border border-red-200 rounded text-sm">
+              Debit and Credit totals must be equal!
             </div>
           )}
 
+          {/* Submit buttons */}
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded hover:bg-gray-50"
+              className="px-4 py-2 border rounded"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               disabled={Math.abs(difference) > 0.01}
+              className="px-4 py-2 bg-blue-600 text-white rounded"
             >
               {entry ? "Update" : "Create"}
             </button>

@@ -89,6 +89,7 @@ const AccountingPayments = () => {
       setIsModalOpen(false);
       fetchPayments();
     } catch (error) {
+      console.log("SERVER ERROR:", error.response?.data); 
       toast.error("Failed to save payment");
       console.error(error);
     }
