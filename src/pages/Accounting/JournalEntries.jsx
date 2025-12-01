@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   getJournalEntries,
+  getJournalEntry,
   createJournalEntry,
   updateJournalEntry,
   deleteJournalEntry,
@@ -40,9 +41,16 @@ const JournalEntries = () => {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (entry) => {
-    setSelectedEntry(entry);
-    setIsModalOpen(true);
+  const handleEdit = async (entry) => {
+    try {
+      const res = await getJournalEntry(entry.id);
+      const full = res?.data?.data || res?.data || entry;
+      setSelectedEntry(full);
+      setIsModalOpen(true);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load journal entry details");
+    }
   };
 
   const handleDelete = async (id) => {
@@ -105,11 +113,19 @@ const JournalEntries = () => {
   };
 
   const filteredEntries = journalEntries.filter((entry) => {
-    const matchesSearch =
-      entry.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter ? entry.status === statusFilter : true;
-    return matchesSearch && matchesStatus;
+    const statusOk = statusFilter ? entry.status === statusFilter : true;
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return statusOk; // show all when no search
+    const haystack = [
+      entry.reference,
+      entry.entry_number,
+      entry.description,
+      entry.entry_type,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return statusOk && haystack.includes(term);
   });
 
   return (
@@ -184,16 +200,23 @@ const JournalEntries = () => {
                 filteredEntries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap font-medium">
-                      {entry.reference}
+                      {entry.reference || entry.entry_number || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {new Date(entry.entry_date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {entry.description || "-"}
+                      {entry.description || entry.narration || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      ${parseFloat(entry.total_amount || 0).toFixed(2)}
+                      ${(
+                        parseFloat(
+                          entry.total_amount ??
+                            entry.total_debit ??
+                            entry.total_credit ??
+                            0
+                        ) || 0
+                      ).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

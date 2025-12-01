@@ -705,6 +705,10 @@ import CAMBilling from "./pages/Setup/CAMBilling.jsx";
 import AddCAMBilling from "./pages/SubPages/AddCAMBilling.jsx";
 import CAMBillingDetails from "./pages/SubPages/details/CAMBillingDetails.jsx";
 import BillingSetup from "./pages/Setup/BillingSetup/BillingSetup.jsx";
+import CAMBills from "./pages/Accounting/Billing/CAMBills.jsx";
+import MonthlyExpenseSetup from "./pages/Accounting/Setup/MonthlyExpenseSetup.jsx";
+import CAMSetup from "./pages/Accounting/Setup/CAMSetup.jsx";
+import AccountingSetupTabs from "./pages/Accounting/Setup/AccountingSetupTabs.jsx";
 import BookingFacilityDetails from "./pages/SubPages/BookingFacilityDetails.jsx";
 import PantryDetails from "./pages/SubPages/details/PantryDetails.jsx";
 import FBRestaurtantDetails from "./pages/SubPages/details/FBSubDetails/FBResturantsDetails.jsx";
@@ -2613,7 +2617,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          
           <Route path="/additional-service" element={<Osr />} />
           <Route path="/ors-dashboard" element={<OSRDashboard />} />
           <Route path="/ors-setups" element={<OrsSetup />} />
@@ -3865,6 +3869,55 @@ function App() {
             element={
               <ProtectedAdminRoutes>
                 <CAMBilling />
+              </ProtectedAdminRoutes>
+            }
+          />
+          {/* New CAM Pages */}
+          <Route
+            path="/admin/cam/bills"
+            element={
+              <ProtectedAdminRoutes>
+                <CAMBills />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/accounting/bills"
+            element={
+              <ProtectedAdminRoutes>
+                <CAMBills />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/admin/cam/setup/monthly-expenses"
+            element={
+              <ProtectedAdminRoutes>
+                <MonthlyExpenseSetup />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/setup/accounting"
+            element={
+              <ProtectedAdminRoutes>
+                <AccountingSetupTabs />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/setup/accounting/monthly-expenses"
+            element={
+              <ProtectedAdminRoutes>
+                <MonthlyExpenseSetup />
+              </ProtectedAdminRoutes>
+            }
+          />
+          <Route
+            path="/setup/accounting/unit-config"
+            element={
+              <ProtectedAdminRoutes>
+                <CAMSetup />
               </ProtectedAdminRoutes>
             }
           />

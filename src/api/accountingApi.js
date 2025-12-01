@@ -62,3 +62,53 @@ export const getProfitAndLoss = (params) => API.get("/accounting_reports/profit_
 export const getLedgerStatement = (params) => API.get("/accounting_reports/ledger_statement.json", { params });
 export const getUnitStatement = (params) => API.get("/accounting_reports/unit_statement.json", { params });
 export const getReceivablesSummary = (params) => API.get("/accounting_reports/receivables_summary.json", { params });
+
+    // CAM (Common Area Maintenance) - Society Maintenance APIs (aligned to /api/cam)
+// Global CAM Settings
+export const getCamSettings = () => API.get("/api/cam/settings");
+export const upsertCamSettings = (data) => API.post("/api/cam/settings", data);
+
+// Unit CAM Configs (carpet area, cam_start_date, overrides)
+export const getUnitCamConfigs = (params) => API.get("/api/cam/unit_configs", { params });
+export const createUnitCamConfig = (data) => API.post("/api/cam/unit_configs", data);
+export const updateUnitCamConfig = (id, data) => API.put(`/api/cam/unit_configs/${id}`, data);
+export const deleteUnitCamConfig = (id) => API.delete(`/api/cam/unit_configs/${id}`);
+
+// Monthly Expenses (by category)
+export const getMonthlyExpenses = (params) => API.get("/api/cam/monthly_expenses", { params });
+export const createMonthlyExpense = (data) => API.post("/api/cam/monthly_expenses", data);
+export const updateMonthlyExpense = (id, data) => API.put(`/api/cam/monthly_expenses/${id}`, data);
+export const deleteMonthlyExpense = (id) => API.delete(`/api/cam/monthly_expenses/${id}`);
+
+// CAM Billing
+export const previewCamBills = (data) => API.post("/api/cam/bills/preview", data);
+export const generateCamBills = (data) => API.post("/api/cam/bills/generate", data);
+export const getCamBills = (params) => API.get("/api/cam/bills", { params });
+export const getCamBill = (id) => API.get(`/api/cam/bills/${id}`);
+
+// Advance Maintenance (24 months before possession)
+export const recordAdvanceMaintenance = (data) => API.post("/api/cam/advance_maintenances/generate", data);
+export const getAdvanceMaintenances = (params) => API.get("/api/cam/advance_maintenances", { params });
+
+// Tenant Move-In / Move-Out Charges
+export const createTenantCharge = (data) => API.post("/api/cam/tenant_charges", data);
+export const getTenantCharges = (params) => API.get("/api/cam/tenant_charges", { params });
+
+// Income vs Expense summary
+export const getCamIncomeExpenseSummary = (params) => API.get("/api/cam/income_expense_summary", { params });
+
+// --- New endpoints per possession enforcement and invoicing spec ---
+// Advance payments (possession guard)
+export const recordAdvancePayment = (data) => API.post("/accounting/advance-payments/record", data);
+export const getAdvancePaymentStatus = (unitId) =>
+    API.get("/accounting/advance-payments/status", { params: { unit_id: unitId } });
+
+// Tenant fee invoicing
+export const invoiceTenantFee = (data) => API.post("/accounting/tenant-fees/invoice", data);
+export const getTenantFeeConfig = () => API.get("/accounting/tenant-fees/config");
+
+// Month-end CAM generation and summary (cron safe)
+export const generateMonthlyCam = (period) =>
+    API.post("/accounting/cam/generate", null, { params: { period } });
+export const getMonthlyCamSummary = (period) =>
+    API.get("/accounting/cam/summary", { params: { period } });
