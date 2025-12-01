@@ -50,7 +50,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
           new Date().toISOString().split("T")[0],
         reference: entry.reference || entry.entry_number || "",
         description: entry.description || entry.narration || "",
-        entries: normalizedLines,
+        journal_lines: normalizedLines,
       });
     }
   }, [entry]);
@@ -71,7 +71,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
   // ✅ Ledger row update
   const handleEntryChange = (index, field, value) => {
-    const newLines = [...formData.journal_lines];
+    const lines = formData.journal_lines || [];
+    const newLines = [...lines];
     newLines[index][field] = value;
     setFormData((prev) => ({ ...prev, journal_lines: newLines }));
   };
@@ -80,28 +81,32 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
     setFormData((prev) => ({
       ...prev,
       journal_lines: [
-        ...prev.journal_lines,
+        ...(prev.journal_lines || []),
         { ledger_id: "", debit: 0, credit: 0, description: "" },
       ],
     }));
   };
 
   const removeEntry = (index) => {
-    if (formData.journal_lines.length <= 2) return;
+    const lines = formData.journal_lines || [];
+    if (lines.length <= 2) return;
 
-    const newLines = formData.journal_lines.filter((_, i) => i !== index);
+    const newLines = lines.filter((_, i) => i !== index);
     setFormData((prev) => ({ ...prev, journal_lines: newLines }));
   };
 
   // ✅ Calculate totals
   const calculateTotals = () => {
-    const totalDebit = formData.journal_lines.reduce(
-      (sum, line) => sum + parseFloat(line.debit || 0),
+    // Support both 'journal_lines' and 'entries' field names
+    const lines = formData.journal_lines || formData.entries || [];
+    
+    const totalDebit = lines.reduce(
+      (sum, line) => sum + parseFloat(line?.debit || 0),
       0
     );
 
-    const totalCredit = formData.journal_lines.reduce(
-      (sum, line) => sum + parseFloat(line.credit || 0),
+    const totalCredit = lines.reduce(
+      (sum, line) => sum + parseFloat(line?.credit || 0),
       0
     );
 
@@ -125,7 +130,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
         entry_date: formData.entry_date,
         reference: formData.reference,
         description: formData.description,
-        entry_lines_attributes: formData.entries.map((l) => ({
+        entry_lines_attributes: (formData.journal_lines || []).map((l) => ({
           ledger_id: l.ledger_id,
           debit: Number(l.debit || 0),
           credit: Number(l.credit || 0),
