@@ -47,6 +47,7 @@
 // };
 
 // export default Table;
+
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 

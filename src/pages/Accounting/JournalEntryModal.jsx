@@ -20,7 +20,31 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
     // If editing → load entry
     if (entry) {
+      console.log("[JournalEntryModal] Raw entry received:", entry);
+      // Support multiple possible API shapes including Rails JournalEntry#entry_lines
+      const rawLines =
+        entry.entry_lines ||
+        entry.journal_entry_lines ||
+        entry.entries ||
+        entry.lines ||
+        [];
+      const normalizedLines = rawLines.length
+        ? rawLines.map((l) => ({
+            ledger_id: l.ledger_id || l.ledger?.id || l.ledger?.ledger_id || "",
+            debit: parseFloat(
+              l.debit ?? l.amount_debit ?? l.debit_amount ?? 0
+            ) || 0,
+            credit: parseFloat(
+              l.credit ?? l.amount_credit ?? l.credit_amount ?? 0
+            ) || 0,
+            description: l.description || l.narration || "",
+          }))
+        : [
+            { ledger_id: "", debit: 0, credit: 0, description: "" },
+            { ledger_id: "", debit: 0, credit: 0, description: "" },
+          ];
       setFormData({
+<<<<<<< HEAD
         entry_date: entry.entry_date?.split("T")[0] || "",
         reference: entry.reference || "",
         description: entry.description || "",
@@ -31,6 +55,15 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                 { ledger_id: "", debit: 0, credit: 0, description: "" },
                 { ledger_id: "", debit: 0, credit: 0, description: "" },
               ],
+=======
+        entry_date:
+          entry.entry_date?.split("T")[0] ||
+          entry.date?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+        reference: entry.reference || entry.entry_number || "",
+        description: entry.description || entry.narration || "",
+        entries: normalizedLines,
+>>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
       });
     }
   }, [entry]);
@@ -98,10 +131,29 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
       alert("Debit and Credit must be equal!");
       return;
     }
+<<<<<<< HEAD
 
     console.log("FINAL PAYLOAD SENT:", formData);
 
     onSave(formData);
+=======
+    // Shape payload for backend: { journal_entry: { entry_date, reference, description, lines: [...] } }
+    const payload = {
+      journal_entry: {
+        entry_date: formData.entry_date,
+        reference: formData.reference,
+        description: formData.description,
+        entry_lines_attributes: formData.entries.map((l) => ({
+          ledger_id: l.ledger_id,
+          debit: Number(l.debit || 0),
+          credit: Number(l.credit || 0),
+          description: l.description || "",
+        })),
+      },
+    };
+    console.log("[JournalEntryModal] Save payload:", payload);
+    onSave(payload);
+>>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
   };
 
   return (

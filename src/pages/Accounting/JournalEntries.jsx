@@ -271,6 +271,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   getJournalEntries,
+  getJournalEntry,
   createJournalEntry,
   updateJournalEntry,
   deleteJournalEntry,
@@ -309,9 +310,16 @@ const JournalEntries = () => {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (entry) => {
-    setSelectedEntry(entry);
-    setIsModalOpen(true);
+  const handleEdit = async (entry) => {
+    try {
+      const res = await getJournalEntry(entry.id);
+      const full = res?.data?.data || res?.data || entry;
+      setSelectedEntry(full);
+      setIsModalOpen(true);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load journal entry details");
+    }
   };
 
   const handleDelete = async (id) => {
@@ -374,6 +382,7 @@ const JournalEntries = () => {
   };
 
   const filteredEntries = journalEntries.filter((entry) => {
+<<<<<<< HEAD
     const matchesSearch =
       entry.entry_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.narration?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -383,6 +392,21 @@ const JournalEntries = () => {
       : true;
 
     return matchesSearch && matchesStatus;
+=======
+    const statusOk = statusFilter ? entry.status === statusFilter : true;
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return statusOk; // show all when no search
+    const haystack = [
+      entry.reference,
+      entry.entry_number,
+      entry.description,
+      entry.entry_type,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return statusOk && haystack.includes(term);
+>>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
   });
 
   return (
@@ -446,8 +470,13 @@ const JournalEntries = () => {
               ) : (
                 filteredEntries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-gray-50">
+<<<<<<< HEAD
                     <td className="px-6 py-4 font-medium">
                       {entry.entry_number}
+=======
+                    <td className="px-6 py-4 whitespace-nowrap font-medium">
+                      {entry.reference || entry.entry_number || "-"}
+>>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
                     </td>
 
                     <td className="px-6 py-4">
@@ -455,6 +484,7 @@ const JournalEntries = () => {
                     </td>
 
                     <td className="px-6 py-4 text-sm text-gray-500">
+<<<<<<< HEAD
                       {entry.narration || "-"}
                     </td>
 
@@ -463,6 +493,18 @@ const JournalEntries = () => {
                       {(
                         parseFloat(entry.total_debit || 0) ||
                         parseFloat(entry.total_credit || 0)
+=======
+                      {entry.description || entry.narration || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      ${(
+                        parseFloat(
+                          entry.total_amount ??
+                            entry.total_debit ??
+                            entry.total_credit ??
+                            0
+                        ) || 0
+>>>>>>> 87de801b902ad6da9e2ddeb6dfc194a8aa98dbe8
                       ).toFixed(2)}
                     </td>
 
