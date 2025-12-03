@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { IoAddCircleOutline } from "react-icons/io5";
-import { ImEye } from "react-icons/im";
 import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { getEvents} from "../../api";
+import { getEvents, updateEventEnableStatus } from "../../api";
 import { BsEye } from "react-icons/bs";
 import Table from "../../components/table/Table";
 import Communication from "../Communication";
@@ -12,30 +11,31 @@ import Navbar from "../../components/Navbar";
 import { BiEdit } from "react-icons/bi";
 import { DNA } from "react-loader-spinner";
 import toast from "react-hot-toast";
-
+ 
 const Events = () => {
   const [searchText, setSearchText] = useState("");
-  const [filter, setFilter] = useState(false);
-  const [user, setUser] = useState("");
   const [events, setEvents] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const themeColor = "rgb(3, 19, 37)";
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
-    const userType = getItemInLocalStorage("USERTYPE");
-    setUser(userType);
-
     const fetchEvents = async () => {
-      const eventsResponse = await getEvents();
+      try {
+        const eventsResponse = await getEvents();
 
-      const sortedEvents = eventsResponse.data
-        .map(ev => ({ ...ev, enabled: ev.enabled ?? false }))
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const sortedEvents = eventsResponse.data
+          .map((ev) => ({ ...ev, enabled: ev.important ?? false })) 
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); 
 
-      setEvents(sortedEvents);
-      setFilteredData(sortedEvents);
-      setLoading(false);
+        setEvents(sortedEvents);
+        setFilteredData(sortedEvents);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchEvents();
@@ -45,33 +45,40 @@ const Events = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
-const handleToggle = async (id) => {
-  const eventToUpdate = events.find((e) => e.id === id);
-  const newStatus = !eventToUpdate.enabled;
+
+  // 🔥 FIXED: Toggle without moving row
+ const handleToggle = async (id) => {
+  const eventItem = events.find((e) => e.id === id);
+  if (!eventItem) return;
+
+  const previousStatus = eventItem.important;
+  const newStatus = !previousStatus;
+
+  const updateLocal = (status) => {
+    setEvents((prev) =>
+      prev.map((ev) =>
+        ev.id === id ? { ...ev, important: status } : ev
+      )
+    );
+
+    setFilteredData((prev) =>
+      prev.map((ev) =>
+        ev.id === id ? { ...ev, important: status } : ev
+      )
+    );
+  };
+
+  // Update UI immediately
+  updateLocal(newStatus);
 
   try {
     await updateEventEnableStatus(id, newStatus);
-
     toast.success(newStatus ? "Event Enabled" : "Event Disabled");
-
-    setEvents(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, enabled: newStatus } : item
-      )
-    );
-
-    setFilteredData(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, enabled: newStatus } : item
-      )
-    );
-
-  } catch (error) {
-    console.log("Enable/Disable failed", error);
-    toast.error("Failed to update status");
+  } catch (err) {
+    toast.error("Failed to update");
+    updateLocal(previousStatus); // revert
   }
 };
-
 
   const column = [
     {
@@ -111,9 +118,7 @@ const handleToggle = async (id) => {
       selector: (row) => {
         const now = new Date();
         const endDate = new Date(row.end_date_time);
-        return endDate < now
-          ? dateFormat(row.end_date_time)
-          : "Not expired yet";
+        return endDate < now ? dateFormat(row.end_date_time) : "Not expired yet";
       },
       sortable: true,
     },
@@ -129,31 +134,30 @@ const handleToggle = async (id) => {
           <input
             type="checkbox"
             className="sr-only peer"
-            checked={row.enabled}
+            checked={row.important}
             onChange={() => handleToggle(row.id)}
           />
-
           <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-600 transition-all"></div>
           <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-full transition-all"></div>
         </label>
       ),
-      sortable: false,
+      sortable: true,
     },
   ];
 
   const handleSearch = (event) => {
-    const searchValue = event.target.value;
-    setSearchText(searchValue);
+    const value = event.target.value.toLowerCase();
+    setSearchText(value);
 
-    const filteredResults = events.filter((item) =>
-      item.event_name.toLowerCase().includes(searchValue.toLowerCase())
+    setFilteredData(
+      events.filter((item) =>
+        item.event_name.toLowerCase().includes(value)
+      )
     );
-
-    setFilteredData(filteredResults);
   };
 
   return (
-    <div className="flex ">
+    <div className="flex">
       <Navbar />
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <Communication />
@@ -167,16 +171,14 @@ const handleToggle = async (id) => {
             onChange={handleSearch}
           />
 
-          <div className="flex gap-2">
-            <Link
-              style={{ background: themeColor }}
-              to={"/communication/create-event"}
-              className="w-full rounded-md flex font-semibold justify-center items-center gap-2 text-white p-2 col-span-1"
-            >
-              <IoAddCircleOutline size={20} />
-              Add
-            </Link>
-          </div>
+          <Link
+            style={{ background: themeColor }}
+            to={"/communication/create-event"}
+            className="rounded-md flex font-semibold justify-center items-center gap-2 text-white p-2 col-span-1"
+          >
+            <IoAddCircleOutline size={20} />
+            Add
+          </Link>
         </div>
 
         {loading ? (

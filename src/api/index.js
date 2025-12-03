@@ -2328,12 +2328,28 @@ export const getEmployeeAttendance = async (userId) =>
   });
 
 // Events
+
+
+export const updateEventEnableStatus = (id, enabled) =>
+  axiosInstance.put(
+    `/events/${id}.json`,
+    {
+      event: {
+        important: enabled,  // <-- correct field
+      },
+    },
+    {
+      params: { token },
+    }
+  );
+
 export const getEvents = async () =>
   axiosInstance.get("/events.json", {
     params: {
       token: token,
     },
   });
+
 export const getEventsDetails = async (id) =>
   axiosInstance.get(`/events/${id}.json`, {
     params: {
@@ -2637,6 +2653,47 @@ export const postCamBilling = async (data) =>
   });
 
 //broadcast
+
+
+// export const updateBroadcastEnableStatus = (id, status) =>
+//   axiosInstance.put(
+//     `/broadcast/enable-disable`,   // Correct endpoint
+//     {
+//       id: id,
+//       enabled: status              // Backend expects this
+//     },
+//     {
+//       params: { token }
+//     }
+//   );
+
+// export const updateBroadcastEnableStatus = (id, status) =>
+//   axiosInstance.put(
+//     `/notices/${id}.json`,
+//     {
+//       enabled: status
+//     },
+//     {
+//       params: { token }
+//     }
+//   );
+
+
+export const updateBroadcastEnableStatus = (id, status) =>
+  axiosInstance.put(
+    `/notices/${id}.json`,
+    {
+      notice: {
+        enabled: status
+      }
+    },
+    {
+      params: { token }
+    }
+  );
+
+
+
 export const getBroadCast = async () =>
   axiosInstance.get("/notices.json", {
     params: {
