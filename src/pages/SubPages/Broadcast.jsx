@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from "react";
-import DataTable from "react-data-table-component";
 import { IoAddCircleOutline } from "react-icons/io5";
-import { ImEye } from "react-icons/im";
 import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from "../../utils/localStorage";
-import { getBroadCast,  } from "../../api";
+import { getBroadCast, updateBroadcastEnableStatus } from "../../api";
 import Table from "../../components/table/Table";
-import { useSelector } from "react-redux";
-import { BsEye } from "react-icons/bs";
 import Navbar from "../../components/Navbar";
 import Communication from "../Communication";
+import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
 import toast from "react-hot-toast";
+import { DNA } from "react-loader-spinner"; 
 
 const Broadcast = () => {
   const [searchText, setSearchText] = useState("");
   const [user, setUser] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [broadcast, setBroadcast] = useState([]);
+  const [loading, setLoading] = useState(true); // Added loading state
   const themeColor = "rgb(3 19 37)";
 
   useEffect(() => {
@@ -25,15 +24,25 @@ const Broadcast = () => {
     setUser(userType);
 
     const fetchBroadCast = async () => {
-      const broadcastResp = await getBroadCast();
-      console.log("BroadCAst", broadcastResp);
+      try {
+        const broadcastResp = await getBroadCast();
+        
+        // Refined mapping to ensure 'enabled' is a boolean for the toggle
+        const sortedBroadcast = broadcastResp.data
+          .map((item) => ({
+            ...item,
+            // Convert any truthy/falsy value from API to a proper boolean
+            enabled: !!item.enabled 
+          }))
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      const sortedBroadcast = broadcastResp.data
-        .map(item => ({ ...item, enabled: item.enabled ?? false }))
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-      setFilteredData(sortedBroadcast);
-      setBroadcast(sortedBroadcast);
+        setFilteredData(sortedBroadcast);
+        setBroadcast(sortedBroadcast);
+      } catch (error) {
+        console.error("Error fetching broadcasts:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetch
+      }
     };
 
     fetchBroadCast();
@@ -46,32 +55,40 @@ const Broadcast = () => {
 
   const handleToggle = async (id) => {
     const item = broadcast.find((b) => b.id === id);
-    const newStatus = !item.enabled;
+    if (!item) return;
+
+    const previousStatus = item.enabled;
+    const newStatus = !previousStatus;
+
+    const updateLocal = (status) => {
+      setBroadcast((prev) =>
+        prev.map((b) =>
+          b.id === id ? { ...b, enabled: status } : b
+        )
+      );
+
+      setFilteredData((prev) =>
+        prev.map((b) =>
+          b.id === id ? { ...b, enabled: status } : b
+        )
+      );
+    };
+
+    // Update UI instantly
+    updateLocal(newStatus);
 
     try {
+      // API call to update the status
       await updateBroadcastEnableStatus(id, newStatus);
-
-      setBroadcast(prev =>
-        prev.map(b =>
-          b.id === id ? { ...b, enabled: newStatus } : b
-        )
-      );
-
-      setFilteredData(prev =>
-        prev.map(b =>
-          b.id === id ? { ...b, enabled: newStatus } : b
-        )
-      );
-
-      newStatus
-        ? toast.success("Broadcast Enabled")
-        : toast.error("Broadcast Disabled");
-
+      toast.success(newStatus ? "Broadcast Enabled" : "Broadcast Disabled");
     } catch (err) {
-      console.log("Toggle failed", err);
-      toast.error("Failed to update status!");
+      toast.error("Failed to update");console.log("API CALL FUNCTION =>", updateBroadcastEnableStatus.toString());
+
+
+      updateLocal(previousStatus); // revert on failure
     }
   };
+
 
   const column = [
     {
@@ -100,48 +117,37 @@ const Broadcast = () => {
       selector: (row) => dateFormat(row.created_at),
       sortable: true,
     },
+    { name: "Status", selector: (row) => row.status, sortable: true },
+
     {
-      name: "Status",
-      selector: (row) => row.status,
-      sortable: true,
-    },
+      name: "Enable / Disable",
+      cell: (row) => (
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            className="sr-only peer"
+            checked={row.enabled}
+            onChange={() => handleToggle(row.id)}
+          />
 
- {
-  name: "Enable / Disable",
-  cell: (row) => (
-    <label className="relative inline-flex items-center cursor-pointer">
+          <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-600 transition-all"></div>
 
-      <input
-        type="checkbox"
-        className="sr-only peer"
-        checked={row.enabled}
-        onChange={() => handleToggle(row.id)}
-      />
-
-      <div
-        className={`w-11 h-6 rounded-full transition-all 
-          ${row.enabled ? "bg-green-600" : "bg-red-600"}`}
-      ></div>
-
-      <div
-        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all
-          ${row.enabled ? "translate-x-full" : ""}`}
-      ></div>
-
-    </label>
-  ),
-  sortable: false,
-}
-
+          <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-full transition-all"></div>
+        </label>
+      ),
+      sortable: false,
+    }
   ];
 
   const handleSearch = (event) => {
-    const searchValue = event.target.value;
-    setSearchText(searchValue);
-    const filteredResults = broadcast.filter((item) =>
-      item.notice_title.toLowerCase().includes(searchValue.toLowerCase())
+    const value = event.target.value.toLowerCase();
+    setSearchText(value);
+
+    setFilteredData(
+      broadcast.filter((item) =>
+        item.notice_title.toLowerCase().includes(value)
+      )
     );
-    setFilteredData(filteredResults);
   };
 
   return (
@@ -158,6 +164,7 @@ const Broadcast = () => {
             value={searchText}
             onChange={handleSearch}
           />
+
           {user === "pms_admin" && (
             <Link
               to={"/communication/broadcast/create-broadcast"}
@@ -170,13 +177,22 @@ const Broadcast = () => {
           )}
         </div>
 
-        <Table columns={column} data={filteredData} />
+        {loading ? (
+          <div className="flex justify-center items-center mt-10 h-60">
+            <DNA visible={true} height={120} width={130} />
+          </div>
+        ) : (
+          <Table columns={column} data={filteredData} />
+        )}
       </div>
     </div>
   );
 };
 
 export default Broadcast;
+
+
+
 
 
 

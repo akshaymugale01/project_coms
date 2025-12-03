@@ -351,9 +351,9 @@ const AddUser = () => {
 
     // Proceed with submission
     try {
-      await postSetupUsers(postData); // API call
+      await postSetupUsers(postData);
       toast.success("User added successfully!");
-      navigate("/setup/users-setup"); // Navigate back to users list
+      navigate("/setup/users-setup");
     } catch (error) {
       console.error("Error adding user:", error);
       toast.error("Failed to add user. Please try again.");
