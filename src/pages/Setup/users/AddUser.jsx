@@ -351,12 +351,16 @@ const AddUser = () => {
 
     // Proceed with submission
     try {
+      setIsCreating(true);
       await postSetupUsers(postData);
       toast.success("User added successfully!");
       navigate("/setup/users-setup");
     } catch (error) {
       console.error("Error adding user:", error);
-      toast.error("Failed to add user. Please try again.");
+      const errorMessage = error?.response?.data?.error || error?.response?.data?.message || "Failed to add user. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsCreating(false);
     }
   };
 
