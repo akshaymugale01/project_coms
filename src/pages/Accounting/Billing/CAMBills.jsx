@@ -216,9 +216,25 @@ const CAMBills = () => {
       const { startMonth, endMonth } = getPeriodParams();
       const res = await generateCamBills({ year, month: startMonth, end_month: endMonth, site_id: siteId });
       const rows = res?.data?.data || res?.data || [];
+      
+      // Fetch unit names for each row
+      const rowsWithNames = await Promise.all(
+        (Array.isArray(rows) ? rows : []).map(async (row) => {
+          try {
+            const unitRes = await getUnitDetails(row.unit_id);
+            const unitData = unitRes?.data?.data || unitRes?.data;
+            const unitName = unitData?.name || unitData?.flat || unitData?.flat_no || `Unit ${row.unit_id}`;
+            return { ...row, flat_no: unitName, unit_name: unitName };
+          } catch (err) {
+            console.error(`Failed to fetch unit ${row.unit_id}:`, err);
+            return row;
+          }
+        })
+      );
+      
       toast.success("Bills generated");
       setPreviewRows([]);
-      setPersistedRows(Array.isArray(rows) ? rows : []);
+      setPersistedRows(rowsWithNames);
     } catch (e) {
       console.error(e);
       toast.error("Generate failed");
