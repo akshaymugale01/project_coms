@@ -122,26 +122,47 @@ const UserSetup = () => {
       sortable: true,
     },
     {
-      name: "Type",
-      selector: (row) =>
-        row.user_type === "pms_admin"
-          ? "Admin"
-          : row.user_type === "pms_occupant_admin"
-          ? "Unit Owner"
-          : row.user_type === "pms_technician"
-          ? "Technician"
-          : row.user_type === "pms_occupant"
-          ? "Unit Owner"
-          : row.user_type === "security_guard"
-          ? "Security Guard"
-          : row.user_type === "employee"
-          ? "Employee"
-          : row.user_type === "unit_resident"
-          ? "Tenant"
-          : row.user_type === "unit_owner"
-          ? "Unit Owner"
-          : "NA",
+      name: "User Type",
+      selector: (row) => {
+        // Determine base user type
+        let userType = "";
+        if (row.user_type === "pms_admin") {
+          userType = "Admin";
+        } else if (row.user_type === "pms_occupant_admin") {
+          userType = "Occupant Admin";
+        } else if (row.user_type === "pms_technician") {
+          userType = "Technician";
+        } else if (row.user_type === "pms_occupant") {
+          userType = "Occupant";
+        } else if (row.user_type === "security_guard") {
+          userType = "Security Guard";
+        } else if (row.user_type === "employee") {
+          userType = "Employee";
+        } else if (row.user_type === "unit_resident" || row.user_type === "user") {
+          userType = "Resident";
+        } else if (row.user_type === "unit_owner") {
+          userType = "Resident";
+        } else {
+          userType = "User";
+        }
+
+        // Get ownership info from user_sites if available
+        const ownership = row.user_sites?.[0]?.ownership;
+        const ownershipType = row.user_sites?.[0]?.ownership_type;
+
+        // Add ownership suffix for residents
+        if (userType === "Resident" || userType === "Occupant" || userType === "Occupant Admin") {
+          if (ownership === "owner") {
+            userType += ` - Owner${ownershipType === "primary" ? " (Primary)" : ownershipType === "secondary" ? " (Secondary)" : ""}`;
+          } else if (ownership === "tenant") {
+            userType += " - Tenant";
+          }
+        }
+
+        return userType;
+      },
       sortable: true,
+      wrap: true,
     },
   ];
 

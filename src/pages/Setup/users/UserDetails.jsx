@@ -2,6 +2,7 @@ import { BiEdit } from "react-icons/bi";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getFilterUsers, getAllUnits } from "../../../api";
+import { Navbar } from "@material-tailwind/react";
 
 const SetupUserDetails = () => {
   const { id } = useParams();
@@ -62,16 +63,14 @@ const SetupUserDetails = () => {
     );
   }
   return (
-    <section className="flex flex-col items-center p-5 bg-gray-700">
+    <section className="flex flex-col items-center p-10 bg-gray-700">
       {/* Page Title */}
-      <div class="flex mx-1 bg-white rounded-md flex-col gap-1 overflow-hidden my-1 w-full p-5 mt-2 mb-3">
-
-        <div className="bg-gray-900 text-white p-3 rounded-full w-full flex items-center justify-between">
-
+      <div class="flex mx-1 bg-white rounded-sm flex-col gap-1 overflow-hidden my-1 w-full p-5 mb-3">
+        <div className="bg-gray-800 text-white py-2 rounded-sm w-full flex items-center justify-between">
           <h2 className="text-xl font-bold text-center w-full">User Details</h2>
           <Link
             to={`/setup/users-edit-page/${id}`}
-            className="ml-auto text-white text-2xl"
+            className="mr-3 text-white text-2xl"
           >
             <BiEdit />
           </Link>
@@ -80,7 +79,6 @@ const SetupUserDetails = () => {
         {/* <div className="w-full rounded-md bg-white max-w-2xl p-10 mt-3 mb-3"> */}
         {/* User Details Card */}
         <div className="bg-white shadow-lg p-2 rounded-lg p-6 w-full mt-3 mb-3 border border-gray-900">
-
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-800">
               User Information
