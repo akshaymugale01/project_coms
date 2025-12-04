@@ -2,22 +2,59 @@ import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { createMonthlyExpense, deleteMonthlyExpense, getMonthlyExpenses, updateMonthlyExpense } from "../../../api/accountingApi";
 
-const defaultRow = () => ({ id: undefined, category: "", amount: 0 });
+const defaultRow = () => ({ id: undefined, category: "", amount: 0, isCustom: false });
+
+const PREDEFINED_CATEGORIES = [
+  "Fixed",
+  "Unit Type",
+  "Per Square Feet",
+  "Expense Based",
+  "Gymnasium",
+  "Swimming Pool",
+  "Utilities",
+  "Lighting",
+  "Elevators",
+  "Maintenance",
+  "Salaries",
+  "Insurance",
+  "Taxes",
+  "Repairs",
+  "Cleaning",
+  "Security",
+  "Landscaping",
+  "Management Fees",
+];
 
 const MonthlyExpenseSetup = () => {
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1); // 1..12
   const [rows, setRows] = useState([defaultRow()]);
+  const [customCategories, setCustomCategories] = useState([]);
 
   const total = useMemo(() => rows.reduce((s, r) => s + Number(r.amount || 0), 0), [rows]);
+  const allCategories = useMemo(() => [...PREDEFINED_CATEGORIES, ...customCategories], [customCategories]);
 
   const load = async () => {
     setLoading(true);
     try {
       const res = await getMonthlyExpenses({ year, month });
       const data = res?.data?.data || res?.data || [];
-      setRows((Array.isArray(data) && data.length > 0) ? data : [defaultRow()]);
+      
+      // Extract custom categories from loaded data
+      if (Array.isArray(data) && data.length > 0) {
+        const customCats = data
+          .map(r => r.category)
+          .filter(cat => cat && !PREDEFINED_CATEGORIES.includes(cat))
+          .filter((cat, idx, arr) => arr.indexOf(cat) === idx); // unique
+        setCustomCategories(customCats);
+        setRows(data.map(r => ({
+          ...r,
+          isCustom: !PREDEFINED_CATEGORIES.includes(r.category)
+        })));
+      } else {
+        setRows([defaultRow()]);
+      }
     } catch (e) {
       console.error(e);
       setRows([defaultRow()]);
@@ -29,7 +66,26 @@ const MonthlyExpenseSetup = () => {
   useEffect(() => { load(); }, [year, month]);
 
   const handleChange = (idx, field, value) => {
-    setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: field === 'amount' ? Number(value || 0) : value } : r)));
+    setRows((prev) => prev.map((r, i) => {
+      if (i !== idx) return r;
+      
+      if (field === 'category') {
+        // Check if selecting custom option
+        if (value === '__custom__') {
+          return { ...r, category: '', isCustom: true };
+        }
+        return { ...r, category: value, isCustom: !PREDEFINED_CATEGORIES.includes(value) };
+      }
+      
+      return { ...r, [field]: field === 'amount' ? Number(value || 0) : value };
+    }));
+  };
+
+  const handleCustomCategoryBlur = (idx) => {
+    const row = rows[idx];
+    if (row.isCustom && row.category && !customCategories.includes(row.category)) {
+      setCustomCategories(prev => [...prev, row.category]);
+    }
   };
 
   const addRow = () => setRows((p) => [...p, defaultRow()]);
@@ -105,7 +161,28 @@ const MonthlyExpenseSetup = () => {
               {rows.map((r, idx) => (
                 <tr key={idx}>
                   <td className="px-4 py-2">
-                    <input value={r.category} onChange={(e) => handleChange(idx, 'category', e.target.value)} className="w-80 max-w-full px-3 py-2 border rounded" placeholder="Lift, Security, Housekeeping..." />
+                    {r.isCustom ? (
+                      <input 
+                        value={r.category} 
+                        onChange={(e) => handleChange(idx, 'category', e.target.value)} 
+                        onBlur={() => handleCustomCategoryBlur(idx)}
+                        className="w-80 max-w-full px-3 py-2 border rounded" 
+                        placeholder="Enter custom category..." 
+                        autoFocus
+                      />
+                    ) : (
+                      <select 
+                        value={r.category} 
+                        onChange={(e) => handleChange(idx, 'category', e.target.value)} 
+                        className="w-80 max-w-full px-3 py-2 border rounded"
+                      >
+                        <option value="">Select Category</option>
+                        {allCategories.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                        <option value="__custom__">+ Add Custom Category</option>
+                      </select>
+                    )}
                   </td>
                   <td className="px-4 py-2">
                     <input type="number" value={r.amount} onChange={(e) => handleChange(idx, 'amount', e.target.value)} className="w-40 px-3 py-2 border rounded" />
