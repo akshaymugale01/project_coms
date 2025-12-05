@@ -421,9 +421,10 @@ const AddServicesChecklist = () => {
   return (
     <section>
       <div className="m-2">
-        <h2 style={{ background: themeColor }} className="text-center text-xl font-bold p-2  rounded-full text-white">
-          Add Checklist
-        </h2>
+<h2 className="text-center text-xl font-bold p-2 rounded-full text-white bg-gray-900">
+  Add Checklist
+</h2>
+
         <div className="md:mx-20 my-5 mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg sm:shadow-xl">
         <div className="py-4">
       {/* Main Grid for all Toggles */}

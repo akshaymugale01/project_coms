@@ -11,7 +11,6 @@ import Navbar from "../../components/Navbar";
 import { BiEdit } from "react-icons/bi";
 import { DNA } from "react-loader-spinner";
 import toast from "react-hot-toast";
- 
 const Events = () => {
   const [searchText, setSearchText] = useState("");
   const [events, setEvents] = useState([]);
