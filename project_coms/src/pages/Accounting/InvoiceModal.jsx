@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect, useCallback } from "react";
 import { getLedgers, getTaxRates } from "../../api/accountingApi";
 
