@@ -1,0 +1,745 @@
+import React, { useEffect, useState } from "react";
+
+import { useSelector } from "react-redux";
+import Table from "../../components/table/Table";
+import { BiEdit } from "react-icons/bi";
+import { Link } from "react-router-dom";
+import { ColorPicker, Space } from "antd";
+import FileInputBox from "../../containers/Inputs/FileInputBox";
+import { FaTimes, FaTrash } from "react-icons/fa";
+import { getHelpDeskCategoriesSetup, getHelpDeskStatusSetup, getHelpDeskSubCategoriesSetup, getHelpDeskSubCategoriesSetupDetails, postHelpDeskStatusSetup , getSetupUsers, editHelpDeskCategoriesSetupDetails} from "../../api";
+import { statusColors } from "../../utils/colors";
+import toast from "react-hot-toast";
+import { getItemInLocalStorage } from "../../utils/localStorage";
+
+import TicketCategorySetup from "../Setup/TicketSetup/TicketCategorySetup";
+import TicketSubCategory from "../Setup/TicketSetup/TicketSubCategory";
+import EditStatusModal from "../Setup/TicketSetup/EditStatusModal";
+import AdditionalSubCategory from "./AdditionalSubCategory";
+
+const AdditionalSetup = () => {
+  const [selectedRule, setSelectedRule] = useState("");
+  const [statusAdded, setStatusAdded] = useState(false);
+const [showEditModal, setShowEditModal] = useState(false)
+  const [formData, setFormData] = useState({
+    status: "",
+    fixedState: "",
+    color: "",
+    order: "",
+  });
+
+  const handleSelectChange = (event) => {
+    setSelectedRule(event.target.value);
+  };
+  const [showSubCategoryPage, setShowSubCategoryPage] = useState(false);
+  const [subCategories, setSubCategories] = useState([]);
+  const [isModalOpen1, setIsModalOpen1] = useState(false);
+  const [subCatId, setSubCatId] = useState(null);
+  const [catId, setCatId] = useState(null);
+  const [isCatEditModalOpen, setIsCatEditModalOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const openModal = () => setShowModal(true);
+  const closeModal = () => setShowModal(false);
+  const [page, setPage] = useState("Category Type");
+  const themeColor = useSelector((state) => state.theme.color);
+  const [categories, setCategories] = useState([]);
+  const [color, setColor] = useState("#ffffff");
+  const [showPicker, setShowPicker] = useState(false);
+  const [statuses, setStatuses] = useState([]);
+  const [id, setId] = useState("")
+  const closeModal1 = () => setIsModalOpen1(false);
+  useEffect(() => {
+    const fetchTicketStatus = async () => {
+      try {
+        const statusResp = await getHelpDeskStatusSetup();
+        const statusArray = Object.values(statusResp.data);
+        setStatuses(statusArray);
+        console.log(statusArray);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchTicketStatus();
+  }, [statusAdded]);
+
+  
+  const openSubCatEditModal = async (id) => {
+    const fetchCatDetails = await getHelpDeskSubCategoriesSetupDetails(id);
+    console.log(fetchCatDetails)
+    setSubCatId(id);
+    // setFormData({
+    //   ...formData,
+    //   category: fetchCatDetails.data.name,
+    //   minTat: fetchCatDetails.data.tat,
+      
+    // });
+    setIsCatEditModalOpen(true);
+  };
+
+  const [engineers, setEngineers] = useState([]);
+  useEffect(() => {
+    const fetchSetupUser = async () => {
+      try {
+        const userResp = await getSetupUsers();
+        const filteredTechnician = userResp.data.filter(
+          (tech) => tech.user_type === "pms_technician"
+        );
+
+        setEngineers(filteredTechnician);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchSetupUser();
+  }, []);
+
+  const openCatEditModal = async (id) => {
+    const fetchCatDetails = await getHelpDeskCategoriesSetupDetails(id);
+    setCatId(id);
+    setFormData({
+      ...formData,
+      category: fetchCatDetails.data.name,
+      minTat: fetchCatDetails.data.tat,
+      // engineer:
+    });
+    setIsCatEditModalOpen(true);
+  };
+
+
+  const [catAdded, setCatAdded] = useState(true);
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        const catResp = await getHelpDeskCategoriesSetup();
+        setCategories(catResp.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    const fetchSubCategory = async () => {
+      try {
+        const subCatResp = await getHelpDeskSubCategoriesSetup();
+    const sortedSubCat = subCatResp.data.sub_categories.sort((a,b)=> {
+      return new Date(b.created_at) - new Date(a.created_at)
+    })
+        setSubCategories(sortedSubCat);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchCategory();
+    fetchSubCategory();
+  }, [catAdded]);
+
+  const handleColorChange = (newColor) => {
+    setColor(newColor.hex);
+  };
+
+  const togglePicker = () => {
+    setShowPicker(!showPicker);
+  };
+  const columns1 = [
+    {
+      name: "Sr.No",
+      selector: (row) => row.No,
+      sortable: true,
+    },
+    {
+      name: "Complaint Mode",
+      selector: (row) => row.Complaint_Mode,
+      sortable: true,
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="flex items-center gap-4">
+          <Link>
+            <BiEdit size={15} />
+          </Link>
+          <Link>
+            <FaTrash size={15} />
+          </Link>
+        </div>
+      ),
+    },
+  ];
+
+  // const columns2 = [
+  //   {
+  //     name: "Sr.No",
+  //     selector: (row) => row.No,
+  //     sortable: true,
+  //   },
+  //   {
+  //     name: "Rule",
+  //     selector: (row) => row.Complaint_Mode,
+  //     sortable: true,
+  //   },
+  //   {
+  //     name: "Action",
+  //     cell: (row) => (
+  //       <div className="flex items-center gap-4">
+  //         <Link>
+  //           <FaTrash size={15} />
+  //         </Link>
+  //       </div>
+  //     ),
+  //   },
+  // ];
+
+  const subCatColumns = [
+    {
+      name: "Sr.no.",
+      selector: (row, index) => index + 1,
+      sortable: true,
+    },
+    {
+      name: "Category Type",
+      selector: (row) => row.helpdesk_category_name,
+      sortable: true,
+    },
+    {
+      name: "Sub Category Type",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+
+    {
+      name: "2BHK (Inr)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "3BHK (INR)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "4BHK (INR)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Flat RK (INR)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Flat 1RK (INR)",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    // {
+    //   name: "Building",
+    //   selector: (row) => row.Building,
+    //   sortable: true,
+    // },
+
+    // {
+    //   name: "Wing",
+    //   selector: (row) => row.Vendor_Email,
+    //   sortable: true,
+    // },
+
+    // {
+    //   name: "Zone",
+    //   selector: (row) => row.Icon,
+    //   sortable: true,
+    // },
+    // {
+    //   name: "Floor",
+    //   selector: (row) => row.Icon,
+    //   sortable: true,
+    // },
+    // {
+    //   name: "Room",
+    //   selector: (row) => row.Icon,
+    //   sortable: true,
+    // },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="flex items-center gap-4">
+          <button onClick={()=>openSubCatEditModal(row.id)}>
+            <BiEdit size={15} />
+          </button>
+           <button>
+            <FaTrash size={15} />
+          </button> 
+        </div>
+      ),
+    },
+  ];
+
+  const handleClick = () => {
+    setShowSubCategoryPage(true); // Show the sub-category component
+  };
+
+  const handleEditStatusModal = (id)=>{
+      setId(id)
+      setShowEditModal(true)
+  }
+  const statusColumns = [
+    {
+      name: "Order",
+      selector: (row) => row.position,
+      sortable: true,
+    },
+    {
+      name: "Status",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Fixed State",
+      selector: (row) => row.fixed_state,
+      sortable: true,
+    },
+    {
+      name: "Color",
+      selector: (row) => (
+        <div
+          style={{ background: row.color_code }}
+          className={`rounded-md w-4 h-4 text-center`}
+        ></div>
+      ),
+      sortable: true,
+    },
+    // {
+    //   name: "Email",
+    //   selector: (row) => row.Email,
+    //   sortable: true,
+    // },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="flex items-center gap-4">
+          <button onClick={()=>{handleEditStatusModal(row.id)}}>
+            <BiEdit size={15} />
+          </button>
+          {/* <Link>
+            <FaTrash size={15} />
+          </Link> */}
+        </div>
+      ),
+    },
+  ];
+
+  const data1 = [
+    {
+      id: 1,
+      No: "1",
+      Complaint_Mode: "Phone",
+    },
+  ];
+  // const data2 = [
+  //   {
+  //     id: 1,
+  //     No: "1",
+  //     Complaint_Mode: "1 - 25 Days",
+  //   },
+  // ];
+  console.log(statusAdded);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+  // console.log(formData);
+  const handleColorClick = (color) => {
+    setFormData({ ...formData, color });
+  };
+  const siteID = getItemInLocalStorage("SITEID");
+  const handleAddStatus = async () => {
+    if (formData.status === "" || formData.order === "") {
+      return toast.error("Please Add Status Name & Order");
+    }
+    const postStatus = new FormData();
+    postStatus.append("complaint_status[of_phase]", "pms");
+    postStatus.append("complaint_status[society_id]", siteID);
+    postStatus.append("complaint_status[name]", formData.status);
+    postStatus.append("complaint_status[fixed_state]", formData.fixedState);
+    postStatus.append("complaint_status[color_code]", formData.color);
+    postStatus.append("complaint_status[position]", formData.order);
+    try {
+      const resp = await postHelpDeskStatusSetup(postStatus);
+      console.log(resp);
+      setStatusAdded(true);
+      toast.success("Status Added Successfully");
+      setFormData({
+        ...formData,
+        color: "",
+        status: "",
+        fixedState: "",
+        order: "",
+      });
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.error);
+    } finally {
+      setTimeout(() => {
+        setStatusAdded(false);
+      }, 500);
+    }
+  };
+
+  const siteId = getItemInLocalStorage("SITEID");
+  const handleEditCategory = async () => {
+    const sendData = new FormData();
+    sendData.append("helpdesk_category[society_id]", siteId);
+    sendData.append("helpdesk_category[of_phase]", "pms");
+    sendData.append("helpdesk_category[name]", formData.category);
+    sendData.append("helpdesk_category[tat]", formData.minTat);
+    try {
+      const resp = await editHelpDeskCategoriesSetupDetails(catId, sendData);
+      console.log(resp);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return (
+    <div className=" w-full my-2 flex  overflow-hidden flex-col">
+      <div className="flex w-full">
+        <div className=" flex gap-2 p-2 pb-0 border-b-2 border-gray-200 w-full">
+          <h2
+            className={`p-1 ${
+              page === "Category Type" &&
+              `bg-white font-medium text-blue-500 shadow-custom-all-sides`
+            } rounded-t-md px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
+            onClick={() => setPage("Category Type")}
+          >
+            Category
+          </h2>
+          <h2
+            className={`p-1 ${
+              page === "Sub Category" &&
+              "bg-white font-medium text-blue-500 shadow-custom-all-sides"
+            } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
+            onClick={() => setPage("Sub Category")}
+          >
+            Sub Category
+          </h2>
+          <h2
+            className={`p-1 ${
+              page === "Status" &&
+              "bg-white font-medium text-blue-500 shadow-custom-all-sides"
+            } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
+            onClick={() => setPage("Status")}
+          >
+            Status
+          </h2>
+         
+          {/* <h2
+            className={`p-1 ${
+              page === "Operational Days" &&
+              "bg-white font-medium text-blue-500 shadow-custom-all-sides"
+            } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
+            onClick={() => setPage("Operational Days")}
+          >
+            Operational Days
+          </h2> */}
+          {/* <h2
+            className={`p-1 ${
+              page === "Complaint Mode" &&
+              "bg-white font-medium text-blue-500 shadow-custom-all-sides"
+            } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
+            onClick={() => setPage("Complaint Mode")}
+          >
+            Complaint Mode
+          </h2>
+          <h2
+            className={`p-1 ${
+              page === "Aging Rule" &&
+              "bg-white font-medium text-blue-500 shadow-custom-all-sides"
+            } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
+            onClick={() => setPage("Aging Rule")}
+          >
+            Aging Rule
+          </h2> */}
+        </div>
+      </div>
+      <div>
+        {page === "Category Type" && (
+          <div className="mr-4">
+            <TicketCategorySetup />
+          </div>
+        )}
+
+        {page === "Sub Category" && (
+          <div>
+            <div className="flex justify-end">
+            <button
+        style={{ background: "blue" }}
+        onClick={handleClick}
+        className="p-2 my-2 mr-4 bg-blue-500 text-white rounded-md"
+      >
+                Add SubCategory
+              </button>
+            </div>
+            {showSubCategoryPage && (
+              
+              <AdditionalSubCategory
+                setCAtAdded={setCatAdded}
+              />
+              
+            )}
+            <Table
+              responsive
+              //   selectableRows
+              columns={subCatColumns}
+              data={subCategories}
+              isPagination={true}
+            />
+          </div>
+        )}
+
+
+          {isModalOpen1 && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50"
+              onClick={closeModal1}
+            ></div>
+            <div className="bg-white h-96 overflow-y-auto rounded-lg shadow-lg p-4 relative z-10 w-2/3">
+              <button
+                className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+                onClick={closeModal1}
+              >
+                <FaTimes />
+              </button>
+              <h2 className="text-xl font-semibold mb-4">Edit Sub Category</h2>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="form-group">
+                  <label className="block mb-2">Select Category</label>
+                  <select
+                    type="text"
+                    className="border p-2 w-full"
+                    placeholder="Enter Category"
+                  >
+                    <option value="">HouseKeeping</option>
+                    <option value="">Washroom cleaning</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="block mb-2">Enter Sub Category</label>
+                  <input className="border p-2 w-full"></input>
+                </div>
+                
+
+                <form className="">
+                  {Object.keys(options).map((section) => (
+                    <div key={section} className="form-section">
+                      <div className="flex flex-col">
+                        <span>
+                          <div></div>
+                          <input type="checkbox" />
+                          &nbsp; &nbsp;<label htmlFor="">{section}</label>
+                          <br />
+                        </span>
+                        <span className="flex flex-col">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              readOnly
+                              value={selectedOptions[section].join(", ")}
+                              onClick={() => toggleSelect(section)}
+                              className="cursor-pointer p-2 border mt-2 border-gray-300 rounded-md w-full"
+                            />
+                            &nbsp;
+                            {isOpen[section] && (
+                              <div className="absolute top-full z-10 mt-2 w-full rounded-md shadow-lg bg-white border border-gray-300">
+                                {options[section].map((option) => (
+                                  <label key={option} className="block p-2">
+                                    <input
+                                      type="checkbox"
+                                      value={option}
+                                      checked={selectedOptions[
+                                        section
+                                      ].includes(option)}
+                                      onChange={() =>
+                                        handleOptionChange(section, option)
+                                      }
+                                      className="mr-2"
+                                    />
+                                    {option}
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="submit"
+                    style={{ background: themeColor, height: "1cm" }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                  >
+                    Submit
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+{isCatEditModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50"
+              onClick={() => setIsCatEditModalOpen(false)}
+            ></div>
+            <div className="bg-white overflow-y-auto rounded-lg shadow-lg p-4 relative z-10">
+              <button
+                className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+                onClick={() => setIsCatEditModalOpen(false)}
+              >
+                <FaTimes size={20} />
+              </button>
+              <h2 className=" font-semibold mb-4">Edit Category</h2>
+              <div>
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="form-group">
+                    <label className="block mb-2">Enter Category</label>
+                    <input
+                      type="text"
+                      className="border p-2 w-full"
+                      placeholder="Enter Category"
+                      value={formData.category}
+                      name="category"
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="block mb-2">Select Engineer</label>
+                    <select className="border p-2 w-full">
+                      {engineers.map((engineer) => (
+                        <option value={engineer.id} key={engineer.id}>
+                          {engineer.firstname}
+                          {engineer.lastname}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="block mb-2">Response Time (min)</label>
+                    <input
+                      type="number"
+                      className="border p-2 w-full"
+                      placeholder="Response Time"
+                      value={formData.minTat}
+                      onChange={handleChange}
+                      name="minTat"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-center ">
+                  <button
+                    style={{ background: themeColor }}
+                    className=" text-white px-4 py-2 rounded-md "
+                    onClick={handleEditCategory}
+                  >
+                    {" "}
+                    Submit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {page === "Status" && (
+          <div className="m-2">
+            <div className="grid md:grid-cols-5 gap-2 my-2">
+              <input
+                type="text"
+                placeholder="Enter status"
+                className="border p-2 rounded-md border-gray-300"
+                value={formData.status}
+                onChange={handleChange}
+                name="status"
+              />
+              <select
+                name="fixedState"
+                onChange={handleChange}
+                value={formData.fixedState}
+                id=""
+                className="border p-2 rounded-md border-gray-300"
+              >
+                <option value="">Select Fixed State</option>
+                <option value="closed">Closed</option>
+                <option value="open">Open</option>
+                <option value="complete">Complete</option>
+              </select>
+
+              <ColorPicker
+                value={formData.color}
+                onChange={(color) =>
+                  setFormData({ ...formData, color: color.toHexString() })
+                }
+                size="large"
+              />
+
+              <input
+                type="number"
+                placeholder="Enter order"
+                className="border p-2 rounded-md border-gray-300"
+                value={formData.order}
+                onChange={handleChange}
+                name="order"
+              />
+              <button
+                className=" font-medium hover:text-white transition-all w-full p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
+                style={{ background: themeColor }}
+                onClick={handleAddStatus}
+              >
+                Add
+              </button>
+            </div>
+            <Table
+              responsive
+              //   selectableRows
+              columns={statusColumns}
+              data={statuses}
+              isPagination={true}
+            />{" "}
+            {/* <div className="flex gap-10">
+              <label className="font-semibold mt-2" htmlFor="">
+                Allow User to reopen ticket after closure
+              </label>
+              <select
+                className="border p-2 rounded-md w-64 border-black"
+                name=""
+                id=""
+              >
+                <option value="">Select time period</option>
+                <option value="">Days</option>
+                <option value="">Hrs</option>
+                <option value="">Months</option>
+              </select>
+              <input
+                type="text"
+                className="border p-2 rounded-md border-black"
+                placeholder="2"
+              />
+              <button
+                className="border-2 font-semibold hover:bg-black hover:text-white transition-all border-black p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
+                style={{ background: themeColor }}
+              >
+                Update
+              </button>
+            </div> */}
+          </div>
+        )}
+
+       {showEditModal && <EditStatusModal onClose={()=> setShowEditModal(false)} id={id} setStatusAdded={setStatusAdded}  />}
+      </div>
+    </div>
+  );
+};
+
+export default AdditionalSetup;
+
+

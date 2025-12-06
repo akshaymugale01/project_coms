@@ -1,0 +1,25 @@
+  /* CSS */
+  @media screen and (min-width: 640px) {
+    /* Adjust layout for small screens */
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  }
+  
+  @media screen and (min-width: 768px) {
+    /* Adjust layout for medium screens */
+    .form-container {
+      max-width: 720px;
+    }
+  }
+  
+  
+  @media screen and (min-width: 1024px) {
+    /* Adjust layout for large screens */
+    .form-container {
+      max-width: 960px;
+    }
+  }
+  
+    
