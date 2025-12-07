@@ -20,10 +20,28 @@ import {
 
 const menuItems = [
   { 
-    id: 'bills', 
-    label: 'Accounting Bills', 
-    icon: <FaFileInvoiceDollar />,
-    component: CAMBills
+    id: 'billing-config', 
+    label: 'Billing Configuration', 
+    icon: <FaCog />,
+    component: BillingConfiguration
+  },
+  { 
+    id: 'income-tracking', 
+    label: 'Income Tracking', 
+    icon: <FaReceipt />,
+    component: IncomeTracking
+  },
+  { 
+    id: 'reconciliation', 
+    label: 'Reconciliation Report', 
+    icon: <FaChartLine />,
+    component: ReconciliationReport
+  },
+  { 
+    id: 'interest-config', 
+    label: 'Interest Configuration', 
+    icon: <FaPercent />,
+    component: InterestConfiguration
   },
   { 
     id: 'monthly', 
@@ -38,29 +56,11 @@ const menuItems = [
     component: CAMSetup
   },
   { 
-    id: 'billing-config', 
-    label: 'Billing Configuration', 
-    icon: <FaCog />,
-    component: BillingConfiguration
+    id: 'bills', 
+    label: 'Accounting Bills', 
+    icon: <FaFileInvoiceDollar />,
+    component: CAMBills
   },
-  { 
-    id: 'interest-config', 
-    label: 'Interest Configuration', 
-    icon: <FaPercent />,
-    component: InterestConfiguration
-  },
-  { 
-    id: 'income-tracking', 
-    label: 'Income Tracking', 
-    icon: <FaReceipt />,
-    component: IncomeTracking
-  },
-  { 
-    id: 'reconciliation', 
-    label: 'Reconciliation Report', 
-    icon: <FaChartLine />,
-    component: ReconciliationReport
-  }
 ];
 
 const AccountingSetupTabs = () => {
@@ -71,12 +71,12 @@ const AccountingSetupTabs = () => {
   return (
     <section className="flex">
       <Navbar />
-      <div className="w-full flex mx-3 flex-col overflow-hidden">
+      <div className="w-full flex  flex-col overflow-hidden">
         {/* <SetupNavbar /> */}
-        <div className="flex flex-1 overflow-hidden mt-2">
+        <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
-          <div className="w-64 bg-white shadow-lg border-r border-gray-200 overflow-y-auto rounded-l-lg">
-            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-600 to-gray-700">
+          <div className="w-64 bg-white shadow-lg border-r border-gray-200 overflow-y-auto ">
+            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-900 to-gray-700">
               <h2 className="text-xl font-bold text-white">Accounting Setup</h2>
               <p className="text-sm text-blue-100 mt-1">Configure settings</p>
             </div>
