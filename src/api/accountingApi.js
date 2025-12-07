@@ -112,3 +112,18 @@ export const generateMonthlyCam = (period) =>
     API.post("/accounting/cam/generate", null, { params: { period } });
 export const getMonthlyCamSummary = (period) =>
     API.get("/accounting/cam/summary", { params: { period } });
+
+// Billing Configurations
+export const getBillingConfigurations = () => API.get("/billing_configurations.json");
+export const getBillingConfiguration = (id) => API.get(`/billing_configurations/${id}.json`);
+export const createBillingConfiguration = (data) => API.post("/billing_configurations.json", data);
+export const updateBillingConfiguration = (id, data) => API.put(`/billing_configurations/${id}.json`, data);
+export const deleteBillingConfiguration = (id) => API.delete(`/billing_configurations/${id}.json`);
+
+// Income Entries
+export const getIncomeEntries = (params) => API.get("/income_entries.json", { params });
+export const getIncomeEntry = (id) => API.get(`/income_entries/${id}.json`);
+export const createIncomeEntry = (data) => API.post("/income_entries.json", data);
+export const updateIncomeEntry = (id, data) => API.put(`/income_entries/${id}.json`, data);
+export const deleteIncomeEntry = (id) => API.delete(`/income_entries/${id}.json`);
+export const getReconciliationReport = (params) => API.get("/income_entries/reconciliation_report.json", { params });
