@@ -72,17 +72,17 @@ const BillingConfiguration = () => {
     <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Billing Configuration</h2>
-        <p className="text-gray-600 mt-1">Configure company details for invoice generation</p>
+        <p className="text-gray-600 mt-1">Configure Society details for invoice generation</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Company Details */}
+        {/* Society Details */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Company Information</h3>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Society Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Name *
+                Society Name *
               </label>
               <input
                 type="text"
@@ -96,7 +96,7 @@ const BillingConfiguration = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Logo URL
+                Society Logo URL
               </label>
               <input
                 type="text"
