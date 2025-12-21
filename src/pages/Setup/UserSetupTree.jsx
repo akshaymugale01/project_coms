@@ -84,18 +84,40 @@ const UserSetupTree = () => {
   // MAIN SEARCH HANDLER
   const fetchUsers = async () => {
     try {
-      // Determine the most specific location selected (Unit > Floor > Building)
-      const locationId = selectedUnitId || selectedFloorId || selectedBuilding;
-
-      // 1️⃣ If Member Type selected → filter by member type at the selected level
-      if (memberType !== "" && locationId) {
-        const res = await getSetupUsersByMemberType(
-          "users",
-          locationId,
-          memberType
-        );
-        setUsers(res.data);
-        return;
+      // 1️⃣ If Member Type selected with any location
+      if (memberType !== "") {
+        // Determine which location parameter to use (most specific first)
+        if (selectedUnitId) {
+          const res = await getSetupUsersByMemberType(
+            "users",
+            selectedUnitId,
+            memberType,
+            "unit_id" // Specify parameter type
+          );
+          setUsers(res.data);
+          return;
+        } else if (selectedFloorId) {
+          const res = await getSetupUsersByMemberType(
+            "users",
+            selectedFloorId,
+            memberType,
+            "floor_id" // Specify parameter type
+          );
+          setUsers(res.data);
+          return;
+        } else if (selectedBuilding) {
+          const res = await getSetupUsersByMemberType(
+            "users",
+            selectedBuilding,
+            memberType,
+            "building_id" // Specify parameter type
+          );
+          setUsers(res.data);
+          return;
+        } else {
+          alert("Please select a building, floor, or unit first.");
+          return;
+        }
       }
 
       // 2️⃣ Building → Floor → Unit (no member type filter)

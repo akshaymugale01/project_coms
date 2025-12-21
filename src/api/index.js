@@ -1,4 +1,3 @@
-import { data } from "autoprefixer";
 import { getItemInLocalStorage } from "../utils/localStorage";
 import axiosInstance from "./axiosInstance";
 import HrmsAuth from "./HrmsAuth";
@@ -1875,20 +1874,25 @@ export const getSetupUsersByBuilding = async (type, building_id) =>
     },
   });
 
-export const getSetupUsersByMemberType = async (type, building_id, ownership) =>
-  axiosInstance.get("users/user_dropdown.json", {
-    params: {
-      token: token,
-      type,
-      building_id,
-      ownership,
-    },
+export const getSetupUsersByMemberType = async (type, locationId, ownership, paramType = "building_id") => {
+  const params = {
+    token: token,
+    type,
+    ownership,
+  };
+  
+  // Add the location parameter with the correct name
+  params[paramType] = locationId;
+  
+  return axiosInstance.get("users/user_dropdown.json", {
+    params,
     headers: {
       "Cache-Control": "no-cache",
       Pragma: "no-cache",
       Expires: "0",
     },
   });
+};
 
 export const getUserCount = async () =>
   axiosInstance.get("/users/index_count.json", {
