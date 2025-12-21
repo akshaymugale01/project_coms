@@ -158,23 +158,52 @@ const UserSetupTreeView = () => {
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-6">
 
-                {/* Profile Header */}
-                <div className="flex items-center space-x-4 mb-6 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-xl shadow-sm">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                    {userData.firstname?.[0]?.toUpperCase() || "U"}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {userData.firstname || "No data"}{" "}
-                      {userData.lastname || ""}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {userData.user_type ? userData.user_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : "No user type"}
-                    </p>
-                  </div>
-                </div>
+               { /* Profile Header */}
+                        <div className="flex items-center space-x-4 mb-6 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-xl shadow-sm">
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                          {userData.firstname?.[0]?.toUpperCase() || "U"}
+                          </div>
+                          <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-800">
+                            {userData.firstname || "No data"}{" "}
+                            {userData.lastname || ""}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {userData.user_sites[0].ownership ? userData.user_sites[0].ownership.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : "Not Assigned"}
+                          </p>
+                          </div>
+                        </div>
 
-                {/* Personal Info */}
+                        {/* Property Information */}
+                        <div className="mb-6">
+                          <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white px-4 py-3 rounded-t-lg">
+                          <h3 className="text-lg font-bold flex items-center">
+                            <span className="mr-2">🏠</span>
+                            Property Details
+                          </h3>
+                          </div>
+                          <div className="bg-white border border-gray-200 rounded-b-lg p-4 shadow-sm">
+                          {userData.user_sites && userData.user_sites.length > 0 ? (
+                            <ul className="space-y-3">
+                            {userData.user_sites.map((site, index) => (
+                              <li key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-gray-800">
+                                {index + 1}.  {site.hierarchy || "N/A"}
+                                </span>
+                              </div>
+                              </li>
+                            ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-500 text-center py-4 italic">
+                            No property assigned
+                            </p>
+                          )}
+                          </div>
+                        </div>
+
+                        {/* Personal Info */}
                 <div className="mb-6">
                   <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white px-4 py-3 rounded-t-lg">
                     <h3 className="text-lg font-bold flex items-center">

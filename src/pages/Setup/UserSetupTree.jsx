@@ -5,6 +5,7 @@ import DataTable from "react-data-table-component";
 import { Link } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { BiEdit } from "react-icons/bi";
+import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 
 import {
   getFloors,
@@ -50,6 +51,10 @@ const UserSetupTree = () => {
   const [openFloor, setOpenFloor] = useState(false);
   const [searchFloor, setSearchFloor] = useState("");
 
+  // State for expanded rows in tree view
+  const [expandedBuildings, setExpandedBuildings] = useState({});
+  const [expandedFloors, setExpandedFloors] = useState({});
+
 
   // Fetch buildings + sites
   useEffect(() => {
@@ -79,18 +84,21 @@ const UserSetupTree = () => {
   // MAIN SEARCH HANDLER
   const fetchUsers = async () => {
     try {
-      // 1️⃣ If Member Type selected → priority filter
-      if (selectedBuilding && memberType !== "") {
+      // Determine the most specific location selected (Unit > Floor > Building)
+      const locationId = selectedUnitId || selectedFloorId || selectedBuilding;
+
+      // 1️⃣ If Member Type selected → filter by member type at the selected level
+      if (memberType !== "" && locationId) {
         const res = await getSetupUsersByMemberType(
           "users",
-          selectedBuilding,
+          locationId,
           memberType
         );
         setUsers(res.data);
         return;
       }
 
-      // 2️⃣ Building → Floor → Unit
+      // 2️⃣ Building → Floor → Unit (no member type filter)
       if (selectedUnitId !== "") {
         const res = await getSetupUsersByUnit("users", selectedUnitId);
         setUsers(res.data);
@@ -117,24 +125,149 @@ const UserSetupTree = () => {
     }
   };
 
+  // Toggle expand/collapse functions
+  const toggleBuilding = (userId, buildingName) => {
+    const key = `${userId}-${buildingName}`;
+    setExpandedBuildings((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const toggleFloor = (userId, buildingName, floorName) => {
+    const key = `${userId}-${buildingName}-${floorName}`;
+    setExpandedFloors((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Group units by building and floor
+  const groupUnitsByStructure = (sites) => {
+    const buildingMap = {};
+    
+    // Aggregate all units from all sites into a single building structure
+    sites.forEach((site) => {
+      site.units.forEach((unit) => {
+        if (!buildingMap[unit.building]) {
+          buildingMap[unit.building] = {};
+        }
+        if (!buildingMap[unit.building][unit.floor]) {
+          buildingMap[unit.building][unit.floor] = [];
+        }
+        buildingMap[unit.building][unit.floor].push(unit);
+      });
+    });
+
+    return buildingMap;
+  };
+
+  // Expandable component for tree hierarchy
+  const ExpandedComponent = ({ data }) => {
+    const buildingStructure = groupUnitsByStructure(data.sites || []);
+    
+    return (
+      <div className="p-4 bg-gray-50">
+        {Object.entries(buildingStructure).map(([buildingName, floors]) => {
+          const buildingKey = `${data.id}-${buildingName}`;
+          
+          return (
+            <div key={buildingName} className="mb-3 border border-green-200 rounded">
+              {/* Building Row */}
+              <div className="flex items-center p-2 bg-green-50 cursor-pointer hover:bg-green-100"
+                onClick={() => toggleBuilding(data.id, buildingName)}>
+                <button className="mr-3 text-green-600">
+                  {expandedBuildings[buildingKey] ? (
+                    <FaChevronDown size={12} />
+                  ) : (
+                    <FaChevronRight size={12} />
+                  )}
+                </button>
+                <span className="font-medium text-green-800">
+                  🏢 {buildingName}
+                </span>
+                <span className="ml-2 text-xs bg-green-200 text-green-700 px-2 py-1 rounded">
+                  {Object.keys(floors).length} floors
+                </span>
+              </div>
+
+              {/* Floors */}
+              {expandedBuildings[buildingKey] && (
+                <div className="p-2 pl-6 bg-white">
+                  {Object.entries(floors).map(([floorName, units]) => {
+                    const floorKey = `${data.id}-${buildingName}-${floorName}`;
+                    
+                    return (
+                      <div key={floorName} className="mb-2 border border-purple-200 rounded">
+                        {/* Floor Row */}
+                        <div className="flex items-center p-2 bg-purple-50 cursor-pointer hover:bg-purple-100"
+                          onClick={() => toggleFloor(data.id, buildingName, floorName)}>
+                          <button className="mr-3 text-purple-600">
+                            {expandedFloors[floorKey] ? (
+                              <FaChevronDown size={10} />
+                            ) : (
+                              <FaChevronRight size={10} />
+                            )}
+                          </button>
+                          <span className="font-medium text-purple-800">
+                            🔢 Floor {floorName}
+                          </span>
+                          <span className="ml-2 text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded">
+                            {units.length} units
+                          </span>
+                        </div>
+
+                        {/* Units */}
+                        {expandedFloors[floorKey] && (
+                          <div className="p-2 pl-6 bg-white">
+                            {units.map((unit) => (
+                              <div
+                                key={unit.unit_id}
+                                className="flex items-center p-2 mb-1 bg-orange-50 rounded hover:bg-orange-100"
+                              >
+                                <span className="mr-2">🏠</span>
+                                <span className="font-medium text-gray-700">
+                                  Unit {unit.unit_name}
+                                </span>
+                                <span className="ml-3 text-sm bg-orange-200 text-orange-700 px-2 py-1 rounded">
+                                  {unit.ownership}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const columns = [
     {
-      name: "View",
+      name: "Actions",
       cell: (row) => (
-        <div className="flex item-center gap-2">
-          <Link to={`/setup/users-tree/${row.id}`}>
-            <BsEye size={15} />
-          </Link>
-          <Link to={`/setup/users-edit-page/${row.id}`}>
-            <BiEdit size={15} />
-          </Link>
-        </div>
+      <div className="flex items-center gap-2">
+        <Link to={`/setup/users-tree/${row.id}`}>
+        <BsEye size={15} />
+        </Link>
+        <Link to={`/setup/users-edit-page/${row.id}`}>
+        <BiEdit size={15} />
+        </Link>
+      </div>
       ),
+      width: "100px",
     },
     {
       name: "Name",
-      selector: (row) => row.good_name,
+      selector: (row) => row.good_name || row.name,
       sortable: true,
+      wrap: true,
     },
     {
       name: "Mobile",
@@ -142,14 +275,53 @@ const UserSetupTree = () => {
       sortable: true,
     },
     {
-      name: "Building",
-      selector: (row) => row.building_name,
+      name: "Email",
+      selector: (row) => row.email,
       sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Building",
+      selector: (row) => row.sites[0].units[0].building,
+      sortable: true,
+      wrap: true,
     },
     {
       name: "Floor",
-      selector: (row) => row.floor_name,
+      selector: (row) => row.sites[0].units[0].floor,
       sortable: true,
+      wrap: true, 
+    },
+    {
+      name: "Ownership",
+      selector: (row) => {
+      const allUnits = (row.sites || []).flatMap(site => site.units || []);
+      const ownerships = [...new Set(allUnits.map(unit => unit.ownership).filter(Boolean))];
+      return ownerships.join(", ").toUpperCase() || "Not Assigned";
+      },
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "No. of Units",
+      selector: (row) => {
+      const totalUnits = (row.sites || []).reduce((sum, site) => sum + (site.units?.length || 0), 0);
+      return totalUnits;
+      },
+      sortable: true,
+    },
+    ];
+
+  // Check if user has units to show expand button
+  const conditionalRowStyles = [
+    {
+      when: row => {
+        const totalUnits = (row.sites || []).reduce((sum, site) => sum + (site.units?.length || 0), 0);
+        return totalUnits === 0;
+      },
+      style: {
+        pointerEvents: 'none',
+      },
     },
   ];
 
@@ -158,17 +330,27 @@ const UserSetupTree = () => {
       style: {
         background: "rgb(17, 24, 39)",
         color: "white",
-        fontSize: "10px",
+        fontSize: "12px",
+        fontWeight: "bold",
       },
     },
     headCells: {
       style: {
         textTransform: "uppercase",
+        paddingLeft: "8px",
+        paddingRight: "8px",
       },
     },
     cells: {
       style: {
         fontSize: "14px",
+        paddingLeft: "8px",
+        paddingRight: "8px",
+      },
+    },
+    expanderRow: {
+      style: {
+        backgroundColor: "#f9fafb",
       },
     },
   };
@@ -186,7 +368,7 @@ const UserSetupTree = () => {
           {/* Building */}
           {/* Building - Searchable Dropdown */}
           <div className="flex flex-col w-full relative">
-            <label className="font-semibold mb-1">Building *</label>
+            <label className="font-semibold mb-1">Building</label>
 
             {/* Selected Box */}
             <div
@@ -259,7 +441,7 @@ const UserSetupTree = () => {
 
           {/* Floor */}
           <div className="flex flex-col w-full relative">
-            <label className="font-semibold mb-1">Floor *</label>
+            <label className="font-semibold mb-1">Floor</label>
 
             {/* Selected Box */}
             <div
@@ -324,9 +506,6 @@ const UserSetupTree = () => {
             )}
           </div>
 
-
-
-
           {/* Unit */}
           <div className="flex flex-col w-full relative">
             <label className="font-semibold mb-1">Unit</label>
@@ -384,7 +563,6 @@ const UserSetupTree = () => {
             )}
           </div>
 
-
           {/* Member Type with Search */}
           <div className="flex flex-col w-full relative">
             <label className="font-semibold mb-1">Member Type:</label>
@@ -434,8 +612,6 @@ const UserSetupTree = () => {
             )}
           </div>
 
-
-
           {/* Search Button */}
           <div className="flex flex-col h-full justify-end">
             <button
@@ -457,6 +633,13 @@ const UserSetupTree = () => {
             highlightOnHover
             striped
             customStyles={customStyles}
+            expandableRows
+            expandableRowsComponent={ExpandedComponent}
+            expandOnRowClicked
+            expandableRowDisabled={row => {
+              const totalUnits = (row.sites || []).reduce((sum, site) => sum + (site.units?.length || 0), 0);
+              return totalUnits === 0;
+            }}
           />
         </div>
       </div>
