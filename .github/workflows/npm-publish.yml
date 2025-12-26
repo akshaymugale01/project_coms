@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      # or master (use the one your repo uses)
+      # change to master if your repo uses master
 
 jobs:
   deploy:
@@ -22,6 +22,22 @@ jobs:
       - name: Deploy to Server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # -------------------------------
+            # Load NVM and force Node 18
+            # -------------------------------
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            nvm use 18
+
+            echo "Node version:"
+            node -v
+            echo "NPM version:"
+            npm -v
+
+            # -------------------------------
+            # Deploy frontend
+            # -------------------------------
             cd /var/www/html/frontend/project_coms || exit 1
 
             echo "🚀 Pulling latest code"
@@ -30,7 +46,7 @@ jobs:
             echo "📦 Installing dependencies"
             npm install || exit 1
 
-            echo "Export Node Mobules Extend Memory Heap"
+            echo "🧠 Increasing Node memory"
             export NODE_OPTIONS=--max-old-space-size=8192
 
             echo "🏗️ Building frontend"
