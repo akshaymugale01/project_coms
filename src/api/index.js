@@ -1547,7 +1547,7 @@ export const postParkingConfiguration = async (data) =>
 
 export const getFacitilitySetup = async (page, per_page) => {
   try {
-    const response = await axiosInstance.get(`/amenities.json`, {
+    const response = await axiosInstance.get(`/amenities.json?q[is_hotel_null]=true`, {
       params: {
         token: token,
         page,
@@ -8601,11 +8601,7 @@ export const getSiteData = async () =>
   });
 
 export const siteChange = async (id) =>
-  axiosInstance.get(`/change_site_for_app.json?siteid=${id} `, {
-    params: {
-      token: token,
-    },
-  });
+  axiosInstance.get(`/change_site_for_app.json?siteid=${id}&token=${token}`);
 
 // forum
 export const postForum = async (data) =>

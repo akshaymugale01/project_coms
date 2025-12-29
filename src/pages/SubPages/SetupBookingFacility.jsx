@@ -27,6 +27,8 @@ const SetupBookingFacility = () => {
   const [hotelBooking, setHotelBooking] = useState([]);
   const [page_no, setPageNo] = useState(1);
   const [per_page, setPerPage] = useState(10);
+  const [facilityTotal, setFacilityTotal] = useState(0);
+  const [hotelTotal, setHotelTotal] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [filteredHotelBookings, setFilteredHotelBookings] = useState([]);
@@ -40,12 +42,12 @@ const SetupBookingFacility = () => {
       try {
         const response = await getFacitilitySetup(page_no, per_page);
         // Filter out hotel facilities and set the booking facility data
-        const facilityData = response.data.amenities.filter(
-          (facility) => facility.is_hotel !== true
-        );
+        const facilityData = response.data.amenities;
         SetBookingFacility(facilityData);
         setOriginalFacilityData(facilityData); // Store the original data for reference
-        console.log("Response", response.data);
+        const totalCount = response.data.total_count || facilityData.length;
+        setFacilityTotal(totalCount);
+        // console.log("Response", response.data);
       } catch (error) {
         console.error("Error fetching facilities", error);
         setError("Failed to fetch booking facilities. Please try again."); // Set error message
@@ -54,7 +56,7 @@ const SetupBookingFacility = () => {
     };
 
     fetchFacilityBooking();
-  }, []);
+  }, [page_no, per_page]);
 
   useEffect(() => {
     const fetchHotelBooking = async () => {
@@ -62,9 +64,11 @@ const SetupBookingFacility = () => {
         const response = await getHotelSetup(true, page_no, per_page);
         // Get the hotel amenities array
         const hotelData = response.data.amenities;
-        console.log("Hotel Data:", hotelData);
+        // console.log("Hotel Data 123:", hotelData);
         setHotelBooking(hotelData);
         setOriginalHotelData(hotelData); // Store the original data for reference
+        const totalCount = response.data.total_count || hotelData.length;
+        setHotelTotal(totalCount);
         setLoading(false); // Stop loading on success
       } catch (error) {
         console.error("Error fetching hotel bookings", error);
@@ -257,12 +261,12 @@ const SetupBookingFacility = () => {
     setSearchText(searchValue);
     if (searchValue.trim() === "") {
       // Restore the original data
-      SetBookingFacility(originalHotelData); // Keep this full list in a separate state variable
+      setHotelBooking(originalHotelData); // Keep this full list in a separate state variable
     } else {
-      const filteredResults = bookingFacility.filter((item) =>
+      const filteredResults = hotelBooking.filter((item) =>
         item.fac_name.toLowerCase().includes(searchValue.toLowerCase())
       );
-      SetBookingFacility(filteredResults);
+      setHotelBooking(filteredResults);
     }
   };
 
@@ -360,7 +364,20 @@ const SetupBookingFacility = () => {
                 <p className="text-center text-red-500">{error}</p>
               ) : (
                 <div className="w-full">
-                  <Table columns={setupColumn} data={bookingFacility} />
+                  <Table
+                    columns={setupColumn}
+                    data={bookingFacility}
+                    pagination
+                    paginationServer
+                    paginationPerPage={per_page}
+                    paginationTotalRows={facilityTotal}
+                    currentPage={page_no}
+                    onChangePage={(newPage) => setPageNo(newPage)}
+                    onChangeRowsPerPage={(newPerPage, newPage) => {
+                      setPerPage(newPerPage);
+                      setPageNo(newPage);
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -409,7 +426,20 @@ const SetupBookingFacility = () => {
                 <p className="text-center text-red-500">{error}</p>
               ) : (
                 <div className="w-full">
-                  <Table columns={setupColumn} data={hotelBooking} />
+                  <Table
+                    columns={setupColumn}
+                    data={hotelBooking}
+                    pagination
+                    paginationServer
+                    paginationPerPage={per_page}
+                    paginationTotalRows={hotelTotal}
+                    currentPage={page_no}
+                    onChangePage={(newPage) => setPageNo(newPage)}
+                    onChangeRowsPerPage={(newPerPage, newPage) => {
+                      setPerPage(newPerPage);
+                      setPageNo(newPage);
+                    }}
+                  />
                 </div>
               )}
             </div>
