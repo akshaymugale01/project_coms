@@ -8,6 +8,7 @@ import {
   getPaymentsByInvoice,
 } from "../../api/accountingApi";
 import PaymentModal from "./PaymentModal";
+import Navbar from "../../components/Navbar";
 
 const AccountingPayments = () => {
   const [payments, setPayments] = useState([]);
@@ -101,7 +102,9 @@ const AccountingPayments = () => {
   );
 
   return (
-    <div className="p-6">
+    <section className="flex">
+      <Navbar />
+    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Accounting Payments</h1>
         <button
@@ -181,14 +184,14 @@ const AccountingPayments = () => {
                       {payment.invoice?.invoice_number || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      ${parseFloat(payment.amount || 0).toFixed(2)}
+                      ₹{parseFloat(payment.amount || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap capitalize">
                       {payment.payment_method?.replace("_", " ")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
+                        className={`px-2 py-1 rounded text-xs ₹{
                           payment.status === "completed"
                             ? "bg-green-100 text-green-800"
                             : payment.status === "failed"
@@ -229,6 +232,7 @@ const AccountingPayments = () => {
         />
       )}
     </div>
+    </section>
   );
 };
 

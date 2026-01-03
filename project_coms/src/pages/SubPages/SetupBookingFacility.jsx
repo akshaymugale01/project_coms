@@ -60,9 +60,10 @@ const SetupBookingFacility = () => {
     const fetchHotelBooking = async () => {
       try {
         const response = await getHotelSetup(true, page_no, per_page);
+        // console.log("Hotel Booking Response:", response.data);
         // Get the hotel amenities array
         const hotelData = response.data.amenities;
-        console.log("Hotel Data:", hotelData);
+        console.log("Hotel Data 123:", response.data);
         setHotelBooking(hotelData);
         setOriginalHotelData(hotelData); // Store the original data for reference
         setLoading(false); // Stop loading on success

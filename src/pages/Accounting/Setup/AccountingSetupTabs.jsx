@@ -64,7 +64,7 @@ const menuItems = [
 ];
 
 const AccountingSetupTabs = () => {
-  const [activeSection, setActiveSection] = useState('bills');
+  const [activeSection, setActiveSection] = useState('billing-config');
 
   const ActiveComponent = menuItems.find(item => item.id === activeSection)?.component;
 

@@ -39,13 +39,39 @@ export const cancelJournalEntry = (id) => API.post(`/journal_entries/${id}/cance
 // Accounting Invoices
 export const getAccountingInvoices = () => API.get("/accounting_invoices.json");
 export const getAccountingInvoice = (id) => API.get(`/accounting_invoices/${id}.json`);
-export const createAccountingInvoice = (data) => API.post("/accounting_invoices.json", data);
-export const updateAccountingInvoice = (id, data) => API.put(`/accounting_invoices/${id}.json`, data);
+export const createAccountingInvoice = (data) => {
+  // Transform items to accounting_invoice_items_attributes format expected by Rails
+  const transformedData = {
+    accounting_invoice: {
+      ...data,
+      terms_and_conditions: data.terms_conditions, // Map terms_conditions to terms_and_conditions
+      accounting_invoice_items_attributes: data.items
+    }
+  };
+  delete transformedData.accounting_invoice.items;
+  delete transformedData.accounting_invoice.terms_conditions; // Remove old key
+  return API.post("/accounting_invoices.json", transformedData);
+};
+export const updateAccountingInvoice = (id, data) => {
+  // Transform items to accounting_invoice_items_attributes format expected by Rails
+  const transformedData = {
+    accounting_invoice: {
+      ...data,
+      terms_and_conditions: data.terms_conditions, // Map terms_conditions to terms_and_conditions
+      accounting_invoice_items_attributes: data.items
+    }
+  };
+  delete transformedData.accounting_invoice.items;
+  delete transformedData.accounting_invoice.terms_conditions; // Remove old key
+  return API.put(`/accounting_invoices/${id}.json`, transformedData);
+};
 export const deleteAccountingInvoice = (id) => API.delete(`/accounting_invoices/${id}.json`);
 export const sendInvoice = (id) => API.post(`/accounting_invoices/${id}/send_invoice.json`);
 export const addPaymentToInvoice = (id, data) => API.post(`/accounting_invoices/${id}/add_payment.json`, data);
 export const getOverdueInvoices = () => API.get("/accounting_invoices/overdue.json");
 export const getInvoicesByUnit = (unitId) => API.get(`/accounting_invoices/by_unit.json?unit_id=${unitId}`);
+export const findInvoiceByNumber = (invoiceNumber) =>
+    API.get("/accounting_invoices/find_by_number.json", { params: { invoice_number: invoiceNumber } });
 
 // Accounting Payments
 export const getAccountingPayments = () => API.get("/accounting_payments.json");
@@ -79,6 +105,7 @@ export const getMonthlyExpenses = (params) => API.get("/api/cam/monthly_expenses
 export const createMonthlyExpense = (data) => API.post("/api/cam/monthly_expenses", data);
 export const updateMonthlyExpense = (id, data) => API.put(`/api/cam/monthly_expenses/${id}`, data);
 export const deleteMonthlyExpense = (id) => API.delete(`/api/cam/monthly_expenses/${id}`);
+export const getMonthlyExpensesTotal = (params) => API.get("/api/cam/monthly_expenses/total", { params });
 
 // CAM Billing
 export const previewCamBills = (data) => API.post("/api/cam/bills/preview", data);
@@ -119,6 +146,10 @@ export const getBillingConfiguration = (id) => API.get(`/billing_configurations/
 export const createBillingConfiguration = (data) => API.post("/billing_configurations.json", data);
 export const updateBillingConfiguration = (id, data) => API.put(`/billing_configurations/${id}.json`, data);
 export const deleteBillingConfiguration = (id) => API.delete(`/billing_configurations/${id}.json`);
+export const uploadBillingLogo = (billingConfigId, formData) =>
+    API.post(`/billing_configurations/${billingConfigId}/upload_logo`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
 
 // Income Entries
 export const getIncomeEntries = (params) => API.get("/income_entries.json", { params });
@@ -127,3 +158,8 @@ export const createIncomeEntry = (data) => API.post("/income_entries.json", data
 export const updateIncomeEntry = (id, data) => API.put(`/income_entries/${id}.json`, data);
 export const deleteIncomeEntry = (id) => API.delete(`/income_entries/${id}.json`);
 export const getReconciliationReport = (params) => API.get("/income_entries/reconciliation_report.json", { params });
+
+// Calculations - moved to backend for security and consistency
+export const calculateMonthlyExpenseTotal = (params) => API.get("/api/cam/monthly_expenses/total", { params });
+export const calculateInterest = (data) => API.post("/api/accounting/calculate-interest.json", data);
+export const calculateIncomeTotal = (params) => API.post("/api/accounting/calculate-income-total.json", params);

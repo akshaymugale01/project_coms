@@ -8,6 +8,7 @@ import {
   seedDefaultAccountGroups,
 } from "../../api/accountingApi";
 import AccountGroupModal from "./AccountGroupModal";
+import Navbar from "../../components/Navbar";
 
 const AccountGroups = () => {
   const [accountGroups, setAccountGroups] = useState([]);
@@ -93,7 +94,9 @@ const AccountGroups = () => {
   );
 
   return (
-    <div className="p-6">
+    <section className="flex">
+      <Navbar />
+    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Account Groups</h1>
         <div className="flex gap-3">
@@ -214,6 +217,7 @@ const AccountGroups = () => {
         />
       )}
     </div>
+    </section>
   );
 };
 

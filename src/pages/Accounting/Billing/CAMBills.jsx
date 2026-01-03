@@ -16,6 +16,9 @@ const CAMBills = () => {
   const [sites, setSites] = useState([]);
   const [siteId, setSiteId] = useState("");
   const [allocation, setAllocation] = useState({ rows: [], totals: { days: 0, area: 0, areaDays: 0, expense: 0, daysInMonth: 0 } });
+  const [expenseCategories, setExpenseCategories] = useState([]);
+  const [selectedExpenseCategories, setSelectedExpenseCategories] = useState([]);
+  const [showExpenseDropdown, setShowExpenseDropdown] = useState(false);
 
   const totalPreview = useMemo(() => previewRows.reduce((s, r) => s + Number(r.total_amount || 0), 0), [previewRows]);
   const totalPersisted = useMemo(() => persistedRows.reduce((s, r) => s + Number(r.total_amount || 0), 0), [persistedRows]);
@@ -124,12 +127,29 @@ const CAMBills = () => {
       try {
         const { startMonth, endMonth } = getPeriodParams();
         let totalExpense = 0;
+        const categoriesSet = new Set();
         
         // Fetch expenses for all months in the period
         for (let m = startMonth; m <= endMonth; m++) {
           const res = await getMonthlyExpenses({ year, month: m });
           const expenseRows = res?.data?.data || res?.data || [];
-          totalExpense += Array.isArray(expenseRows) ? expenseRows.reduce((s, r) => s + Number(r.amount || 0), 0) : 0;
+          if (Array.isArray(expenseRows)) {
+            expenseRows.forEach((row) => {
+              if (row.category) categoriesSet.add(row.category);
+            });
+
+            const rowsToSum =
+              selectedExpenseCategories.length === 0
+                ? expenseRows
+                : expenseRows.filter((r) => selectedExpenseCategories.includes(r.category));
+
+            totalExpense += rowsToSum.reduce((s, r) => s + Number(r.amount || 0), 0);
+          }
+        }
+        const newCategories = Array.from(categoriesSet);
+        setExpenseCategories(newCategories);
+        if (selectedExpenseCategories.length === 0 && newCategories.length > 0) {
+          setSelectedExpenseCategories(newCategories);
         }
         
         if (!unitConfigs || unitConfigs.length === 0) return;
@@ -168,7 +188,27 @@ const CAMBills = () => {
       }
     };
     run();
-  }, [year, month, period, unitConfigs]);
+  }, [year, month, period, unitConfigs, selectedExpenseCategories]);
+
+  const toggleExpenseCategory = (category) => {
+    setSelectedExpenseCategories((prev) => {
+      if (prev.includes(category)) {
+        return prev.filter((c) => c !== category);
+      }
+      return [...prev, category];
+    });
+  };
+
+  const selectedExpenseLabel = useMemo(() => {
+    if (expenseCategories.length === 0) return "No expenses";
+    if (selectedExpenseCategories.length === 0 || selectedExpenseCategories.length === expenseCategories.length) {
+      return "All expenses";
+    }
+    if (selectedExpenseCategories.length === 1) {
+      return selectedExpenseCategories[0];
+    }
+    return `${selectedExpenseCategories.length} selected`;
+  }, [expenseCategories, selectedExpenseCategories]);
 
   const doPreview = async () => {
     setLoading(true);
@@ -248,7 +288,7 @@ const CAMBills = () => {
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Accounting Bills</h1>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Site</label>
             <select
@@ -278,6 +318,41 @@ const CAMBills = () => {
               <option value="half-yearly">Half-Yearly (6 Months)</option>
               <option value="yearly">Yearly (12 Months)</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Expenses</label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowExpenseDropdown((prev) => !prev)}
+                className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <span className="text-gray-700 truncate mr-2">{selectedExpenseLabel}</span>
+                <span className="text-gray-500 text-xs">▼</span>
+              </button>
+              {showExpenseDropdown && (
+                <div className="absolute z-20 mt-1 w-full max-h-40 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg text-sm">
+                  {expenseCategories.length === 0 && (
+                    <div className="px-3 py-2 text-gray-400 text-xs">No monthly expenses for this period</div>
+                  )}
+                  {expenseCategories.map((cat) => (
+                    <label
+                      key={cat}
+                      className="flex items-center gap-2 px-3 py-1 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        checked={selectedExpenseCategories.includes(cat)}
+                        onChange={() => toggleExpenseCategory(cat)}
+                      />
+                      <span className="text-gray-700">{cat}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-gray-500">By default all expenses are selected. Uncheck to exclude.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
@@ -332,7 +407,11 @@ const CAMBills = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">Expense Allocation Preview</h2>
               <div className="text-sm text-white bg-blue-700 px-4 py-1 rounded-full">
-                Monthly Expense Total: <span className="font-bold">₹{Number(allocation?.totals?.expense || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                {selectedExpenseCategories.length === 0 || selectedExpenseCategories.length === expenseCategories.length
+                  ? "Monthly Expense Total"
+                  : "Selected Expenses Total"}
+                :{" "}
+                <span className="font-bold">₹{Number(allocation?.totals?.expense || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>
@@ -346,7 +425,6 @@ const CAMBills = () => {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Area (sqft)</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Area × Days</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Expense (Days)</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Expense (Area-Days)</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -361,7 +439,6 @@ const CAMBills = () => {
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{Number(r.area || 0)}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{Number(r.areaDays || 0)}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">₹{Number(r.daysShare || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">₹{Number(r.areaDaysShare || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -371,8 +448,7 @@ const CAMBills = () => {
                     <td className="px-4 py-3 text-sm font-bold text-gray-900">{allocation.totals.days}</td>
                     <td className="px-4 py-3 text-sm font-bold text-gray-900">{allocation.totals.area}</td>
                     <td className="px-4 py-3 text-sm font-bold text-gray-900">{allocation.totals.areaDays}</td>
-                    <td className="px-4 py-3 text-sm font-bold text-gray-900">₹{Number(allocation.totals.expense || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                    <td className="px-4 py-3 text-sm font-bold text-blue-700">₹{Number(allocation.totals.expense || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="px-4 py-3 text-sm font-bold text-gray-900">₹{Number(allocation.totals.expense || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>

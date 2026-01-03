@@ -376,16 +376,51 @@
 
   // export default InvoiceModal;
 import React, { useState, useEffect } from "react";
-import { getLedgers, getTaxRates } from "../../api/accountingApi";
+import { getLedgers, getTaxRates, getBillingConfigurations } from "../../api/accountingApi";
+import { getBuildings, getFloors, getUnits, getUnitDetails, getSetupUsersByUnit, getHsns, getSites } from "../../api/index";
 
 const InvoiceModal = ({ invoice, onClose, onSave }) => {
   const [ledgers, setLedgers] = useState([]);
   const [taxRates, setTaxRates] = useState([]);
-  const [selectedUnitType, setSelectedUnitType] = useState(""); // "flat" or "shop"
+  const [buildings, setBuildings] = useState([]);
+  const [floors, setFloors] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [hsnCodes, setHsnCodes] = useState([]);
+  const [siteInfo, setSiteInfo] = useState({});
+  const [billingConfig, setBillingConfig] = useState({});
+  const [selectedBuilding, setSelectedBuilding] = useState("");
+  const [selectedFloor, setSelectedFloor] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
   const [showDetails, setShowDetails] = useState(false);
   const [unitDetails, setUnitDetails] = useState({});
   const [showPreview, setShowPreview] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // console.log("Billing Config:", billingConfig);
+
+  const getDefaultItem = (sNo = 1) => {
+    const defaultGstRate = billingConfig.default_gst_rate || "9";
+    const enableIgst = billingConfig.enable_igst || false;
+    const enableGstSplit = billingConfig.enable_gst_split !== false;
+
+    return {
+      s_no: sNo,
+      service_description: "", 
+      service_details: "",
+      hsn_sac_code: "", 
+      rate: "", 
+      quantity: "1",
+      taxable_value: "0.00", 
+      cgst_rate: enableGstSplit && !enableIgst ? defaultGstRate : "0", 
+      cgst_amount: "0.00", 
+      sgst_rate: enableGstSplit && !enableIgst ? defaultGstRate : "0", 
+      sgst_amount: "0.00", 
+      igst_rate: enableIgst ? (parseFloat(defaultGstRate) * 2).toString() : "0",
+      igst_amount: "0.00",
+      total: "0.00"
+    };
+  };
 
   const [formData, setFormData] = useState({
     invoice_date: new Date().toISOString().split("T")[0],
@@ -419,48 +454,33 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     notes: "",
     bank_account: "",
     bank_ifsc: "",
-    bank_aic: "", // Added Bank AIC field
-    terms_conditions: "", // Added Terms & Conditions field
-    gst_reverse_charge: "0", // Added GST on Reverse Charge field
-    place_of_supply: "Club House", // Added Place of Supply field
-    state: "Maharashtra", // Added State field
-    state_code: "27", // Added State Code field
+    bank_aic: "",
+    terms_conditions: "",
+    gst_reverse_charge: "0",
+    place_of_supply: "Club House",
+    state: "Maharashtra",
+    state_code: "27",
   });
 
-  // Mock data for flat and shop details
-  const flatOptions = [
-    { id: "flat_101", name: "Flat 101", type: "flat", details: { owner: "John Doe", area: "1000 sq ft", floor: "1st Floor", maintenance: "100" } },
-    { id: "flat_102", name: "Flat 102", type: "flat", details: { owner: "Jane Smith", area: "1200 sq ft", floor: "1st Floor", maintenance: "120" } },
-    { id: "flat_103", name: "Flat 103", type: "flat", details: { owner: "Mike Johnson", area: "1100 sq ft", floor: "1st Floor", maintenance: "110" } },
-    { id: "flat_201", name: "Flat 201", type: "flat", details: { owner: "Sarah Wilson", area: "1300 sq ft", floor: "2nd Floor", maintenance: "130" } },
-    { id: "flat_202", name: "Flat 202", type: "flat", details: { owner: "David Brown", area: "950 sq ft", floor: "2nd Floor", maintenance: "95" } },
-    { id: "flat_301", name: "Flat 301", type: "flat", details: { owner: "Robert Taylor", area: "1050 sq ft", floor: "3rd Floor", maintenance: "105" } },
-    { id: "flat_302", name: "Flat 302", type: "flat", details: { owner: "Emily Davis", area: "1150 sq ft", floor: "3rd Floor", maintenance: "115" } },
-  ];
+  // GST configuration from billing config
+  const enableIgst = billingConfig.enable_igst || false;
+  const enableGstSplit = billingConfig.enable_gst_split !== false; // Default true
+  const showCgstSgst = enableGstSplit && !enableIgst;
+  const showIgst = enableIgst;
 
-  const shopOptions = [
-    { id: "shop_g01", name: "Shop G01", type: "shop", details: { owner: "ABC Retail", area: "500 sq ft", business: "Retail", rent: "500" } },
-    { id: "shop_g02", name: "Shop G02", type: "shop", details: { owner: "XYZ Services", area: "600 sq ft", business: "Service", rent: "600" } },
-    { id: "shop_g03", name: "Shop G03", type: "shop", details: { owner: "Quick Food", area: "400 sq ft", business: "Restaurant", rent: "400" } },
-    { id: "shop_g04", name: "Shop G04", type: "shop", details: { owner: "Fashion Store", area: "800 sq ft", business: "Boutique", rent: "800" } },
-    { id: "shop_f01", name: "Shop F01", type: "shop", details: { owner: "Tech Solutions", area: "700 sq ft", business: "Electronics", rent: "700" } },
-    { id: "shop_f02", name: "Shop F02", type: "shop", details: { owner: "Book World", area: "550 sq ft", business: "Bookstore", rent: "550" } },
-    { id: "shop_f03", name: "Shop F03", type: "shop", details: { owner: "Beauty Salon", area: "650 sq ft", business: "Salon", rent: "650" } },
-  ];
+  const unitName = unitDetails?.name || unitDetails?.flat || unitDetails?.flat_no || "";
+  const siteName = unitDetails?.site_name || unitDetails?.site?.name || "";
+  const buildingName = unitDetails?.building_name || unitDetails?.building?.name || "";
+  const floorName = unitDetails?.floor_name || unitDetails?.floor?.name || "";
+  const unitAddressParts = [
+    unitName && `Unit ${unitName}`,
+    floorName && `Floor ${floorName}`,
+    buildingName && `Building ${buildingName}`,
+    siteName,
+  ].filter(Boolean);
+  const unitFullAddress = unitAddressParts.join(", ");
 
-  // Mock customer data for dropdown
-  const customerOptions = [
-    { id: 1, name: "John Doe", email: "john.doe@example.com", address: "123 Main St, City, State 12345" },
-    { id: 2, name: "Jane Smith", email: "jane.smith@example.com", address: "456 Oak Ave, City, State 12345" },
-    { id: 3, name: "Mike Johnson", email: "mike.johnson@example.com", address: "789 Pine Rd, City, State 12345" },
-    { id: 4, name: "Sarah Wilson", email: "sarah.wilson@example.com", address: "321 Elm St, City, State 12345" },
-    { id: 5, name: "David Brown", email: "david.brown@example.com", address: "654 Maple Dr, City, State 12345" },
-    { id: 6, name: "Robert Taylor", email: "robert.taylor@example.com", address: "987 Cedar Ln, City, State 12345" },
-    { id: 7, name: "Emily Davis", email: "emily.davis@example.com", address: "147 Birch Blvd, City, State 12345" },
-    { id: 8, name: "ABC Retail", email: "contact@abcretail.com", address: "258 Commerce St, City, State 12345" },
-    { id: 9, name: "XYZ Services", email: "info@xyzservices.com", address: "369 Service Rd, City, State 12345" },
-    { id: 10, name: "Quick Food", email: "orders@quickfood.com", address: "741 Food Court, City, State 12345" },
-  ];
+  // Data will be fetched from API dynamically
 
   // Service description options with details
   const serviceOptions = [
@@ -469,7 +489,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       label: "Banquet Booking", 
       details: "Banquet hall booking services for events and functions",
       hsn_sac_code: "999599",
-      gst_rate: "18%"
+      gst_rate: "22%"
     },
     { 
       value: "guest_room_booking", 
@@ -597,6 +617,11 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
   useEffect(() => {
     fetchLedgers();
     fetchTaxRates();
+    fetchBuildings();
+    fetchHsnCodes();
+    fetchSiteInfo();
+    fetchBillingConfig();
+    
     if (invoice) {
       setFormData({
         invoice_date: invoice.invoice_date?.split("T")[0] || "",
@@ -607,29 +632,27 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
         customer_email: invoice.customer_email || "",
         customer_address: invoice.customer_address || "",
         unit_id: invoice.unit_id || "",
-        items: invoice.items || [
-          { 
-            s_no: 1,
-            service_description: "", 
-            service_details: "",
-            hsn_sac_code: "", 
-            rate: "", 
-            quantity: "1",
-            taxable_value: "0.00", 
-            cgst_rate: "9", 
-            cgst_amount: "0.00", 
-            sgst_rate: "9", 
-            sgst_amount: "0.00", 
-            igst_rate: "0",
-            igst_amount: "0.00",
-            total: "0.00" 
-          },
-        ],
+        items: (invoice.items || invoice.accounting_invoice_items || []).map((item, index) => ({
+          s_no: item.s_no || index + 1,
+          service_description: item.service_description || item.description || "", 
+          service_details: item.service_details || "",
+          hsn_sac_code: item.hsn_sac_code || "", 
+          rate: item.rate?.toString() || item.unit_price?.toString() || "", 
+          quantity: item.quantity?.toString() || "1",
+          taxable_value: item.taxable_value?.toString() || item.amount?.toString() || "0.00", 
+          cgst_rate: item.cgst_rate?.toString() || "9", 
+          cgst_amount: item.cgst_amount?.toString() || "0.00", 
+          sgst_rate: item.sgst_rate?.toString() || "9", 
+          sgst_amount: item.sgst_amount?.toString() || "0.00", 
+          igst_rate: item.igst_rate?.toString() || "0",
+          igst_amount: item.igst_amount?.toString() || "0.00",
+          total: item.total?.toString() || item.total_amount?.toString() || "0.00" 
+        })),
         notes: invoice.notes || "",
         bank_account: invoice.bank_account || "",
         bank_ifsc: invoice.bank_ifsc || "",
         bank_aic: invoice.bank_aic || "",
-        terms_conditions: invoice.terms_conditions || "",
+        terms_conditions: invoice.terms_and_conditions || invoice.terms_conditions || "",
         gst_reverse_charge: invoice.gst_reverse_charge || "0",
         place_of_supply: invoice.place_of_supply || "Club House",
         state: invoice.state || "Maharashtra",
@@ -637,23 +660,60 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       });
       
       // Set selected unit if editing existing invoice
-      if (invoice.unit_no) {
-        const flat = flatOptions.find(f => f.id === invoice.unit_no);
-        const shop = shopOptions.find(s => s.id === invoice.unit_no);
-        if (flat) {
-          setSelectedUnitType("flat");
-          setSelectedUnit(invoice.unit_no);
-          setUnitDetails(flat.details);
-          setShowDetails(true);
-        } else if (shop) {
-          setSelectedUnitType("shop");
-          setSelectedUnit(invoice.unit_no);
-          setUnitDetails(shop.details);
-          setShowDetails(true);
-        }
+      if (invoice.unit_id) {
+        loadEditInvoiceData(invoice.unit_id);
       }
     }
   }, [invoice]);
+
+  // Update form defaults when billing config is loaded
+  useEffect(() => {
+    if (billingConfig && Object.keys(billingConfig).length > 0 && !invoice) {
+      const defaultItem = getDefaultItem(1);
+      
+      setFormData(prev => ({
+        ...prev,
+        bank_account: prev.bank_account || billingConfig.account_number || "",
+        bank_ifsc: prev.bank_ifsc || billingConfig.ifsc_code || "",
+        bank_aic: prev.bank_aic || billingConfig.bank_name || "",
+        terms_conditions: prev.terms_conditions || billingConfig.terms_and_conditions || "",
+        state: prev.state || billingConfig.state || "Maharashtra",
+        state_code: prev.state_code || billingConfig.state_code || "27",
+        place_of_supply: prev.place_of_supply || billingConfig.place_of_supply || "Club House",
+        items: prev.items.length === 1 && !prev.items[0].service_description ? [defaultItem] : prev.items,
+      }));
+    }
+  }, [billingConfig, invoice]);
+
+  const loadEditInvoiceData = async (unitId) => {
+    try {
+      const unitResponse = await getUnitDetails(unitId);
+      const unit = unitResponse.data;
+      
+      if (unit) {
+        // Set building and fetch floors
+        if (unit.floor?.building_id) {
+          setSelectedBuilding(unit.floor.building_id);
+          const floorsResponse = await getFloors(unit.floor.building_id);
+          setFloors(floorsResponse.data || []);
+        }
+        
+        // Set floor and fetch units
+        if (unit.floor_id) {
+          setSelectedFloor(unit.floor_id);
+          const unitsResponse = await getUnits(unit.floor_id);
+          setUnits(unitsResponse.data || []);
+        }
+        
+        // Set selected unit
+        setSelectedUnit(unitId);
+        setUnitDetails(unit);
+        setShowDetails(true);
+      }
+    } catch (error) {
+      console.error("Failed to load unit data for editing", error);
+    }
+  };
 
   const fetchLedgers = async () => {
     try {
@@ -673,21 +733,130 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     }
   };
 
+  const fetchHsnCodes = async () => {
+    try {
+      const response = await getHsns(1, 1000); // Fetch all HSN codes
+      setHsnCodes(response.data.data || response.data.hsns || response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch HSN codes", error);
+    }
+  };
+
+  const fetchSiteInfo = async () => {
+    try {
+      const response = await getSites();
+      const sites = response.data.sites || response.data || [];
+      // Get the first/current site or you can filter by specific site_id
+      if (sites.length > 0) {
+        setSiteInfo(sites[0]); // Use first site or filter by user's current site
+      }
+    } catch (error) {
+      console.error("Failed to fetch site info", error);
+    }
+  };
+
+  const fetchBillingConfig = async () => {
+    try {
+      const response = await getBillingConfigurations();
+      const configs = response.data.data || response.data || [];
+      // console.log("Billing Configurations fetched:", configs);
+      
+        setBillingConfig(configs); // Use first config
+      
+    } catch (error) {
+      console.error("Failed to fetch billing configuration", error);
+    }
+  };
+
+  const fetchBuildings = async () => {
+    try {
+      setLoading(true);
+      const response = await getBuildings();
+      setBuildings(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch buildings", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFloors = async (buildingId) => {
+    try {
+      setLoading(true);
+      const response = await getFloors(buildingId);
+      setFloors(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch floors", error);
+      setFloors([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnits = async (floorId) => {
+    try {
+      setLoading(true);
+      const response = await getUnits(floorId);
+      setUnits(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch units", error);
+      setUnits([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnitDetails = async (unitId) => {
+    try {
+      const response = await getUnitDetails(unitId);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch unit details", error);
+      return null;
+    }
+  };
+
+  const fetchUsersByUnit = async (unitId) => {
+    if (!unitId) {
+      setUsers([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Backend returns all users in the unit when type="user"
+      const response = await getSetupUsersByUnit("users", unitId);
+      const list = response?.data?.data || response?.data || [];
+      const normalized = Array.isArray(list)
+        ? list.map((user) => ({
+            ...user,
+            unit_type: user.unit_type || user.type || "",
+          }))
+        : [];
+      setUsers(normalized);
+    } catch (error) {
+      console.error("Failed to fetch users for unit", error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCustomerSelect = (e) => {
-    const selectedCustomerId = e.target.value;
-    if (selectedCustomerId) {
-      const selectedCustomer = customerOptions.find(customer => customer.id.toString() === selectedCustomerId);
-      if (selectedCustomer) {
+    const selectedUserId = e.target.value;
+    if (selectedUserId) {
+      const selectedUser = users.find(user => user.id.toString() === selectedUserId);
+      if (selectedUser) {
         setFormData(prev => ({
           ...prev,
-          customer_name: selectedCustomer.name,
-          customer_email: selectedCustomer.email,
-          customer_address: selectedCustomer.address
+          customer_name: selectedUser.name || selectedUser.full_name || "",
+          customer_email: selectedUser.email || "",
+          customer_address: selectedUser.address || selectedUser.permanent_address || ""
         }));
       }
     } else {
@@ -730,33 +899,51 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     setFormData((prev) => ({ ...prev, items: newItems }));
   };
 
-  const handleUnitTypeChange = (e) => {
-    const unitType = e.target.value;
-    setSelectedUnitType(unitType);
-    setSelectedUnit(""); // Reset unit selection when type changes
+  const handleBuildingChange = async (e) => {
+    const buildingId = e.target.value;
+    setSelectedBuilding(buildingId);
+    setSelectedFloor("");
+    setSelectedUnit("");
     setShowDetails(false);
-    setFormData(prev => ({ ...prev, unit_no: "" }));
+    setFloors([]);
+    setUnits([]);
+    setFormData(prev => ({ ...prev, unit_no: "", unit_id: "" }));
+    
+    if (buildingId) {
+      await fetchFloors(buildingId);
+    }
   };
 
-  const handleUnitChange = (e) => {
+  const handleFloorChange = async (e) => {
+    const floorId = e.target.value;
+    setSelectedFloor(floorId);
+    setSelectedUnit("");
+    setShowDetails(false);
+    setUnits([]);
+    setFormData(prev => ({ ...prev, unit_no: "", unit_id: "" }));
+    
+    if (floorId) {
+      await fetchUnits(floorId);
+    }
+  };
+
+  const handleUnitChange = async (e) => {
     const unitId = e.target.value;
     setSelectedUnit(unitId);
     
     if (unitId) {
-      let details = {};
-      if (selectedUnitType === "flat") {
-        const flat = flatOptions.find(f => f.id === unitId);
-        details = flat.details;
-      } else if (selectedUnitType === "shop") {
-        const shop = shopOptions.find(s => s.id === unitId);
-        details = shop.details;
+      const unit = await fetchUnitDetails(unitId);
+      if (unit) {
+        setUnitDetails(unit);
+        setShowDetails(true);
+        setFormData(prev => ({ ...prev, unit_no: unit.name || unitId, unit_id: unitId }));
+        await fetchUsersByUnit(unitId);
       }
-      setUnitDetails(details);
-      setShowDetails(true);
-      setFormData(prev => ({ ...prev, unit_no: unitId }));
     } else {
       setShowDetails(false);
-      setFormData(prev => ({ ...prev, unit_no: "" }));
+      setUnitDetails({});
+      setUsers([]);
+      setFormData(prev => ({ ...prev, unit_no: "", unit_id: "", customer_name: "", customer_email: "", customer_address: "" }));
     }
   };
 
@@ -764,13 +951,26 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
   const recalculateItemTotals = (item) => {
     const taxableValue = parseFloat(item.taxable_value) || 0;
     
-    const cgstRate = parseFloat(item.cgst_rate) || 0;
-    const sgstRate = parseFloat(item.sgst_rate) || 0;
-    const igstRate = parseFloat(item.igst_rate) || 0;
+    const enableIgst = billingConfig.enable_igst || false;
+    const enableGstSplit = billingConfig.enable_gst_split !== false;
     
-    const cgstAmount = taxableValue * (cgstRate / 100);
-    const sgstAmount = taxableValue * (sgstRate / 100);
-    const igstAmount = taxableValue * (igstRate / 100);
+    let cgstAmount = 0;
+    let sgstAmount = 0;
+    let igstAmount = 0;
+    
+    if (enableIgst) {
+      const igstRate = parseFloat(item.igst_rate) || 0;
+      igstAmount = taxableValue * (igstRate / 100);
+      item.cgst_rate = "0";
+      item.sgst_rate = "0";
+    } else if (enableGstSplit) {
+      const cgstRate = parseFloat(item.cgst_rate) || 0;
+      const sgstRate = parseFloat(item.sgst_rate) || 0;
+      cgstAmount = taxableValue * (cgstRate / 100);
+      sgstAmount = taxableValue * (sgstRate / 100);
+      item.igst_rate = "0";
+    }
+    
     const total = taxableValue + cgstAmount + sgstAmount + igstAmount;
     
     item.cgst_amount = cgstAmount.toFixed(2);
@@ -789,6 +989,28 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     
     item.taxable_value = taxableValue.toFixed(2);
     return item;
+  };
+
+  // Handle GST rate input and auto-distribute based on billing config
+  const handleGstRateChange = (index, gstRate) => {
+    const newItems = [...formData.items];
+    const rate = parseFloat(gstRate) || 0;
+    
+    if (enableIgst) {
+      // Use full rate as IGST
+      newItems[index].igst_rate = rate.toString();
+      newItems[index].cgst_rate = "0";
+      newItems[index].sgst_rate = "0";
+    } else if (enableGstSplit) {
+      // Split rate equally between CGST and SGST
+      const splitRate = (rate / 2).toFixed(2);
+      newItems[index].cgst_rate = splitRate;
+      newItems[index].sgst_rate = splitRate;
+      newItems[index].igst_rate = "0";
+    }
+    
+    recalculateItemTotals(newItems[index]);
+    setFormData((prev) => ({ ...prev, items: newItems }));
   };
 
   const handleItemChange = (index, field, value) => {
@@ -816,28 +1038,14 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
 
   const addItem = () => {
     const newSNo = formData.items.length + 1;
-    const newItem = { 
-      s_no: newSNo,
-      service_description: "", 
-      service_details: "",
-      hsn_sac_code: "", 
-      rate: "", 
-      quantity: "1",
-      taxable_value: "0.00", 
-      cgst_rate: "9", 
-      cgst_amount: "0.00", 
-      sgst_rate: "9", 
-      sgst_amount: "0.00", 
-      igst_rate: "0",
-      igst_amount: "0.00",
-      total: "0.00" 
-    };
+    const newItem = getDefaultItem(newSNo);
     
     setFormData((prev) => ({
       ...prev,
       items: [...prev.items, newItem],
     }));
   };
+
 
   const removeItem = (index) => {
     if (formData.items.length <= 1) return;
@@ -870,14 +1078,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     onSave(formData);
   };
 
-  const getCurrentOptions = () => {
-    if (selectedUnitType === "flat") {
-      return flatOptions;
-    } else if (selectedUnitType === "shop") {
-      return shopOptions;
-    }
-    return [];
-  };
+  // No helper functions needed - using state directly
 
   // Preview functionality
   const handlePreview = () => {
@@ -923,7 +1124,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                     name="invoice_number"
                     value={formData.invoice_number}
                     onChange={handleChange}
-                    required
+                    
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                     placeholder="Enter invoice number"
                   />
@@ -957,7 +1158,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Unit ID*
                   </label>
@@ -969,7 +1170,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                     placeholder="Enter unit ID"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -979,33 +1180,51 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Unit Type *
+                    Building / Floor / Unit *
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    {/* Building */}
                     <select
-                      value={selectedUnitType}
-                      onChange={handleUnitTypeChange}
+                      value={selectedBuilding}
+                      onChange={handleBuildingChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                      disabled={loading}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
-                      <option value="">Select Unit Type</option>
-                      <option value="flat">Flat</option>
-                      <option value="shop">Shop</option>
+                      <option value="">Select Building</option>
+                      {buildings.map((building) => (
+                        <option key={building.id} value={building.id}>
+                          {building.name}
+                        </option>
+                      ))}
                     </select>
 
+                    {/* Floor */}
+                    <select
+                      value={selectedFloor}
+                      onChange={handleFloorChange}
+                      required
+                      disabled={!selectedBuilding || loading}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Select Floor</option>
+                      {floors.map((floor) => (
+                        <option key={floor.id} value={floor.id}>
+                          {floor.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Unit */}
                     <select
                       value={selectedUnit}
                       onChange={handleUnitChange}
                       required
-                      disabled={!selectedUnitType}
+                      disabled={!selectedFloor || loading}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
-                      <option value="">
-                        {selectedUnitType === "flat" ? "Select Flat" : 
-                         selectedUnitType === "shop" ? "Select Shop" : 
-                         "Select Unit Type First"}
-                      </option>
-                      {getCurrentOptions().map((unit) => (
+                      <option value="">Select Unit</option>
+                      {units.map((unit) => (
                         <option key={unit.id} value={unit.id}>
                           {unit.name}
                         </option>
@@ -1016,31 +1235,38 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
 
                 {/* Unit Details Section */}
                 {showDetails && (
-                  <div className={`p-4 border-2 rounded-lg text-sm transition-all duration-300 ${
-                    selectedUnitType === "flat" 
-                      ? "border-blue-300 bg-blue-50" 
-                      : "border-green-300 bg-green-50"
-                  }`}>
-                    <h3 className={`font-semibold mb-3 text-lg ${
-                      selectedUnitType === "flat" ? "text-blue-800" : "text-green-800"
-                    }`}>
-                      {selectedUnitType === "flat" ? "🏠 Flat Details" : "🏪 Shop Details"}
+                  <div className="p-4 border-2 rounded-lg text-sm transition-all duration-300 border-indigo-300 bg-indigo-50">
+                    <h3 className="font-semibold mb-3 text-lg text-indigo-800">
+                      🏢 Unit Details
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {Object.entries(unitDetails).map(([key, value]) => (
-                        <div key={key} className="bg-white rounded-lg p-3 shadow-sm">
-                          <label className={`block text-xs font-semibold mb-2 ${
-                            selectedUnitType === "flat" ? "text-blue-700" : "text-green-700"
-                          }`}>
-                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}
-                          </label>
-                          <div className={`px-3 py-2 border rounded text-sm font-medium ${
-                            selectedUnitType === "flat" ? "border-blue-200 text-blue-800" : "border-green-200 text-green-800"
-                          }`}>
-                            {value}
-                          </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <label className="block text-xs font-semibold mb-2 text-indigo-700">Name</label>
+                        <div className="px-3 py-2 border rounded text-sm font-medium border-indigo-200 text-indigo-800">
+                          {unitName || "-"}
                         </div>
-                      ))}
+                      </div>
+
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <label className="block text-xs font-semibold mb-2 text-indigo-700">Site Name</label>
+                        <div className="px-3 py-2 border rounded text-sm font-medium border-indigo-200 text-indigo-800">
+                          {siteName || "-"}
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <label className="block text-xs font-semibold mb-2 text-indigo-700">Building Name</label>
+                        <div className="px-3 py-2 border rounded text-sm font-medium border-indigo-200 text-indigo-800">
+                          {buildingName || "-"}
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-lg p-3 shadow-sm md:col-span-2">
+                        <label className="block text-xs font-semibold mb-2 text-indigo-700">Full Address</label>
+                        <div className="px-3 py-2 border rounded text-sm font-medium border-indigo-200 text-indigo-800">
+                          {unitFullAddress || "-"}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1052,24 +1278,33 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
               <h3 className="font-semibold text-xl text-gray-800 border-b pb-3 mb-4">Customer Information</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-6">
-                  <div>
+                  <div className="">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Customer
+                      Select Customer {!selectedUnit && <span className="text-xs text-gray-500">(Select unit first)</span>}
                     </label>
                     <select
                       onChange={handleCustomerSelect}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                      disabled={!selectedUnit || loading || users.length === 0}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
-                      <option value="">Select Customer</option>
-                      {customerOptions.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </option>
-                      ))}
+                      <option value="">
+                        {!selectedUnit ? "Select unit first" : users.length === 0 ? "No users found" : "Select Customer"}
+                      </option>
+                      {users.map((user) => {
+                        const typeLabel = (user?.sites[0]?.units[0]?.ownership || user.type || "")
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase());
+                        return (
+                          <option key={user.id} value={user.id}>
+                            {user.name || user.full_name}
+                            {typeLabel ? ` - ${typeLabel}` : ""}
+                            {user.email ? ` (${user.email})` : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
-
-                  <div>
+                  <div className="">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Customer Name *
                     </label>
@@ -1083,6 +1318,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                       placeholder="Enter customer name"
                     />
                   </div>
+
                 </div>
 
                 <div>
@@ -1138,69 +1374,59 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                       <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-12">
                         S.No
                       </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r min-w-[180px]">
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r min-w-[150px]">
                         Service Description
                       </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r min-w-[220px]">
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700 border-r min-w-[180px]">
                         Service Details
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-20">
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[120px]">
                         HSN/SAC
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-24">
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[130px]">
                         Rate (₹)
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-20">
-                        Qty
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[100px] ">
+                        Quantity
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-28">
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[150px]">
                         Taxable Value (₹)
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-20">
-                        CGST%
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[100px]">
+                        GST%
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-24">
-                        CGST Amt (₹)
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-20">
-                        SGST%
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-24">
-                        SGST Amt (₹)
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-20">
-                        IGST%
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-24">
-                        IGST Amt (₹)
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r w-28">
+                      {showCgstSgst && (
+                        <>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[110px]">
+                            CGST Amt (₹)
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[110px]">
+                            SGST Amt (₹)
+                          </th>
+                        </>
+                      )}
+                      {showIgst && (
+                        <>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[110px]">
+                            IGST Amt (₹)
+                          </th>
+                        </>
+                      )}
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[120px]">
                         Total (₹)
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 w-24">
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 min-w-[90px]">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody >
                     {formData.items.map((item, index) => (
                       <tr key={index} className="border-t border-gray-200 hover:bg-gray-50 transition-colors duration-150">
                         <td className="px-4 py-3 border-r text-center font-medium text-gray-600">
                           {item.s_no}
                         </td>
                         <td className="px-4 py-3 border-r">
-                          <select
-                            value={item.service_description}
-                            onChange={(e) => handleServiceSelect(index, e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm mb-2"
-                          >
-                            <option value="">Select Service</option>
-                            {serviceOptions.map((service) => (
-                              <option key={service.value} value={service.value}>
-                                {service.label}
-                              </option>
-                            ))}
-                          </select>
                           <input
                             type="text"
                             value={item.service_description}
@@ -1208,32 +1434,46 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                               handleItemChange(index, "service_description", e.target.value)
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-                            placeholder="Or enter custom description"
+                            placeholder="Service description"
+                            list="services"
                           />
+                          <datalist id="services">
+                            {serviceOptions.map((service) => (
+                              <option key={service.value} value={service.label} />
+                            ))}
+                          </datalist>
                         </td>
                         <td className="px-4 py-3 border-r">
-                          <textarea
+                          <input
+                            type="text"
                             value={item.service_details}
                             onChange={(e) =>
                               handleItemChange(index, "service_details", e.target.value)
                             }
-                            rows="3"
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-                            placeholder="Service details and description"
+                            placeholder="Service details"
                           />
                         </td>
                         <td className="px-4 py-3 border-r">
                           <input
                             type="text"
+                            list={`hsn-list-${index}`}
                             value={item.hsn_sac_code}
                             onChange={(e) =>
                               handleItemChange(index, "hsn_sac_code", e.target.value)
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center"
-                            placeholder="HSN/SAC"
+                            placeholder="Select or enter HSN/SAC"
                           />
+                          <datalist id={`hsn-list-${index}`}>
+                            {hsnCodes.map((hsn) => (
+                              <option key={hsn.id} value={hsn.hsn_code || hsn.code}>
+                                {hsn.description || hsn.name}
+                              </option>
+                            ))}
+                          </datalist>
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <input
                             type="number"
                             value={item.rate}
@@ -1242,11 +1482,11 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                             }
                             step="0.01"
                             min="0"
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center"
+                            className="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-right"
                             placeholder="0.00"
                           />
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <input
                             type="number"
                             value={item.quantity}
@@ -1255,10 +1495,10 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                             }
                             step="1"
                             min="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center"
+                            className="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-right"
                           />
                         </td>
-                        <td className="px-4 py-3 border-r">
+                        <td className="px-3 py-3 border-r">
                           <input
                             type="number"
                             value={item.taxable_value}
@@ -1267,61 +1507,43 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                             }
                             step="0.01"
                             min="0"
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center font-semibold bg-blue-50"
+                            className="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-right font-semibold bg-blue-50"
                             placeholder="0.00"
                           />
                         </td>
-                        {/* CGST */}
-                        <td className="px-4 py-3 border-r">
+                        {/* Single GST% input that auto-distributes */}
+                        <td className="px-3 py-3 border-r">
                           <input
                             type="number"
-                            value={item.cgst_rate}
-                            onChange={(e) =>
-                              handleItemChange(index, "cgst_rate", e.target.value)
-                            }
+                            value={enableIgst ? item.igst_rate : (parseFloat(item.cgst_rate || 0) + parseFloat(item.sgst_rate || 0)).toFixed(2)}
+                            onChange={(e) => handleGstRateChange(index, e.target.value)}
                             step="0.01"
                             min="0"
                             max="100"
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center"
+                            className="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center font-medium bg-yellow-50"
+                            placeholder="GST%"
                           />
                         </td>
-                        <td className="px-4 py-3 border-r text-center font-semibold text-gray-700">
-                          {item.cgst_amount}
-                        </td>
-                        {/* SGST */}
-                        <td className="px-4 py-3 border-r">
-                          <input
-                            type="number"
-                            value={item.sgst_rate}
-                            onChange={(e) =>
-                              handleItemChange(index, "sgst_rate", e.target.value)
-                            }
-                            step="0.01"
-                            min="0"
-                            max="100"
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center"
-                          />
-                        </td>
-                        <td className="px-4 py-3 border-r text-center font-semibold text-gray-700">
-                          {item.sgst_amount}
-                        </td>
-                        {/* IGST */}
-                        <td className="px-4 py-3 border-r">
-                          <input
-                            type="number"
-                            value={item.igst_rate}
-                            onChange={(e) =>
-                              handleItemChange(index, "igst_rate", e.target.value)
-                            }
-                            step="0.01"
-                            min="0"
-                            max="100"
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center"
-                          />
-                        </td>
-                        <td className="px-4 py-3 border-r text-center font-semibold text-gray-700">
-                          {item.igst_amount}
-                        </td>
+                        {showCgstSgst && (
+                          <>
+                            <td className="px-4 py-3 border-r text-center font-semibold text-gray-700">
+                              <div className="text-xs text-gray-500">C: {item.cgst_rate}%</div>
+                              <div>₹{item.cgst_amount}</div>
+                            </td>
+                            <td className="px-4 py-3 border-r text-center font-semibold text-gray-700">
+                              <div className="text-xs text-gray-500">S: {item.sgst_rate}%</div>
+                              <div>₹{item.sgst_amount}</div>
+                            </td>
+                          </>
+                        )}
+                        {showIgst && (
+                          <>
+                            <td className="px-4 py-3 border-r text-center font-semibold text-gray-700">
+                              <div className="text-xs text-gray-500">I: {item.igst_rate}%</div>
+                              <div>₹{item.igst_amount}</div>
+                            </td>
+                          </>
+                        )}
                         <td className="px-4 py-3 border-r text-center font-semibold text-blue-700 text-lg">
                           {item.total}
                         </td>
@@ -1330,11 +1552,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                             <button
                               type="button"
                               onClick={() => removeItem(index)}
-                              className="flex items-center justify-center gap-1 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all duration-200 text-xs font-semibold w-full"
+                              className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all duration-200 text-sm font-semibold"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
                               Remove
                             </button>
                           )}
@@ -1349,15 +1568,24 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                       <td className="px-4 py-4 text-center border-r text-green-700 text-lg">
                         {totals.taxableValue.toFixed(2)}
                       </td>
-                      <td className="px-4 py-4 text-center border-r" colSpan="2">
-                        {totals.cgst.toFixed(2)}
+                      <td className="px-4 py-4 text-center border-r text-gray-700">
+                        {enableIgst ? `${totals.igst.toFixed(2)}` : `${(totals.cgst + totals.sgst).toFixed(2)}`}
                       </td>
-                      <td className="px-4 py-4 text-center border-r" colSpan="2">
-                        {totals.sgst.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-4 text-center border-r" colSpan="2">
-                        {totals.igst.toFixed(2)}
-                      </td>
+                      {showCgstSgst && (
+                        <>
+                          <td className="px-4 py-4 text-center border-r">
+                            ₹{totals.cgst.toFixed(2)}
+                          </td>
+                          <td className="px-4 py-4 text-center border-r">
+                            ₹{totals.sgst.toFixed(2)}
+                          </td>
+                        </>
+                      )}
+                      {showIgst && (
+                        <td className="px-4 py-4 text-center border-r">
+                          ₹{totals.igst.toFixed(2)}
+                        </td>
+                      )}
                       <td className="px-4 py-4 text-center border-r text-green-700 text-xl">
                         {totals.total.toFixed(2)}
                       </td>
@@ -1419,7 +1647,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Bank AIC:
+                          Bank Name
                         </label>
                         <input
                           type="text"
@@ -1635,201 +1863,245 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
             </div>
 
             {/* Enhanced Preview Content - EXACTLY MATCHING THE SCREENSHOT */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 bg-white shadow-inner">
-              {/* Header Section */}
-              <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-4">Tax Invoice</h1>
-                <div className="flex justify-between items-start mb-4 text-sm">
-                  <div className="text-left">
-                    <p><strong>Invoice No:</strong> {formData.invoice_number || "AVI24-25001"}</p>
-                    <p><strong>Invoice date:</strong> {formData.invoice_date || ""}</p>
-                    <p><strong>Reverse Charge (Y/N):</strong> N</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="border border-gray-300 p-2 rounded">
-                      <p><strong>State:</strong> {formData.state || "Maharashtra"} | <strong>Code:</strong> {formData.state_code || "27"} | <strong>Place of Supply:</strong> {formData.place_of_supply || "Club House"}</p>
-                    </div>
-                  </div>
+            <div className="border border-gray-800 bg-white">
+              {/* Company Header Section */}
+              <div className="border-b border-gray-800">
+                <div className="text-center py-4">
+                  <h1 className="text-xl font-bold text-gray-900">{billingConfig.company_name || siteInfo.name || "JP Infra Venture LLP"}</h1>
+                  <p className="text-xs text-gray-700 mt-1">
+                    {billingConfig.address || siteInfo.address || "3rd Floor, 301, Viraj Tower, Near WEH, Metro Station, W.E.Highway, Andheri East, Mumbai -400093"}
+                  </p>
+                  <p className="text-xs text-gray-700 font-semibold">GST No- {billingConfig.gst_number || billingConfig.gst_no || siteInfo.gst_no || siteInfo.gst_number || ""}</p>
                 </div>
-                <hr className="border-gray-300 my-4" />
               </div>
 
-              {/* Bill to Party Section */}
-              <div className="mb-8">
-                <h2 className="text-lg font-bold text-gray-800 mb-2">Bill to Party</h2>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p><strong>Name:</strong> {formData.customer_name || ""}</p>
-                    <p><strong>Address:</strong> {formData.customer_address || "JP Aviva"}</p>
-                  </div>
-                  <div className="text-right">
-                    <p><strong>GST Nd:</strong></p>
-                    <p><strong>State:</strong> {formData.state || "Maharashtra"} | <strong>Code:</strong> {formData.state_code || "27"} | <strong>Mode of Payment:</strong> UPI No.:</p>
-                  </div>
-                </div>
-                <hr className="border-gray-300 my-4" />
+              {/* Tax Invoice Title */}
+              <div className="bg-blue-100 border-b border-gray-800 py-2">
+                <h2 className="text-center text-lg font-bold text-gray-900">Tax Invoice</h2>
               </div>
 
-              {/* Items Table - EXACTLY MATCHING SCREENSHOT STRUCTURE */}
-              <div className="mb-8">
-                <table className="w-full border-collapse border border-gray-300 text-sm">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border border-gray-300 p-2 text-center font-semibold">S. No</th>
-                      <th className="border border-gray-300 p-2 text-left font-semibold">Service Description</th>
-                      <th className="border border-gray-300 p-2 text-center font-semibold">HSN/SAC Code</th>
-                      <th className="border border-gray-300 p-2 text-center font-semibold">Rate</th>
-                      <th className="border border-gray-300 p-2 text-center font-semibold">Taxable Value</th>
-                      <th className="border border-gray-300 p-2 text-center font-semibold" colSpan="2">CGST</th>
-                      <th className="border border-gray-300 p-2 text-center font-semibold" colSpan="2">SGST</th>
-                      <th className="border border-gray-300 p-2 text-center font-semibold">Total</th>
-                    </tr>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-300 p-1"></th>
-                      <th className="border border-gray-300 p-1"></th>
-                      <th className="border border-gray-300 p-1"></th>
-                      <th className="border border-gray-300 p-1"></th>
-                      <th className="border border-gray-300 p-1"></th>
-                      <th className="border border-gray-300 p-1 text-xs">Rate %</th>
-                      <th className="border border-gray-300 p-1 text-xs">Amount</th>
-                      <th className="border border-gray-300 p-1 text-xs">Rate %</th>
-                      <th className="border border-gray-300 p-1 text-xs">Amount</th>
-                      <th className="border border-gray-300 p-1"></th>
-                    </tr>
-                    {/* Pre-filled GST rates row */}
-                    <tr className="bg-gray-100">
-                      <td className="border border-gray-300 p-1 text-center"></td>
-                      <td className="border border-gray-300 p-1"></td>
-                      <td className="border border-gray-300 p-1"></td>
-                      <td className="border border-gray-300 p-1"></td>
-                      <td className="border border-gray-300 p-1"></td>
-                      <td className="border border-gray-300 p-1 text-center">3%</td>
-                      <td className="border border-gray-300 p-1"></td>
-                      <td className="border border-gray-300 p-1 text-center">3%</td>
-                      <td className="border border-gray-300 p-1"></td>
-                      <td className="border border-gray-300 p-1"></td>
-                    </tr>
-                  </thead>
+              {/* Invoice Details Section */}
+              <div className="border-b border-gray-800">
+                <table className="w-full text-xs">
                   <tbody>
-                    {formData.items.map((item, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="border border-gray-300 p-2 text-center">{item.s_no}</td>
-                        <td className="border border-gray-300 p-2">
-                          <div className="font-medium">{item.service_description || ""}</div>
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center font-mono">{item.hsn_sac_code || ""}</td>
-                        <td className="border border-gray-300 p-2 text-center">₹{parseFloat(item.rate || 0).toFixed(2)}</td>
-                        <td className="border border-gray-300 p-2 text-center">₹{parseFloat(item.taxable_value || 0).toFixed(2)}</td>
-                        <td className="border border-gray-300 p-2 text-center">{item.cgst_rate || "0"}%</td>
-                        <td className="border border-gray-300 p-2 text-center">₹{parseFloat(item.cgst_amount || 0).toFixed(2)}</td>
-                        <td className="border border-gray-300 p-2 text-center">{item.sgst_rate || "0"}%</td>
-                        <td className="border border-gray-300 p-2 text-center">₹{parseFloat(item.sgst_amount || 0).toFixed(2)}</td>
-                        <td className="border border-gray-300 p-2 text-center font-semibold">₹{parseFloat(item.total || 0).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                    
-                    {/* Empty rows to match template - exactly 7 rows total */}
-                    {formData.items.length < 7 && 
-                      Array.from({ length: 7 - formData.items.length }).map((_, index) => (
-                        <tr key={`empty-${index}`} className={formData.items.length % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                          <td className="border border-gray-300 p-2 text-center">{formData.items.length + index + 1}</td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                          <td className="border border-gray-300 p-2"></td>
-                        </tr>
-                      ))
-                    }
+                    <tr>
+                      <td className="border-r border-gray-800 p-2" style={{width: '50%'}}>
+                        <strong>Invoice No:</strong> {formData.invoice_number || "AV/24-25/001"}
+                      </td>
+                      <td className="p-2"></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2"><strong>Invoice date:</strong> {formData.invoice_date || ""}</td>
+                      <td className="border-t border-gray-800 p-2"></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2">
+                        <strong>Reverse Charge (Y/N):</strong> {formData.gst_reverse_charge === "1" ? "Y" : "N"}
+                      </td>
+                      <td className="border-t border-gray-800 p-2"></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2">
+                        <strong>State:</strong> {formData.state || "Maharashtra"}
+                      </td>
+                      <td className="border-t border-gray-800 p-2" style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <span><strong>Code</strong></span>
+                        <span>{formData.state_code || "27"}</span>
+                        <span><strong>Place of Supply:</strong> {formData.place_of_supply || "Club House"}</span>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
 
-              <hr className="border-gray-300 my-6" />
-
-              {/* Total Section - UPDATED TO MATCH SCREENSHOT */}
-              <div className="mb-8">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">Total</h2>
-                
-                {/* Tax Breakdown - UPDATED */}
-                <div className="mb-4">
-                  <div className="flex justify-between py-1">
-                    <span>Total Amount before Tax:</span>
-                    <span>₹{totals.taxableValue.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Add: CGST:</span>
-                    <span>₹{totals.cgst.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Add: SGST:</span>
-                    <span>₹{totals.sgst.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Total Tax Amount:</span>
-                    <span>₹{(totals.cgst + totals.sgst + totals.igst).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>GST on Reverse Charge:</span>
-                    <span>{formData.gst_reverse_charge || "0"}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-t border-gray-300 mt-2 font-bold">
-                    <span>Total Amount after Tax:</span>
-                    <span>₹{totals.total.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between mb-4">
-                  <div className="w-1/2">
-                    <div className="mb-2">
-                      <p className="text-sm font-semibold">Total Invoice amount in words</p>
-                      <div className="p-2 border border-gray-300 rounded bg-yellow-50 text-sm min-h-10">
-                        {amountInWords || "Amount inwords"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-1/2 pl-4">
-                    {/* Empty space for alignment */}
-                  </div>
-                </div>
+              {/* Bill to Party Section */}
+              <div className="bg-blue-100 border-b border-gray-800 py-1">
+                <h3 className="text-center text-sm font-bold text-gray-900">Bill to Party</h3>
               </div>
 
-              {/* Bank Details and Certification Section */}
-              <div className="grid grid-cols-2 gap-8 mb-6">
-                <div>
-                  <div className="mb-4">
-                    <p className="font-semibold">Bank Details</p>
-                    <p><strong>Bank INC:</strong> {formData.bank_account || ""}</p>
-                    <p><strong>Bank IFSC:</strong> {formData.bank_ifsc || ""}</p>
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-4">
-                    <p><strong>GST on Reverse Charge</strong> {formData.gst_reverse_charge || "0"}</p>
-                  </div>
-                  <div className="text-center border border-gray-300 p-4 rounded">
-                    <p className="text-sm">Certified that the particulars given above are true and correct</p>
-                    <p className="font-bold mt-2">JP Infra Venture LLP</p>
-                  </div>
-                </div>
+              <div className="border-b border-gray-800">
+                <table className="w-full text-xs">
+                  <tbody>
+                    <tr>
+                      <td className="border-r border-gray-800 p-2" style={{width: '50%'}}>
+                        <strong>Name:</strong><br/>
+                        {formData.customer_name || ""}
+                      </td>
+                      <td className="p-2"></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2">
+                        <strong>Address:</strong> {formData.customer_address || "JP Aviva"}
+                      </td>
+                      <td className="border-t border-gray-800 p-2"></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2"></td>
+                      <td className="border-t border-gray-800 p-2"></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2">
+                        <strong>State:</strong> {formData.state || "Maharashtra"}
+                      </td>
+                      <td className="border-t border-gray-800 p-2" style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <span><strong>Code</strong></span>
+                        <span>{formData.state_code || "27"}</span>
+                        <span><strong>Mode of Payment: UPI No.:</strong></span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
-              {/* Footer Section */}
-              <div className="flex justify-between items-end pt-4 border-t border-gray-300">
-                <div className="text-center">
-                  <div className="border-t-2 border-gray-400 pt-2 mx-auto w-32">
-                    <span className="text-sm font-semibold">Common Seal</span>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="border-t-2 border-gray-400 pt-2 mx-auto w-40">
-                    <span className="text-sm font-semibold">Authorised signatory</span>
-                  </div>
-                </div>
+              {/* Items Table */}
+              <table className="w-full border-collapse text-xs">
+                <thead>
+                  <tr className="bg-blue-100">
+                    <th className="border border-gray-800 p-1 font-bold" rowSpan="2">S. No</th>
+                    <th className="border border-gray-800 p-1 font-bold" rowSpan="2">Service Description</th>
+                    <th className="border border-gray-800 p-1 font-bold" rowSpan="2">HSN/SAC<br/>Code</th>
+                    <th className="border border-gray-800 p-1 font-bold" rowSpan="2">Rate</th>
+                    <th className="border border-gray-800 p-1 font-bold" rowSpan="2">Taxable<br/>Value</th>
+                    <th className="border border-gray-800 p-1 font-bold" colSpan="2">CGST</th>
+                    <th className="border border-gray-800 p-1 font-bold" colSpan="2">SGST</th>
+                    <th className="border border-gray-800 p-1 font-bold" rowSpan="2">Total</th>
+                  </tr>
+                  <tr className="bg-blue-100">
+                    <th className="border border-gray-800 p-1 font-bold text-xs">Rate %</th>
+                    <th className="border border-gray-800 p-1 font-bold text-xs">Amount</th>
+                    <th className="border border-gray-800 p-1 font-bold text-xs">Rate %</th>
+                    <th className="border border-gray-800 p-1 font-bold text-xs">Amount</th>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-800 p-1"></td>
+                    <td className="border border-gray-800 p-1"></td>
+                    <td className="border border-gray-800 p-1"></td>
+                    <td className="border border-gray-800 p-1"></td>
+                    <td className="border border-gray-800 p-1 text-center">-</td>
+                    <td className="border border-gray-800 p-1 text-center">9%</td>
+                    <td className="border border-gray-800 p-1 text-center">-</td>
+                    <td className="border border-gray-800 p-1 text-center">9%</td>
+                    <td className="border border-gray-800 p-1 text-center">-</td>
+                    <td className="border border-gray-800 p-1 text-center">-</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.items.map((item, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-800 p-1 text-center">{item.s_no}</td>
+                      <td className="border border-gray-800 p-1">{item.service_description || ""}</td>
+                      <td className="border border-gray-800 p-1 text-center">{item.hsn_sac_code || ""}</td>
+                      <td className="border border-gray-800 p-1 text-right">{parseFloat(item.rate || 0).toFixed(2)}</td>
+                      <td className="border border-gray-800 p-1 text-right">{parseFloat(item.taxable_value || 0).toFixed(2)}</td>
+                      <td className="border border-gray-800 p-1 text-center">{item.cgst_rate || "0"}%</td>
+                      <td className="border border-gray-800 p-1 text-right">{parseFloat(item.cgst_amount || 0).toFixed(2)}</td>
+                      <td className="border border-gray-800 p-1 text-center">{item.sgst_rate || "0"}%</td>
+                      <td className="border border-gray-800 p-1 text-right">{parseFloat(item.sgst_amount || 0).toFixed(2)}</td>
+                      <td className="border border-gray-800 p-1 text-right font-semibold">{parseFloat(item.total || 0).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Total Section */}
+              <div className="border-t border-gray-800">
+                <table className="w-full text-xs">
+                  <tbody>
+                    <tr className="bg-blue-100">
+                      <td className="border-r border-b border-gray-800 p-2 font-bold text-center" colSpan="2">Total</td>
+                      <td className="border-b border-gray-800 p-2"></td>
+                      <td className="border-b border-gray-800 p-2"></td>
+                      <td className="border-b border-gray-800 p-2 text-right font-bold">{totals.taxableValue.toFixed(2)}</td>
+                      <td className="border-l border-b border-gray-800 p-2"></td>
+                      <td className="border-b border-gray-800 p-2 text-right font-bold">{totals.cgst.toFixed(2)}</td>
+                      <td className="border-l border-b border-gray-800 p-2"></td>
+                      <td className="border-b border-gray-800 p-2 text-right font-bold">{totals.sgst.toFixed(2)}</td>
+                      <td className="border-l border-b border-gray-800 p-2 text-right font-bold">{totals.total.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-b border-gray-800 p-2" style={{width: '50%'}}>
+                        <strong>Total Invoice amount in words</strong><br/>
+                        <span className="text-gray-700">{amountInWords || "Amount inwords"}</span>
+                      </td>
+                      <td className="border-b border-gray-800 p-2" style={{width: '50%'}}>
+                        <table className="w-full text-xs">
+                          <tbody>
+                            <tr>
+                              <td className="p-1"><strong>Total Amount before Tax</strong></td>
+                              <td className="p-1 text-right">{totals.taxableValue.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-1"><strong>Add: CGST</strong></td>
+                              <td className="p-1 text-right">{totals.cgst.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-1"><strong>Add: SGST</strong></td>
+                              <td className="p-1 text-right">{totals.sgst.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-1"><strong>Total Tax Amount</strong></td>
+                              <td className="p-1 text-right">{(totals.cgst + totals.sgst + totals.igst).toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-1"><strong>Total Amount after Tax:</strong></td>
+                              <td className="p-1 text-right font-bold">{totals.total.toFixed(2)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Bank Details and Signature Section */}
+              <div className="border-t border-gray-800">
+                <table className="w-full text-xs">
+                  <tbody>
+                    <tr>
+                      <td className="border-r border-gray-800 p-2" style={{width: '50%'}}>
+                        <strong>Bank Details</strong><br/>
+                        <strong>Bank A/C:</strong> {billingConfig.bank_account || formData.bank_account || ""}<br/>
+                        <strong>Bank IFSC:</strong> {billingConfig.bank_ifsc || formData.bank_ifsc || ""}
+                      </td>
+                      <td className="p-2" style={{width: '50%'}} rowSpan="2">
+                        <div className="text-right">
+                          <p className="text-xs mb-2"><strong>GST on Reverse Charge</strong>: {formData.gst_reverse_charge === "1" ? "Yes" : "0"}</p>
+                          <div className="text-xs text-center mt-4">
+                            <p>Certified that the particulars given above are true and correct</p>
+                            <p className="font-bold mt-2">{billingConfig.company_name || siteInfo.name || "JP Infra Venture LLP"}</p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2">
+                        <strong>Terms & conditions</strong><br/>
+                        <span className="text-gray-700">{billingConfig.terms_and_conditions || formData.terms_conditions || ""}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Footer Signature Section */}
+              <div className="border-t border-gray-800">
+                <table className="w-full text-xs">
+                  <tbody>
+                    <tr>
+                      <td className="border-r border-gray-800 p-4 text-center" style={{width: '50%'}}>
+                        <div className="mt-8">
+                          <strong>Common Seal</strong>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center" style={{width: '50%'}}>
+                        <div className="mt-8">
+                          <strong>Authorised signatory</strong>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 

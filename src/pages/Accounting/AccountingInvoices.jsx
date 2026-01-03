@@ -12,6 +12,7 @@ import {
 } from "../../api/accountingApi";
 import InvoiceModal from "./InvoiceModal";
 import AddPaymentModal from "./AddPaymentModal";
+import Navbar from "../../components/Navbar";
 
 const AccountingInvoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -122,7 +123,9 @@ const AccountingInvoices = () => {
   });
 
   return (
-    <div className="p-6">
+    <section className="flex">
+      <Navbar />
+    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Accounting Invoices</h1>
         <button
@@ -220,11 +223,11 @@ const AccountingInvoices = () => {
                       {new Date(invoice.due_date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      ${parseFloat(invoice.total_amount || 0).toFixed(2)}
+                      ₹{parseFloat(invoice.total_amount || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
+                        className={`px-2 py-1 rounded text-xs ₹{
                           invoice.status === "paid"
                             ? "bg-green-100 text-green-800"
                             : invoice.status === "overdue"
@@ -295,6 +298,7 @@ const AccountingInvoices = () => {
         />
       )}
     </div>
+    </section>
   );
 };
 

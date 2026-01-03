@@ -193,11 +193,11 @@
 //                       {entry.description || "-"}
 //                     </td>
 //                     <td className="px-6 py-4 whitespace-nowrap">
-//                       ${parseFloat(entry.total_amount || 0).toFixed(2)}
+//                       ₹{parseFloat(entry.total_amount || 0).toFixed(2)}
 //                     </td>
 //                     <td className="px-6 py-4 whitespace-nowrap">
 //                       <span
-//                         className={`px-2 py-1 rounded text-xs ${
+//                         className={`px-2 py-1 rounded text-xs ₹{
 //                           entry.status === "posted"
 //                             ? "bg-green-100 text-green-800"
 //                             : entry.status === "cancelled"
@@ -497,7 +497,7 @@
 //                       {entry.description || entry.narration || "-"}
 //                     </td>
 //                     <td className="px-6 py-4 whitespace-nowrap">
-//                       ${(
+//                       ₹{(
 //                         parseFloat(
 //                           entry.total_amount ??
 //                             entry.total_debit ??
@@ -510,7 +510,7 @@
 
 //                     <td className="px-6 py-4">
 //                       <span
-//                         className={`px-2 py-1 rounded text-xs ${
+//                         className={`px-2 py-1 rounded text-xs ₹{
 //                           entry.status === "posted"
 //                             ? "bg-green-100 text-green-800"
 //                             : entry.status === "cancelled"

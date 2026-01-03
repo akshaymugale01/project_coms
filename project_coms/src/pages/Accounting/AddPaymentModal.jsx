@@ -34,10 +34,10 @@ const AddPaymentModal = ({ invoice, onClose, onSave }) => {
             Invoice: <span className="font-semibold">{invoice?.invoice_number}</span>
           </p>
           <p className="text-sm text-gray-700">
-            Total Amount: <span className="font-semibold">${parseFloat(invoice?.total_amount || 0).toFixed(2)}</span>
+            Total Amount: <span className="font-semibold">₹{parseFloat(invoice?.total_amount || 0).toFixed(2)}</span>
           </p>
           <p className="text-sm text-gray-700">
-            Balance Due: <span className="font-semibold text-red-600">${parseFloat(invoice?.balance_due || 0).toFixed(2)}</span>
+            Balance Due: <span className="font-semibold text-red-600">₹{parseFloat(invoice?.balance_due || 0).toFixed(2)}</span>
           </p>
         </div>
 

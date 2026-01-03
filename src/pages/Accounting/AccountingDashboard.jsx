@@ -8,6 +8,7 @@ import {
   getOverdueInvoices,
 } from "../../api/accountingApi";
 import AccountingAnalyticsDashboard from "./AccountingAnalyticsDashboard";
+import Navbar from "../../components/Navbar";
 
 const AccountingDashboard = () => {
   const [stats, setStats] = useState({
@@ -123,7 +124,9 @@ const AccountingDashboard = () => {
   }
 
   return (
-    <div className="p-6">
+    <section className="flex">
+      <Navbar />
+    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
       <h1 className="text-3xl font-bold mb-6">Accounting Dashboard</h1>
 
       {/* Stats Cards */}
@@ -143,7 +146,7 @@ const AccountingDashboard = () => {
             <div>
               <p className="text-gray-500 text-sm">Total Revenue</p>
               <p className="text-3xl font-bold text-green-600">
-                ${parseFloat(stats.totalRevenue).toFixed(2)}
+                ₹{parseFloat(stats.totalRevenue).toFixed(2)}
               </p>
             </div>
             <div className="text-4xl">💰</div>
@@ -155,7 +158,7 @@ const AccountingDashboard = () => {
             <div>
               <p className="text-gray-500 text-sm">Pending Amount</p>
               <p className="text-3xl font-bold text-orange-600">
-                ${parseFloat(stats.pendingAmount).toFixed(2)}
+                ₹{parseFloat(stats.pendingAmount).toFixed(2)}
               </p>
             </div>
             <div className="text-4xl">⏳</div>
@@ -183,7 +186,7 @@ const AccountingDashboard = () => {
             <Link
               key={module.path}
               to={module.path}
-              className={`${module.color} rounded-lg p-4 text-center hover:shadow-lg transition-shadow`}
+              className={`₹{module.color} rounded-lg p-4 text-center hover:shadow-lg transition-shadow`}
             >
               <div className="text-3xl mb-2">{module.icon}</div>
               <p className="text-sm font-medium">{module.name}</p>
@@ -222,10 +225,10 @@ const AccountingDashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-medium">
-                      ${parseFloat(invoice.total_amount || 0).toFixed(2)}
+                      ₹{parseFloat(invoice.total_amount || 0).toFixed(2)}
                     </p>
                     <span
-                      className={`text-xs px-2 py-1 rounded ${
+                      className={`text-xs px-2 py-1 rounded ₹{
                         invoice.status === "paid"
                           ? "bg-green-100 text-green-800"
                           : invoice.status === "overdue"
@@ -270,7 +273,7 @@ const AccountingDashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-green-600">
-                      ${parseFloat(payment.amount || 0).toFixed(2)}
+                      ₹{parseFloat(payment.amount || 0).toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">
                       {new Date(payment.payment_date).toLocaleDateString()}
@@ -333,11 +336,11 @@ const AccountingDashboard = () => {
                       {entry.description || "-"}
                     </td>
                     <td className="px-4 py-3">
-                      ${parseFloat(entry.total_amount || 0).toFixed(2)}
+                      ₹{parseFloat(entry.total_amount || 0).toFixed(2)}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
+                        className={`px-2 py-1 rounded text-xs ₹{
                           entry.status === "posted"
                             ? "bg-green-100 text-green-800"
                             : "bg-yellow-100 text-yellow-800"
@@ -362,6 +365,7 @@ const AccountingDashboard = () => {
         </div>
       </div>
     </div>
+    </section>
   );
 };
 

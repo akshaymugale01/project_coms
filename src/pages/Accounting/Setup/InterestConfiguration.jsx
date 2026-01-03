@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { calculateInterest } from '../../../api/accountingApi';
 
 const InterestConfiguration = () => {
   const [formData, setFormData] = useState({
@@ -10,9 +11,17 @@ const InterestConfiguration = () => {
     min_amount_for_interest: 100,
     auto_calculate: true
   });
+  const [calculationResult, setCalculationResult] = useState(null);
+  const [calculationLoading, setCalculationLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Persist configuration locally so other screens (e.g. Income Tracking) can reuse it
+    try {
+      window.localStorage.setItem('interest_configuration', JSON.stringify(formData));
+    } catch (err) {
+      console.error('Failed to persist interest configuration', err);
+    }
     toast.success('Interest configuration saved successfully');
   };
 
@@ -22,6 +31,39 @@ const InterestConfiguration = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
+  };
+
+  useEffect(() => {
+    // Load previously saved configuration, if any
+    try {
+      const saved = window.localStorage.getItem('interest_configuration');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setFormData((prev) => ({ ...prev, ...parsed }));
+      }
+    } catch (err) {
+      console.error('Failed to load saved interest configuration', err);
+    }
+  }, []);
+
+  // Calculate interest from backend
+  const handleCalculateInterest = async () => {
+    setCalculationLoading(true);
+    try {
+      const result = await calculateInterest({
+        principal: 10000,
+        rate: formData.interest_rate,
+        days: 30,
+        grace_period_days: formData.grace_period_days,
+        calculation_method: formData.calculation_method === 'monthly' ? 'monthly' : 'daily'
+      });
+      setCalculationResult(result.data);
+    } catch (e) {
+      console.error('Error calculating interest:', e);
+      toast.error('Failed to calculate interest');
+    } finally {
+      setCalculationLoading(false);
+    }
   };
 
   return (
@@ -129,23 +171,48 @@ const InterestConfiguration = () => {
 
         {/* Interest Calculation Preview */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Calculation Preview</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-700">Calculation Preview</h3>
+            <button
+              type="button"
+              onClick={handleCalculateInterest}
+              disabled={calculationLoading}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 text-sm"
+            >
+              {calculationLoading ? 'Calculating...' : 'Calculate'}
+            </button>
+          </div>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-gray-700 mb-2">
               <strong>Example:</strong> If a bill of ₹10,000 is overdue by 30 days:
             </p>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p>Principal Amount: ₹10,000</p>
-              <p>Interest Rate: {formData.interest_rate}% p.a.</p>
-              <p>Days Overdue: 30 days (after {formData.grace_period_days} days grace period)</p>
-              <p className="font-semibold text-blue-700 mt-2">
-                Interest Amount: ₹{((10000 * formData.interest_rate * 30) / (365 * 100)).toFixed(2)}
-              </p>
-              <p className="font-semibold text-gray-800">
-                Total Payable: ₹{(10000 + ((10000 * formData.interest_rate * 30) / (365 * 100))).toFixed(2)}
-              </p>
-            </div>
+            {calculationResult ? (
+              <div className="space-y-1 text-sm text-gray-600">
+                <p>Principal Amount: ₹{calculationResult.principal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p>Interest Rate: {calculationResult.rate}% p.a.</p>
+                <p>Days Overdue: {calculationResult.days} days (after {calculationResult.grace_period_days} days grace period)</p>
+                <p className="text-xs text-gray-500">Days after grace: {calculationResult.days_after_grace}</p>
+                <p className="font-semibold text-blue-700 mt-2">
+                  Interest Amount: ₹{calculationResult.interest.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </p>
+                <p className="font-semibold text-gray-800">
+                  Total Payable: ₹{calculationResult.total_payable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1 text-sm text-gray-600">
+                <p>Principal Amount: ₹10,000</p>
+                <p>Interest Rate: {formData.interest_rate}% p.a.</p>
+                <p>Days Overdue: 30 days (after {formData.grace_period_days} days grace period)</p>
+                <p className="font-semibold text-blue-700 mt-2">
+                  Interest Amount: ₹{((10000 * formData.interest_rate * 30) / (365 * 100)).toFixed(2)} (frontend estimate)
+                </p>
+                <p className="font-semibold text-gray-800">
+                  Total Payable: ₹{(10000 + ((10000 * formData.interest_rate * 30) / (365 * 100))).toFixed(2)}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

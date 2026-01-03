@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
-import { createMonthlyExpense, deleteMonthlyExpense, getMonthlyExpenses, updateMonthlyExpense } from "../../../api/accountingApi";
+import { createMonthlyExpense, deleteMonthlyExpense, getMonthlyExpenses, updateMonthlyExpense, calculateMonthlyExpenseTotal } from "../../../api/accountingApi";
 
 const defaultRow = () => ({ id: undefined, category: "", amount: 0, isCustom: false });
 
@@ -31,9 +31,20 @@ const MonthlyExpenseSetup = () => {
   const [month, setMonth] = useState(new Date().getMonth() + 1); // 1..12
   const [rows, setRows] = useState([defaultRow()]);
   const [customCategories, setCustomCategories] = useState([]);
+  const [backendTotal, setBackendTotal] = useState(0); // Store backend-calculated total
 
-  const total = useMemo(() => rows.reduce((s, r) => s + Number(r.amount || 0), 0), [rows]);
   const allCategories = useMemo(() => [...PREDEFINED_CATEGORIES, ...customCategories], [customCategories]);
+
+  // Fetch total from backend
+  const fetchTotal = async (yr, mo) => {
+    try {
+      const res = await calculateMonthlyExpenseTotal({ year: yr, month: mo });
+      setBackendTotal(res?.data?.total || 0);
+    } catch (e) {
+      console.error('Failed to fetch total:', e);
+      setBackendTotal(0);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -55,6 +66,9 @@ const MonthlyExpenseSetup = () => {
       } else {
         setRows([defaultRow()]);
       }
+      
+      // Fetch backend total
+      await fetchTotal(year, month);
     } catch (e) {
       console.error(e);
       setRows([defaultRow()]);
@@ -146,7 +160,7 @@ const MonthlyExpenseSetup = () => {
       <div className="bg-white rounded-lg shadow p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Expense Rows</h2>
-          <div className="text-sm text-gray-600">Total: <span className="font-semibold">₹{total.toFixed(2)}</span></div>
+          <div className="text-sm text-gray-600">Total: <span className="font-semibold">₹{backendTotal.toFixed(2)}</span></div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">

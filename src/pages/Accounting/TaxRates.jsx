@@ -9,6 +9,7 @@ import {
   getActiveTaxRates,
 } from "../../api/accountingApi";
 import TaxRateModal from "./TaxRateModal";
+import Navbar from "../../components/Navbar";
 
 const TaxRates = () => {
   const [taxRates, setTaxRates] = useState([]);
@@ -101,7 +102,9 @@ const TaxRates = () => {
   );
 
   return (
-    <div className="p-6">
+    <section className="flex">
+      <Navbar />
+    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Tax Rates</h1>
         <div className="flex gap-3">
@@ -231,6 +234,7 @@ const TaxRates = () => {
         />
       )}
     </div>
+    </section>
   );
 };
 

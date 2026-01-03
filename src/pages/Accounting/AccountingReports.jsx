@@ -8,6 +8,7 @@ import {
   getUnitStatement,
   getReceivablesSummary,
 } from "../../api/accountingApi";
+import Navbar from "../../components/Navbar";
 
 const AccountingReports = () => {
   const [activeReport, setActiveReport] = useState("trial_balance");
@@ -261,7 +262,9 @@ const AccountingReports = () => {
   };
 
   return (
-    <div className="p-6">
+    <section className="flex">
+      <Navbar />
+    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
       <h1 className="text-2xl font-bold mb-6">Accounting Reports</h1>
 
       <div className="grid grid-cols-6 gap-3 mb-6">
@@ -358,6 +361,7 @@ const AccountingReports = () => {
         )}
       </div>
     </div>
+    </section>
   );
 };
 

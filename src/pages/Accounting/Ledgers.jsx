@@ -13,6 +13,7 @@ import { getAccountGroups } from "../../api/accountingApi";
 import { getAllUnits } from "../../api";
 import LedgerModal from "./LedgerModal";
 import LedgerBalanceSheet from "./LedgerBalanceSheet";
+import Navbar from "../../components/Navbar";
 
 const Ledgers = () => {
   const [ledgers, setLedgers] = useState([]);
@@ -156,7 +157,9 @@ const Ledgers = () => {
   });
 
   return (
-    <div className="p-6">
+    <section className="flex">
+      <Navbar />
+    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Ledgers</h1>
         <div className="flex gap-3">
@@ -308,6 +311,7 @@ const Ledgers = () => {
         />
       )}
     </div>
+    </section>
   );
 };
 

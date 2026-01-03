@@ -1064,7 +1064,7 @@ const convertAmountToWords = useCallback((amount) => {
                     name="invoice_number"
                     value={formData.invoice_number}
                     onChange={handleChange}
-                    required
+                    // required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                     placeholder="Enter invoice number"
                   />
@@ -1639,7 +1639,7 @@ const convertAmountToWords = useCallback((amount) => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Bank AIC:
+                          Bank Name
                         </label>
                         <input
                           type="text"
@@ -1835,11 +1835,11 @@ const convertAmountToWords = useCallback((amount) => {
               {/* Company Header - Matching Excel */}
               <div className="p-4 border-b border-gray-300">
                 <div className="text-center mb-2">
-                  <div className="text-2xl font-bold">JP Infra Venture LLP</div>
+                  <div className="text-2xl font-bold">{billingConfig.company_name || siteInfo.name || "JP Infra Venture LLP"}</div>
                   <div className="text-sm mt-1">
-                    3rd Floor, 301, Viraj Tower, Near WEH, Metro Station, W.E.Highway, Andheri East, Mumbai -400093
+                    {billingConfig.company_address || "3rd Floor, 301, Viraj Tower, Near WEH, Metro Station, W.E.Highway, Andheri East, Mumbai -400093"}
                   </div>
-                  <div className="text-sm mt-2 font-semibold">GST No- 27AALFJ2933L1ZZ</div>
+                  <div className="text-sm mt-2 font-semibold">GST No- {billingConfig.gst_number || ""}</div>
                 </div>
               </div>
 
@@ -1852,7 +1852,7 @@ const convertAmountToWords = useCallback((amount) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="mb-1">
-                      <span className="font-semibold">Invoice No:</span> {formData.invoice_number || "AV/24-25/001"}
+                      <span className="font-semibold">Invoice No:</span> {formData.invoice_number || "AV/25-26/001"}
                     </div>
                     <div className="mb-1">
                       <span className="font-semibold">Invoice date:</span> {formData.invoice_date || ""}

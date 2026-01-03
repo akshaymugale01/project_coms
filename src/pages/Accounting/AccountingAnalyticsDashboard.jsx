@@ -142,14 +142,14 @@ const AccountingAnalyticsDashboard = () => {
     },
     yAxis: {
       title: {
-        text: "Revenue ($)",
+        text: "Revenue (₹)",
         style: { color: "#9CA3AF" },
       },
       labels: { style: { color: "#9CA3AF" } },
       gridLineColor: "#374151",
     },
     tooltip: {
-      pointFormat: "Revenue: <b>${point.y:.2f}</b>",
+      pointFormat: "Revenue: <b>₹{point.y:.2f}</b>",
     },
     plotOptions: {
       line: {
@@ -228,14 +228,14 @@ const AccountingAnalyticsDashboard = () => {
     },
     yAxis: {
       title: {
-        text: "Amount ($)",
+        text: "Amount (₹)",
         style: { color: "#9CA3AF" },
       },
       labels: { style: { color: "#9CA3AF" } },
       gridLineColor: "#374151",
     },
     tooltip: {
-      pointFormat: "Amount: <b>${point.y:.2f}</b>",
+      pointFormat: "Amount: <b>₹{point.y:.2f}</b>",
     },
     series: [
       {
@@ -265,14 +265,14 @@ const AccountingAnalyticsDashboard = () => {
     },
     yAxis: {
       title: {
-        text: "Balance ($)",
+        text: "Balance (₹)",
         style: { color: "#9CA3AF" },
       },
       labels: { style: { color: "#9CA3AF" } },
       gridLineColor: "#374151",
     },
     tooltip: {
-      pointFormat: "Balance: <b>${point.y:.2f}</b>",
+      pointFormat: "Balance: <b>₹{point.y:.2f}</b>",
     },
     series: [
       {
@@ -302,7 +302,7 @@ const AccountingAnalyticsDashboard = () => {
     },
     yAxis: {
       title: {
-        text: "Amount ($)",
+        text: "Amount (₹)",
         style: { color: "#9CA3AF" },
       },
       labels: { style: { color: "#9CA3AF" } },
@@ -310,7 +310,7 @@ const AccountingAnalyticsDashboard = () => {
     },
     tooltip: {
       shared: true,
-      pointFormat: "<b>{series.name}: ${point.y:.2f}</b><br/>",
+      pointFormat: "<b>{series.name}: ₹{point.y:.2f}</b><br/>",
     },
     plotOptions: {
       area: {
@@ -370,14 +370,14 @@ const AccountingAnalyticsDashboard = () => {
     },
     yAxis: {
       title: {
-        text: "Total Invoice Amount ($)",
+        text: "Total Invoice Amount (₹)",
         style: { color: "#9CA3AF" },
       },
       labels: { style: { color: "#9CA3AF" } },
       gridLineColor: "#374151",
     },
     tooltip: {
-      pointFormat: "Amount: <b>${point.y:.2f}</b>",
+      pointFormat: "Amount: <b>₹{point.y:.2f}</b>",
     },
     series: [
       {
@@ -446,7 +446,7 @@ const AccountingAnalyticsDashboard = () => {
           <button
             key={option.id}
             onClick={() => setSelectedChart(option.id)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all ₹{
               selectedChart === option.id
                 ? "bg-blue-600 text-white shadow-lg"
                 : "bg-gray-800 text-gray-300 hover:bg-gray-700"

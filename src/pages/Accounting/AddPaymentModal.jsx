@@ -34,10 +34,10 @@ const AddPaymentModal = ({ invoice, onClose, onSave }) => {
             Invoice: <span className="font-semibold">{invoice?.invoice_number}</span>
           </p>
           <p className="text-sm text-gray-700">
-            Total Amount: <span className="font-semibold">${parseFloat(invoice?.total_amount || 0).toFixed(2)}</span>
+            Total Amount: <span className="font-semibold">₹{parseFloat(invoice?.total_amount || 0).toFixed(2)}</span>
           </p>
           <p className="text-sm text-gray-700">
-            Balance Due: <span className="font-semibold text-red-600">${parseFloat(invoice?.balance_due || 0).toFixed(2)}</span>
+            Balance Due: <span className="font-semibold text-red-600">₹{parseFloat(invoice?.balance_due || 0).toFixed(2)}</span>
           </p>
         </div>
 
@@ -68,10 +68,14 @@ const AddPaymentModal = ({ invoice, onClose, onSave }) => {
                 onChange={handleChange}
                 required
                 step="0.01"
-                min="0"
-                max={invoice?.balance_due || 0}
+                min="0.01"
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {formData.amount > (invoice?.balance_due || 0) && (
+                <p className="text-xs text-orange-600 mt-1">
+                  ⚠️ Amount exceeds balance due by ₹{(formData.amount - (invoice?.balance_due || 0)).toFixed(2)}
+                </p>
+              )}
             </div>
 
             <div>
