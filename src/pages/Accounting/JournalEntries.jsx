@@ -489,7 +489,7 @@ const JournalEntries = () => {
 
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 rounded text-xs ₹{
+                        className={`px-2 py-1 rounded text-xs ${
                           entry.status === "posted"
                             ? "bg-green-100 text-green-800"
                             : entry.status === "cancelled"

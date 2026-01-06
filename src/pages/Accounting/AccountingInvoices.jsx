@@ -116,8 +116,12 @@ const AccountingInvoices = () => {
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
-      invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      (invoice.invoice_number || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (invoice.customer_name || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter ? invoice.status === statusFilter : true;
     return matchesSearch && matchesStatus;
   });
@@ -227,7 +231,7 @@ const AccountingInvoices = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded text-xs ₹{
+                        className={`px-2 py-1 rounded text-xs ${
                           invoice.status === "paid"
                             ? "bg-green-100 text-green-800"
                             : invoice.status === "overdue"

@@ -98,7 +98,7 @@ const TaxRates = () => {
   };
 
   const filteredTaxRates = taxRates.filter((rate) =>
-    rate.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    (rate.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -192,7 +192,7 @@ const TaxRates = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded text-xs ₹{
+                        className={`px-2 py-1 rounded text-xs ${
                           rate.is_active
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"

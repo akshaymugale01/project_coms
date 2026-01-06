@@ -90,7 +90,7 @@ const AccountGroups = () => {
   };
 
   const filteredGroups = accountGroups.filter((group) =>
-    group.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    (group.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

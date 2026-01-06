@@ -7,13 +7,22 @@ import {
   getLedgerStatement,
   getUnitStatement,
   getReceivablesSummary,
+  downloadExpensesMIS,
+  downloadIncomeMIS,
+  downloadIndividualMIS,
+  importExpensesMIS,
+  importIncomeMIS,
 } from "../../api/accountingApi";
 import Navbar from "../../components/Navbar";
+import FileInput from "../../Buttons/FileInput";
 
 const AccountingReports = () => {
   const [activeReport, setActiveReport] = useState("trial_balance");
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [misBusy, setMisBusy] = useState(false);
+  const [expensesMisFile, setExpensesMisFile] = useState(null);
+  const [incomeMisFile, setIncomeMisFile] = useState(null);
   const [filters, setFilters] = useState({
     start_date: "",
     end_date: "",
@@ -78,6 +87,113 @@ const AccountingReports = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getMisParams = () => ({
+    start_date: filters.start_date,
+    end_date: filters.end_date,
+  });
+
+  const extractFilename = (contentDisposition, fallbackName) => {
+    if (!contentDisposition) return fallbackName;
+
+    const match = contentDisposition.match(/filename\*?=([^;]+)/i);
+    if (!match) return fallbackName;
+
+    let value = match[1].trim();
+    value = value.replace(/^UTF-8''/i, "");
+    value = value.replace(/^"|"$/g, "");
+    try {
+      return decodeURIComponent(value);
+    } catch (_) {
+      return value;
+    }
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleMisDownload = async (kind) => {
+    setMisBusy(true);
+    try {
+      const params = getMisParams();
+      let res;
+      let fallbackName;
+
+      if (kind === "expenses") {
+        res = await downloadExpensesMIS(params);
+        fallbackName = "expenses_mis.xlsx";
+      } else if (kind === "income") {
+        res = await downloadIncomeMIS(params);
+        fallbackName = "income_mis.xlsx";
+      } else if (kind === "individual") {
+        res = await downloadIndividualMIS(params);
+        fallbackName = "individual_mis.xlsx";
+      } else {
+        throw new Error("Invalid MIS type");
+      }
+
+      const filename = extractFilename(res.headers?.["content-disposition"], fallbackName);
+      downloadBlob(res.data, filename);
+      toast.success("MIS downloaded");
+    } catch (error) {
+      toast.error("Failed to download MIS");
+      console.error(error);
+    } finally {
+      setMisBusy(false);
+    }
+  };
+
+  const handleMisImport = async (kind) => {
+    setMisBusy(true);
+    try {
+      let res;
+      if (kind === "expenses") {
+        if (!expensesMisFile) {
+          toast.error("Select Expenses MIS file first");
+          return;
+        }
+        res = await importExpensesMIS(expensesMisFile);
+      } else if (kind === "income") {
+        if (!incomeMisFile) {
+          toast.error("Select Income MIS file first");
+          return;
+        }
+        res = await importIncomeMIS(incomeMisFile);
+      } else {
+        throw new Error("Invalid MIS import type");
+      }
+
+      const created = res?.data?.created;
+      const updated = res?.data?.updated;
+      const errors = res?.data?.errors;
+
+      if (Array.isArray(errors) && errors.length > 0) {
+        toast.error(`Imported with ${errors.length} errors`);
+      } else {
+        toast.success(
+          `Import successful${
+            typeof created === "number" || typeof updated === "number"
+              ? ` (created ${created || 0}, updated ${updated || 0})`
+              : ""
+          }`
+        );
+      }
+    } catch (error) {
+      const message = error?.response?.data?.error || "Failed to import MIS";
+      toast.error(message);
+      console.error(error);
+    } finally {
+      setMisBusy(false);
     }
   };
 
@@ -347,6 +463,70 @@ const AccountingReports = () => {
             >
               {loading ? "Generating..." : "Generate Report"}
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">MIS (Excel)</h2>
+
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <button
+            onClick={() => handleMisDownload("expenses")}
+            disabled={misBusy}
+            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-900 disabled:bg-gray-400"
+          >
+            Download Expenses MIS
+          </button>
+          <button
+            onClick={() => handleMisDownload("income")}
+            disabled={misBusy}
+            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-900 disabled:bg-gray-400"
+          >
+            Download Income MIS
+          </button>
+          <button
+            onClick={() => handleMisDownload("individual")}
+            disabled={misBusy}
+            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-900 disabled:bg-gray-400"
+          >
+            Download Individual MIS
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div className="border rounded p-4">
+            <div className="font-medium mb-2">Import Expenses MIS</div>
+            <div className="flex items-center gap-3">
+              <FileInput
+                accept=".xlsx,.xls"
+                handleFileChange={(e) => setExpensesMisFile(e.target.files?.[0] || null)}
+              />
+              <button
+                onClick={() => handleMisImport("expenses")}
+                disabled={misBusy || !expensesMisFile}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                Import
+              </button>
+            </div>
+          </div>
+
+          <div className="border rounded p-4">
+            <div className="font-medium mb-2">Import Income MIS</div>
+            <div className="flex items-center gap-3">
+              <FileInput
+                accept=".xlsx,.xls"
+                handleFileChange={(e) => setIncomeMisFile(e.target.files?.[0] || null)}
+              />
+              <button
+                onClick={() => handleMisImport("income")}
+                disabled={misBusy || !incomeMisFile}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                Import
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -151,7 +151,9 @@ const Ledgers = () => {
   };
 
   const filteredLedgers = ledgers.filter((ledger) => {
-    const matchesSearch = ledger.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (ledger.name || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesUnit = !filterUnitId || ledger.unit_id === parseInt(filterUnitId);
     return matchesSearch && matchesUnit;
   });

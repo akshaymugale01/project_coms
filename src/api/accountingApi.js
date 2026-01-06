@@ -1,4 +1,5 @@
 import API from "./axiosInstance";
+import { getItemInLocalStorage } from "../utils/localStorage";
 
 // Account Groups
 export const getAccountGroups = () => API.get("/account_groups.json");
@@ -88,6 +89,36 @@ export const getProfitAndLoss = (params) => API.get("/accounting_reports/profit_
 export const getLedgerStatement = (params) => API.get("/accounting_reports/ledger_statement.json", { params });
 export const getUnitStatement = (params) => API.get("/accounting_reports/unit_statement.json", { params });
 export const getReceivablesSummary = (params) => API.get("/accounting_reports/receivables_summary.json", { params });
+
+// MIS (Excel)
+export const downloadExpensesMIS = (params) =>
+  API.get("/accounting_reports/expenses_mis.xlsx", { params, responseType: "blob" });
+
+export const downloadIncomeMIS = (params) =>
+  API.get("/accounting_reports/income_mis.xlsx", { params, responseType: "blob" });
+
+export const downloadIndividualMIS = (params) =>
+  API.get("/accounting_reports/individual_mis.xlsx", { params, responseType: "blob" });
+
+export const importExpensesMIS = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const token = getItemInLocalStorage("TOKEN");
+  return API.post("/accounting_reports/expenses_mis/import.json", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    params: token ? { token } : undefined,
+  });
+};
+
+export const importIncomeMIS = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const token = getItemInLocalStorage("TOKEN");
+  return API.post("/accounting_reports/income_mis/import.json", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    params: token ? { token } : undefined,
+  });
+};
 
     // CAM (Common Area Maintenance) - Society Maintenance APIs (aligned to /api/cam)
 // Global CAM Settings
