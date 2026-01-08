@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-const AccountGroupModal = ({ group, onClose, onSave }) => {
+const AccountGroupModal = ({ group, allGroups = [], onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: "",
     code: "",
     group_type: "asset",
-    nature: "debit",
+    parent_id: "",
     description: "",
   });
 
@@ -15,7 +15,7 @@ const AccountGroupModal = ({ group, onClose, onSave }) => {
         name: group.name || "",
         code: group.code || "",
         group_type: group.group_type || "asset",
-        nature: group.nature || "debit",
+        parent_id: group.parent_id || "",
         description: group.description || "",
       });
     }
@@ -28,8 +28,20 @@ const AccountGroupModal = ({ group, onClose, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    const dataToSend = {
+      account_group: {
+        name: formData.name,
+        code: formData.code,
+        group_type: formData.group_type,
+        parent_id: formData.parent_id ? parseInt(formData.parent_id) : null,
+        description: formData.description,
+      }
+    };
+    onSave(dataToSend);
   };
+
+  // Get primary groups (only groups with no parent)
+  const primaryGroups = allGroups && allGroups.filter(g => !g.parent_id);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -91,25 +103,31 @@ const AccountGroupModal = ({ group, onClose, onSave }) => {
                 <option value="asset">Asset</option>
                 <option value="liability">Liability</option>
                 <option value="equity">Equity</option>
-                <option value="revenue">Revenue</option>
+                <option value="income">Income</option>
                 <option value="expense">Expense</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nature *
+                Parent Group (Optional)
               </label>
               <select
-                name="nature"
-                value={formData.nature}
+                name="parent_id"
+                value={formData.parent_id}
                 onChange={handleChange}
-                required
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="debit">Debit</option>
-                <option value="credit">Credit</option>
+                <option value="">Create as Primary Group</option>
+                {primaryGroups && primaryGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} ({g.group_type})
+                  </option>
+                ))}
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Leave empty for primary groups, select a group to make this a sub-group
+              </p>
             </div>
 
             <div>

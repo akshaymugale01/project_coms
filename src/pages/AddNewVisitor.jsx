@@ -110,7 +110,6 @@ const AddNewVisitor = () => {
     building_id: "",
     unit_id: "",
     floor_id: "",
-    profile_picture: "",
   });
 
 

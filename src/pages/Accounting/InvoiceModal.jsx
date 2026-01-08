@@ -396,6 +396,13 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
   const [unitDetails, setUnitDetails] = useState({});
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [invoiceSearchLoading, setInvoiceSearchLoading] = useState(false);
+  const [paymentData, setPaymentData] = useState({
+    amount: "",
+    payment_mode: "",
+    reference_number: ""
+  });
 
   // console.log("Billing Config:", billingConfig);
 
@@ -412,13 +419,15 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       rate: "", 
       quantity: "1",
       taxable_value: "0.00", 
+      gst_type: enableIgst ? "igst" : "cgst_sgst", // New field: 'cgst_sgst' or 'igst'
       cgst_rate: enableGstSplit && !enableIgst ? defaultGstRate : "0", 
       cgst_amount: "0.00", 
       sgst_rate: enableGstSplit && !enableIgst ? defaultGstRate : "0", 
       sgst_amount: "0.00", 
       igst_rate: enableIgst ? (parseFloat(defaultGstRate) * 2).toString() : "0",
       igst_amount: "0.00",
-      total: "0.00"
+      total: "0.00",
+      tax_rate_id: null
     };
   };
 
@@ -428,9 +437,11 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       .toISOString()
       .split("T")[0],
     invoice_number: "",
+    source_type: "invoice",
     unit_no: "",
     customer_name: "",
     customer_email: "",
+    gst_no: "",
     customer_address: "",
     unit_id: "",
     items: [
@@ -442,13 +453,15 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
         rate: "", 
         quantity: "1",
         taxable_value: "0.00", 
+        gst_type: "cgst_sgst",
         cgst_rate: "9", 
         cgst_amount: "0.00", 
         sgst_rate: "9", 
         sgst_amount: "0.00", 
         igst_rate: "0",
         igst_amount: "0.00",
-        total: "0.00" 
+        total: "0.00",
+        tax_rate_id: null
       },
     ],
     notes: "",
@@ -457,6 +470,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     bank_aic: "",
     terms_conditions: "",
     gst_reverse_charge: "0",
+    gst_input_value: "0.00",
     place_of_supply: "Club House",
     state: "Maharashtra",
     state_code: "27",
@@ -630,9 +644,11 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
         unit_no: invoice.unit_no || "",
         customer_name: invoice.customer_name || "",
         customer_email: invoice.customer_email || "",
+        gst_no: invoice.gst_no || invoice.customer_gst_no || invoice.customer_gst_number || invoice.gst_number || "",
         customer_address: invoice.customer_address || "",
         unit_id: invoice.unit_id || "",
         items: (invoice.items || invoice.accounting_invoice_items || []).map((item, index) => ({
+          id: item.id, // Include id for update operations
           s_no: item.s_no || index + 1,
           service_description: item.service_description || item.description || "", 
           service_details: item.service_details || "",
@@ -640,6 +656,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
           rate: item.rate?.toString() || item.unit_price?.toString() || "", 
           quantity: item.quantity?.toString() || "1",
           taxable_value: item.taxable_value?.toString() || item.amount?.toString() || "0.00", 
+          gst_type: item.gst_type || (item.igst_rate && parseFloat(item.igst_rate) > 0 ? "igst" : "cgst_sgst"),
+          tax_rate_id: item.tax_rate_id || null,
           cgst_rate: item.cgst_rate?.toString() || "9", 
           cgst_amount: item.cgst_amount?.toString() || "0.00", 
           sgst_rate: item.sgst_rate?.toString() || "9", 
@@ -654,10 +672,21 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
         bank_aic: invoice.bank_aic || "",
         terms_conditions: invoice.terms_and_conditions || invoice.terms_conditions || "",
         gst_reverse_charge: invoice.gst_reverse_charge || "0",
+        gst_input_value: invoice.gst_input_value?.toString?.() || invoice.gst_input_value || "0.00",
+        amount: "0.00",
         place_of_supply: invoice.place_of_supply || "Club House",
         state: invoice.state || "Maharashtra",
         state_code: invoice.state_code || "27",
       });
+      
+      // Load payment data if invoice has payments
+      if (invoice.first_payment) {
+        setPaymentData({
+          amount: invoice.first_payment.amount?.toString() || "",
+          payment_mode: invoice.first_payment.payment_mode || "",
+          reference_number: invoice.first_payment.reference_number || ""
+        });
+      }
       
       // Set selected unit if editing existing invoice
       if (invoice.unit_id) {
@@ -856,6 +885,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
           ...prev,
           customer_name: selectedUser.name || selectedUser.full_name || "",
           customer_email: selectedUser.email || "",
+          gst_no: selectedUser.gst_number || selectedUser.gst_no || "",
           customer_address: selectedUser.address || selectedUser.permanent_address || ""
         }));
       }
@@ -865,8 +895,68 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
         ...prev,
         customer_name: "",
         customer_email: "",
+        gst_no: "",
         customer_address: ""
       }));
+    }
+  };
+
+  const handleFindInvoiceByNumber = async () => {
+    const term = invoiceSearch.trim();
+    if (!term) {
+      alert("Please enter an invoice number");
+      return;
+    }
+
+    try {
+      setInvoiceSearchLoading(true);
+      const { findInvoiceByNumber } = await import("../../api/accountingApi");
+      const res = await findInvoiceByNumber(term);
+      const inv = res.data;
+      
+      if (!inv || !inv.unit) {
+        alert("Invoice not found or has no unit");
+        return;
+      }
+
+      const unit = inv.unit;
+      const buildingId = unit.building_id ? String(unit.building_id) : "";
+      const floorId = unit.floor_id ? String(unit.floor_id) : "";
+      const unitId = unit.id ? String(unit.id) : "";
+
+      // Set building and fetch floors
+      if (buildingId) {
+        setSelectedBuilding(buildingId);
+        const floorsResponse = await getFloors(buildingId);
+        setFloors(floorsResponse.data || []);
+
+        // Set floor and fetch units
+        if (floorId) {
+          setSelectedFloor(floorId);
+          const unitsResponse = await getUnits(floorId);
+          setUnits(unitsResponse.data || []);
+
+          // Set unit and fetch details
+          if (unitId) {
+            setSelectedUnit(unitId);
+            const unitDetails = await fetchUnitDetails(unitId);
+            if (unitDetails) {
+              setUnitDetails(unitDetails);
+              setShowDetails(true);
+              setFormData(prev => ({ ...prev, unit_id: unitId }));
+              await fetchUsersByUnit(unitId);
+            }
+          }
+        }
+      }
+
+      alert("Invoice details loaded");
+      setInvoiceSearch("");
+    } catch (err) {
+      console.error("Failed to find invoice by number", err);
+      alert("Invoice not found or error occurred");
+    } finally {
+      setInvoiceSearchLoading(false);
     }
   };
 
@@ -943,7 +1033,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       setShowDetails(false);
       setUnitDetails({});
       setUsers([]);
-      setFormData(prev => ({ ...prev, unit_no: "", unit_id: "", customer_name: "", customer_email: "", customer_address: "" }));
+      setFormData(prev => ({ ...prev, unit_no: "", unit_id: "", customer_name: "", customer_email: "", gst_no: "", customer_address: "" }));
     }
   };
 
@@ -991,17 +1081,93 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     return item;
   };
 
+  // Handle GST type change (CGST/SGST or IGST)
+  const handleGstTypeChange = (index, gstType) => {
+    const newItems = [...formData.items];
+    newItems[index].gst_type = gstType;
+    
+    if (gstType === "igst") {
+      // Convert to IGST (usually double the individual GST rate)
+      const currentRate = parseFloat(newItems[index].cgst_rate) || 0;
+      newItems[index].igst_rate = (currentRate * 2).toString();
+      newItems[index].cgst_rate = "0";
+      newItems[index].sgst_rate = "0";
+    } else {
+      // Convert to CGST/SGST (split the IGST rate)
+      const currentRate = parseFloat(newItems[index].igst_rate) || 0;
+      const splitRate = (currentRate / 2).toFixed(2);
+      newItems[index].cgst_rate = splitRate;
+      newItems[index].sgst_rate = splitRate;
+      newItems[index].igst_rate = "0";
+    }
+    
+    recalculateItemTotals(newItems[index]);
+    setFormData((prev) => ({ ...prev, items: newItems }));
+  };
+
+  // Get filtered tax rates based on GST type
+  const getFilteredTaxRates = (gstType) => {
+    if (!taxRates || taxRates.length === 0) return [];
+    
+    return taxRates.filter(tax => {
+      const taxType = (tax.tax_type || tax.type || "").toLowerCase();
+      
+      if (gstType === "igst") {
+        // Show only IGST type rates
+        return taxType === "igst" || taxType.includes("igst");
+      } else {
+        // Show CGST, SGST, or combined rates for CGST/SGST type
+        return !taxType.includes("igst");
+      }
+    });
+  };
+
+  // Handle tax rate dropdown selection with smart application based on tax type
+  const handleTaxRateSelect = (index, selectedTax) => {
+    const newItems = [...formData.items];
+    const rate = parseFloat(selectedTax.rate) || 0;
+    const taxType = (selectedTax.tax_type || selectedTax.type || "").toLowerCase();
+    
+    // Store the tax_rate_id
+    newItems[index].tax_rate_id = selectedTax.id;
+    
+    if (newItems[index].gst_type === "igst") {
+      // For IGST type, apply the full rate
+      newItems[index].igst_rate = rate.toString();
+      newItems[index].cgst_rate = "0";
+      newItems[index].sgst_rate = "0";
+    } else {
+      // For CGST/SGST type
+      if (taxType.includes("cgst")) {
+        // Apply only to CGST
+        newItems[index].cgst_rate = rate.toString();
+      } else if (taxType.includes("sgst")) {
+        // Apply only to SGST
+        newItems[index].sgst_rate = rate.toString();
+      } else {
+        // Combined rate - split equally
+        const splitRate = (rate / 2).toFixed(2);
+        newItems[index].cgst_rate = splitRate;
+        newItems[index].sgst_rate = splitRate;
+      }
+      newItems[index].igst_rate = "0";
+    }
+    
+    recalculateItemTotals(newItems[index]);
+    setFormData((prev) => ({ ...prev, items: newItems }));
+  };
+
   // Handle GST rate input and auto-distribute based on billing config
   const handleGstRateChange = (index, gstRate) => {
     const newItems = [...formData.items];
     const rate = parseFloat(gstRate) || 0;
     
-    if (enableIgst) {
+    if (newItems[index].gst_type === "igst") {
       // Use full rate as IGST
       newItems[index].igst_rate = rate.toString();
       newItems[index].cgst_rate = "0";
       newItems[index].sgst_rate = "0";
-    } else if (enableGstSplit) {
+    } else {
       // Split rate equally between CGST and SGST
       const splitRate = (rate / 2).toFixed(2);
       newItems[index].cgst_rate = splitRate;
@@ -1075,7 +1241,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    // Save invoice first
+    onSave(formData, paymentData);
   };
 
   // No helper functions needed - using state directly
@@ -1111,10 +1278,53 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Search Invoice Section */}
+            {/* <div className="bg-blue-50 rounded-lg p-6 border-2 border-blue-200">
+              <h3 className="font-semibold text-lg text-blue-900 mb-4">🔍 Search Existing Invoice</h3>
+              <div className="flex items-end gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Invoice Number
+                  </label>
+                  <input
+                    type="text"
+                    value={invoiceSearch}
+                    onChange={(e) => setInvoiceSearch(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter invoice number (e.g., FP-1001-01)"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleFindInvoiceByNumber}
+                  disabled={invoiceSearchLoading}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-medium"
+                >
+                  {invoiceSearchLoading ? "Searching..." : "Find Invoice"}
+                </button>
+              </div>
+            </div> */}
+
             {/* Basic Information */}
             <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
               <h3 className="font-semibold text-xl text-gray-800 border-b pb-3 mb-4">Basic Information</h3>
               <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Source Type *
+                  </label>
+                  <select
+                    name="source_type"
+                    value={formData.source_type}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                  >
+                    <option value="invoice">Invoice</option>
+                    <option value="cam_bill">CAM Bill</option>
+                    <option value="vendor_bill">Vendor Bill</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Invoice Number *
@@ -1337,6 +1547,20 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    GST No
+                  </label>
+                  <input
+                    type="text"
+                    name="gst_no"
+                    value={formData.gst_no}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                    placeholder="Enter customer GST No"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Customer Address
                   </label>
                   <textarea
@@ -1392,8 +1616,11 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                       <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[150px]">
                         Taxable Value (₹)
                       </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[100px]">
-                        GST%
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[110px]">
+                        GST Type
+                      </th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700 border-r min-w-[120px]">
+                        Tax Rate (%) / Select Rate
                       </th>
                       {showCgstSgst && (
                         <>
@@ -1511,18 +1738,52 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                             placeholder="0.00"
                           />
                         </td>
-                        {/* Single GST% input that auto-distributes */}
+                        {/* GST Type Selector */}
                         <td className="px-3 py-3 border-r">
-                          <input
-                            type="number"
-                            value={enableIgst ? item.igst_rate : (parseFloat(item.cgst_rate || 0) + parseFloat(item.sgst_rate || 0)).toFixed(2)}
-                            onChange={(e) => handleGstRateChange(index, e.target.value)}
-                            step="0.01"
-                            min="0"
-                            max="100"
-                            className="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center font-medium bg-yellow-50"
-                            placeholder="GST%"
-                          />
+                          <select
+                            value={item.gst_type || "cgst_sgst"}
+                            onChange={(e) => handleGstTypeChange(index, e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center font-medium bg-purple-50"
+                          >
+                            <option value="cgst_sgst">CGST/SGST</option>
+                            <option value="igst">IGST</option>
+                          </select>
+                        </td>
+                        {/* GST Rate input with Tax Rate dropdown */}
+                        <td className="px-3 py-3 border-r">
+                          <div className="flex gap-1 items-center">
+                            <select
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  const selectedTax = getFilteredTaxRates(item.gst_type).find(t => t.id === parseInt(e.target.value));
+                                  if (selectedTax) {
+                                    handleTaxRateSelect(index, selectedTax);
+                                  }
+                                }
+                              }}
+                              defaultValue=""
+                              className="flex-1 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm bg-green-50"
+                              title={item.gst_type === "igst" ? "IGST Rates" : "CGST/SGST Rates"}
+                            >
+                              <option value="">Select Rate</option>
+                              {getFilteredTaxRates(item.gst_type).map((tax) => (
+                                <option key={tax.id} value={tax.id}>
+                                  {tax.name} ({tax.rate}%) {tax.tax_type && `[${tax.tax_type.toUpperCase()}]`}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              value={item.gst_type === "igst" ? item.igst_rate : (parseFloat(item.cgst_rate || 0) + parseFloat(item.sgst_rate || 0)).toFixed(2)}
+                              onChange={(e) => handleGstRateChange(index, e.target.value)}
+                              step="0.01"
+                              min="0"
+                              max="100"
+                              className="flex-1 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center font-medium bg-yellow-50"
+                              placeholder="GST%"
+                              title="Enter custom GST rate or select from dropdown"
+                            />
+                          </div>
                         </td>
                         {showCgstSgst && (
                           <>
@@ -1725,6 +1986,36 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                         placeholder="0"
                       />
                     </div>
+
+                    {/* GST Input Value */}
+                    {/* <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                      <span className="text-sm text-gray-600">GST Input Value:</span>
+                      <input
+                        type="number"
+                        name="gst_input_value"
+                        value={formData.gst_input_value}
+                        onChange={handleChange}
+                        step="0.01"
+                        min="0"
+                        className="w-28 px-2 py-1 border border-gray-300 rounded text-sm text-right"
+                        placeholder="0.00"
+                      />
+                    </div> */}
+
+                    {/* Payment Amount */}
+                    {/* <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                      <span className="text-sm text-gray-600">Payment Amount:</span>
+                      <input
+                        type="number"
+                        name="payment_amount"
+                        value={formData.payment_amount}
+                        onChange={handleChange}
+                        step="0.01"
+                        min="0"
+                        className="w-28 px-2 py-1 border border-gray-300 rounded text-sm text-right"
+                        placeholder="0.00"
+                      />
+                    </div> */}
                     
                     {/* Total Amount after Tax */}
                     <div className="flex justify-between items-center py-3 bg-gray-50 rounded-lg px-4">
@@ -1733,33 +2024,75 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                     </div>
                   </div>
 
-                  {/* Certification and JP Infra Venture - UPDATED */}
-                  <div className="bg-white rounded-lg p-6 border-2 border-gray-300 shadow-sm">
-                    <div className="text-center">
-                      <div className="text-center text-sm bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="text-gray-700 mb-2">Certified that the particulars given above are true and correct</div>
-                        <div className="font-bold text-blue-800 text-lg">JP Infra Venture LLP</div>
-                        
-                        {/* Authorised Signatory directly below JP Infra Venture */}
-                        <div className="mt-4">
-                          <div className="border-t-2 border-gray-400 pt-2 mx-auto w-48">
-                            <span className="text-xs font-semibold text-gray-700">Authorised Signatory</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Information Section */}
+            <div className="bg-green-50 rounded-lg p-6 border-2 border-green-200">
+              <h3 className="font-semibold text-xl text-green-900 border-b border-green-200 pb-3 mb-4">💳 Payment Information</h3>
+              <p className="text-xs text-green-600 mb-4">These details will be saved to Accounting Payment record (Optional - leave empty if paying later)</p>
+              
+              <div className="grid grid-cols-3 gap-6">
+               
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Mode
+                  </label>
+                  <select
+                    name="payment_mode"
+                    value={paymentData.payment_mode || ""}
+                    onChange={(e) => setPaymentData({...paymentData, payment_mode: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">Select Payment Mode</option>
+                    <option value="cash">Cash</option>
+                    <option value="cheque">Cheque</option>
+                    <option value="online">Online Transfer</option>
+                    <option value="card">Card</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                  </select>
+                </div>
+
+                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="amount"
+                    value={paymentData.amount || ""}
+                    onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
+                    step="0.01"
+                    min="0"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reference Number
+                  </label>
+                  <input
+                    type="text"
+                    name="reference_number"
+                    value={paymentData.reference_number || ""}
+                    onChange={(e) => setPaymentData({...paymentData, reference_number: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder={paymentData.payment_mode === "cheque" ? "Cheque No" : "Transaction ID / UTR"}
+                  />
                 </div>
               </div>
 
-              {/* Common Seal Section - Centered below both columns */}
-              <div className="mt-6 text-center">
-                <div className="bg-white rounded-lg p-4 border-2 border-gray-300 shadow-sm inline-block">
-                  <div className="border-t-2 border-gray-400 pt-2 mx-auto w-32">
-                    <span className="text-sm font-semibold text-gray-700">Common Seal</span>
-                  </div>
-                </div>
-              </div>
+              <p className="text-xs text-green-700 mt-3">
+                {paymentData.payment_mode === "cheque" 
+                  ? "Enter cheque number for tracking"
+                  : paymentData.payment_mode === "online" || paymentData.payment_mode === "bank_transfer"
+                  ? "Enter transaction ID or UTR number"
+                  : "Enter payment reference number"}
+              </p>
             </div>
 
             {/* Notes */}
@@ -1931,6 +2264,12 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                     </tr>
                     <tr>
                       <td className="border-r border-t border-gray-800 p-2">
+                        <strong>GST No:</strong> {formData.gst_no || ""}
+                      </td>
+                      <td className="border-t border-gray-800 p-2"></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-t border-gray-800 p-2">
                         <strong>Address:</strong> {formData.customer_address || "JP Aviva"}
                       </td>
                       <td className="border-t border-gray-800 p-2"></td>
@@ -2043,6 +2382,10 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                               <td className="p-1 text-right">{(totals.cgst + totals.sgst + totals.igst).toFixed(2)}</td>
                             </tr>
                             <tr>
+                              <td className="p-1"><strong>GST Input Value</strong></td>
+                              <td className="p-1 text-right">{parseFloat(formData.gst_input_value || 0).toFixed(2)}</td>
+                            </tr>
+                            <tr>
                               <td className="p-1"><strong>Total Amount after Tax:</strong></td>
                               <td className="p-1 text-right font-bold">{totals.total.toFixed(2)}</td>
                             </tr>
@@ -2059,45 +2402,16 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                 <table className="w-full text-xs">
                   <tbody>
                     <tr>
-                      <td className="border-r border-gray-800 p-2" style={{width: '50%'}}>
+                      <td className="p-2" style={{width: '100%'}}>
                         <strong>Bank Details</strong><br/>
                         <strong>Bank A/C:</strong> {billingConfig.bank_account || formData.bank_account || ""}<br/>
                         <strong>Bank IFSC:</strong> {billingConfig.bank_ifsc || formData.bank_ifsc || ""}
                       </td>
-                      <td className="p-2" style={{width: '50%'}} rowSpan="2">
-                        <div className="text-right">
-                          <p className="text-xs mb-2"><strong>GST on Reverse Charge</strong>: {formData.gst_reverse_charge === "1" ? "Yes" : "0"}</p>
-                          <div className="text-xs text-center mt-4">
-                            <p>Certified that the particulars given above are true and correct</p>
-                            <p className="font-bold mt-2">{billingConfig.company_name || siteInfo.name || "JP Infra Venture LLP"}</p>
-                          </div>
-                        </div>
-                      </td>
                     </tr>
                     <tr>
-                      <td className="border-r border-t border-gray-800 p-2">
+                      <td className="border-t border-gray-800 p-2">
                         <strong>Terms & conditions</strong><br/>
                         <span className="text-gray-700">{billingConfig.terms_and_conditions || formData.terms_conditions || ""}</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Footer Signature Section */}
-              <div className="border-t border-gray-800">
-                <table className="w-full text-xs">
-                  <tbody>
-                    <tr>
-                      <td className="border-r border-gray-800 p-4 text-center" style={{width: '50%'}}>
-                        <div className="mt-8">
-                          <strong>Common Seal</strong>
-                        </div>
-                      </td>
-                      <td className="p-4 text-center" style={{width: '50%'}}>
-                        <div className="mt-8">
-                          <strong>Authorised signatory</strong>
-                        </div>
                       </td>
                     </tr>
                   </tbody>

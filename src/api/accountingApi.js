@@ -40,7 +40,7 @@ export const cancelJournalEntry = (id) => API.post(`/journal_entries/${id}/cance
 // Accounting Invoices
 export const getAccountingInvoices = () => API.get("/accounting_invoices.json");
 export const getAccountingInvoice = (id) => API.get(`/accounting_invoices/${id}.json`);
-export const createAccountingInvoice = (data) => {
+export const createAccountingInvoice = (data, paymentData) => {
   // Transform items to accounting_invoice_items_attributes format expected by Rails
   const transformedData = {
     accounting_invoice: {
@@ -49,6 +49,12 @@ export const createAccountingInvoice = (data) => {
       accounting_invoice_items_attributes: data.items
     }
   };
+  
+  // Add payment_data if provided
+  if (paymentData && paymentData.payment_mode) {
+    transformedData.payment_data = paymentData;
+  }
+  
   delete transformedData.accounting_invoice.items;
   delete transformedData.accounting_invoice.terms_conditions; // Remove old key
   return API.post("/accounting_invoices.json", transformedData);
@@ -194,3 +200,21 @@ export const getReconciliationReport = (params) => API.get("/income_entries/reco
 export const calculateMonthlyExpenseTotal = (params) => API.get("/api/cam/monthly_expenses/total", { params });
 export const calculateInterest = (data) => API.post("/api/accounting/calculate-interest.json", data);
 export const calculateIncomeTotal = (params) => API.post("/api/accounting/calculate-income-total.json", params);
+
+// Monthly Income (by category) - similar to monthly expenses
+export const getMonthlyIncome = (params) => API.get("/api/cam/monthly_income", { params });
+export const getMonthlyIncomeTotal = (params) => API.get("/api/cam/monthly_income/total", { params });
+
+// Get detailed income breakdown from invoices, payments, journal entries
+export const getDetailedIncomeSummary = (params) => API.get("/api/cam/detailed_income_summary", { params });
+
+// Backend calculations for Income & Expense Reports
+export const calculateIncomeAllocation = (params) => API.post("/api/cam/calculate_income_allocation", params);
+export const calculateExpenseAllocation = (params) => API.post("/api/cam/calculate_expense_allocation", params);
+export const calculateIncomeVsExpense = (params) => API.post("/api/cam/calculate_income_vs_expense", params);
+export const getIncomeByCategory = (params) => API.get("/api/cam/income_by_category", { params });
+export const getExpenseByCategory = (params) => API.get("/api/cam/expense_by_category", { params });
+export const getDailyIncomeReport = (params) => API.get("/api/cam/daily_income_report", { params });
+export const getDailyExpenseReport = (params) => API.get("/api/cam/daily_expense_report", { params });
+export const getUnitWiseIncomeSummary = (params) => API.get("/api/cam/unit_wise_income_summary", { params });
+export const getUnitWiseExpenseSummary = (params) => API.get("/api/cam/unit_wise_expense_summary", { params });

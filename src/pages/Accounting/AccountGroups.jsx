@@ -67,8 +67,8 @@ const AccountGroups = () => {
         await createAccountGroup(data);
         toast.success("Account group created successfully");
       }
+      await fetchAccountGroups();
       setIsModalOpen(false);
-      fetchAccountGroups();
     } catch (error) {
       toast.error("Failed to save account group");
       console.error(error);
@@ -135,7 +135,7 @@ const AccountGroups = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                  Group / Sub-Group
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Code
@@ -144,7 +144,7 @@ const AccountGroups = () => {
                   Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nature
+                  Level
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
@@ -163,45 +163,53 @@ const AccountGroups = () => {
                 </tr>
               ) : (
                 filteredGroups.map((group) => (
-                  <tr key={group.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">
-                      {group.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {group.code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {group.group_type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          group.nature === "debit"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {group.nature}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {group.description || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(group)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(group.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
+                  <React.Fragment key={group.id}>
+                    <tr className={group.parent_id ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-gray-50"}>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium">
+                        {group.parent_id ? (
+                          <span className="text-blue-600 pl-6">
+                            ↳ {group.name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-900 font-bold text-lg">
+                            {group.name}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {group.code}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 rounded text-xs bg-gray-100">
+                          {group.group_type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {group.parent_id ? (
+                          <span className="text-blue-600">Sub-Group</span>
+                        ) : (
+                          <span className="font-semibold text-gray-700">Primary</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {group.description || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleEdit(group)}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(group.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  </React.Fragment>
                 ))
               )}
             </tbody>
@@ -212,6 +220,7 @@ const AccountGroups = () => {
       {isModalOpen && (
         <AccountGroupModal
           group={selectedGroup}
+          allGroups={accountGroups}
           onClose={() => setIsModalOpen(false)}
           onSave={handleSave}
         />

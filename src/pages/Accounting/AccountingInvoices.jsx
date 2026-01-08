@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   getAccountingInvoices,
+  getAccountingInvoice,
   createAccountingInvoice,
   updateAccountingInvoice,
   deleteAccountingInvoice,
@@ -48,9 +49,17 @@ const AccountingInvoices = () => {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (invoice) => {
-    setSelectedInvoice(invoice);
-    setIsModalOpen(true);
+  const handleEdit = async (invoice) => {
+    try {
+      // Fetch full invoice details including items and payments
+      const response = await getAccountingInvoice(invoice.id);
+      const fullInvoice = response.data.data || response.data;
+      setSelectedInvoice(fullInvoice);
+      setIsModalOpen(true);
+    } catch (error) {
+      toast.error("Failed to fetch invoice details");
+      console.error(error);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -97,14 +106,30 @@ const AccountingInvoices = () => {
     }
   };
 
-  const handleSave = async (data) => {
+  const handleSave = async (data, paymentData) => {
     try {
+      const invoiceData = data || {};
+
       if (selectedInvoice) {
-        await updateAccountingInvoice(selectedInvoice.id, data);
+        await updateAccountingInvoice(selectedInvoice.id, invoiceData);
         toast.success("Invoice updated successfully");
+
+        // Handle payment if provided
+        if (paymentData && paymentData.payment_mode) {
+          await addPaymentToInvoice(selectedInvoice.id, {
+            payment_date: new Date().toISOString().split("T")[0],
+            amount: paymentData.amount,
+            payment_mode: paymentData.payment_mode,
+            reference_number: paymentData.reference_number,
+          });
+          toast.success("Payment added successfully");
+        }
       } else {
-        await createAccountingInvoice(data);
+        const res = await createAccountingInvoice(invoiceData, paymentData);
+        const createdInvoice = res?.data?.data || res?.data;
         toast.success("Invoice created successfully");
+
+        // Payment will be created automatically on backend
       }
       setIsModalOpen(false);
       fetchInvoices();

@@ -830,7 +830,6 @@ const handleInputChange = (field, value) => {
                       ...prev,
                       check_in_date_time: formatToApiDate(date),
                       check_out_date_time: null,
-                      amount: 0,
                       member_adult: 0,
                       member_child: 0,
                       guest_adult: 0,

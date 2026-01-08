@@ -8,6 +8,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split("T")[0],
     reference: "",
+    invoice_number: "",
+    invoice_date: "",
     description: "",
     journal_lines: [
       { ledger_id: "", debit: 0, credit: 0, description: "" },
@@ -49,6 +51,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
           entry.date?.split("T")[0] ||
           new Date().toISOString().split("T")[0],
         reference: entry.reference || entry.entry_number || "",
+        invoice_number: entry.invoice_number || "",
+        invoice_date: entry.invoice_date?.split("T")[0] || "",
         description: entry.description || entry.narration || "",
         journal_lines: normalizedLines,
       });
@@ -128,8 +132,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
     const payload = {
       journal_entry: {
         entry_date: formData.entry_date,
-        reference: formData.reference,
-        description: formData.description,
+        reference: formData.reference,        invoice_number: formData.invoice_number,
+        invoice_date: formData.invoice_date,        description: formData.description,
         entry_lines_attributes: (formData.journal_lines || []).map((l) => ({
           ledger_id: l.ledger_id,
           debit: Number(l.debit || 0),
@@ -184,6 +188,35 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                 value={formData.reference}
                 onChange={handleChange}
                 required
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+          </div>
+
+          {/* Invoice fields */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Invoice Number
+              </label>
+              <input
+                type="text"
+                name="invoice_number"
+                value={formData.invoice_number}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Invoice Date
+              </label>
+              <input
+                type="date"
+                name="invoice_date"
+                value={formData.invoice_date}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border rounded"
               />
             </div>
@@ -250,7 +283,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                           className="w-full px-2 py-1 border rounded"
                           required
                         >
-                          <option value="">Select Ledger</option>
+                          <option value="">Select Ledger/Vendor</option>
                           {ledgers.map((ledger) => (
                             <option key={ledger.id} value={ledger.id}>
                               {ledger.name}

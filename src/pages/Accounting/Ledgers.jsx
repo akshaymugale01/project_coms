@@ -194,11 +194,20 @@ const Ledgers = () => {
           className="px-4 py-2 border rounded"
         >
           <option value="">All Groups</option>
-          {accountGroups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
+          {accountGroups && accountGroups
+            .filter(g => !g.parent_id)  // Only show primary groups as optgroup
+            .map((primaryGroup) => (
+              <optgroup key={primaryGroup.id} label={`${primaryGroup.name} (${primaryGroup.group_type})`}>
+                {/* Show sub-groups under each primary group */}
+                {accountGroups
+                  .filter(g => g.parent_id === primaryGroup.id)
+                  .map(subGroup => (
+                    <option key={subGroup.id} value={subGroup.id}>
+                      &nbsp;&nbsp;↳ {subGroup.name}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
         </select>
         <select
           value={filterUnitId}
