@@ -3111,6 +3111,14 @@ export const getVisitorDashboard = async () =>
       token: token,
     },
   });
+
+export const getCommunicationDashboard = async () =>
+  axiosInstance.get("/notices/communicaions_dashboard.json", {
+    params: {
+      token: token,
+    },
+  });
+
 export const getRegisteredVehicle = async () =>
   axiosInstance.get(`/registered_vehicles.json`, {
     params: {

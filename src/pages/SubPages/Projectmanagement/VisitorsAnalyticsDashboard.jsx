@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { getVisitorDashboard } from "../../../api";
-import { FaSpinner } from "react-icons/fa";
+import { FaSpinner, FaUsers, FaUserCheck, FaUserClock, FaCar, FaTruck, FaCalendarAlt } from "react-icons/fa";
 
 const VisitorsAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -24,6 +24,8 @@ const VisitorsAnalyticsDashboard = () => {
     purpose_breakdown: {},
     hourly_visits: {},
     monthly_visits: {},
+    visitor_type_breakdown: {},
+    weekly_trend: {},
   });
 
   useEffect(() => {
@@ -37,59 +39,35 @@ const VisitorsAnalyticsDashboard = () => {
       const response = await getVisitorDashboard();
       console.log("Visitor Analytics Data:", response.data);
       
-      // Simulating additional data - replace with actual API data when available
+      const apiData = response.data;
+      
+      // Map API response to dashboard state - use API data when available
       const data = {
-        ...response.data,
-        // Mock data for charts - replace with actual API data
-        delivery_breakdown: {
-          "Swiggy/Swiggy I": 403,
-          "Zepto": 245,
-          "Zomato": 192,
-          "Blinkit": 190,
-          "Amazon": 110,
-          "D Mart": 39,
-          "Flipkart": 26,
-          "Jio Mart": 22,
-          "Other": 16,
-          "Urban Clap": 12,
-          "Big Basket": 9,
-          "Box8": 8,
-          "Domino's": 7,
-          "Myntra": 5,
-          "Country Delight": 1,
+        total: apiData.total || 0,
+        today_in: apiData.today_in || 0,
+        today_out: apiData.today_out || 0,
+        in: apiData.in || 0,
+        out: apiData.out || 0,
+        expected: apiData.expected_v || apiData.expected || 0,
+        unexpected: apiData.unexpected_v || apiData.unexpected || 0,
+        staff_total: apiData.staff_total || 0,
+        staff_in: apiData.staff_in || 0,
+        staff_out: apiData.staff_out || 0,
+        vehicles: apiData.vehicles || 0,
+        // Use API data for breakdowns if available, otherwise fallback to calculated data
+        delivery_breakdown: apiData.delivery_breakdown || apiData.delivery_by_platform || {},
+        purpose_breakdown: apiData.purpose_breakdown || {
+          "Meeting": apiData.meeting_count || 0,
+          "Delivery": apiData.delivery_count || 0,
+          "Interview": apiData.interview_count || 0,
+          "Site Visit": apiData.site_visit_count || 0,
+          "Maintenance": apiData.maintenance_count || 0,
+          "Other": apiData.other_count || 0,
         },
-        purpose_breakdown: {
-          "Meeting": response.data.meeting_count || 0,
-          "Delivery": response.data.delivery_count || 0,
-          "Interview": response.data.interview_count || 0,
-          "Site Visit": response.data.site_visit_count || 0,
-          "Maintenance": response.data.maintenance_count || 0,
-          "Other": response.data.other_count || 0,
-        },
-        hourly_visits: {
-          "00:00": 5,
-          "03:00": 2,
-          "06:00": 15,
-          "09:00": 45,
-          "12:00": 120,
-          "15:00": 95,
-          "18:00": 80,
-          "21:00": 25,
-        },
-        monthly_visits: {
-          "Jan": 450,
-          "Feb": 520,
-          "Mar": 480,
-          "Apr": 510,
-          "May": 550,
-          "Jun": 490,
-          "Jul": 530,
-          "Aug": 560,
-          "Sep": 540,
-          "Oct": 580,
-          "Nov": 0,
-          "Dec": 0,
-        },
+        hourly_visits: apiData.hourly_visits || apiData.hourly_trend || {},
+        monthly_visits: apiData.monthly_visits || apiData.monthly_trend || {},
+        visitor_type_breakdown: apiData.visitor_type_breakdown || apiData.by_visitor_type || {},
+        weekly_trend: apiData.weekly_trend || {},
       };
       
       setDashboardData(data);
@@ -495,25 +473,45 @@ const VisitorsAnalyticsDashboard = () => {
   return (
     <div className="space-y-5">
       {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-5">
+      <div className="grid md:grid-cols-5 gap-5">
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
-          <h3 className="text-lg font-medium">Total Visitors</h3>
-          <p className="text-4xl font-bold my-2">{dashboardData.total || 5514}</p>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Total Visitors</h3>
+            <FaUsers className="text-3xl opacity-80" />
+          </div>
+          <p className="text-4xl font-bold my-2">{dashboardData.total || 0}</p>
           <p className="text-sm opacity-80">All time visitors</p>
         </div>
         <div className="bg-gradient-to-br from-green-600 to-green-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
-          <h3 className="text-lg font-medium">Today&apos;s In</h3>
-          <p className="text-4xl font-bold my-2">{dashboardData.today_in || 0}</p>
-          <p className="text-sm opacity-80">Checked in today</p>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Total In</h3>
+            <FaUserCheck className="text-3xl opacity-80" />
+          </div>
+          <p className="text-4xl font-bold my-2">{dashboardData.in || 0}</p>
+          <p className="text-sm opacity-80">Currently inside</p>
         </div>
         <div className="bg-gradient-to-br from-orange-600 to-orange-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
-          <h3 className="text-lg font-medium">Expected</h3>
-          <p className="text-4xl font-bold my-2">{dashboardData.expected || 34}</p>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Total Out</h3>
+            <FaUserClock className="text-3xl opacity-80" />
+          </div>
+          <p className="text-4xl font-bold my-2">{dashboardData.out || 0}</p>
+          <p className="text-sm opacity-80">Checked out</p>
+        </div>
+        <div className="bg-gradient-to-br from-teal-600 to-teal-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Expected</h3>
+            <FaUserClock className="text-3xl opacity-80" />
+          </div>
+          <p className="text-4xl font-bold my-2">{dashboardData.expected || 0}</p>
           <p className="text-sm opacity-80">Pre-registered visitors</p>
         </div>
         <div className="bg-gradient-to-br from-purple-600 to-purple-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
-          <h3 className="text-lg font-medium">Unexpected</h3>
-          <p className="text-4xl font-bold my-2">{dashboardData.unexpected || 5480}</p>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">Unexpected</h3>
+            <FaUsers className="text-3xl opacity-80" />
+          </div>
+          <p className="text-4xl font-bold my-2">{dashboardData.unexpected || 0}</p>
           <p className="text-sm opacity-80">Walk-in visitors</p>
         </div>
       </div>
@@ -557,9 +555,17 @@ const VisitorsAnalyticsDashboard = () => {
       </div>
 
       {/* Additional Stats Cards */}
-      <div className="grid md:grid-cols-5 gap-5">
+      <div className="grid md:grid-cols-6 gap-5">
         <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white text-center">
-          <p className="text-sm opacity-80">Total Staff</p>
+          <p className="text-sm opacity-80">Today&apos;s In</p>
+          <p className="text-3xl font-bold my-1">{dashboardData.today_in || 0}</p>
+        </div>
+        <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white text-center">
+          <p className="text-sm opacity-80">Today&apos;s Out</p>
+          <p className="text-3xl font-bold my-1">{dashboardData.today_out || 0}</p>
+        </div>
+        <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white text-center">
+          <p className="text-sm opacity-80">Staff Total</p>
           <p className="text-3xl font-bold my-1">{dashboardData.staff_total || 0}</p>
         </div>
         <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white text-center">
@@ -573,10 +579,6 @@ const VisitorsAnalyticsDashboard = () => {
         <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white text-center">
           <p className="text-sm opacity-80">Total Vehicles</p>
           <p className="text-3xl font-bold my-1">{dashboardData.vehicles || 0}</p>
-        </div>
-        <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white text-center">
-          <p className="text-sm opacity-80">Total In</p>
-          <p className="text-3xl font-bold my-1">{dashboardData.in || 0}</p>
         </div>
       </div>
     </div>

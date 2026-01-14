@@ -1,21 +1,25 @@
 import { useEffect, useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import { FaSpinner, FaBullhorn, FaEnvelope, FaUsers, FaChartLine } from "react-icons/fa";
+import { FaSpinner, FaBullhorn, FaEnvelope, FaUsers, FaChartLine, FaCalendarAlt, FaEye, FaEyeSlash, FaClock } from "react-icons/fa";
+import { getCommunicationDashboard } from "../../api";
 
 const CommunicationAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedChart, setSelectedChart] = useState("comm_types");
   const [chartType, setChartType] = useState("pie");
   const [commData, setCommData] = useState({
-    totalAnnouncements: 0,
-    totalNotifications: 0,
-    totalMessages: 0,
-    activeUsers: 0,
-    byCategory: {},
-    byDepartment: {},
-    monthlyTrend: {},
-    readUnread: {},
+    total_notices: 0,
+    active_notices: 0,
+    inactive_notices: 0,
+    today_notices: 0,
+    this_week_notices: 0,
+    this_month_notices: 0,
+    by_type: {},
+    by_category: {},
+    monthly_trend: {},
+    view_stats: { total_views: 0, unique_viewers: 0 },
+    recent_notices: [],
   });
 
   useEffect(() => {
@@ -26,59 +30,37 @@ const CommunicationAnalyticsDashboard = () => {
   const fetchCommunicationAnalytics = async (retry = 0) => {
     try {
       setLoading(true);
+      const response = await getCommunicationDashboard();
+      console.log("Communication Dashboard Data:", response.data);
       
-      // Mock data - replace with actual API calls
+      // Map API response to state
+      const apiData = response.data;
       const data = {
-        totalAnnouncements: 145,
-        totalNotifications: 2340,
-        totalMessages: 1567,
-        activeUsers: 456,
-        byCategory: {
-          "Emergency": 25,
-          "General": 95,
-          "Events": 45,
-          "Maintenance": 35,
-          "HR Updates": 55,
-          "Policy": 30,
-        },
-        byDepartment: {
-          "Administration": 120,
-          "Facilities": 95,
-          "HR": 85,
-          "IT": 75,
-          "Operations": 110,
-          "Security": 65,
-        },
-        monthlyTrend: {
-          "Jan": 180,
-          "Feb": 195,
-          "Mar": 210,
-          "Apr": 225,
-          "May": 240,
-          "Jun": 220,
-          "Jul": 235,
-          "Aug": 250,
-          "Sep": 245,
-          "Oct": 260,
-          "Nov": 0,
-          "Dec": 0,
-        },
+        total_notices: apiData.total_notices || 0,
+        active_notices: apiData.active_notices || 0,
+        inactive_notices: apiData.inactive_notices || 0,
+        today_notices: apiData.today_notices || 0,
+        this_week_notices: apiData.this_week_notices || 0,
+        this_month_notices: apiData.this_month_notices || 0,
+        by_type: apiData.by_type || {},
+        by_category: apiData.by_category || {},
+        monthly_trend: apiData.monthly_trend || {},
+        view_stats: apiData.view_stats || { total_views: 0, unique_viewers: 0 },
+        recent_notices: apiData.recent_notices || [],
+        // Keep legacy fields for backward compatibility
+        totalAnnouncements: apiData.total_announcements || apiData.by_type?.announcement || 0,
+        totalNotifications: apiData.total_notifications || apiData.by_type?.notification || 0,
+        totalMessages: apiData.total_messages || apiData.by_type?.message || 0,
+        activeUsers: apiData.unique_viewers || apiData.view_stats?.unique_viewers || 0,
         readUnread: {
-          "Read": 1850,
-          "Unread": 490,
-          "Archived": 560,
+          Read: apiData.read_count || apiData.view_stats?.total_views || 0,
+          Unread: apiData.unread_count || Math.max(0, (apiData.total_notices || 0) - (apiData.read_count || 0)),
+          Archived: apiData.archived_count || apiData.inactive_notices || 0,
         },
-        engagementRate: {
-          "High": 320,
-          "Medium": 580,
-          "Low": 250,
-        },
-        responseTime: {
-          "< 1 hour": 450,
-          "1-4 hours": 680,
-          "4-24 hours": 520,
-          "> 24 hours": 290,
-        },
+        engagementRate: apiData.engagement_rate || {},
+        responseTime: apiData.response_time || {},
+        byDepartment: apiData.by_department || apiData.by_category || {},
+        monthlyTrend: apiData.monthly_trend || {},
       };
       
       setCommData(data);
@@ -96,12 +78,21 @@ const CommunicationAnalyticsDashboard = () => {
     }
   };
 
-  const totalCommunications = commData.totalAnnouncements + commData.totalNotifications + commData.totalMessages;
-  const readRate = (commData.readUnread.Read + commData.readUnread.Archived) > 0
+  // Calculate totals from API data
+  const totalCommunications = commData.total_notices || (commData.totalAnnouncements + commData.totalNotifications + commData.totalMessages);
+  const readRate = commData.view_stats?.total_views && commData.total_notices
+    ? Math.round((commData.view_stats.total_views / commData.total_notices) * 100)
+    : (commData.readUnread?.Read || 0) > 0
     ? Math.round((commData.readUnread.Read / (commData.readUnread.Read + commData.readUnread.Unread + commData.readUnread.Archived)) * 100)
     : 0;
 
-  // Dynamic Chart - Communication Types
+  // Dynamic Chart - Communication Types (by_type from API)
+  const typeData = Object.entries(commData.by_type || {}).map(([name, value], index) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    y: value,
+    color: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"][index % 6],
+  }));
+  
   const commTypePieChart = {
     chart: {
       type: chartType,
@@ -133,23 +124,23 @@ const CommunicationAnalyticsDashboard = () => {
       {
         name: "Count",
         colorByPoint: true,
-        data: [
-          { name: "Announcements", y: commData.totalAnnouncements, color: "#3B82F6" },
-          { name: "Notifications", y: commData.totalNotifications, color: "#10B981" },
-          { name: "Messages", y: commData.totalMessages, color: "#F59E0B" },
+        data: typeData.length > 0 ? typeData : [
+          { name: "Announcements", y: commData.totalAnnouncements || 0, color: "#3B82F6" },
+          { name: "Notifications", y: commData.totalNotifications || 0, color: "#10B981" },
+          { name: "Messages", y: commData.totalMessages || 0, color: "#F59E0B" },
         ],
       },
     ],
   };
 
-  // Pie Chart - Read/Unread Status
+  // Pie Chart - Active/Inactive Status
   const readStatusPieChart = {
     chart: {
       type: "pie",
       backgroundColor: "transparent",
     },
     title: {
-      text: "Message Read Status",
+      text: "Notice Status Distribution",
       style: { color: "#fff", fontSize: "16px" },
     },
     tooltip: {
@@ -172,25 +163,24 @@ const CommunicationAnalyticsDashboard = () => {
     },
     series: [
       {
-        name: "Messages",
+        name: "Notices",
         colorByPoint: true,
         data: [
-          { name: "Read", y: commData.readUnread.Read || 0, color: "#10B981" },
-          { name: "Unread", y: commData.readUnread.Unread || 0, color: "#EF4444" },
-          { name: "Archived", y: commData.readUnread.Archived || 0, color: "#6B7280" },
+          { name: "Active", y: commData.active_notices || 0, color: "#10B981" },
+          { name: "Inactive", y: commData.inactive_notices || 0, color: "#EF4444" },
         ],
       },
     ],
   };
 
-  // Donut Chart - Engagement Rate
+  // Donut Chart - Time Period Distribution
   const engagementDonutChart = {
     chart: {
       type: "pie",
       backgroundColor: "transparent",
     },
     title: {
-      text: "User Engagement Rate",
+      text: "Notices by Time Period",
       style: { color: "#fff", fontSize: "16px" },
     },
     tooltip: {
@@ -214,18 +204,18 @@ const CommunicationAnalyticsDashboard = () => {
     },
     series: [
       {
-        name: "Users",
+        name: "Notices",
         colorByPoint: true,
         data: [
-          { name: "High Engagement", y: commData.engagementRate?.High || 0, color: "#10B981" },
-          { name: "Medium Engagement", y: commData.engagementRate?.Medium || 0, color: "#F59E0B" },
-          { name: "Low Engagement", y: commData.engagementRate?.Low || 0, color: "#EF4444" },
+          { name: "Today", y: commData.today_notices || 0, color: "#10B981" },
+          { name: "This Week", y: commData.this_week_notices || 0, color: "#F59E0B" },
+          { name: "This Month", y: commData.this_month_notices || 0, color: "#3B82F6" },
         ],
       },
     ],
   };
 
-  // Bar Chart - Category Breakdown
+  // Bar Chart - Category Breakdown (by_category from API)
   const categoryBarChart = {
     chart: {
       type: "column",
@@ -236,7 +226,7 @@ const CommunicationAnalyticsDashboard = () => {
       style: { color: "#fff", fontSize: "16px" },
     },
     xAxis: {
-      categories: Object.keys(commData.byCategory),
+      categories: Object.keys(commData.by_category || commData.byCategory || {}),
       labels: {
         style: { color: "#fff" },
         rotation: -45,
@@ -270,23 +260,23 @@ const CommunicationAnalyticsDashboard = () => {
     series: [
       {
         name: "Communications",
-        data: Object.values(commData.byCategory),
+        data: Object.values(commData.by_category || commData.byCategory || {}),
       },
     ],
   };
 
-  // Bar Chart - Department Wise
+  // Bar Chart - By Type (horizontal bar)
   const departmentBarChart = {
     chart: {
       type: "bar",
       backgroundColor: "transparent",
     },
     title: {
-      text: "Communications by Department",
+      text: "Communications by Type",
       style: { color: "#fff", fontSize: "16px" },
     },
     xAxis: {
-      categories: Object.keys(commData.byDepartment),
+      categories: Object.keys(commData.by_type || commData.byDepartment || {}),
       labels: {
         style: { color: "#fff" },
       },
@@ -319,7 +309,7 @@ const CommunicationAnalyticsDashboard = () => {
     series: [
       {
         name: "Communications",
-        data: Object.values(commData.byDepartment),
+        data: Object.values(commData.by_type || commData.byDepartment || {}),
       },
     ],
   };
@@ -335,7 +325,7 @@ const CommunicationAnalyticsDashboard = () => {
       style: { color: "#fff", fontSize: "16px" },
     },
     xAxis: {
-      categories: Object.keys(commData.monthlyTrend),
+      categories: Object.keys(commData.monthly_trend || commData.monthlyTrend || {}),
       labels: {
         style: { color: "#fff" },
       },
@@ -363,31 +353,31 @@ const CommunicationAnalyticsDashboard = () => {
     series: [
       {
         name: "Total Communications",
-        data: Object.values(commData.monthlyTrend),
+        data: Object.values(commData.monthly_trend || commData.monthlyTrend || {}),
         color: "#3B82F6",
       },
     ],
   };
 
-  // Column Chart - Response Time
+  // Column Chart - View Statistics
   const responseTimeChart = {
     chart: {
       type: "column",
       backgroundColor: "transparent",
     },
     title: {
-      text: "Response Time Distribution",
+      text: "View Statistics",
       style: { color: "#fff", fontSize: "16px" },
     },
     xAxis: {
-      categories: Object.keys(commData.responseTime || {}),
+      categories: ["Total Views", "Unique Viewers"],
       labels: {
         style: { color: "#fff" },
       },
     },
     yAxis: {
       title: {
-        text: "Number of Responses",
+        text: "Count",
         style: { color: "#fff" },
       },
       labels: {
@@ -398,7 +388,7 @@ const CommunicationAnalyticsDashboard = () => {
       enabled: false,
     },
     tooltip: {
-      pointFormat: "Responses: <b>{point.y}</b>",
+      pointFormat: "Count: <b>{point.y}</b>",
     },
     plotOptions: {
       column: {
@@ -417,8 +407,11 @@ const CommunicationAnalyticsDashboard = () => {
     },
     series: [
       {
-        name: "Responses",
-        data: Object.values(commData.responseTime || {}),
+        name: "Views",
+        data: [
+          commData.view_stats?.total_views || 0,
+          commData.view_stats?.unique_viewers || 0,
+        ],
       },
     ],
   };
@@ -437,34 +430,34 @@ const CommunicationAnalyticsDashboard = () => {
       <div className="grid md:grid-cols-4 gap-5">
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-medium">Total Communications</h3>
+            <h3 className="text-lg font-medium">Total Notices</h3>
             <FaBullhorn className="text-3xl opacity-80" />
           </div>
           <p className="text-4xl font-bold my-2">{totalCommunications}</p>
-          <p className="text-sm opacity-80">All communications sent</p>
+          <p className="text-sm opacity-80">All notices sent</p>
         </div>
         <div className="bg-gradient-to-br from-green-600 to-green-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-medium">Announcements</h3>
-            <FaBullhorn className="text-3xl opacity-80" />
+            <h3 className="text-lg font-medium">Active Notices</h3>
+            <FaEye className="text-3xl opacity-80" />
           </div>
-          <p className="text-4xl font-bold my-2">{commData.totalAnnouncements}</p>
-          <p className="text-sm opacity-80">Total announcements</p>
+          <p className="text-4xl font-bold my-2">{commData.active_notices || 0}</p>
+          <p className="text-sm opacity-80">Currently active</p>
         </div>
         <div className="bg-gradient-to-br from-orange-600 to-orange-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-medium">Notifications</h3>
-            <FaEnvelope className="text-3xl opacity-80" />
+            <h3 className="text-lg font-medium">Inactive Notices</h3>
+            <FaEyeSlash className="text-3xl opacity-80" />
           </div>
-          <p className="text-4xl font-bold my-2">{commData.totalNotifications}</p>
-          <p className="text-sm opacity-80">Total notifications</p>
+          <p className="text-4xl font-bold my-2">{commData.inactive_notices || 0}</p>
+          <p className="text-sm opacity-80">Archived/Disabled</p>
         </div>
         <div className="bg-gradient-to-br from-purple-600 to-purple-700 shadow-custom-all-sides border py-4 px-5 rounded-md flex flex-col text-white">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-medium">Active Users</h3>
+            <h3 className="text-lg font-medium">Unique Viewers</h3>
             <FaUsers className="text-3xl opacity-80" />
           </div>
-          <p className="text-4xl font-bold my-2">{commData.activeUsers}</p>
+          <p className="text-4xl font-bold my-2">{commData.view_stats?.unique_viewers || 0}</p>
           <p className="text-sm opacity-80">Engaged users</p>
         </div>
       </div>
@@ -474,37 +467,37 @@ const CommunicationAnalyticsDashboard = () => {
         <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-80">Messages</p>
-              <p className="text-3xl font-bold my-1">{commData.totalMessages}</p>
+              <p className="text-sm opacity-80">Today&apos;s Notices</p>
+              <p className="text-3xl font-bold my-1">{commData.today_notices || 0}</p>
             </div>
-            <FaEnvelope className="text-2xl text-blue-400" />
+            <FaCalendarAlt className="text-2xl text-blue-400" />
           </div>
         </div>
         <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-80">Read Rate</p>
-              <p className="text-3xl font-bold my-1">{readRate}%</p>
+              <p className="text-sm opacity-80">This Week</p>
+              <p className="text-3xl font-bold my-1">{commData.this_week_notices || 0}</p>
             </div>
-            <FaChartLine className="text-2xl text-green-400" />
+            <FaClock className="text-2xl text-green-400" />
           </div>
         </div>
         <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-80">Unread</p>
-              <p className="text-3xl font-bold my-1">{commData.readUnread.Unread || 0}</p>
+              <p className="text-sm opacity-80">This Month</p>
+              <p className="text-3xl font-bold my-1">{commData.this_month_notices || 0}</p>
             </div>
-            <div className="text-2xl text-red-400">📧</div>
+            <FaCalendarAlt className="text-2xl text-orange-400" />
           </div>
         </div>
         <div className="bg-gray-700 shadow-custom-all-sides border py-3 px-4 rounded-md text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-80">Archived</p>
-              <p className="text-3xl font-bold my-1">{commData.readUnread.Archived || 0}</p>
+              <p className="text-sm opacity-80">Total Views</p>
+              <p className="text-3xl font-bold my-1">{commData.view_stats?.total_views || 0}</p>
             </div>
-            <div className="text-2xl text-gray-400">📁</div>
+            <FaEye className="text-2xl text-purple-400" />
           </div>
         </div>
       </div>
@@ -541,7 +534,7 @@ const CommunicationAnalyticsDashboard = () => {
                 : "bg-gray-800 text-gray-300 hover:bg-gray-700"
             }`}
           >
-            📧 Read Status
+            📧 Active/Inactive
           </button>
           <button
             onClick={() => setSelectedChart("engagement")}
@@ -551,7 +544,7 @@ const CommunicationAnalyticsDashboard = () => {
                 : "bg-gray-800 text-gray-300 hover:bg-gray-700"
             }`}
           >
-            📈 User Engagement
+            📈 Time Period
           </button>
           <button
             onClick={() => setSelectedChart("category")}
@@ -571,7 +564,7 @@ const CommunicationAnalyticsDashboard = () => {
                 : "bg-gray-800 text-gray-300 hover:bg-gray-700"
             }`}
           >
-            🏢 By Department
+            🏢 By Type
           </button>
           <button
             onClick={() => setSelectedChart("monthly")}
