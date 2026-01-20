@@ -822,7 +822,7 @@ function App() {
 
   return (
     <>
-      <Router>
+      {/* <Router> */}
         <Toaster />
         {/* <Navbar/> */}
         <Routes>
@@ -7312,7 +7312,7 @@ function App() {
 
         </Routes>
         <Footer />
-      </Router>
+      {/* </Router> */}
       <ToastContainer
         position="top-right"
         autoClose={4000}
