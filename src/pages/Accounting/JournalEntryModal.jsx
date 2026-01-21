@@ -33,15 +33,29 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
         entry.lines ||
         [];
       const normalizedLines = rawLines.length
-        ? rawLines.map((l) => ({
-            ledger_id: l.ledger_id || l.ledger?.id || l.ledger?.ledger_id || "",
-            debit: parseFloat(
-              l.debit ?? l.amount_debit ?? l.debit_amount ?? 0
-            ) || 0,
-            credit: parseFloat(
-              l.credit ?? l.amount_credit ?? l.credit_amount ?? 0
-            ) || 0,
-          }))
+        ? rawLines.map((l) => {
+            // Handle API format with entry_side and amount
+            let debitValue = 0;
+            let creditValue = 0;
+            
+            if (l.entry_side === "debit") {
+              debitValue = l.amount ?? 0;
+            } else if (l.entry_side === "credit") {
+              creditValue = l.amount ?? 0;
+            } else {
+              // Fallback for other formats
+              debitValue = l.debit ?? l.amount_debit ?? l.debit_amount ?? 0;
+              creditValue = l.credit ?? l.amount_credit ?? l.credit_amount ?? 0;
+            }
+            
+            console.log('[JournalEntryModal] Line data:', { l, debitValue, creditValue });
+            return {
+              id: l.id, // Preserve ID for updates
+              ledger_id: String(l.ledger_id || l.ledger?.id || l.ledger?.ledger_id || ""),
+              debit: Number(debitValue) || 0,
+              credit: Number(creditValue) || 0,
+            };
+          })
         : [
             { ledger_id: "", debit: 0, credit: 0 },
             { ledger_id: "", debit: 0, credit: 0 },
@@ -53,9 +67,9 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
           new Date().toISOString().split("T")[0],
         // reference: entry.reference || entry.entry_number || "",
         invoice_number: entry.invoice_number || "",
-        invoice_date: entry.invoice_date?.split("T")[0] || "",
-        expense_month: entry.expense_month || "",
-        expense_year: entry.expense_year || "",
+        invoice_date: entry.invoice_date ? entry.invoice_date.split("T")[0] : "",
+        expense_month: entry.expense_month ? String(entry.expense_month) : "",
+        expense_year: entry.expense_year ? String(entry.expense_year) : "",
         description: entry.description || entry.narration || "",
         journal_lines: normalizedLines,
       });
@@ -80,7 +94,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
   const handleEntryChange = (index, field, value) => {
     const lines = formData.journal_lines || [];
     const newLines = [...lines];
-    newLines[index][field] = value;
+    // Keep as string if not empty, convert to number for calculations
+    newLines[index][field] = value === "" ? "" : value;
     setFormData((prev) => ({ ...prev, journal_lines: newLines }));
   };
 
@@ -96,10 +111,18 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
   const removeEntry = (index) => {
     const lines = formData.journal_lines || [];
-    if (lines.length <= 2) return;
+    if (lines.filter(l => !l._destroy).length <= 2) return;
 
-    const newLines = lines.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, journal_lines: newLines }));
+    const line = lines[index];
+    // If line has an ID, mark for deletion; otherwise just remove from array
+    if (line.id) {
+      const newLines = [...lines];
+      newLines[index] = { ...line, _destroy: true };
+      setFormData((prev) => ({ ...prev, journal_lines: newLines }));
+    } else {
+      const newLines = lines.filter((_, i) => i !== index);
+      setFormData((prev) => ({ ...prev, journal_lines: newLines }));
+    }
   };
 
   // ✅ Calculate totals
@@ -108,12 +131,12 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
     const lines = formData.journal_lines || formData.entries || [];
     
     const totalDebit = lines.reduce(
-      (sum, line) => sum + parseFloat(line?.debit || 0),
+      (sum, line) => sum + (parseFloat(line?.debit) || 0),
       0
     );
 
     const totalCredit = lines.reduce(
-      (sum, line) => sum + parseFloat(line?.credit || 0),
+      (sum, line) => sum + (parseFloat(line?.credit) || 0),
       0
     );
 
@@ -141,11 +164,18 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
         expense_month: formData.expense_month,
         expense_year: formData.expense_year,
         description: formData.description,
-        entry_lines_attributes: (formData.journal_lines || []).map((l) => ({
-          ledger_id: l.ledger_id,
-          debit: Number(l.debit || 0),
-          credit: Number(l.credit || 0),
-        })),
+        entry_lines_attributes: (formData.journal_lines || []).map((l) => {
+          const line = {
+            ledger_id: l.ledger_id,
+            debit: Number(l.debit || 0),
+            credit: Number(l.credit || 0),
+          };
+          // Include ID for updates
+          if (l.id) line.id = l.id;
+          // Include _destroy for deletions
+          if (l._destroy) line._destroy = true;
+          return line;
+        }),
       },
     };
     console.log("[JournalEntryModal] Save payload:", payload);
@@ -323,13 +353,16 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                 </thead>
 
                 <tbody>
-                  {formData.journal_lines.map((line, index) => (
-                    <tr key={index} className="border-t">
+                  {formData.journal_lines.filter(line => !line._destroy).map((line, index) => {
+                    // Get the actual index in the full array
+                    const actualIndex = formData.journal_lines.indexOf(line);
+                    return (
+                    <tr key={line.id || index} className="border-t">
                       <td className="px-4 py-2">
                         <select
                           value={line.ledger_id}
                           onChange={(e) =>
-                            handleEntryChange(index, "ledger_id", e.target.value)
+                            handleEntryChange(actualIndex, "ledger_id", e.target.value)
                           }
                           className="w-full px-2 py-1 border rounded"
                           required
@@ -346,34 +379,36 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                       <td className="px-4 py-2">
                         <input
                           type="number"
-                          value={line.debit}
+                          value={line.debit === 0 ? "" : line.debit}
                           onChange={(e) =>
-                            handleEntryChange(index, "debit", e.target.value)
+                            handleEntryChange(actualIndex, "debit", e.target.value)
                           }
                           className="w-full px-2 py-1 border rounded"
                           min="0"
                           step="0.01"
+                          placeholder="0.00"
                         />
                       </td>
 
                       <td className="px-4 py-2">
                         <input
                           type="number"
-                          value={line.credit}
+                          value={line.credit === 0 ? "" : line.credit}
                           onChange={(e) =>
-                            handleEntryChange(index, "credit", e.target.value)
+                            handleEntryChange(actualIndex, "credit", e.target.value)
                           }
                           className="w-full px-2 py-1 border rounded"
                           min="0"
                           step="0.01"
+                          placeholder="0.00"
                         />
                       </td>
 
                       <td className="px-4 py-2">
-                        {formData.journal_lines.length > 2 && (
+                        {formData.journal_lines.filter(l => !l._destroy).length > 2 && (
                           <button
                             type="button"
-                            onClick={() => removeEntry(index)}
+                            onClick={() => removeEntry(actualIndex)}
                             className="text-red-600 text-sm"
                           >
                             Remove
@@ -381,7 +416,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                         )}
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
 
                   {/* Totals Row */}
                   <tr className="border-t bg-gray-50 font-semibold">
