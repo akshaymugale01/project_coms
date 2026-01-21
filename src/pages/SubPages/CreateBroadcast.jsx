@@ -161,7 +161,7 @@ const CreateBroadcast = () => {
     }
   };
 
-   const handleGroupChange = (event) => {
+  const handleGroupChange = (event) => {
     const groupId = parseInt(event.target.value, 10) || 0;
     const selectedGroupObj = groups.find((group) => group.id === groupId);
 
@@ -435,25 +435,22 @@ const CreateBroadcast = () => {
                 <div className="flex flex-col items-center justify-center">
                   <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                     <h2
-                      className={`p-1 ${
-                        share === "all" && "bg-black text-white"
-                      } rounded-full px-6 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${share === "all" && "bg-black text-white"
+                        } rounded-full px-6 cursor-pointer border-2 border-black`}
                       onClick={() => setShare("all")}
                     >
                       All
                     </h2>
                     <h2
-                      className={`p-1 ${
-                        share === "individual" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${share === "individual" && "bg-black text-white"
+                        } rounded-full px-4 cursor-pointer border-2 border-black`}
                       onClick={() => setShare("individual")}
                     >
                       Individuals
                     </h2>
                     <h2
-                      className={`p-1 ${
-                        share === "groups" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${share === "groups" && "bg-black text-white"
+                        } rounded-full px-4 cursor-pointer border-2 border-black`}
                       onClick={() => setShare("groups")}
                     >
                       Groups
@@ -588,11 +585,12 @@ const CreateBroadcast = () => {
               </div> */}
               <div className="flex justify-center mt-10 my-5">
                 <button
-                  style={{ background: themeColor }}
-                  onClick={handlePreview}
-                  className="px-4 text-white p-2 rounded-md flex items-center gap-2"
+                  className={`${submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
+                    } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-400`}
+                  onClick={handleCreateEvent}
+                  disabled={submitting}
                 >
-                  <FaCheck /> Submit
+                  <FaCheck /> {submitting ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </div>

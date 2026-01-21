@@ -43,6 +43,7 @@ const CreateEvent = () => {
   const [units, setUnits] = useState([]);
   const [selectedOption, setSelectedOption] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     site_id: siteId,
     created_by: userID,
@@ -103,7 +104,7 @@ const CreateEvent = () => {
     const filtered = members.filter((member) => {
       // Check if the user belongs to the selected building
       const buildingMatch =
-        !selectedUnit || Number(member.building_id ?? member.building?.id) ===  Number(selectedUnit);
+        !selectedUnit || Number(member.building_id ?? member.building?.id) === Number(selectedUnit);
 
       console.log(
         "building_id type:",
@@ -276,6 +277,9 @@ const CreateEvent = () => {
     if (formData.event_name === "" || formData.start_date_time === "") {
       return toast.error("All fields are Required");
     }
+    if (submitting) return; // Prevent multiple submissions
+
+    setSubmitting(true);
     try {
       toast.loading("Creating Event Please Wait!");
       const formDataSend = new FormData();
@@ -326,6 +330,7 @@ const CreateEvent = () => {
     } catch (error) {
       console.log(error);
       toast.dismiss();
+      setSubmitting(false);
     }
   };
 
@@ -522,25 +527,22 @@ const CreateEvent = () => {
               <div className="flex flex-col items-center justify-center">
                 <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                   <h2
-                    className={`p-1 ${
-                      share === "all" && "bg-black text-white"
-                    } rounded-full px-6 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "all" && "bg-black text-white"
+                      } rounded-full px-6 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("all")}
                   >
                     All
                   </h2>
                   <h2
-                    className={`p-1 ${
-                      share === "individual" && "bg-black text-white"
-                    } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "individual" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("individual")}
                   >
                     Individuals
                   </h2>
                   <h2
-                    className={`p-1 ${
-                      share === "groups" && "bg-black text-white"
-                    } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${share === "groups" && "bg-black text-white"
+                      } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("groups")}
                   >
                     Groups
@@ -697,11 +699,12 @@ const CreateEvent = () => {
             </div>
             <div className="flex justify-center mt-10 my-5">
               <button
-                style={{ background: themeColor }}
-                className="bg-black text-white p-2 rounded-md hover:bg-white  flex items-center gap-2 px-4"
+                className={`${submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
+                  } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-400`}
                 onClick={handleCreateEvent}
+                disabled={submitting}
               >
-                <FaCheck /> Submit
+                <FaCheck /> {submitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </div>
