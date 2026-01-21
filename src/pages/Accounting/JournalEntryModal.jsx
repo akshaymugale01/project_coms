@@ -7,13 +7,15 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
   // ✅ Correct payload structure
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split("T")[0],
-    reference: "",
+    // reference: "",
     invoice_number: "",
     invoice_date: "",
+    expense_month: "",
+    expense_year: "",
     description: "",
     journal_lines: [
-      { ledger_id: "", debit: 0, credit: 0, description: "" },
-      { ledger_id: "", debit: 0, credit: 0, description: "" },
+      { ledger_id: "", debit: 0, credit: 0 },
+      { ledger_id: "", debit: 0, credit: 0 },
     ],
   });
 
@@ -39,20 +41,21 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
             credit: parseFloat(
               l.credit ?? l.amount_credit ?? l.credit_amount ?? 0
             ) || 0,
-            description: l.description || l.narration || "",
           }))
         : [
-            { ledger_id: "", debit: 0, credit: 0, description: "" },
-            { ledger_id: "", debit: 0, credit: 0, description: "" },
+            { ledger_id: "", debit: 0, credit: 0 },
+            { ledger_id: "", debit: 0, credit: 0 },
           ];
       setFormData({
         entry_date:
           entry.entry_date?.split("T")[0] ||
           entry.date?.split("T")[0] ||
           new Date().toISOString().split("T")[0],
-        reference: entry.reference || entry.entry_number || "",
+        // reference: entry.reference || entry.entry_number || "",
         invoice_number: entry.invoice_number || "",
         invoice_date: entry.invoice_date?.split("T")[0] || "",
+        expense_month: entry.expense_month || "",
+        expense_year: entry.expense_year || "",
         description: entry.description || entry.narration || "",
         journal_lines: normalizedLines,
       });
@@ -86,7 +89,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
       ...prev,
       journal_lines: [
         ...(prev.journal_lines || []),
-        { ledger_id: "", debit: 0, credit: 0, description: "" },
+        { ledger_id: "", debit: 0, credit: 0 },
       ],
     }));
   };
@@ -132,13 +135,16 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
     const payload = {
       journal_entry: {
         entry_date: formData.entry_date,
-        reference: formData.reference,        invoice_number: formData.invoice_number,
-        invoice_date: formData.invoice_date,        description: formData.description,
+        // reference: formData.reference,
+        invoice_number: formData.invoice_number,
+        invoice_date: formData.invoice_date,
+        expense_month: formData.expense_month,
+        expense_year: formData.expense_year,
+        description: formData.description,
         entry_lines_attributes: (formData.journal_lines || []).map((l) => ({
           ledger_id: l.ledger_id,
           debit: Number(l.debit || 0),
           credit: Number(l.credit || 0),
-          description: l.description || "",
         })),
       },
     };
@@ -163,7 +169,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
         <form onSubmit={handleSubmit}>
           {/* Top fields */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Entry Date *
@@ -178,7 +184,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Reference *
               </label>
@@ -190,11 +196,11 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                 required
                 className="w-full px-3 py-2 border rounded"
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Invoice fields */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-4 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Invoice Number
@@ -219,6 +225,54 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Expense Month
+              </label>
+              <select
+                name="expense_month"
+                value={formData.expense_month}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded"
+              >
+                <option value="">Select Month</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Expense Year
+              </label>
+              <select
+                name="expense_year"
+                value={formData.expense_year}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded"
+              >
+                <option value="">Select Year</option>
+                {Array.from({ length: 10 }, (_, i) => {
+                  const year = new Date().getFullYear() - 2 + i;
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
           </div>
 
@@ -257,9 +311,6 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                       Ledger
                     </th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
-                      Description
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
                       Debit
                     </th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">
@@ -290,17 +341,6 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                             </option>
                           ))}
                         </select>
-                      </td>
-
-                      <td className="px-4 py-2">
-                        <input
-                          type="text"
-                          value={line.description}
-                          onChange={(e) =>
-                            handleEntryChange(index, "description", e.target.value)
-                          }
-                          className="w-full px-2 py-1 border rounded"
-                        />
                       </td>
 
                       <td className="px-4 py-2">
@@ -345,7 +385,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
                   {/* Totals Row */}
                   <tr className="border-t bg-gray-50 font-semibold">
-                    <td colSpan="2" className="px-4 py-2 text-right">
+                    <td className="px-4 py-2 text-right">
                       Totals:
                     </td>
                     <td className="px-4 py-2">₹{totalDebit.toFixed(2)}</td>

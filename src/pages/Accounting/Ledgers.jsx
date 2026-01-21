@@ -241,9 +241,9 @@ const Ledgers = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Unit
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Code
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Opening Balance
                 </th>
@@ -271,9 +271,9 @@ const Ledgers = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {ledger.unit?.name || <span className="text-gray-400 text-xs">Organization-wide</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       {ledger.code || "-"}
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap">
                      ₹{parseFloat(ledger.opening_balance || 0).toFixed(2)}
                     </td>

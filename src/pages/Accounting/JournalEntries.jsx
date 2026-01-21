@@ -289,6 +289,25 @@ const JournalEntries = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
+  // Month mapping
+  const getMonthName = (monthValue) => {
+    if (!monthValue) return "-";
+    
+    // If already a month name, return it
+    if (typeof monthValue === 'string' && isNaN(monthValue)) {
+      return monthValue;
+    }
+    
+    // Convert number to month name
+    const monthMap = {
+      1: "January", 2: "February", 3: "March", 4: "April",
+      5: "May", 6: "June", 7: "July", 8: "August",
+      9: "September", 10: "October", 11: "November", 12: "December"
+    };
+    
+    return monthMap[parseInt(monthValue)] || monthValue;
+  };
+
   useEffect(() => {
     fetchJournalEntries();
   }, []);
@@ -446,8 +465,12 @@ const JournalEntries = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3">Reference</th>
+                {/* <th className="px-6 py-3">Reference</th> */}
                 <th className="px-6 py-3">Date</th>
+                <th className="px-6 py-3">Invoice Number</th>
+                <th className="px-6 py-3">Invoice Date</th>
+                <th className="px-6 py-3">Expense Month</th>
+                <th className="px-6 py-3">Expense Year</th>
                 <th className="px-6 py-3">Description</th>
                 <th className="px-6 py-3">Total Amount</th>
                 <th className="px-6 py-3">Status</th>
@@ -458,19 +481,35 @@ const JournalEntries = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-500">
+                  <td colSpan="10" className="text-center py-4 text-gray-500">
                     No journal entries found
                   </td>
                 </tr>
               ) : (
                 filteredEntries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">
+                    {/* <td className="px-6 py-4 whitespace-nowrap font-medium">
                       {entry.reference || entry.entry_number || "-"}
-                    </td>
+                    </td> */}
 
                     <td className="px-6 py-4">
                       {new Date(entry.entry_date).toLocaleDateString()}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {entry.invoice_number || "-"}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {entry.invoice_date ? new Date(entry.invoice_date).toLocaleDateString() : "-"}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {getMonthName(entry.expense_month)}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {entry.expense_year || "-"}
                     </td>
 
                     <td className="px-6 py-4 text-sm text-gray-500">
