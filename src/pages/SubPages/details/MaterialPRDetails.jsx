@@ -373,26 +373,18 @@ const MaterialPRDetails = () => {
         </h2>
         <div className="my-5  text-sm items-center font-medium grid gap-4 md:grid-cols-2">
           <div className="grid grid-cols-2 items-center">
-            <p>LOI No. :</p>
-            <p className="text-sm font-normal"> {details.id}</p>
+            <p>PR No. :</p>
+            <p className="text-sm font-normal">{details.pr_no}</p>
           </div>
           <div className="grid grid-cols-2 items-center">
             <p>Reference No. :</p>
             <p className="text-sm font-normal">{details.reference}</p>
           </div>
           <div className="grid grid-cols-2 items-center">
-            <p>LOI Date :</p>
+            <p>PR Date :</p>
             <p className="text-sm font-normal">{details.loi_date}</p>
           </div>
-          {/* <div className="grid grid-cols-2 items-center">
-            <p>ID</p>
-            <p className="text-sm font-normal">: 6088</p>
-          </div> */}
-          {/* <div className="grid grid-cols-2 items-center">
-            <p>Plant Detail</p>
-            <p className="text-sm font-normal">: 1050-S150-S150</p>
-          </div> */}
-          <div className="grid grid-cols-2 items-center">
+                    <div className="grid grid-cols-2 items-center">
             <p>Supplier :</p>
             <p className="text-sm font-normal">{details?.supplier?.company_name}</p>
           </div>
@@ -426,19 +418,64 @@ const MaterialPRDetails = () => {
             <p className="text-sm font-normal">{details?.supplier?.gst}</p>
           </div>
           <div className="grid grid-cols-2 items-center">
-            <p>QC (%)</p>
+            <p>QC (%) :</p>
             <p className="text-sm font-normal">{details.qc}%</p>
           </div>
           <div className="grid grid-cols-2 items-center">
-            <p>Advance Amount</p>
-            <p className="text-sm font-normal">{details.advance_amount}</p>
+            <p>Retention (%) :</p>
+            <p className="text-sm font-normal">{details.retention}%</p>
+          </div>
+          <div className="grid grid-cols-2 items-center">
+            <p>TDS (%) :</p>
+            <p className="text-sm font-normal">{details.tds || "N/A"}</p>
+          </div>
+          <div className="grid grid-cols-2 items-center">
+            <p>Transportation Amount :</p>
+            <p className="text-sm font-normal">{details.transportation_amount || "N/A"}</p>
+          </div>
+          <div className="grid grid-cols-2 items-center">
+            <p>Payment Tenure :</p>
+            <p className="text-sm font-normal">{details.payment_tenure ? `${details.payment_tenure} Days` : "N/A"}</p>
+          </div>
+          <div className="grid grid-cols-2 items-center">
+            <p>Advance Amount :</p>
+            <p className="text-sm font-normal">{details.advance_amount || "N/A"}</p>
+          </div>
+          <div className="grid grid-cols-2 items-center">
+            <p>Related To :</p>
+            <p className="text-sm font-normal">{details.related_to || "N/A"}</p>
+          </div>
+          <div className="grid grid-cols-2 items-center">
+            <p>Approval Status :</p>
+            <p className={`text-sm font-medium px-2 py-1 rounded-md inline-block ${details.is_approved ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+              {details.is_approved ? "Approved" : "Pending"}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 items-center">
+            <p>Created By :</p>
+            <p className="text-sm font-normal">
+              {details.created_by_name ? `${details.created_by_name.firstname || ""} ${details.created_by_name.lastname || ""}`.trim() : "N/A"}
+            </p>
+          </div>
+          <div className="grid items-center gap-2">
+            <p>Billing Address : </p>
+            {details.billing_address &&
+              details.billing_address.building_name && (
+                <p className="text-sm font-normal bg-gray-100 rounded-md p-2">
+                  {details.billing_address.address_title} - {details.billing_address.building_name},{" "}
+                  {details.billing_address.street_name},{" "}
+                  {details.billing_address.city},{" "}
+                  {details.billing_address.state},{" "}
+                  {details.billing_address.pin_code}.
+                </p>
+              )}
           </div>
           <div className="grid items-center gap-2">
             <p>Delivery Address : </p>
             {details.delivery_address &&
               details.delivery_address.building_name && (
                 <p className="text-sm font-normal bg-gray-100 rounded-md p-2">
-                  {details.delivery_address.building_name},{" "}
+                  {details.delivery_address.address_title} - {details.delivery_address.building_name},{" "}
                   {details.delivery_address.street_name},{" "}
                   {details.delivery_address.city},{" "}
                   {details.delivery_address.state},{" "}

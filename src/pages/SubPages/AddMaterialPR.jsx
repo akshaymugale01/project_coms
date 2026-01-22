@@ -8,6 +8,8 @@ import {
   getVendors,
   postLOI,
   postLOIItems,
+  getLOI,
+  getLOIDetails,
 } from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +23,11 @@ const AddMatertialPR = () => {
   const [addresses, setAddresses] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [units, setUnits] = useState([]);
+  const [loiList, setLoiList] = useState([]);
+  const [selectedLoiId, setSelectedLoiId] = useState("");
+  const [loadingLoi, setLoadingLoi] = useState(false);
+  const [loiPreview, setLoiPreview] = useState(null);
+  const [showLoiPreview, setShowLoiPreview] = useState(false);
   const [activities, setActivities] = useState([
     {
       inventory: "",
@@ -206,6 +213,156 @@ const AddMatertialPR = () => {
     fetchSuppliers();
     fetchInventory();
   }, []);
+
+  // Fetch all LOIs for dropdown
+  useEffect(() => {
+    const fetchLoiList = async () => {
+      try {
+        const loiResp = await getLOI();
+        const loiData = loiResp?.data || [];
+        setLoiList(Array.isArray(loiData) ? loiData : []);
+      } catch (error) {
+        console.log(error);
+        setLoiList([]);
+      }
+    };
+    fetchLoiList();
+  }, []);
+
+  // Helper function to format date for input fields (YYYY-MM-DD)
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0];
+  };
+
+  // Fetch LOI details when an LOI ID is selected
+  const handleLoiSelect = async (e) => {
+    const loiId = e.target.value;
+    setSelectedLoiId(loiId);
+
+    if (!loiId) {
+      // Reset form to empty state when LOI is deselected
+      setFormData({
+        vendorId: "",
+        type: "PR",
+        date: "",
+        billingAddress: "",
+        deliveryAddress: "",
+        transportation: "",
+        retention: "",
+        tds: "",
+        qc: "",
+        paymentTenure: "",
+        terms: "",
+        advanceAmount: "",
+        relatedTo: "",
+        referenceNo: "",
+        approved: false,
+        attachments: []
+      });
+      setActivities([
+        {
+          inventory: "",
+          SACCode: "",
+          quantity: "",
+          unit: "",
+          expectedDate: "",
+          rate: "",
+          cgstRate: "",
+          cgstAmount: "",
+          sgstRate: "",
+          sgstAmount: "",
+          igstRate: "",
+          igstAmount: "",
+          TCSRate: "",
+          TCSAmount: "",
+          TaxAmount: "",
+          Amount: "",
+          Total: "",
+        },
+      ]);
+      setLoiPreview(null);
+      setShowLoiPreview(false);
+      return;
+    }
+
+    setLoadingLoi(true);
+    try {
+      const loiResp = await getLOIDetails(loiId);
+      const loiData = loiResp?.data;
+
+      if (loiData) {
+        // Populate formData with LOI details
+        setFormData({
+          vendorId: loiData.vendor_id || "",
+          type: "PR",
+          date: formatDateForInput(loiData.loi_date),
+          billingAddress: loiData.billing_address_id || "",
+          deliveryAddress: loiData.delivery_address_id || "",
+          transportation: loiData.transportation_amount || "",
+          retention: loiData.retention || "",
+          tds: loiData.tds || "",
+          qc: loiData.qc || "",
+          paymentTenure: loiData.payment_tenure || "",
+          terms: loiData.terms || "",
+          advanceAmount: loiData.advance_amount || "",
+          relatedTo: loiData.related_to || "",
+          referenceNo: loiData.reference || "",
+          approved: loiData.is_approved || false,
+          attachments: []
+        });
+
+        // Populate activities with LOI items
+        if (loiData.loi_items && loiData.loi_items.length > 0) {
+          const mappedActivities = loiData.loi_items.map((item) => ({
+            inventory: item.item_id || "",
+            SACCode: item.sac_code || "",
+            quantity: item.quantity || "",
+            unit: item.standard_unit_id || "",
+            expectedDate: formatDateForInput(item.expected_date),
+            rate: item.rate || "",
+            cgstRate: item.csgt_rate || "",
+            cgstAmount: item.csgt_amt || "",
+            sgstRate: item.sgst_rate || "",
+            sgstAmount: item.sgst_amt || "",
+            igstRate: item.igst_rate || "",
+            igstAmount: item.igst_amt || "",
+            TCSRate: item.tcs_rate || "",
+            TCSAmount: item.tcs_amt || "",
+            TaxAmount: item.tax_amt || "",
+            Amount: item.amount || "",
+            Total: item.total_amount || "",
+          }));
+          setActivities(mappedActivities);
+        }
+
+        // Store LOI preview data for display
+        setLoiPreview({
+          prNo: loiData.pr_no,
+          loiType: loiData.loi_type,
+          loiDate: loiData.loi_date,
+          vendorName: loiData.vendor_name,
+          siteName: loiData.site_name,
+          createdBy: loiData.created_by_name
+            ? `${loiData.created_by_name.firstname || ""} ${loiData.created_by_name.lastname || ""}`.trim()
+            : null,
+          supplier: loiData.supplier,
+          billingAddress: loiData.billing_address,
+          deliveryAddress: loiData.delivery_address,
+          loiItems: loiData.loi_items,
+        });
+        setShowLoiPreview(true);
+
+        toast.success("LOI data loaded successfully");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to fetch LOI details");
+    } finally {
+      setLoadingLoi(false);
+    }
+  };
   const siteId = getItemInLocalStorage("SITEID");
   const userId = getItemInLocalStorage("UserId");
   const navigate = useNavigate();
@@ -241,6 +398,9 @@ const AddMatertialPR = () => {
       formData.deliveryAddress
     );
     sendData.append("loi_detail[terms]", formData.terms);
+    if (selectedLoiId) {
+      sendData.append("loi_detail[self_id]", selectedLoiId);
+    }
     activities.forEach((item, index) => {
       sendData.append(`loi_detail[loi_items][][item_id]`, item.inventory);
       sendData.append(`loi_detail[loi_items][][sac_code]`, item.SACCode);
@@ -298,6 +458,128 @@ const AddMatertialPR = () => {
             New Material PR
           </h2>
           <div className="md:mx-20 my-5 mb-10 md:border border-gray-400 md:p-5 md:px-10 rounded-lg sm:shadow-xl">
+            {/* Import from LOI Section */}
+            <div className="w-full md:mx-3 my-5 p-5 md:shadow-lg rounded-lg md:border border-gray-300 bg-blue-50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="col-span-1">
+                  <label
+                    className="block text-gray-700 font-bold mb-2"
+                    htmlFor="loi-select"
+                  >
+                    Import from LOI (Optional)
+                  </label>
+                  <select
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="loi-select"
+                    value={selectedLoiId}
+                    onChange={handleLoiSelect}
+                    disabled={loadingLoi}
+                  >
+                    <option value="">Select LOI to auto-fill form</option>
+                    {loiList.map((loi) => (
+                      <option value={loi.id} key={loi.id}>
+                        {loi.pr_no || `LOI-${loi.id}`} - {loi.vendor_name || "No Vendor"}
+                      </option>
+                    ))}
+                  </select>
+                  {loadingLoi && (
+                    <p className="text-sm text-gray-500 mt-1">Loading LOI data...</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* LOI Details Preview Section */}
+            {showLoiPreview && loiPreview && (
+              <div className="w-full md:mx-3 my-5 p-5 md:shadow-lg rounded-lg md:border border-gray-300 bg-green-50">
+                <div className="mb-3">
+                  <p className="text-lg font-bold text-gray-800">
+                    LOI Selected: {loiPreview.prNo || `LOI-${selectedLoiId}`}
+                  </p>
+                </div>
+                
+                <details className="cursor-pointer">
+                  <summary className="text-md font-semibold text-gray-700 hover:text-gray-900 mb-2 list-none flex items-center select-none">
+                    <span className="inline-block mr-2 text-blue-600">▼</span>
+                    View LOI Details (click to expand/collapse)
+                  </summary>
+                  
+                  <div className="mt-4 space-y-3 pl-4 border-l-4 border-blue-400">
+                    {/* Supplier Information */}
+                    {loiPreview.supplier && (
+                      <div className="text-sm">
+                        <span className="font-semibold">Supplier:</span>{" "}
+                        {loiPreview.supplier.vendor_name || loiPreview.vendorName}
+                        {loiPreview.supplier.company_name && (
+                          <> ({loiPreview.supplier.company_name})</>
+                        )}
+                        {loiPreview.supplier.mobile && (
+                          <> - {loiPreview.supplier.mobile}</>
+                        )}
+                        {loiPreview.supplier.email && (
+                          <> - {loiPreview.supplier.email}</>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Billing Address */}
+                    {loiPreview.billingAddress && (
+                      <div className="text-sm">
+                        <span className="font-semibold">Billing:</span>{" "}
+                        {loiPreview.billingAddress.address_title || ""}
+                        {loiPreview.billingAddress.building_name && (
+                          <>, {loiPreview.billingAddress.building_name}</>
+                        )}
+                        {loiPreview.billingAddress.city && (
+                          <>, {loiPreview.billingAddress.city}</>
+                        )}
+                        {loiPreview.billingAddress.state && (
+                          <>, {loiPreview.billingAddress.state}</>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Delivery Address */}
+                    {loiPreview.deliveryAddress && (
+                      <div className="text-sm">
+                        <span className="font-semibold">Delivery:</span>{" "}
+                        {loiPreview.deliveryAddress.address_title || ""}
+                        {loiPreview.deliveryAddress.building_name && (
+                          <>, {loiPreview.deliveryAddress.building_name}</>
+                        )}
+                        {loiPreview.deliveryAddress.city && (
+                          <>, {loiPreview.deliveryAddress.city}</>
+                        )}
+                        {loiPreview.deliveryAddress.state && (
+                          <>, {loiPreview.deliveryAddress.state}</>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Additional Info */}
+                    {loiPreview.siteName && (
+                      <div className="text-sm">
+                        <span className="font-semibold">Site:</span> {loiPreview.siteName}
+                      </div>
+                    )}
+                    
+                    {loiPreview.createdBy && (
+                      <div className="text-sm">
+                        <span className="font-semibold">Created By:</span> {loiPreview.createdBy}
+                      </div>
+                    )}
+                    
+                    {loiPreview.loiDate && (
+                      <div className="text-sm">
+                        <span className="font-semibold">LOI Date:</span>{" "}
+                        {new Date(loiPreview.loiDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </details>
+              </div>
+            )}
+
             <h2 className="border-b text-center text-xl border-black mb-6 font-bold">
               SUPPLIER DETAILS
             </h2>
