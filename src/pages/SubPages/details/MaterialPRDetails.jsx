@@ -29,6 +29,8 @@ const MaterialPRDetails = () => {
         setLoiItems(loiResp.data.loi_items);
         seDetails(loiResp.data);
 
+        console.log("Supplier", loiResp.data.supplier);
+
         const totalAmount = loiResp.data.loi_items
           ? loiResp.data.loi_items.reduce(
               (sum, item) => sum + (Number(item.amount) || 0),
@@ -245,6 +247,17 @@ const MaterialPRDetails = () => {
     return filePath.split("/").pop().split("?")[0];
   };
   const domainPrefix = "https://admin.vibecopilot.ai";
+  const [statusFilter, setStatusFilter] = useState("Pending");
+
+  const statusOptions = [
+    "Pending",
+    "SiteApproval",
+    "Admin Head Approval",
+    "HO Approval",
+    "Approved",
+    "Completed"
+  ];
+
   return (
     <section className="mb-10">
       <div className="flex flex-col  md:justify-between my-5 w-full">
@@ -252,6 +265,17 @@ const MaterialPRDetails = () => {
           Material PR DETAILS
         </h2>
         <div className="flex my-2 justify-end">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="font-semibold border-2 border-black px-4 p-1 rounded-md mr-3"
+          >
+            {statusOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
           <button className="font-semibold border-2 border-black px-4 p-1 flex gap-2 items-center rounded-md">
             Clone
           </button>
@@ -268,28 +292,28 @@ const MaterialPRDetails = () => {
       </div>
       <div className="flex gap-3 item-center justify-center md:justify-between my-3 md:mx-5 flex-wrap">
         <div className="flex flex-col gap-1 justify-center md:items-center">
-          <p className="text-sm font-medium">Site Incharge Approval:</p>
+          <p className="text-sm font-medium">Project Site Approval:</p>
           <p className="bg-orange-400 px-2 text-center  py-1 rounded-md text-white text-sm">
             Pending
           </p>
           <p className="">Approval Authority</p>
         </div>
         <div className="flex flex-col gap-1 justify-center md:items-center">
-          <p className="text-sm font-medium">FM Admin Head Approval:</p>
+          <p className="text-sm font-medium">Admin Head Approval:</p>
           <p className="bg-orange-400 px-2 text-center py-1 rounded-md text-white text-sm">
             Pending
           </p>
           <p className="">Approval Authority</p>
         </div>
         <div className="flex flex-col gap-1 justify-center md:items-center">
-          <p className="text-sm font-medium">FM HOD Approval:</p>
+          <p className="text-sm font-medium">HO Approval:</p>
           <p className="bg-orange-400 px-2 items-center py-1 rounded-md text-white text-sm text-center">
             Pending
           </p>
           <p className="">Approval Authority</p>
         </div>
         <div className="flex flex-col gap-1 justify-center md:items-center">
-          <p className="text-sm font-medium">Site Accounts Team Approval:</p>
+          <p className="text-sm font-medium">Prompter Approval:</p>
           <p className="bg-orange-400 px-2 items-center py-1 rounded-md text-white text-sm text-center">
             Pending
           </p>
@@ -370,7 +394,7 @@ const MaterialPRDetails = () => {
           </div> */}
           <div className="grid grid-cols-2 items-center">
             <p>Supplier :</p>
-            <p className="text-sm font-normal">{details.vendor_name}</p>
+            <p className="text-sm font-normal">{details?.supplier?.company_name}</p>
           </div>
           {/* <div className="grid  items-center col-span-3">
             <p>Address :</p>
@@ -387,48 +411,19 @@ const MaterialPRDetails = () => {
           </div> */}
           <div className="grid grid-cols-2 items-center">
             <p>Phone</p>
-            <p className="text-sm font-normal">: NA</p>
+            <p className="text-sm font-normal">: {details?.supplier?.mobile}</p>
           </div>
           <div className="grid grid-cols-2 items-center">
             <p>Address</p>
-            <p className="text-sm font-normal">NA</p>
+            <p className="text-sm font-normal">{details?.supplier?.address}</p>
           </div>
           <div className="grid grid-cols-2 items-center">
             <p>Email</p>
-            <p className="text-sm font-normal">NA</p>
+            <p className="text-sm font-normal">{details?.supplier?.email}</p>
           </div>
           <div className="grid grid-cols-2 items-center">
             <p>GST</p>
-            <p className="text-sm font-normal">: NA</p>
-          </div>
-          <div className="grid grid-cols-2 items-center">
-            <p>PAN</p>
-            <p className="text-sm font-normal">NA</p>
-          </div>
-
-          <div className="grid grid-cols-2 items-center">
-            <p>Phone</p>
-            <p className="text-sm font-normal">: NA</p>
-          </div>
-          <div className="grid grid-cols-2 items-center">
-            <p>Email</p>
-            <p className="text-sm font-normal">: NA</p>
-          </div>
-          <div className="grid grid-cols-2 items-center">
-            <p>Related To</p>
-            <p className="text-sm font-normal">{details.related_to}</p>
-          </div>
-          <div className="grid grid-cols-2 items-center">
-            <p>Payment Tenure (In Days)</p>
-            <p className="text-sm font-normal">{details.payment_tenure} days</p>
-          </div>
-          <div className="grid grid-cols-2 items-center">
-            <p>Retention (%)</p>
-            <p className="text-sm font-normal">{details.retention}%</p>
-          </div>
-          <div className="grid grid-cols-2 items-center">
-            <p>TDS (%)</p>
-            <p className="text-sm font-normal">{details.tds}%</p>
+            <p className="text-sm font-normal">{details?.supplier?.gst}</p>
           </div>
           <div className="grid grid-cols-2 items-center">
             <p>QC (%)</p>

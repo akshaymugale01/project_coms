@@ -289,7 +289,6 @@ const AddMatertialPR = () => {
   return (
     <section className="flex">
       <Navbar />
-
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <div className="">
           <h2
