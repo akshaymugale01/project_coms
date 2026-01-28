@@ -3385,6 +3385,13 @@ export const getLOI = async () =>
       token: token,
     },
   });
+export const getLOIByApprovalStatus = async (status) =>
+  axiosInstance.get(`/loi_details.json`, {
+    params: {
+      token: token,
+      "q[is_approved_eq]": status,
+    },
+  });
 export const getServicePR = async () =>
   axiosInstance.get(`/loi_services.json`, {
     params: {
