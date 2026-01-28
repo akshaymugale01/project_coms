@@ -65,7 +65,8 @@ const AddMatertialPR = () => {
     relatedTo: "",
     referenceNo: "",
     approved: false,
-    attachments:[]
+    attachments:[],
+    loiComments: ""
   });
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -259,7 +260,8 @@ const AddMatertialPR = () => {
         relatedTo: "",
         referenceNo: "",
         approved: false,
-        attachments: []
+        attachments: [],
+        loiComments: ""
       });
       setActivities([
         {
@@ -297,7 +299,7 @@ const AddMatertialPR = () => {
         setFormData({
           vendorId: loiData.vendor_id || "",
           type: "PR",
-          date: formatDateForInput(loiData.loi_date),
+          date: "",
           billingAddress: loiData.billing_address_id || "",
           deliveryAddress: loiData.delivery_address_id || "",
           transportation: loiData.transportation_amount || "",
@@ -310,7 +312,8 @@ const AddMatertialPR = () => {
           relatedTo: loiData.related_to || "",
           referenceNo: loiData.reference || "",
           approved: loiData.is_approved || false,
-          attachments: []
+          attachments: [],
+          loiComments: loiData.loi_comments || ""
         });
 
         // Populate activities with LOI items
@@ -398,6 +401,7 @@ const AddMatertialPR = () => {
       formData.deliveryAddress
     );
     sendData.append("loi_detail[terms]", formData.terms);
+    sendData.append("loi_detail[loi_comments]", formData.loiComments);
     if (selectedLoiId) {
       sendData.append("loi_detail[self_id]", selectedLoiId);
     }
@@ -1365,6 +1369,29 @@ const AddMatertialPR = () => {
               Total Amount : {activitie}
             </button>
           </div> */}
+            <h3 className="border-b text-center text-xl border-black mb-6 font-bold">
+              DESCRIPTION
+            </h3>
+            <div className="w-full md:mx-3 my-5 p-5 md:shadow-lg rounded-lg md:border border-gray-300">
+              <div className="col-span-1">
+                <label
+                  className="block text-gray-700 font-bold mb-2"
+                  htmlFor="loi-comments"
+                >
+                  Description / Comments
+                </label>
+                <textarea
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="loi-comments"
+                  placeholder="Enter description or comments"
+                  value={formData.loiComments}
+                  name="loiComments"
+                  onChange={handleChange}
+                  rows={4}
+                ></textarea>
+              </div>
+            </div>
+
             <h3 className="border-b text-center text-xl border-black mb-6 font-bold">
               ATTACHMENTS
             </h3>
