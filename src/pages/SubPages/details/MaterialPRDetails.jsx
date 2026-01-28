@@ -519,6 +519,11 @@ const MaterialPRDetails = () => {
       </div>
 
       <div className="border-t my-2 mx-5 border-black">
+        <p className="text-md font-semibold">Description / Comments:</p>
+        <p className="text-sm p-2 bg-gray-100 rounded-md">{details.loi_comments || "No description"}</p>
+      </div>
+
+      <div className="border-t my-2 mx-5 border-black">
         <p className="text-md font-semibold">Attachments</p>
         <div className="flex gap-4 flex-wrap my-4 items-center  text-center">
           {details.loi_details_image && details.loi_details_image.length > 0 ? (
