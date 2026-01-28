@@ -2,19 +2,20 @@ import React, { useEffect, useState } from "react";
 import { IoMdPrint } from "react-icons/io";
 import { MdFeed } from "react-icons/md";
 import Table from "../../../components/table/Table";
-import { getLOIDetails } from "../../../api";
+import { domainPrefix, getLOIDetails } from "../../../api";
 import { useParams } from "react-router-dom";
 import numberToWordsIndian from "../../../utils/NumbersToWords";
 import { FaRegFileAlt } from "react-icons/fa";
 
 const MaterialPRDetails = () => {
   const { id } = useParams();
-  const [details, seDetails] = useState({});
+  const [details, setDetails] = useState({});
   const [loiItems, setLoiItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState("");
   const [taxAmount, setTaxAmount] = useState("");
   const [netAmt, setNetAmt] = useState("");
   const [netAmtInWords, setNetAmtInWords] = useState("");
+  const [approvalLogs, setApprovalLogs] = useState([]);
   const formatAmount = (amount) => {
     return amount.toLocaleString("en-IN", {
       minimumFractionDigits: 2,
@@ -25,24 +26,25 @@ const MaterialPRDetails = () => {
     const fetchLOIDetails = async () => {
       try {
         const loiResp = await getLOIDetails(id);
-        console.log(loiResp.data);
+        // console.log(loiResp.data);
         setLoiItems(loiResp.data.loi_items);
-        seDetails(loiResp.data);
+        setDetails(loiResp.data);
+        setApprovalLogs(loiResp.data.approval_logs || []);
 
-        console.log("Supplier", loiResp.data.supplier);
+        // console.log("Supplier", loiResp.data.supplier);
 
         const totalAmount = loiResp.data.loi_items
           ? loiResp.data.loi_items.reduce(
-              (sum, item) => sum + (Number(item.amount) || 0),
-              0
-            )
+            (sum, item) => sum + (Number(item.amount) || 0),
+            0
+          )
           : " ";
 
         const taxAmt = loiResp.data.loi_items
           ? loiResp.data.loi_items.reduce(
-              (sum, item) => sum + (Number(item.tax_amt) || 0),
-              0
-            )
+            (sum, item) => sum + (Number(item.tax_amt) || 0),
+            0
+          )
           : " ";
 
         setTotalAmount(formatAmount(totalAmount));
@@ -57,6 +59,22 @@ const MaterialPRDetails = () => {
     };
     fetchLOIDetails();
   }, []);
+
+  const level1 = approvalLogs
+    .filter(log => log.level_id === 1)
+    .reduce((latest, log) =>
+      !latest || new Date(log.created_at) > new Date(latest.created_at)
+        ? log
+        : latest,
+      null
+    );
+
+  const level2 = approvalLogs.filter(log => log.level_id === 2).reduce((latest, log) => !latest || new Date(log.created_at) > new Date(latest.created_at) ? log : latest, null);
+  const level3 = approvalLogs.filter(log => log.level_id === 3).reduce((latest, log) => !latest || new Date(log.created_at) > new Date(latest.created_at) ? log : latest, null);
+  const level4 = approvalLogs.filter(log => log.level_id === 4).reduce((latest, log) => !latest || new Date(log.created_at) > new Date(latest.created_at) ? log : latest, null);
+
+
+  console.log("level2", level1);
 
   const column = [
     { name: "Sr.No", selector: (row, index) => index + 1, sortable: true },
@@ -246,7 +264,6 @@ const MaterialPRDetails = () => {
   const getFileName = (filePath) => {
     return filePath.split("/").pop().split("?")[0];
   };
-  const domainPrefix = "https://admin.vibecopilot.ai";
   const [statusFilter, setStatusFilter] = useState("Pending");
 
   const statusOptions = [
@@ -293,34 +310,33 @@ const MaterialPRDetails = () => {
       <div className="flex gap-3 item-center justify-center md:justify-between my-3 md:mx-5 flex-wrap">
         <div className="flex flex-col gap-1 justify-center md:items-center">
           <p className="text-sm font-medium">Project Site Approval:</p>
-          <p className="bg-orange-400 px-2 text-center  py-1 rounded-md text-white text-sm">
-            Pending
+          <p className={`px-2 text-center py-1 rounded-md text-white text-sm ${level1 && level1.status == "ProjectSiteApproved" ? "bg-green-500" : "bg-orange-400"}`}>
+            {level1 ? level1.status : "Pending"}
           </p>
-          <p className="">Approval Authority</p>
+          <p className="">{level1 ? level1.approver_name : "Submitted"}</p>
         </div>
         <div className="flex flex-col gap-1 justify-center md:items-center">
           <p className="text-sm font-medium">Admin Head Approval:</p>
-          <p className="bg-orange-400 px-2 text-center py-1 rounded-md text-white text-sm">
-            Pending
+          <p className={`px-2 text-center py-1 rounded-md text-white text-sm ${level2 && level2.status == "AdminApproved" ? "bg-green-500" : "bg-orange-400"}`}>
+            {level2 ? level2.status : "Pending"}
           </p>
-          <p className="">Approval Authority</p>
+          <p className="">{level2 ? level2.approver_name : "Pending"}</p>
         </div>
         <div className="flex flex-col gap-1 justify-center md:items-center">
           <p className="text-sm font-medium">HO Approval:</p>
-          <p className="bg-orange-400 px-2 items-center py-1 rounded-md text-white text-sm text-center">
-            Pending
+          <p className={`px-2 items-center py-1 rounded-md text-white text-sm text-center ${level3 && level3.status == "HOApproved" ? "bg-green-500" : "bg-orange-400"}`}>
+            {level3 ? level3.status : "Pending"}
           </p>
-          <p className="">Approval Authority</p>
+          <p className="">{level3 ? level3.approver_name : "Pending"}</p>
         </div>
         <div className="flex flex-col gap-1 justify-center md:items-center">
-          <p className="text-sm font-medium">Prompter Approval:</p>
-          <p className="bg-orange-400 px-2 items-center py-1 rounded-md text-white text-sm text-center">
-            Pending
+          <p className="text-sm font-medium">Promoter Approval:</p>
+          <p className={`px-2 items-center py-1 rounded-md text-white text-sm text-center ${level4 && level4.status == "PromoterApproved" ? "bg-green-500" : "bg-orange-400"}`}>
+            {level4 ? level4.status : "Pending"}
           </p>
-          <p className="">Approval Authority</p>
+          <p className="">{level4 ? level4.approver_name : "Pending"}</p>
         </div>
       </div>
-
       <div className="border-2 flex flex-col my-5 mx-3 p-4 gap-4 rounded-md border-gray-400">
         <h2 className=" text-lg border-black font-semibold text-center">
           {details.site_name}
@@ -384,7 +400,7 @@ const MaterialPRDetails = () => {
             <p>PR Date :</p>
             <p className="text-sm font-normal">{details.loi_date}</p>
           </div>
-                    <div className="grid grid-cols-2 items-center">
+          <div className="grid grid-cols-2 items-center">
             <p>Supplier :</p>
             <p className="text-sm font-normal">{details?.supplier?.company_name}</p>
           </div>
@@ -447,8 +463,8 @@ const MaterialPRDetails = () => {
           </div>
           <div className="grid grid-cols-2 items-center">
             <p>Approval Status :</p>
-            <p className={`text-sm font-medium px-2 py-1 rounded-md inline-block ${details.is_approved ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-              {details.is_approved ? "Approved" : "Pending"}
+            <p className={`text-sm font-medium px-2 py-1 rounded-md inline-block ${details.is_approved == "Approved" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+              {details.is_approved == "Approved" ? "Approved" : "Submitted"}
             </p>
           </div>
           <div className="grid grid-cols-2 items-center">
