@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { getLedgers } from "../../api/accountingApi";
+import { getLedgers, createLedger, getAccountGroups } from "../../api/accountingApi";
+import { getAllUnits } from "../../api/index";
 
 const JournalEntryModal = ({ entry, onClose, onSave }) => {
   const [ledgers, setLedgers] = useState([]);
+  const [accountGroups, setAccountGroups] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [showAddLedger, setShowAddLedger] = useState(false);
+  const [addingLedger, setAddingLedger] = useState(false);
+  const [newLedgerForm, setNewLedgerForm] = useState({
+    name: "",
+    account_group_id: "",
+    unit_id: "",
+    code: "",
+    opening_balance: 0,
+  });
 
   // ✅ Correct payload structure
   const [formData, setFormData] = useState({
@@ -21,6 +33,8 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
 
   useEffect(() => {
     fetchLedgers();
+    fetchAccountGroups();
+    fetchUnits();
 
     // If editing → load entry
     if (entry) {
@@ -34,32 +48,32 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
         [];
       const normalizedLines = rawLines.length
         ? rawLines.map((l) => {
-            // Handle API format with entry_side and amount
-            let debitValue = 0;
-            let creditValue = 0;
-            
-            if (l.entry_side === "debit") {
-              debitValue = l.amount ?? 0;
-            } else if (l.entry_side === "credit") {
-              creditValue = l.amount ?? 0;
-            } else {
-              // Fallback for other formats
-              debitValue = l.debit ?? l.amount_debit ?? l.debit_amount ?? 0;
-              creditValue = l.credit ?? l.amount_credit ?? l.credit_amount ?? 0;
-            }
-            
-            console.log('[JournalEntryModal] Line data:', { l, debitValue, creditValue });
-            return {
-              id: l.id, // Preserve ID for updates
-              ledger_id: String(l.ledger_id || l.ledger?.id || l.ledger?.ledger_id || ""),
-              debit: Number(debitValue) || 0,
-              credit: Number(creditValue) || 0,
-            };
-          })
+          // Handle API format with entry_side and amount
+          let debitValue = 0;
+          let creditValue = 0;
+
+          if (l.entry_side === "debit") {
+            debitValue = l.amount ?? 0;
+          } else if (l.entry_side === "credit") {
+            creditValue = l.amount ?? 0;
+          } else {
+            // Fallback for other formats
+            debitValue = l.debit ?? l.amount_debit ?? l.debit_amount ?? 0;
+            creditValue = l.credit ?? l.amount_credit ?? l.credit_amount ?? 0;
+          }
+
+          console.log('[JournalEntryModal] Line data:', { l, debitValue, creditValue });
+          return {
+            id: l.id, // Preserve ID for updates
+            ledger_id: String(l.ledger_id || l.ledger?.id || l.ledger?.ledger_id || ""),
+            debit: Number(debitValue) || 0,
+            credit: Number(creditValue) || 0,
+          };
+        })
         : [
-            { ledger_id: "", debit: 0, credit: 0 },
-            { ledger_id: "", debit: 0, credit: 0 },
-          ];
+          { ledger_id: "", debit: 0, credit: 0 },
+          { ledger_id: "", debit: 0, credit: 0 },
+        ];
       setFormData({
         entry_date:
           entry.entry_date?.split("T")[0] ||
@@ -82,6 +96,73 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
       setLedgers(response.data.data || response.data);
     } catch (error) {
       console.error("Failed to fetch ledgers", error);
+    }
+  };
+
+  const fetchAccountGroups = async () => {
+    try {
+      const response = await getAccountGroups();
+      setAccountGroups(response.data.data || response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch account groups", error);
+    }
+  };
+
+  const fetchUnits = async () => {
+    try {
+      const response = await getAllUnits();
+      setUnits(response.data.data || response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch units", error);
+    }
+  };
+
+  const handleNewLedgerChange = (e) => {
+    const { name, value } = e.target;
+    setNewLedgerForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetNewLedgerForm = () => {
+    setNewLedgerForm({
+      name: "",
+      account_group_id: "",
+      unit_id: "",
+      code: "",
+      opening_balance: 0,
+    });
+    setShowAddLedger(false);
+  };
+
+  const handleAddLedger = async () => {
+    if (!newLedgerForm.name.trim()) {
+      alert("Ledger/Vendor Name is required!");
+      return;
+    }
+    if (!newLedgerForm.account_group_id) {
+      alert("Account Group is required!");
+      return;
+    }
+    
+    setAddingLedger(true);
+    try {
+      const payload = {
+        ledger: {
+          name: newLedgerForm.name.trim(),
+          account_group_id: newLedgerForm.account_group_id,
+          unit_id: newLedgerForm.unit_id || null,
+          code: newLedgerForm.code || null,
+          opening_balance: Number(newLedgerForm.opening_balance) || 0,
+        },
+      };
+      const response = await createLedger(payload);
+      const newLedger = response.data.data || response.data;
+      setLedgers((prev) => [...prev, newLedger]);
+      resetNewLedgerForm();
+    } catch (error) {
+      console.error("Failed to create ledger", error);
+      alert("Failed to create ledger. Please try again.");
+    } finally {
+      setAddingLedger(false);
     }
   };
 
@@ -129,7 +210,7 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
   const calculateTotals = () => {
     // Support both 'journal_lines' and 'entries' field names
     const lines = formData.journal_lines || formData.entries || [];
-    
+
     const totalDebit = lines.reduce(
       (sum, line) => sum + (parseFloat(line?.debit) || 0),
       0
@@ -324,14 +405,145 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold">Journal Entry Lines</h3>
-              <button
-                type="button"
-                onClick={addEntry}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded"
-              >
-                + Add Line
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddLedger(true)}
+                  className="px-3 py-1 text-sm bg-purple-600 text-white rounded"
+                >
+                  + New Ledger
+                </button>
+                <button
+                  type="button"
+                  onClick={addEntry}
+                  className="px-3 py-1 text-sm bg-green-600 text-white rounded"
+                >
+                  + Add Line
+                </button>
+              </div>
             </div>
+
+            {/* Add Ledger Modal Form */}
+            {showAddLedger && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                  <h3 className="text-lg font-semibold mb-4">Create New Ledger</h3>
+                  
+                  {/* Ledger/Vendor Name */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ledger/Vendor Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={newLedgerForm.name}
+                      onChange={handleNewLedgerChange}
+                      placeholder="Enter ledger/vendor name"
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* Account Group */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Account Group <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="account_group_id"
+                      value={newLedgerForm.account_group_id}
+                      onChange={handleNewLedgerChange}
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Account Group</option>
+                      {accountGroups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Select a sub-group to create ledgers under it
+                    </p>
+                  </div>
+
+                  {/* Unit (Optional) */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Unit (Optional)
+                    </label>
+                    <select
+                      name="unit_id"
+                      value={newLedgerForm.unit_id}
+                      onChange={handleNewLedgerChange}
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Unit (Organization-wide if blank)</option>
+                      {units.map((unit) => (
+                        <option key={unit.id} value={unit.id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Assign to a specific department, branch, or project. Leave blank for organization-wide ledgers.
+                    </p>
+                  </div>
+
+                  {/* Code */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Code
+                    </label>
+                    <input
+                      type="text"
+                      name="code"
+                      value={newLedgerForm.code}
+                      onChange={handleNewLedgerChange}
+                      placeholder="Enter code (optional)"
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Opening Balance */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Opening Balance
+                    </label>
+                    <input
+                      type="number"
+                      name="opening_balance"
+                      value={newLedgerForm.opening_balance}
+                      onChange={handleNewLedgerChange}
+                      placeholder="0"
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={resetNewLedgerForm}
+                      className="px-4 py-2 border rounded hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddLedger}
+                      disabled={addingLedger || !newLedgerForm.name.trim() || !newLedgerForm.account_group_id}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {addingLedger ? "Creating..." : "Create"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="border rounded overflow-hidden">
               <table className="min-w-full">
@@ -357,66 +569,66 @@ const JournalEntryModal = ({ entry, onClose, onSave }) => {
                     // Get the actual index in the full array
                     const actualIndex = formData.journal_lines.indexOf(line);
                     return (
-                    <tr key={line.id || index} className="border-t">
-                      <td className="px-4 py-2">
-                        <select
-                          value={line.ledger_id}
-                          onChange={(e) =>
-                            handleEntryChange(actualIndex, "ledger_id", e.target.value)
-                          }
-                          className="w-full px-2 py-1 border rounded"
-                          required
-                        >
-                          <option value="">Select Ledger/Vendor</option>
-                          {ledgers.map((ledger) => (
-                            <option key={ledger.id} value={ledger.id}>
-                              {ledger.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          value={line.debit === 0 ? "" : line.debit}
-                          onChange={(e) =>
-                            handleEntryChange(actualIndex, "debit", e.target.value)
-                          }
-                          className="w-full px-2 py-1 border rounded"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                        />
-                      </td>
-
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          value={line.credit === 0 ? "" : line.credit}
-                          onChange={(e) =>
-                            handleEntryChange(actualIndex, "credit", e.target.value)
-                          }
-                          className="w-full px-2 py-1 border rounded"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                        />
-                      </td>
-
-                      <td className="px-4 py-2">
-                        {formData.journal_lines.filter(l => !l._destroy).length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() => removeEntry(actualIndex)}
-                            className="text-red-600 text-sm"
+                      <tr key={line.id || index} className="border-t">
+                        <td className="px-4 py-2">
+                          <select
+                            value={line.ledger_id}
+                            onChange={(e) =>
+                              handleEntryChange(actualIndex, "ledger_id", e.target.value)
+                            }
+                            className="w-full px-2 py-1 border rounded"
+                            required
                           >
-                            Remove
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
+                            <option value="">Select Ledger/Vendor</option>
+                            {ledgers.map((ledger) => (
+                              <option key={ledger.id} value={ledger.id}>
+                                {ledger.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+
+                        <td className="px-4 py-2">
+                          <input
+                            type="number"
+                            value={line.debit === 0 ? "" : line.debit}
+                            onChange={(e) =>
+                              handleEntryChange(actualIndex, "debit", e.target.value)
+                            }
+                            className="w-full px-2 py-1 border rounded"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                          />
+                        </td>
+
+                        <td className="px-4 py-2">
+                          <input
+                            type="number"
+                            value={line.credit === 0 ? "" : line.credit}
+                            onChange={(e) =>
+                              handleEntryChange(actualIndex, "credit", e.target.value)
+                            }
+                            className="w-full px-2 py-1 border rounded"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                          />
+                        </td>
+
+                        <td className="px-4 py-2">
+                          {formData.journal_lines.filter(l => !l._destroy).length > 2 && (
+                            <button
+                              type="button"
+                              onClick={() => removeEntry(actualIndex)}
+                              className="text-red-600 text-sm"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
                   })}
 
                   {/* Totals Row */}

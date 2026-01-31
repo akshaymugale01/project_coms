@@ -280,6 +280,8 @@ import {
 } from "../../api/accountingApi";
 import JournalEntryModal from "./JournalEntryModal";
 import Navbar from "../../components/Navbar";
+import { FaDraft2Digital, FaEdit, FaEye, FaFirstdraft, FaTrash } from "react-icons/fa";
+import { TbFlagCancel } from "react-icons/tb";
 
 const JournalEntries = () => {
   const [journalEntries, setJournalEntries] = useState([]);
@@ -288,6 +290,8 @@ const JournalEntries = () => {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewEntry, setViewEntry] = useState(null);
 
   // Month mapping
   const getMonthName = (monthValue) => {
@@ -328,6 +332,18 @@ const JournalEntries = () => {
   const handleCreate = () => {
     setSelectedEntry(null);
     setIsModalOpen(true);
+  };
+
+  const handleView = async (entry) => {
+    try {
+      const res = await getJournalEntry(entry.id);
+      const full = res?.data?.data || res?.data || entry;
+      setViewEntry(full);
+      setIsViewModalOpen(true);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load journal entry details");
+    }
   };
 
   const handleEdit = async (entry) => {
@@ -546,34 +562,43 @@ const JournalEntries = () => {
                         <>
                           <button
                             onClick={() => handlePost(entry.id)}
-                            className="text-green-600 hover:text-green-900 mr-3"
+                            className="text-gray-600 hover:text-green-900 mr-3"
                           >
-                            Post
+                            <FaFirstdraft className="inline mr-1" />
                           </button>
 
                           <button
                             onClick={() => handleEdit(entry)}
                             className="text-blue-600 hover:text-blue-900 mr-3"
                           >
-                            Edit
+                            <FaEdit className="inline mr-1" />
                           </button>
                         </>
                       )}
 
                       {entry.status === "posted" && (
-                        <button
-                          onClick={() => handleCancel(entry.id)}
-                          className="text-orange-600 hover:text-orange-900 mr-3"
-                        >
-                          Cancel
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleView(entry)}
+                            className="text-blue-600 hover:text-blue-900 mr-3"
+                            title="View Details"
+                          >
+                            <FaEye className="inline mr-1" />
+                          </button>
+                          <button
+                            onClick={() => handleCancel(entry.id)}
+                            className="text-red-600 hover:text-orange-900 mr-3"
+                          >
+                            <TbFlagCancel className="inline mr-1" />
+                          </button>
+                        </>
                       )}
 
                       <button
                         onClick={() => handleDelete(entry.id)}
                         className="text-red-600 hover:text-red-900"
                       >
-                        Delete
+                        <FaTrash className="inline mr-1" />
                       </button>
                     </td>
                   </tr>
@@ -590,6 +615,193 @@ const JournalEntries = () => {
           onClose={() => setIsModalOpen(false)}
           onSave={handleSave}
         />
+      )}
+
+      {/* View Modal for Posted Entries */}
+      {isViewModalOpen && viewEntry && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6 my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Journal Entry Details</h2>
+              <button
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  setViewEntry(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Entry Info */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Entry Number</p>
+                <p className="font-medium">{viewEntry.entry_number || viewEntry.reference || "-"}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Entry Date</p>
+                <p className="font-medium">
+                  {viewEntry.entry_date
+                    ? new Date(viewEntry.entry_date).toLocaleDateString()
+                    : "-"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Status</p>
+                <span
+                  className={`px-2 py-1 rounded text-xs ${
+                    viewEntry.status === "posted"
+                      ? "bg-green-100 text-green-800"
+                      : viewEntry.status === "cancelled"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {viewEntry.status}
+                </span>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Total Amount</p>
+                <p className="font-medium text-green-600">
+                  ₹{(parseFloat(viewEntry.total_amount ?? viewEntry.total_debit ?? viewEntry.total_credit ?? 0) || 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            {/* Invoice Details */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Invoice Number</p>
+                <p className="font-medium">{viewEntry.invoice_number || "-"}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Invoice Date</p>
+                <p className="font-medium">
+                  {viewEntry.invoice_date
+                    ? new Date(viewEntry.invoice_date).toLocaleDateString()
+                    : "-"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Expense Month</p>
+                <p className="font-medium">{getMonthName(viewEntry.expense_month)}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <p className="text-xs text-gray-500 mb-1">Expense Year</p>
+                <p className="font-medium">{viewEntry.expense_year || "-"}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            {(viewEntry.description || viewEntry.narration) && (
+              <div className="mb-6">
+                <p className="text-xs text-gray-500 mb-1">Description</p>
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-gray-700">{viewEntry.description || viewEntry.narration}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Journal Entry Lines */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-3">Journal Entry Lines</h3>
+              <div className="border rounded overflow-hidden">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Ledger
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        Debit
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        Credit
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {(viewEntry.entry_lines || viewEntry.journal_entry_lines || viewEntry.lines || []).map((line, idx) => {
+                      // Handle different API formats
+                      let debitAmount = 0;
+                      let creditAmount = 0;
+                      
+                      if (line.entry_side === "debit") {
+                        debitAmount = line.amount ?? 0;
+                      } else if (line.entry_side === "credit") {
+                        creditAmount = line.amount ?? 0;
+                      } else {
+                        debitAmount = line.debit ?? line.amount_debit ?? line.debit_amount ?? 0;
+                        creditAmount = line.credit ?? line.amount_credit ?? line.credit_amount ?? 0;
+                      }
+
+                      return (
+                        <tr key={line.id || idx} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            {line.ledger?.name || line.ledger_name || `Ledger #${line.ledger_id}`}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {parseFloat(debitAmount) > 0 ? `₹${parseFloat(debitAmount).toFixed(2)}` : "-"}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {parseFloat(creditAmount) > 0 ? `₹${parseFloat(creditAmount).toFixed(2)}` : "-"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {/* Totals Row */}
+                    <tr className="bg-gray-100 font-semibold">
+                      <td className="px-4 py-3 text-right">Total:</td>
+                      <td className="px-4 py-3 text-right text-green-600">
+                        ₹{(viewEntry.entry_lines || viewEntry.journal_entry_lines || viewEntry.lines || []).reduce((sum, line) => {
+                          if (line.entry_side === "debit") return sum + (parseFloat(line.amount) || 0);
+                          return sum + (parseFloat(line.debit ?? line.amount_debit ?? line.debit_amount) || 0);
+                        }, 0).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-red-600">
+                        ₹{(viewEntry.entry_lines || viewEntry.journal_entry_lines || viewEntry.lines || []).reduce((sum, line) => {
+                          if (line.entry_side === "credit") return sum + (parseFloat(line.amount) || 0);
+                          return sum + (parseFloat(line.credit ?? line.amount_credit ?? line.credit_amount) || 0);
+                        }, 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Timestamps */}
+            <div className="grid grid-cols-2 gap-4 text-sm text-gray-500 border-t pt-4">
+              <div>
+                <span className="font-medium">Created:</span>{" "}
+                {viewEntry.created_at
+                  ? new Date(viewEntry.created_at).toLocaleString()
+                  : "-"}
+              </div>
+              <div>
+                <span className="font-medium">Updated:</span>{" "}
+                {viewEntry.updated_at
+                  ? new Date(viewEntry.updated_at).toLocaleString()
+                  : "-"}
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  setViewEntry(null);
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
     </section>

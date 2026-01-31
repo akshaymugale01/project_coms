@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { IoMdPrint } from "react-icons/io";
 import { MdFeed } from "react-icons/md";
 import Table from "../../../components/table/Table";
-import { domainPrefix, getLOIDetails } from "../../../api";
+import { domainPrefix, getLOIDetails, postApprovalLogs } from "../../../api";
 import { useParams } from "react-router-dom";
 import numberToWordsIndian from "../../../utils/NumbersToWords";
 import { FaRegFileAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const MaterialPRDetails = () => {
   const { id } = useParams();
@@ -26,29 +27,22 @@ const MaterialPRDetails = () => {
     const fetchLOIDetails = async () => {
       try {
         const loiResp = await getLOIDetails(id);
-        // console.log(loiResp.data);
         setLoiItems(loiResp.data.loi_items);
         setDetails(loiResp.data);
         setApprovalLogs(loiResp.data.approval_logs || []);
-
-        // console.log("Supplier", loiResp.data.supplier);
-
         const totalAmount = loiResp.data.loi_items
           ? loiResp.data.loi_items.reduce(
             (sum, item) => sum + (Number(item.amount) || 0),
             0
           )
           : " ";
-
         const taxAmt = loiResp.data.loi_items
           ? loiResp.data.loi_items.reduce(
             (sum, item) => sum + (Number(item.tax_amt) || 0),
             0
           )
           : " ";
-
         setTotalAmount(formatAmount(totalAmount));
-
         setTaxAmount(formatAmount(taxAmt));
         const netAmount = totalAmount + taxAmt;
         setNetAmt(formatAmount(netAmount));
@@ -264,16 +258,116 @@ const MaterialPRDetails = () => {
   const getFileName = (filePath) => {
     return filePath.split("/").pop().split("?")[0];
   };
-  const [statusFilter, setStatusFilter] = useState("Pending");
+  const [approverComment, setApproverComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const statusOptions = [
-    "Pending",
-    "SiteApproval",
-    "Admin Head Approval",
-    "HO Approval",
-    "Approved",
-    "Completed"
-  ];
+  // Get user type from localStorage (remove quotes if present)
+  const userType = (localStorage.getItem("USERTYPE") || "").replace(/"/g, "").trim();
+  console.log("userType", userType);
+
+  // Map status to level_id
+  const statusLevelMap = {
+    "Submitted": 0,
+    "ProjectSiteApproved": 1,
+    "AdminApproved": 2,
+    "HOApproved": 3,
+    "PromoterApproved": 4,
+    "Cancel": -1,
+    "Reject": -2,
+  };
+
+  // Status options based on user type
+  const getStatusOptionsByUserType = () => {
+    switch (userType) {
+      case "project_head":
+        return [
+          { value: "Submitted", label: "Submitted" },
+          { value: "ProjectSiteApproved", label: "Approved" },
+          { value: "Cancel", label: "Cancel" },
+        ];
+      case "admin_head":
+        return [
+          { value: "ProjectSiteApproved", label: "Project Site Approved" },
+          { value: "AdminApproved", label: "Admin Approved" },
+          { value: "Cancel", label: "Cancel" },
+        ];
+      case "head_officer":
+        return [
+          { value: "AdminApproved", label: "Admin Approved" },
+          { value: "HOApproved", label: "HO Approved" },
+          { value: "Cancel", label: "Cancel" },
+        ];
+      case "promoter":
+        return [
+          { value: "HOApproved", label: "HO Approved" },
+          { value: "PromoterApproved", label: "Promoter Approved" },
+          { value: "Reject", label: "Reject" },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Get default status based on user type
+  const getDefaultStatus = () => {
+    switch (userType) {
+      case "project_head":
+        return "Submitted";
+      case "admin_head":
+        return "ProjectSiteApproved";
+      case "head_officer":
+        return "AdminApproved";
+      case "promoter":
+        return "HOApproved";
+      default:
+        return "";
+    }
+  };
+
+  const statusOptions = getStatusOptionsByUserType();
+  const [statusFilter, setStatusFilter] = useState(getDefaultStatus());
+
+  console.log("userType:", userType);
+  console.log("statusOptions:", statusOptions);
+  console.log("statusOptions.length:", statusOptions.length);
+
+  const currentUser = localStorage.getItem("UserId") || "";
+
+  const handleSubmitApproval = async () => {
+    if (!statusFilter || !approverComment) {
+      toast.error("Status and comment are required.");
+      return;
+    }
+    const level_id = statusLevelMap?.[statusFilter];
+    if (level_id === undefined) {
+      toast.error("Invalid approval status selected.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        id,
+        approved_by_user_id: currentUser,
+        status: statusFilter,
+        level_id,
+        comment: approverComment,
+      };
+      console.log("Submitting approval:", payload);
+      const response = await postApprovalLogs(id, payload);
+
+      if ([200, 201].includes(response.status)) {
+        toast.success("Approval submitted successfully!");
+        setApproverComment("");
+      } else {
+        toast.error("Failed to submit approval. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error submitting approval:", error);
+      toast.error("Failed to submit approval. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section className="mb-10">
@@ -282,17 +376,22 @@ const MaterialPRDetails = () => {
           Material PR DETAILS
         </h2>
         <div className="flex my-2 justify-end">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="font-semibold border-2 border-black px-4 p-1 rounded-md mr-3"
-          >
-            {statusOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+          {statusOptions.length > 0 && (
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="font-semibold border-2 border-black px-4 p-1 rounded-md mr-3"
+            >
+              <option value="" disabled>
+                Select Status
               </option>
-            ))}
-          </select>
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
           <button className="font-semibold border-2 border-black px-4 p-1 flex gap-2 items-center rounded-md">
             Clone
           </button>
@@ -313,7 +412,7 @@ const MaterialPRDetails = () => {
           <p className={`px-2 text-center py-1 rounded-md text-white text-sm ${level1 && level1.status == "ProjectSiteApproved" ? "bg-green-500" : "bg-orange-400"}`}>
             {level1 ? level1.status : "Pending"}
           </p>
-          <p className="">{level1 ? level1.approver_name : "Submitted"}</p>
+          <p className="">{level1 ? level1.approver_name : "Pending"}</p>
         </div>
         <div className="flex flex-col gap-1 justify-center md:items-center">
           <p className="text-sm font-medium">Admin Head Approval:</p>
@@ -572,6 +671,33 @@ const MaterialPRDetails = () => {
           )}
         </div>
       </div>
+
+      {statusOptions.length > 0 && (
+        <>
+          <div className="border-t my-2 mx-5 border-black py-4">
+            <p className="text-md font-semibold mb-2">Approver Comments <span className="text-red-800">*</span></p>
+            <textarea
+              value={approverComment}
+              onChange={(e) => setApproverComment(e.target.value)}
+              placeholder="Enter your comments here..."
+              className="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:border-blue-500 resize-none"
+              rows={4}
+            />
+          </div>
+          <div className="flex justify-end mx-5 my-4 gap-3">
+            <button
+              onClick={handleSubmitApproval}
+              disabled={isSubmitting}
+              className={`px-6 py-2 rounded-md text-white font-semibold transition-all duration-300 ${isSubmitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gray-600 hover:bg-gray-700"
+                }`}
+            >
+              {isSubmitting ? "Submitting..." : "Submit for Approval"}
+            </button>
+          </div>
+        </>
+      )}
       <div className=" flex flex-col gap-5 items-end mx-5 border-black">
         <p className="text-md font-semibold">
           For (company name) we Confirm & Accept,

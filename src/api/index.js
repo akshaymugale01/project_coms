@@ -3379,6 +3379,15 @@ export const postLOI = async (data) =>
       token: token,
     },
   });
+
+
+export const postApprovalLogs = async (id, data) =>
+  axiosInstance.post(`/loi_details/${id}/create_approval_levels.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
 export const getLOI = async () =>
   axiosInstance.get(`/loi_details.json`, {
     params: {
