@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 const ExportBookingModal = ({ onclose }) => {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
+    
   const handleExport = () => {
     const currentDate = new Date();
     const options = { timeZone: "Asia/Kolkata" };
@@ -60,9 +61,14 @@ const ExportBookingModal = ({ onclose }) => {
           </div>
         </div>
 
-        <button className="bg-black p-2 px-4 text-white rounded-md my-5" onClick={handleExport}>
+     <div className=""> 
+         <button className="bg-black p-2 px-6 text-white rounded-md my-5 mx-4" onClick={handleExport}>
           Submit
         </button>
+          <button className="bg-black p-2 px-4 text-white rounded-md my-5" onClick={handleExport}>
+          Send Email
+        </button>
+     </div>
       </div>
     </ModalWrapper>
   );

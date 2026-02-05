@@ -51,6 +51,9 @@ const EditAmenitySetup = () => {
       guest_price_child: "",
       tenant_price_child: "",
       tenant_price_adult: "",
+      member: null,
+      guest: null,
+      tenant: null,
       min_people: "",
       max_people: "",
       cancel_before: "",
@@ -63,9 +66,12 @@ const EditAmenitySetup = () => {
       deposit: "",
       description: "",
       max_slots: "",
-      member: null,
-      guest: null,
-      tenant: null,
+      is_member_adult: true, // Added missing state
+      is_member_child: false,
+      is_guest_adult: true, // Added missing state
+      is_guest_child: false,
+      is_tenant_adult: true, // Added missing state
+      is_tenant_child: false,
     },
     covers: [],
     attachments: [],
@@ -80,18 +86,6 @@ const EditAmenitySetup = () => {
   });
 
   console.log("DATA:", formData);
-
-  // const fecthFacitySetup = async() => {
-  //   try {
-  //    const fetchAPI = await getFacitilitySetup()
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   fecthFacitySetup();
-  // },[]) // [] for
 
   // Fetch the facility details for the specific ID
   const fetchFacilityBooking = async () => {
@@ -147,10 +141,16 @@ const EditAmenitySetup = () => {
             deposit: facility.deposit || "",
             description: facility.description || "",
             max_slots: facility.max_slots || "",
-            member: facility.member || null,
-            guest: facility.guest || null,
+            member: facility.member ?? null,
+            is_member_adult: facility.is_member_adult ?? true, // Fetch from API
+            is_member_child: facility.is_member_child ?? false,
+            guest: facility.guest ?? null,
+            is_guest_adult: facility.is_guest_adult ?? true, // Fetch from API
+            is_guest_child: facility.is_guest_child ?? false,
+            tenant: facility.tenant ?? null,
+            is_tenant_adult: facility.is_tenant_adult ?? true, // Fetch from API
+            is_tenant_child: facility.is_tenant_child ?? false,
             fixed_amount: facility.fixed_amount || null,
-            tenant: facility.tenant || null,
             prepaid: facility.prepaid || null,
             postpaid: facility.postpaid || null,
             status: facility.status || "",
@@ -262,6 +262,17 @@ const EditAmenitySetup = () => {
       },
     }));
   };
+  
+  const handleChildToggle = (field) => {
+    setFormData((prev) => ({
+      ...prev,
+      amenity: {
+        ...prev.amenity,
+        [field]: !prev.amenity[field],
+      },
+    }));
+  };
+
 
   const handlePriceChange = (field, value) => {
     setFormData((prevState) => ({
@@ -383,25 +394,6 @@ const EditAmenitySetup = () => {
   };
   const [subFacilityAvailable, setSubFacilityAvailable] = useState(false);
 
-  /*const [rules, setRules] = useState([{ selectedOption: "", timesPerDay: "" }]);
-    const options = ["Flat", "User", "Tenant", "Owner"];
-    const handleAddRule = () => {
-      if (rules.length < 5) {
-        setRules([...rules, { selectedOption: "", timesPerDay: "" }]);
-      }
-    };
-    const handleOptionChange = (index, field, value) => {
-      const updatedRules = rules.map((rule, i) =>
-        i === index ? { ...rule, [field]: value } : rule
-      );
-      setRules(updatedRules);
-    };
-  
-    const handleRemoveRule = (index) => {
-      const updatedRules = rules.filter((_, i) => i !== index);
-      setRules(updatedRules);
-    };*/
-  //new
   const [rules, setRules] = useState([{ timesPerDay: "", selectedOption: "" }]);
 
   const options = ["Members", "Guests", "Tenant", "Staff", "Others"];
@@ -453,21 +445,6 @@ const EditAmenitySetup = () => {
       attachments: updatedAttachments,
     });
   };
-
-  // const handleSlotTimeChange = (index, timeType, timeValue) => {
-
-  //     const [hours, minutes] = timeValue.split(":");
-
-  //     setFormData(prevState => {
-  //         const updatedSlots = [...prevState.slots];
-  //         updatedSlots[index] = {
-  //             ...updatedSlots[index],
-  //             [`${timeType}_hr`]: hours,
-  //             [`${timeType}_min`]: minutes,
-  //         };
-  //         return { ...prevState, slots: updatedSlots };
-  //     });
-  // };
 
   const handleSlotTimeChange = (index, timeType, timeValue) => {
     let [hours, minutes] = timeValue.split(":");
@@ -566,7 +543,7 @@ const EditAmenitySetup = () => {
           Setup Edit Facility
         </h1>
 
-        <div className="flex  gap-4 my-4">
+        <div className="flex gap-4 my-4">
           <div className="flex gap-2 items-center">
             <input
               type="radio"
@@ -596,7 +573,7 @@ const EditAmenitySetup = () => {
         </div>
 
         <div>
-          <h2 className="border-b border-black text-lg  font-medium my-3">
+          <h2 className="border-b border-black text-lg font-medium my-3">
             Facility Details
           </h2>
           <div className="grid md:grid-cols-4 gap-2">
@@ -679,6 +656,7 @@ const EditAmenitySetup = () => {
               <p className="text-center font-medium"> Child</p>
               <p className="text-center font-medium"> Flat Amount</p>
             </div>
+            
             {/* Member Section */}
             <div className="grid grid-cols-4 items-center border-b">
               <div className="flex justify-center my-2">
@@ -691,10 +669,21 @@ const EditAmenitySetup = () => {
                   Member
                 </label>
               </div>
+
+              {/* Adult */}
               <div className="flex justify-center my-2">
+                {/* Adult Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_member_adult}
+                  disabled={!formData.amenity.member}
+                  onChange={() => handleChildToggle("is_member_adult")}
+                />
+                {/* Adult Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.member}
+                  disabled={!formData.amenity.member || !formData.amenity.is_member_adult}
                   value={formData.amenity.member_price_adult || ""}
                   onChange={(e) =>
                     handlePriceChange("member_price_adult", e.target.value)
@@ -703,10 +692,24 @@ const EditAmenitySetup = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Child */}
               <div className="flex justify-center my-2">
+                {/* Child Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_member_child}
+                  disabled={!formData.amenity.member}
+                  onChange={() => handleChildToggle("is_member_child")}
+                />
+                {/* Child Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.member}
+                  disabled={
+                    !formData.amenity.member ||
+                    !formData.amenity.is_member_child
+                  }
                   value={formData.amenity.member_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("member_price_child", e.target.value)
@@ -715,10 +718,11 @@ const EditAmenitySetup = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Flat */}
               <div className="flex justify-center my-2">
                 <input
                   type="text"
-                  // disabled={!formData.amenity.member}
                   value={formData.amenity.fixed_amount || ""}
                   onChange={(e) =>
                     handlePriceChange("fixed_amount", e.target.value)
@@ -741,10 +745,21 @@ const EditAmenitySetup = () => {
                   Guest
                 </label>
               </div>
+
+              {/* Adult */}
               <div className="flex justify-center my-2">
+                {/* Adult Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_guest_adult}
+                  disabled={!formData.amenity.guest}
+                  onChange={() => handleChildToggle("is_guest_adult")}
+                />
+                {/* Adult Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.guest}
+                  disabled={!formData.amenity.guest || !formData.amenity.is_guest_adult}
                   value={formData.amenity.guest_price_adult || ""}
                   onChange={(e) =>
                     handlePriceChange("guest_price_adult", e.target.value)
@@ -753,10 +768,24 @@ const EditAmenitySetup = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Child */}
               <div className="flex justify-center my-2">
+                {/* Child Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_guest_child}
+                  disabled={!formData.amenity.guest}
+                  onChange={() => handleChildToggle("is_guest_child")}
+                />
+                {/* Child Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.guest}
+                  disabled={
+                    !formData.amenity.guest ||
+                    !formData.amenity.is_guest_child
+                  }
                   value={formData.amenity.guest_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("guest_price_child", e.target.value)
@@ -779,10 +808,21 @@ const EditAmenitySetup = () => {
                   Tenant
                 </label>
               </div>
+
+              {/* Adult */}
               <div className="flex justify-center my-2">
+                {/* Adult Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_tenant_adult}
+                  disabled={!formData.amenity.tenant}
+                  onChange={() => handleChildToggle("is_tenant_adult")}
+                />
+                {/* Adult Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.tenant}
+                  disabled={!formData.amenity.tenant || !formData.amenity.is_tenant_adult}
                   value={formData.amenity.tenant_price_adult || ""}
                   onChange={(e) =>
                     handlePriceChange("tenant_price_adult", e.target.value)
@@ -791,10 +831,24 @@ const EditAmenitySetup = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Child */}
               <div className="flex justify-center my-2">
+                {/* Child Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_tenant_child}
+                  disabled={!formData.amenity.tenant}
+                  onChange={() => handleChildToggle("is_tenant_child")}
+                />
+                {/* Child Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.tenant}
+                  disabled={
+                    !formData.amenity.tenant ||
+                    !formData.amenity.is_tenant_child
+                  }
                   value={formData.amenity.tenant_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("tenant_price_child", e.target.value)
@@ -1037,11 +1091,11 @@ const EditAmenitySetup = () => {
                   className="object-cover w-full h-40"
                 />
                 {/* <button
-                                    onClick={() => removeImage(index)}
-                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
-                                >
-                                    X
-                                </button> */}
+onClick={() => removeImage(index)}
+className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+>
+X
+</button> */}
               </div>
             ))
           ) : (
@@ -1078,11 +1132,11 @@ const EditAmenitySetup = () => {
                   className="object-cover w-full h-40"
                 />
                 {/* <button
-                                    onClick={() => removeAttachment(index)}
-                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
-                                >
-                                    X
-                                </button> */}
+onClick={() => removeAttachment(index)}
+className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+>
+X
+</button> */}
               </div>
             ))
           ) : (

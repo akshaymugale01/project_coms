@@ -216,7 +216,7 @@ function AddCAMBilling() {
   const handleChangePreviousDue = (e) => {
     const value = e.target.value.replace(/[^0-9.]/g, "");
     const numValue = parseFloat(value) || 0;
-    
+
     // Validate amount
     if (value && !validateAmount(value)) {
       setErrors(prev => ({
@@ -255,7 +255,7 @@ function AddCAMBilling() {
       try {
         const response = await getAddressSetup();
         setInvoiceAdd(response.data);
-      console.log("Address Setup data:", response.data);
+        console.log("Address Setup data:", response.data);
       } catch (err) {
         console.error("Failed to fetch Address Setup data:", err);
       }
@@ -268,7 +268,7 @@ function AddCAMBilling() {
     const { name, value, type } = e.target;
 
     let cleanedValue = value;
-    
+
     // Input sanitization and validation
     if (name === "notes") {
       cleanedValue = value.replace(/[^a-zA-Z0-9 .,!?'"()\-\n]/g, "").slice(0, 500);
@@ -334,7 +334,7 @@ function AddCAMBilling() {
     !formData.block || !formData.floor_name || !units.length;
 
   const navigate = useNavigate();
-  
+
   // Enhanced validation for form submission
   const validateForm = () => {
     const newErrors = {};
@@ -344,10 +344,10 @@ function AddCAMBilling() {
     if (!formData.invoiceAddress) newErrors.invoiceAddress = "Invoice address is required";
     if (!formData.invoice_number) newErrors.invoice_number = "Invoice number is required";
     else if (!validateInvoiceNumber(formData.invoice_number)) newErrors.invoice_number = "Invalid invoice number format";
-    
+
     if (!formData.dueDate) newErrors.dueDate = "Due date is required";
     else if (!validateDate(formData.dueDate)) newErrors.dueDate = "Due date must be today or later";
-    
+
     if (!formData.block) newErrors.block = "Block is required";
     if (!formData.floor_name) newErrors.floor_name = "Floor is required";
     if (!formData.flat) newErrors.flat = "Flat is required";
@@ -363,19 +363,19 @@ function AddCAMBilling() {
     fields.forEach((field, index) => {
       if (!field.description) newErrors[`description_${index}`] = "Description is required";
       else if (!validateDescription(field.description)) newErrors[`description_${index}`] = "Description must be 3-100 characters";
-      
+
       if (!field.sacHsnCode) newErrors[`sacHsnCode_${index}`] = "HSN/SAC code is required";
       else if (!validateHsnCode(field.sacHsnCode)) newErrors[`sacHsnCode_${index}`] = "HSN/SAC code must be 4-8 digits";
-      
+
       if (!field.qty) newErrors[`qty_${index}`] = "Quantity is required";
       else if (!validateQuantity(field.qty)) newErrors[`qty_${index}`] = "Quantity must be between 1-9999";
-      
+
       if (!field.rate) newErrors[`rate_${index}`] = "Rate is required";
       else if (!validateRate(field.rate)) newErrors[`rate_${index}`] = "Rate must be between 1-999999";
-      
+
       if (!field.unit) newErrors[`unit_${index}`] = "Unit is required";
       else if (!validateText(field.unit, 1, 10)) newErrors[`unit_${index}`] = "Unit must be 1-10 characters";
-      
+
       if (field.percentage && !validatePercentage(field.percentage)) newErrors[`percentage_${index}`] = "Percentage must be between 0-100";
       if (field.cgstRate && !validateTaxRate(field.cgstRate)) newErrors[`cgstRate_${index}`] = "CGST rate must be between 0-28%";
       if (field.sgstRate && !validateTaxRate(field.sgstRate)) newErrors[`sgstRate_${index}`] = "SGST rate must be between 0-28%";
@@ -568,59 +568,59 @@ function AddCAMBilling() {
         if (!value) error = 'Invoice number is required';
         else if (!validateInvoiceNumber(value)) error = 'Invalid invoice number format (use A-Z, 0-9, -, /)';
         break;
-      
+
       case 'dueDate':
         if (!value) error = 'Due date is required';
         else if (!validateDate(value)) error = 'Due date must be today or later';
         break;
-      
+
       case 'dateSupply':
         if (value && !validateDate(value)) error = 'Supply date must be today or later';
         break;
-      
+
       case 'notes':
         if (value && !validateNotes(value)) error = 'Notes must be 500 characters or less';
         break;
-      
+
       case 'description':
         if (!value) error = 'Description is required';
         else if (!validateDescription(value)) error = 'Description must be 3-100 characters';
         break;
-      
+
       case 'sacHsnCode':
         if (!value) error = 'HSN/SAC code is required';
         else if (!validateHsnCode(value)) error = 'HSN/SAC code must be 4-8 digits';
         break;
-      
+
       case 'qty':
         if (!value) error = 'Quantity is required';
         else if (!validateQuantity(value)) error = 'Quantity must be between 1-9999';
         break;
-      
+
       case 'rate':
         if (!value) error = 'Rate is required';
         else if (!validateRate(value)) error = 'Rate must be between 1-999999';
         break;
-      
+
       case 'percentage':
         if (value && !validatePercentage(value)) error = 'Percentage must be between 0-100';
         break;
-      
+
       case 'discount':
         if (value && !validateAmount(value)) error = 'Invalid discount amount';
         break;
-      
+
       case 'cgstRate':
       case 'sgstRate':
       case 'igstRate':
         if (value && !validateTaxRate(value)) error = 'Tax rate must be between 0-28%';
         break;
-      
+
       case 'unit':
         if (!value) error = 'Unit is required';
         else if (!validateText(value, 1, 10)) error = 'Unit must be 1-10 characters';
         break;
-      
+
       default:
         break;
     }
@@ -919,14 +919,16 @@ function AddCAMBilling() {
                       Unit
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       id={`unit-${index}`}
                       placeholder="Enter Unit"
-                      className="border p-1 px-4 border-gray-500 rounded-md"
+                      className={`border p-1 px-4 border-gray-500 rounded-md ${errors[`unit_${index}`] ? "border-red-500" : ""
+                        }`}
                       value={field.unit}
                       name="unit"
                       onChange={(e) => handleChange(e, index)}
                     />
+
                     <ErrorMessage error={errors[`unit_${index}`]} />
                   </div>
                   <div className="flex flex-col">

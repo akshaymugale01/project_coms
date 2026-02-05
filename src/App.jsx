@@ -534,6 +534,7 @@ import AddUser from "./pages/Setup/users/AddUser.jsx";
 import EditContactBook from "./pages/SubPages/EditContactBook.jsx";
 import LOIProceed from "./pages/SubPages/LOIProceed.jsx";
 
+
 // new admin hrms
 import AddGenerationLetter from "./pages/AdminHrms/AddGenerationLetter.jsx";
 import OrganisationView2 from "./pages/AdminHrms/OrganisationView2.jsx";

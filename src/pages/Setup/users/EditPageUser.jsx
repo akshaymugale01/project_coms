@@ -23,6 +23,7 @@ const EditPageUser = () => {
   const [sites, setSites] = useState([]);
   const [usersites, setUserSites] = useState([]);
   const [members, setMembers] = useState([]);
+  const [pets, setPets] = useState([]);
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -48,6 +49,7 @@ const EditPageUser = () => {
     user_members: [],
     user_vendor: [],
     vehicle_details: [],
+    pet_details:[],
   });
   const [originalData, setOriginalData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ const EditPageUser = () => {
       console.log("Full API response:", userResp?.data);
       console.log("moving_date from API:", userResp?.data?.moving_date);
       console.log("vehicle_details from API:", userResp?.data?.vehicle_details);
-      
+
       const userData = userResp?.data || {};
       // Convert date formats for HTML5 date inputs
       const formattedData = {
@@ -95,10 +97,25 @@ const EditPageUser = () => {
         lease_expiry: convertToISODate(userData.lease_expiry),
         birth_date: convertToISODate(userData.birth_date),
       };
-      
+
       setFormData(formattedData);
+      if (Array.isArray(userData.pets)) {
+        setPets(
+          userData.pets.map((p) => ({
+            id: p.id ?? null,
+            pet_name: p.pet_name ?? "",
+            // pet_owner_mobile_no: p.pet_owner_mobile_no ?? "",
+            pet_breed: p.pet_breed ?? "",
+            gender: p.gender ?? "",
+            colour: p.colour ?? "",
+            age: p.age ?? "",
+          }))
+        );
+      }
+
       setOriginalData(formattedData);
       setUserSites(sitesResp.data);
+
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -110,13 +127,12 @@ const EditPageUser = () => {
   }, []);
 
   useEffect(() => {
-    if (!hydratedSite && Array.isArray(formData.user_sites) && formData.user_sites.length > 0)
-    {
+    if (!hydratedSite && Array.isArray(formData.user_sites) && formData.user_sites.length > 0) {
       const site = formData.user_sites[0];
       console.log("Hydrating site:", site);
-       setSelectedUnit(String(site.unit_id ?? ""));
-       setSelectedBuilding(String(site.build_id ?? ""));
-       setSelectedFloorId(String(site.floor_id ?? ""));
+      setSelectedUnit(String(site.unit_id ?? ""));
+      setSelectedBuilding(String(site.build_id ?? ""));
+      setSelectedFloorId(String(site.floor_id ?? ""));
       setHydratedSite(true); // prevent rehydration
     }
   }, [formData.user_sites, hydratedSite]);
@@ -192,7 +208,7 @@ const EditPageUser = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sitesResp , buildResp] = await Promise.all([
+        const [sitesResp, buildResp] = await Promise.all([
           getSites(),
           getBuildings(),
         ]);
@@ -216,12 +232,12 @@ const EditPageUser = () => {
     if (!hasHydratedUserData && formData.firstname) {
       const hydratedMembers = Array.isArray(formData.user_members) && formData.user_members.length > 0
         ? formData.user_members.map((m) => ({
-            id: m.id ?? null,
-            member_type: m.member_type ?? "",
-            member_name: m.member_name ?? "",
-            contact_no: m.contact_no ?? "",
-            relation: m.relation ?? "",
-          }))
+          id: m.id ?? null,
+          member_type: m.member_type ?? "",
+          member_name: m.member_name ?? "",
+          contact_no: m.contact_no ?? "",
+          relation: m.relation ?? "",
+        }))
         : [];
 
       console.log("Hydrating members from formData:", hydratedMembers);
@@ -229,11 +245,11 @@ const EditPageUser = () => {
 
       const hydratedVendors = Array.isArray(formData.user_vendor) && formData.user_vendor.length > 0
         ? formData.user_vendor.map((v) => ({
-            id: v.id ?? null,
-            service_type: v.service_type ?? "",
-            name: v.name ?? "",
-            contact_no: v.contact_no ?? "",
-          }))
+          id: v.id ?? null,
+          service_type: v.service_type ?? "",
+          name: v.name ?? "",
+          contact_no: v.contact_no ?? "",
+        }))
         : [];
 
       console.log("Hydrating vendors from formData:", hydratedVendors);
@@ -242,11 +258,11 @@ const EditPageUser = () => {
       // Hydrate vehicles
       const hydratedVehicles = Array.isArray(formData.vehicle_details) && formData.vehicle_details.length > 0
         ? formData.vehicle_details.map((v) => ({
-            id: v.id ?? null,
-            vehicle_type: v.vehicle_type ?? "",
-            vehicle_no: v.vehicle_no ?? "",
-            parking_slot_no: v.parking_slot_no ?? "",
-          }))
+          id: v.id ?? null,
+          vehicle_type: v.vehicle_type ?? "",
+          vehicle_no: v.vehicle_no ?? "",
+          parking_slot_no: v.parking_slot_no ?? "",
+        }))
         : [];
 
       console.log("Hydrating vehicles from formData:", hydratedVehicles);
@@ -316,12 +332,66 @@ const EditPageUser = () => {
       fetchFloorsAndUnits();
     }
   }, [hydratedSite, selectedBuilding, selectedFloorId]);
-  
+
   const handleUnitChange = (e) => {
     setSelectedUnit(e.target.value);
     // Optional: log or trigger side effects
     console.log("Selected unit ID:", e.target.value);
   };
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      pet_details: pets.map((p) => ({
+        id: p.id ?? undefined,
+        pet_name: p.pet_name,
+        // pet_owner_mobile_no: p.pet_owner_mobile_no,
+        pet_breed: p.pet_breed,
+        gender: p.gender,
+        colour: p.colour,
+        age: p.age,
+        // _destroy: p._destroy || false,
+      })),
+    }));
+  }, [pets]);
+
+
+
+  const handleAddPets = () => {
+    setPets((prev) => [
+      ...prev,
+      {
+        id: null,
+        pet_name: "",
+        pet_owner_mobile_no: "",
+        pet_breed: "",
+        gender: "",
+        colour: "",
+        age: "",
+      }
+
+    ]);
+  };
+
+  const handlePetChange = (index, field, value) => {
+    setPets((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      return updated;
+    });
+  };
+
+  const handleDeletePet = (index) => {
+    setPets((prev) =>
+      prev.map((p, i) =>
+        i === index ? { ...p, _destroy: true } : p
+      )
+    );
+  };
+
 
   const handleAddMember = () => {
     setMembers((prev) => [
@@ -452,6 +522,8 @@ const EditPageUser = () => {
         blood_group: formData.blood_group,
         no_of_pets: formData.no_of_pets,
         birth_date: formData.birth_date,
+        pet_details: formData.pet_details || [],
+
         user_sites_attributes: [
           {
             id: formData.user_sites?.[0]?.id,
@@ -485,7 +557,7 @@ const EditPageUser = () => {
         })),
       },
     };
-
+    console.log("PETS PAYLOAD", postData.user.pets_attributes);
     try {
       console.log("Sending update data:", postData);
       await editSetupUsers(id, postData);
@@ -550,9 +622,8 @@ const EditPageUser = () => {
                       placeholder={`Enter ${field}`}
                       disabled={isDisabled}
                       className={`border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm
-              ${
-                isDisabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""
-              }
+              ${isDisabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""
+                        }
             `}
                     />
                   </div>
@@ -820,21 +891,20 @@ const EditPageUser = () => {
                 </div>
               )}
 
-              {/* 💼 Pets */}
+              {/* 💼 Profession */}
               <div className="flex flex-col gap-2">
                 <label htmlFor="profession" className="font-semibold">
-                  Pets(if any):
+                  Profession:
                 </label>
                 <input
-                  type="number"
-                  min={0}
-                  id="no_of_pets"
-                  name="no_of_pets"
+                  type="text"
+                  id="profession"
+                  name="profession"
                   className="border p-2 rounded border-gray-300"
-                  placeholder="Number of pets"
-                  value={formData.no_of_pets || ""}
+                  placeholder="Enter profession"
+                  value={formData.profession || ""}
                   onChange={(e) =>
-                    handleInputChange("no_of_pets", e.target.value)
+                    handleInputChange("profession", e.target.value)
                   }
                 />
               </div>
@@ -882,24 +952,146 @@ const EditPageUser = () => {
                 />
               </div>
 
-              {/* 💼 Profession */}
+              {/* Pets */}
               <div className="flex flex-col gap-2">
                 <label htmlFor="profession" className="font-semibold">
-                  Profession:
+                  Pets(if any):
                 </label>
                 <input
-                  type="text"
-                  id="profession"
-                  name="profession"
+                  type="number"
+                  min={0}
+                  id="no_of_pets"
+                  name="no_of_pets"
                   className="border p-2 rounded border-gray-300"
-                  placeholder="Enter profession"
-                  value={formData.profession || ""}
+                  placeholder="Number of pets"
+                  value={formData.no_of_pets || ""}
                   onChange={(e) =>
-                    handleInputChange("profession", e.target.value)
+                    handleInputChange("no_of_pets", e.target.value)
                   }
                 />
               </div>
             </div>
+          </div>
+
+
+          <div className="mt-10 space-y-4">
+            {/* ➕ Add Button */}
+            <button
+              type="button"
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={handleAddPets}
+            >
+              Add Pets
+            </button>
+
+            {/* Pets Rows */}
+            {pets.map((pet, index) => {
+              if (pet._destroy) return null;
+
+              return (
+                <div
+                  key={pet.id ?? index}
+                  className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end mt-4"
+                >
+                  {/* Pet Name */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Pet Name</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded"
+                      value={pet.pet_name}
+                      onChange={(e) =>
+                        handlePetChange(index, "pet_name", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Owner Mobile */}
+                  {/* <div className="flex flex-col">
+                    <label className="font-semibold">Mobile No</label>
+                    <input
+                      type="tel"
+                      className="border p-2 rounded"
+                      value={pet.pet_owner_mobile_no}
+                      maxLength={10}
+                      onChange={(e) =>
+                        handlePetChange(
+                          index,
+                          "pet_owner_mobile_no",
+                          e.target.value.replace(/\D/g, "")
+                        )
+                      }
+                    />
+                  </div> */}
+
+                  {/* Breed */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Breed</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded"
+                      value={pet.pet_breed}
+                      onChange={(e) =>
+                        handlePetChange(index, "pet_breed", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Gender</label>
+                    <select
+                      className="border p-2 rounded"
+                      value={pet.gender}
+                      onChange={(e) =>
+                        handlePetChange(index, "gender", e.target.value)
+                      }
+                    >
+                      <option value="">-- Select --</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+
+                  {/* Colour */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Colour</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded"
+                      value={pet.colour}
+                      onChange={(e) =>
+                        handlePetChange(index, "colour", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Age */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Age</label>
+                    <input
+                      type="number"
+                      min={0}
+                      className="border p-2 rounded"
+                      value={pet.age}
+                      onChange={(e) =>
+                        handlePetChange(index, "age", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Delete */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePet(index)}
+                    >
+                      <RiDeleteBinLine className="text-red-600 w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-10 space-y-4">
@@ -1293,11 +1485,10 @@ const EditPageUser = () => {
             <button
               onClick={handleAddUser}
               disabled={isUpdating}
-              className={`text-white p-2 px-4 rounded-md font-medium ${
-                isUpdating
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-black hover:bg-gray-800"
-              }`}
+              className={`text-white p-2 px-4 rounded-md font-medium ${isUpdating
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-black hover:bg-gray-800"
+                }`}
             >
               {isUpdating ? (
                 <span className="flex items-center gap-2">

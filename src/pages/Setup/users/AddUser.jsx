@@ -46,6 +46,7 @@ const AddUser = () => {
   const [vehicleList, setVehicleList] = useState([
     { vehicle_type: "", vehicle_no: "", parking_slot_no: "" },
   ]);
+  const [pets, setPets] = useState([]);
 
   const [occupancy_type, setOccupancy_type] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -240,6 +241,46 @@ const AddUser = () => {
     setMembers(updated);
   };
 
+ // ✅ ADDED PETS HANDLERS WITH FILE SUPPORT
+  const handleAddPets = () => {
+    setPets((prev) => [
+      ...prev,
+      {
+        pet_name: "",
+        pet_owner_mobile_no: "",
+        pet_breed: "",
+        gender: "",
+        colour: "",
+        age: "",
+        pet_images: [], // Added
+        pet_profile: null // Added
+      },
+    ]);
+  };
+
+
+  const handlePetChange = (index, field, value) => {
+    setPets((prev) => {
+      const updated = [...prev];
+      
+      // ✅ Handle File Inputs separately
+      if (field === "pet_images" || field === "pet_profile") {
+         // value is likely e.target.files (FileList) for 'pet_images' or a File object for 'pet_profile'
+         updated[index][field] = value; 
+      } else {
+        updated[index] = {
+          ...updated[index],
+          [field]: value,
+        };
+      }
+      return updated;
+    });
+  };
+
+  const handleDeletePet = (index) => {
+    setPets((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleAddUser = async () => {
     const {
       firstname,
@@ -314,7 +355,7 @@ const AddUser = () => {
         net_provider_name,
         net_provider_id,
         blood_group,
-        no_of_pets,
+        no_of_pets:pets.length,
         birth_date,
         user_sites: [
           {
@@ -345,6 +386,18 @@ const AddUser = () => {
           vehicle_no: vehicle.vehicle_no,
           parking_slot_no: vehicle.parking_slot_no,
         })),
+
+        // ✅ MAPPING TO pet_details
+        pet_details: pets.map((p) => ({
+          pet_name: p.pet_name,
+          pet_breed: p.pet_breed,
+          gender: p.gender,
+          colour: p.colour,
+          age: p.age,
+          pet_images: p.pet_images || [], // Array of file objects
+          pet_profile: p.pet_profile || null // Single file object
+        }))
+
       },
       site_ids,
     };
@@ -548,24 +601,25 @@ const AddUser = () => {
                 </div>
               )}
 
-              {/* 💼 Pets */}
+              {/* 💼 Profession */}
               <div className="flex flex-col gap-2">
                 <label htmlFor="profession" className="font-semibold">
-                  Pets(if any):
+                  Profession:
                 </label>
                 <input
-                  type="number"
-                  min={0}
-                  id="no_of_pets"
-                  name="no_of_pets"
+                  type="text"
+                  id="profession"
+                  name="profession"
                   className="border p-2 rounded border-gray-300"
-                  placeholder="Number of pets"
-                  value={formData.no_of_pets || ""}
+                  placeholder="Enter profession"
+                  value={formData.profession || ""}
                   onChange={(e) =>
-                    handleInputChange("no_of_pets", e.target.value)
+                    handleInputChange("profession", e.target.value)
                   }
                 />
               </div>
+
+
             </div>
           </div>
 
@@ -610,24 +664,169 @@ const AddUser = () => {
                 />
               </div>
 
-              {/* 💼 Profession */}
+              {/* 💼 Pets */}
               <div className="flex flex-col gap-2">
                 <label htmlFor="profession" className="font-semibold">
-                  Profession:
+                  Pets(if any):
                 </label>
                 <input
-                  type="text"
-                  id="profession"
-                  name="profession"
+                  type="number"
+                  min={0}
+                  id="no_of_pets"
+                  name="no_of_pets"
                   className="border p-2 rounded border-gray-300"
-                  placeholder="Enter profession"
-                  value={formData.profession || ""}
+                  placeholder="Number of pets"
+                  value={formData.no_of_pets || ""}
                   onChange={(e) =>
-                    handleInputChange("profession", e.target.value)
+                    handleInputChange("no_of_pets", e.target.value)
                   }
                 />
               </div>
             </div>
+          </div>
+
+          {/* ✅ ADDED PETS SECTION HERE */}
+          <div className="mt-10 space-y-4">
+            <button
+              type="button"
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={handleAddPets}
+            >
+              Add Pets
+            </button>
+
+            {pets.map((pet, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end mt-4"
+              >
+                {/* Pet Name */}
+                <div className="flex flex-col">
+                  <label className="font-semibold">Pet Name</label>
+                  <input
+                    type="text"
+                    className="border p-2 rounded"
+                    value={pet.pet_name}
+                    placeholder=" Enter Pet Name"
+                    onChange={(e) =>
+                      handlePetChange(index, "pet_name", e.target.value)
+
+                    }
+                  />
+                </div>
+
+                {/* Owner Mobile */}
+                {/* <div className="flex flex-col">
+                  <label className="font-semibold">Mobile No</label>
+                  <input
+                    type="tel"
+                    className="border p-2 rounded"
+                    value={pet.owner_mobile_no}
+                    maxLength={10}
+                    onChange={(e) =>
+                      handlePetChange(
+                        index,
+                        "owner_mobile_no",
+                        e.target.value.replace(/\D/g, "")
+                      )
+                    }
+                  />
+                </div> */}
+
+                {/* Breed */}
+                <div className="flex flex-col">
+                  <label className="font-semibold">Breed</label>
+                  <input
+                    type="text"
+                    className="border p-2 rounded"
+                    value={pet.pet_breed}
+                    placeholder=" Enter Pet Breed"
+                    onChange={(e) =>
+                      handlePetChange(index, "pet_breed", e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* Gender */}
+                <div className="flex flex-col">
+                  <label className="font-semibold">Gender</label>
+                  <select
+                    className="border p-2 rounded"
+                    value={pet.gender}
+                    onChange={(e) =>
+                      handlePetChange(index, "gender", e.target.value)
+                    }
+                  >
+                    <option value="">-- Select --</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+
+                {/* Colour */}
+                <div className="flex flex-col">
+                  <label className="font-semibold">Colour</label>
+                  <input
+                    type="text"
+                    className="border p-2 rounded"
+                    value={pet.colour}
+                    placeholder=" Enter Pet Colour"
+                    onChange={(e) =>
+                      handlePetChange(index, "colour", e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* Age */}
+                <div className="flex flex-col">
+                  <label className="font-semibold">Age</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="border p-2 rounded"
+                    value={pet.age}
+                    placeholder=" Enter Pet Age"
+                    onChange={(e) =>
+                      handlePetChange(index, "age", e.target.value)
+                    }
+                  />
+                </div>
+                 <div className="col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                   {/* Pet Images Input */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Pet Images</label>
+                    <input
+                      type="file"
+                      className="border p-2 rounded"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => handlePetChange(index, "pet_images", e.target.files)}
+                    />
+                  </div>
+
+                  {/* Pet Profile Input */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Pet Profile</label>
+                    <input
+                      type="file"
+                      className="border p-2 rounded"
+                      accept="image/*"
+                      onChange={(e) => handlePetChange(index, "pet_profile", e.target.files[0])}
+                    />
+                  </div>
+                  </div>
+
+                {/* Delete */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePet(index)}
+                  >
+                    <RiDeleteBinLine className="text-red-600 w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="mt-10 space-y-4">
@@ -1125,11 +1324,10 @@ const AddUser = () => {
             <button
               onClick={handleAddUser}
               disabled={isCreating}
-              className={`text-white p-2 px-4 rounded-md font-medium ${
-                isCreating
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-black hover:bg-gray-800"
-              }`}
+              className={`text-white p-2 px-4 rounded-md font-medium ${isCreating
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-black hover:bg-gray-800"
+                }`}
             >
               {isCreating ? (
                 <span className="flex items-center gap-2">

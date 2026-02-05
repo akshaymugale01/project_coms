@@ -113,7 +113,7 @@ const AddNewVisitor = () => {
   });
 
 
-console.log("Form Data", formData);
+  console.log("Form Data", formData);
 
   const fetchDetails = async () => {
     if (!mobile) return;
@@ -250,11 +250,11 @@ console.log("Form Data", formData);
       if (value.length > 10) value = value.slice(0, 10);
     }
 
-    if (name  === "vehicleNumber" || name === "passNumber"){
+    if (name === "vehicleNumber" || name === "passNumber") {
       value = value.replace(/[^a-zA-Z0-9]/g, "");
     }
 
-    if (name  === "comingFrom" || name === "visitorName") {
+    if (name === "comingFrom" || name === "visitorName") {
       value = value.replace(/[^a-zA-Z\s]/g, "");
     }
 
@@ -404,11 +404,13 @@ console.log("Form Data", formData);
     const fetchParkingConfig = async () => {
       try {
         const parkingRes = await getParkingConfig();
-        setSlots(parkingRes.data);
+        console.log("Parking API response:", parkingRes.data);
+        setSlots(parkingRes.data.slots || []);
       } catch (error) {
         console.log(error);
       }
     };
+
     fetchUsers();
     fetchVisitorCategory();
     fetchParkingConfig();
@@ -831,22 +833,27 @@ console.log("Form Data", formData);
           </div>
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="slotNumber" className="font-semibold">
-              Select parking Slot
+              Select Parking Slot
             </label>
+
             <select
+              id="slotNumber"
               name="slotNumber"
               value={formData.slotNumber}
               onChange={handleChange}
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
             >
               <option value="">Select Slot</option>
-              {slots.map((slot) => (
-                <option value={slot.id} key={slot.id}>
-                  {slot.name}
-                </option>
-              ))}
+
+              {Array.isArray(slots) &&
+                slots.map((slot) => (
+                  <option key={slot.id} value={slot.id}>
+                    {slot.name}
+                  </option>
+                ))}
             </select>
           </div>
+
           <div className="grid gap-2 items-center w-full">
             <label htmlFor="expectedDate" className="font-semibold">
               Expected Date:
@@ -1043,13 +1050,12 @@ console.log("Form Data", formData);
               {weekdaysMap.map((weekdayObj) => (
                 <button
                   key={weekdayObj.day}
-                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${
-                    selectedWeekdays?.includes(weekdayObj.day)
+                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${selectedWeekdays?.includes(weekdayObj.day)
                       ? // &&
-                        // weekdayObj.isActive
-                        "bg-green-400 text-white "
+                      // weekdayObj.isActive
+                      "bg-green-400 text-white "
                       : ""
-                  }`}
+                    }`}
                   onClick={(e) => {
                     e.preventDefault();
                     handleWeekdaySelection(weekdayObj.day);

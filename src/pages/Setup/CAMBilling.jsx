@@ -29,17 +29,23 @@ function CAMBilling() {
   const [filter, setFilter] = useState(false);
   const [camBilling, setComBilling] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [searchText, setSearchText] = useState([]);
+const [searchText, setSearchText] = useState("");
 
-  const fetchCamBilling = async () => {
-    try {
-      const response = await getCamBillingData();
-      setComBilling(response.data);
-      setFilteredData(response.data);
-    } catch (err) {
-      console.error("Failed to fetch Address Setup data:", err);
-    }
-  };
+const fetchCamBilling = async () => {
+  try {
+    const response = await getCamBillingData();
+
+    const list = Array.isArray(response.data?.cam_bills)
+      ? response.data.cam_bills
+      : [];
+
+    setComBilling(list);
+    setFilteredData(list);
+  } catch (err) {
+    console.error("Failed to fetch CAM Billing data:", err);
+  }
+};
+
   useEffect(() => {
     fetchCamBilling(); // Call the API
   }, []);
@@ -221,25 +227,27 @@ function CAMBilling() {
   const isFlatDisabled =
     !formData.block || !formData.floor_name || !units.length;
   const navigate = useNavigate();
-  const handleFilterData = async () => {
-    try {
-      const [startDate, endDate] = billingPeriod;
-      const resp = await gatCamBillFilter(
-        formData.block,
-        formData.floor_name,
-        formData.flat,
-        formData.status,
-        startDate,
-        endDate,
-        formData.dueDate
-      );
-      console.log(resp);
-      navigate("/cam_bill/billing");
-      setFilteredData(resp.data);
-    } catch (error) {
-      console.error("Error filtering data:", error);
-    }
-  };
+const handleFilterData = async () => {
+  try {
+    const [startDate, endDate] = billingPeriod;
+
+    const resp = await gatCamBillFilter(
+      formData.block,
+      formData.floor_name,
+      formData.flat,
+      formData.status,
+      startDate,
+      endDate,
+      formData.dueDate
+    );
+
+    setFilteredData(resp.data?.cam_bills || []);
+    navigate("/cam_bill/billing");
+  } catch (error) {
+    console.error("Error filtering data:", error);
+  }
+};
+
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
@@ -423,12 +431,13 @@ function CAMBilling() {
             </button>
           </div>
         )}
-        <Table
-          columns={columns}
-          data={filteredData}
-          selectableRow={true}
-          onSelectedRows={handleSelectedRows}
-        />
+      <Table
+  columns={columns}
+  data={filteredData}
+  selectableRows
+  onSelectedRows={handleSelectedRows}
+/>
+
         {importModal && (
           <InvoiceImportModal
             onclose={() => setImportModal(false)}

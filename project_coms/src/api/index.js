@@ -490,23 +490,36 @@ export const getFitoutDocs = async () =>
   });
 
 // ticket download section
-export const getTicketStatusDownload = async (
-  startDate = null,
-  endDate = null
-) => {
-  const params = {
-    token: token,
-  };
+// export const getTicketStatusDownload = async (
+//   startDate = null,
+//   endDate = null
+// ) => {
+//   const params = {
+//     token: token,
+//   };
 
-  if (startDate && endDate) {
-    params.start_date = startDate;
-    params.end_date = endDate;
-  }
+//   if (startDate && endDate) {
+//     params.start_date = startDate;
+//     params.end_date = endDate;
+//   }
 
-  return axiosInstance.get(`/pms/admin/complaints/export_complaints.xlsx`, {
-    params,
-    responseType: "blob",
-  });
+//   return axiosInstance.get(`/pms/admin/complaints/export_complaints.xlsx`, {
+//     params,
+//     responseType: "blob",
+//   });
+// };
+
+export const getTicketStatusDownload = async (params = {}) => {
+  return axiosInstance.get(
+    "/pms/admin/complaints/export_complaints.xlsx",
+    {
+      params: {
+        token,
+        ...params,   // 🔥 pass all filters
+      },
+      responseType: "blob",
+    }
+  );
 };
 
 export const getStatusDownload = async (id) =>
