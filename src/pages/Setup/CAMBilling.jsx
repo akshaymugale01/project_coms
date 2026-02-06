@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { BsEye } from "react-icons/bs";
 import { Link, useNavigate } from "react-router-dom";
-
 import { useSelector } from "react-redux";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { FaDownload, FaUpload } from "react-icons/fa";
 import { BiFilterAlt } from "react-icons/bi";
-
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -22,6 +20,7 @@ import Navbar from "../../components/Navbar";
 import CamBillingHeader from "../SubPages/CamBillingHeader";
 import Table from "../../components/table/Table";
 import InvoiceImportModal from "../../containers/modals/InvoiceImportModal";
+
 function CAMBilling() {
   const themeColor = useSelector((state) => state.theme.color);
   const [billingPeriod, setBillingPeriod] = useState([null, null]);
@@ -29,25 +28,26 @@ function CAMBilling() {
   const [filter, setFilter] = useState(false);
   const [camBilling, setComBilling] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState("");
 
-const fetchCamBilling = async () => {
-  try {
-    const response = await getCamBillingData();
+  const fetchCamBilling = async () => {
+    try {
+      const response = await getCamBillingData();
+      // Handle the specific JSON structure provided
+      const list = Array.isArray(response.data?.cam_bills)
+        ? response.data.cam_bills
+        : [];
 
-    const list = Array.isArray(response.data?.cam_bills)
-      ? response.data.cam_bills
-      : [];
-
-    setComBilling(list);
-    setFilteredData(list);
-  } catch (err) {
-    console.error("Failed to fetch CAM Billing data:", err);
-  }
-};
+      setComBilling(list);
+      setFilteredData(list);
+    } catch (err) {
+      console.error("Failed to fetch CAM Billing data:", err);
+      toast.error("Failed to load data");
+    }
+  };
 
   useEffect(() => {
-    fetchCamBilling(); // Call the API
+    fetchCamBilling();
   }, []);
 
   const columns = [
@@ -63,7 +63,8 @@ const fetchCamBilling = async () => {
     },
     {
       name: "Flat",
-      selector: (row, index) => row?.flat?.name,
+      // Safe navigation for nested flat object
+      selector: (row) => row?.flat?.name || "N/A",
       sortable: true,
     },
     {
@@ -98,14 +99,9 @@ const fetchCamBilling = async () => {
     },
     {
       name: "Payment Status",
-      selector: (row) => row.payment_status, // Pass row.status
+      selector: (row) => row.payment_status || "Pending",
       sortable: true,
     },
-    // {
-    //   name: "Mail sent",
-    //   selector: (row) => row.mail_sent,
-    //   sortable: true,
-    // },
     {
       name: "Recall",
       selector: (row) => row.status,
@@ -120,24 +116,21 @@ const fetchCamBilling = async () => {
 
   const handleDateChange = (dates) => {
     const [start, end] = dates;
-    setBillingPeriod([start, end]); // Update the state
+    setBillingPeriod([start, end]);
   };
 
   const [selectedRows, setSelectedRows] = useState([]);
   const handleSelectedRows = (rows) => {
     const selectedId = rows.map((row) => row.id);
-    console.log(selectedId);
     setSelectedRows(selectedId);
   };
 
   const handleDownload = async () => {
     if (selectedRows.length === 0) {
-      return toast.error("Please select at least one data.");
+      return toast.error("Please select at least one record.");
     }
 
-    console.log(selectedRows);
-    toast.loading("Cam Billing Invoice downloading, please wait!");
-
+    toast.loading("Downloading...");
     try {
       const response = await getCamBillingDownload(selectedRows);
       const url = window.URL.createObjectURL(
@@ -151,14 +144,15 @@ const fetchCamBilling = async () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      toast.success("Cam Billing Invoice downloaded successfully");
+      toast.success("Downloaded successfully");
       toast.dismiss();
     } catch (error) {
       toast.dismiss();
       console.error("Error downloading :", error);
-      toast.error("Something went wrong, please try again");
+      toast.error("Something went wrong");
     }
   };
+
   const buildings = getItemInLocalStorage("Building");
   const [floors, setFloors] = useState([]);
   const [units, setUnits] = useState([]);
@@ -170,12 +164,9 @@ const fetchCamBilling = async () => {
     dueDate: "",
   });
 
-  console.log(formData);
-  console.log(billingPeriod);
   const handleChange = async (e) => {
     const { name, value, type } = e.target;
 
-    // Fetch floors based on building ID
     const fetchFloor = async (buildingID) => {
       try {
         const response = await getFloors(buildingID);
@@ -186,7 +177,7 @@ const fetchCamBilling = async () => {
         console.error("Error fetching floors:", error);
       }
     };
-    // Fetch units based on floor ID
+
     const fetchUnit = async (floorID) => {
       try {
         const response = await getUnits(floorID);
@@ -200,17 +191,17 @@ const fetchCamBilling = async () => {
 
     if (type === "select-one" && name === "block") {
       const buildingID = Number(value);
-      await fetchFloor(buildingID); // Fetch floors for the selected block
+      await fetchFloor(buildingID);
       setFormData((prev) => ({
         ...prev,
         building_id: buildingID,
         block: value,
-        floor_id: "", // Reset floor selection
-        flat: "", // Reset unit selection
+        floor_id: "",
+        flat: "",
       }));
     } else if (type === "select-one" && name === "floor_name") {
       const floorID = Number(value);
-      await fetchUnit(floorID); // Fetch units for the selected floor
+      await fetchUnit(floorID);
       setFormData((prev) => ({
         ...prev,
         floor_id: floorID,
@@ -224,29 +215,30 @@ const fetchCamBilling = async () => {
       }));
     }
   };
+
   const isFlatDisabled =
     !formData.block || !formData.floor_name || !units.length;
   const navigate = useNavigate();
-const handleFilterData = async () => {
-  try {
-    const [startDate, endDate] = billingPeriod;
 
-    const resp = await gatCamBillFilter(
-      formData.block,
-      formData.floor_name,
-      formData.flat,
-      formData.status,
-      startDate,
-      endDate,
-      formData.dueDate
-    );
-
-    setFilteredData(resp.data?.cam_bills || []);
-    navigate("/cam_bill/billing");
-  } catch (error) {
-    console.error("Error filtering data:", error);
-  }
-};
+  const handleFilterData = async () => {
+    try {
+      const [startDate, endDate] = billingPeriod;
+      const resp = await gatCamBillFilter(
+        formData.block,
+        formData.floor_name,
+        formData.flat,
+        formData.status,
+        startDate,
+        endDate,
+        formData.dueDate
+      );
+      setFilteredData(resp.data?.cam_bills || []);
+      // navigate("/cam_bill/billing"); // Optional: keep URL in sync
+    } catch (error) {
+      console.error("Error filtering data:", error);
+      toast.error("Error filtering data");
+    }
+  };
 
   const handleSearch = (e) => {
     const searchValue = e.target.value;
@@ -259,40 +251,30 @@ const handleFilterData = async () => {
           item?.invoice_number
             ?.toLowerCase()
             .includes(searchValue.toLowerCase()) ||
-          // item?.unit_id?.toLowerCase().includes(searchValue.toLowerCase()) ||
           item?.status?.toLowerCase().includes(searchValue.toLowerCase())
       );
       setFilteredData(filterResult);
     }
   };
-  console.log(searchText);
 
-  const getStatusButton = (status) => {
-    if (status === "pending" || status === "recall" || status === null) {
-      return <button className="text-black">Unpaid</button>;
-    } else {
-      return <button className="text-green-500">Paid</button>;
-    }
-  };
-  console.log(filteredData.status);
   return (
     <section className="flex">
       <Navbar />
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <CamBillingHeader />
-        <div className="flex md:flex-row flex-col justify-between md:items-center my-2 gap-2  ">
+        <div className="flex md:flex-row flex-col justify-between md:items-center my-2 gap-2">
           <input
             type="text"
             onChange={handleSearch}
             value={searchText}
             placeholder="Search By Invoice No, Payment Status"
-            className=" p-2 md:w-96 border-gray-300 rounded-md placeholder:text-sm outline-none border "
+            className="p-2 md:w-96 border-gray-300 rounded-md placeholder:text-sm outline-none border"
           />
           <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
             <Link
               to={`/cam_bill/add`}
               style={{ background: "rgb(3 19 37)" }}
-              className="px-4 py-2  font-medium text-white rounded-md flex gap-2 items-center justify-center"
+              className="px-4 py-2 font-medium text-white rounded-md flex gap-2 items-center justify-center"
             >
               <IoAddCircleOutline />
               Add
@@ -314,7 +296,7 @@ const handleFilterData = async () => {
               Export
             </button>
             <button
-              className=" font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
+              className="font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
               style={{ background: "rgb(3 19 37)" }}
               onClick={() => setFilter(!filter)}
             >
@@ -347,7 +329,7 @@ const handleFilterData = async () => {
                 onChange={handleChange}
                 value={formData.floor_name}
                 name="floor_name"
-                disabled={!floors.length} // Disable if no floors are available
+                disabled={!floors.length}
               >
                 <option value="">Select Floor</option>
                 {floors.map((floor) => (
@@ -394,8 +376,6 @@ const handleFilterData = async () => {
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
-                id="dateSupply"
-                placeholder="Enter Date of supply"
                 className="border p-1 px-4 border-gray-500 rounded-md"
               />
             </div>
@@ -415,7 +395,7 @@ const handleFilterData = async () => {
                 handleFilterData();
                 setFilter(!filter);
               }}
-              className=" p-1 px-4 text-white rounded-md"
+              className="p-1 px-4 text-white rounded-md"
               style={{ background: themeColor }}
             >
               Apply
@@ -431,12 +411,13 @@ const handleFilterData = async () => {
             </button>
           </div>
         )}
-      <Table
-  columns={columns}
-  data={filteredData}
-  selectableRows
-  onSelectedRows={handleSelectedRows}
-/>
+        
+        <Table
+          columns={columns}
+          data={filteredData}
+          selectableRow={true}
+          onSelectedRows={handleSelectedRows}
+        />
 
         {importModal && (
           <InvoiceImportModal
