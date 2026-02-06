@@ -565,51 +565,55 @@ const Ticket = () => {
   };
 
   // export data
-  const exportTicketsToExcel = async (exportType = 'overall', dateRange = null) => {
-    const loadingMessage = exportType === 'overall' 
-      ? "Downloading All Tickets Report, Please Wait..." 
-      : "Downloading Date-wise Tickets Report, Please Wait...";
-      
-    toast.loading(loadingMessage);
-    
-    try {
-      // Use the API function with date parameters, similar to VisitorsDashboard
-      const response = exportType === 'date' && dateRange
-        ? await getTicketStatusDownload(dateRange.start, dateRange.end)
-        : await getTicketStatusDownload();
-      
-      // Create blob and download
-      const url = window.URL.createObjectURL(
-        new Blob([response.data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        })
-      );
-      
-      const link = document.createElement('a');
-      link.style.display = 'none';
-      link.href = url;
-      
-      // Dynamic filename based on export type
-      const filename = exportType === 'date' && dateRange
-        ? `tickets_${dateRange.start}_to_${dateRange.end}.xlsx`
-        : `tickets_export_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.xlsx`;
-      
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-      
-      toast.dismiss();
-      toast.success("Tickets report downloaded successfully");
-      setShowExportModal(false); // Close modal after download
-      
-    } catch (error) {
-      toast.dismiss();
-      console.error("Error downloading tickets report:", error);
-      toast.error("Failed to download tickets report. Please try again.");
+const exportTicketsToExcel = async (exportType = "overall", dateRange = null) => {
+  toast.loading("Downloading Tickets Report...");
+
+  try {
+    const params = {};
+
+    // 🔥 APPLY CURRENT FILTERS
+    if (isFiltered && Object.keys(currentFilterParams).length > 0) {
+      Object.entries(currentFilterParams).forEach(([key, value]) => {
+        params[key] = value;
+      });
     }
-  };
+
+    // 🔥 DATE RANGE FILTER
+    if (exportType === "date" && dateRange) {
+      params.start_date = dateRange.start;
+      params.end_date = dateRange.end;
+    }
+
+    const response = await getTicketStatusDownload(params);
+
+    const url = window.URL.createObjectURL(
+      new Blob([response.data], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      })
+    );
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `tickets_export_${new Date()
+      .toISOString()
+      .split("T")[0]}.xlsx`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.dismiss();
+    toast.success("Filtered tickets exported successfully");
+    setShowExportModal(false);
+  } catch (error) {
+    toast.dismiss();
+    toast.error("Failed to export tickets");
+    console.error(error);
+  }
+};
+
+
 
   const handleOverallExport = () => {
     exportTicketsToExcel('overall');

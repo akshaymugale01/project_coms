@@ -16,6 +16,7 @@ import { getFacitilitySetup, postFacitilitySetup } from "../../api";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+
 const SetupFacility = () => {
   const [allowMultipleSlots, setAllowMultipleSlots] = useState("no");
 
@@ -60,6 +61,12 @@ const SetupFacility = () => {
       member: false,
       guest: false,
       tenant: false,
+      is_member_adult: true, // Added missing state
+      is_member_child: false,
+      is_guest_adult: true, // Added missing state
+      is_guest_child: false,
+      is_tenant_adult: true, // Added missing state
+      is_tenant_child: false,
       pay_on_facility: null,
       gst: "",
       sgst: "",
@@ -78,18 +85,6 @@ const SetupFacility = () => {
 
   console.log("DATA:", formData);
 
-  // const fecthFacitySetup = async() => {
-  //   try {
-  //    const fetchAPI = await getFacitilitySetup()
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   fecthFacitySetup();
-  // },[]) // [] for
-
   const postAmenitiesSetup = async () => {
     // Validate required fields
     if (
@@ -106,13 +101,13 @@ const SetupFacility = () => {
     // Append covers as an array
     if (formData.covers.length > 0) {
       formData.covers.forEach((file) => {
-        postData.append("cover_images[]", file); // Use "cover_images[]" for Rails to recognize it as an array
+        postData.append("cover_images[]", file);
       });
     }
     // Append attachments as an array
     if (formData.attachments.length > 0) {
       formData.attachments.forEach((file) => {
-        postData.append("attachments[]", file); // Use "attachments[]" for Rails to recognize it as an array
+        postData.append("attachments[]", file);
       });
     }
     // Append amenity fields
@@ -155,6 +150,18 @@ const SetupFacility = () => {
       },
     }));
   };
+
+  // ✅ ADDED HANDLER FOR SUB-CHECKBOXES (Adult/Child)
+  const handleChildToggle = (field) => {
+    setFormData((prev) => ({
+      ...prev,
+      amenity: {
+        ...prev.amenity,
+        [field]: !prev.amenity[field],
+      },
+    }));
+  };
+
   const handlePriceChange = (field, value) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -201,37 +208,6 @@ const SetupFacility = () => {
       slots: prevState.slots.filter((_, i) => i !== index),
     }));
   };
-
-  // Handle input change
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-
-  //   setFormData((prevData) => {
-  //     // Update the specific field in the formData
-  //     const updatedFormData = {
-  //       ...prevData,
-  //       amenity: {
-  //         ...prevData.amenity,
-  //         [name]: value,
-  //       },
-  //     };
-
-  //     // Construct the combined `book_before` value
-  //     const { book_before_days, book_before_hours, book_before_mins } = updatedFormData.amenity;
-  //     updatedFormData.amenity.book_before =
-  //       parseInt(`${book_before_days || 0}${book_before_hours || 0}${book_before_mins || 0}`, 10);
-
-  //     const { advance_days, advance_hours, advance_mins } = updatedFormData.amenity;
-  //     updatedFormData.amenity.advance_booking =
-  //       parseInt(`${advance_days || 0}${advance_hours || 0}${advance_mins || 0}`, 10);
-
-  //     const { cancel_before_days, cancel_before_hours, cancel_before_min } = updatedFormData.amenity;
-  //     updatedFormData.amenity.cancel_before =
-  //       parseInt(`${cancel_before_days || 0}${cancel_before_hours || 0}${cancel_before_min || 0}`, 10);
-
-  //     return updatedFormData;
-  //   });
-  // };
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -319,25 +295,6 @@ const SetupFacility = () => {
   };
   const [subFacilityAvailable, setSubFacilityAvailable] = useState(false);
 
-  /*const [rules, setRules] = useState([{ selectedOption: "", timesPerDay: "" }]);
-  const options = ["Flat", "User", "Tenant", "Owner"];
-  const handleAddRule = () => {
-    if (rules.length < 5) {
-      setRules([...rules, { selectedOption: "", timesPerDay: "" }]);
-    }
-  };
-  const handleOptionChange = (index, field, value) => {
-    const updatedRules = rules.map((rule, i) =>
-      i === index ? { ...rule, [field]: value } : rule
-    );
-    setRules(updatedRules);
-  };
-
-  const handleRemoveRule = (index) => {
-    const updatedRules = rules.filter((_, i) => i !== index);
-    setRules(updatedRules);
-  };*/
-  //new
   const [rules, setRules] = useState([{ timesPerDay: "", selectedOption: "" }]);
   const options = ["Members", "Guests", "Tenant", "Staff", "Others"];
   const handleOptionChange = (index, field, value) => {
@@ -400,7 +357,7 @@ const SetupFacility = () => {
       ...formData,
       amenity: {
         ...formData.amenity,
-        description: value, // Update description in the state
+        description: value,
       },
     });
   };
@@ -411,7 +368,7 @@ const SetupFacility = () => {
       ...formData,
       amenity: {
         ...formData.amenity,
-        terms: value, // Update terms in the state
+        terms: value,
       },
     });
   };
@@ -422,7 +379,7 @@ const SetupFacility = () => {
       ...formData,
       amenity: {
         ...formData.amenity,
-        cancellation_policy: value, // Update cancellation policy in the state
+        cancellation_policy: value,
       },
     });
   };
@@ -438,7 +395,7 @@ const SetupFacility = () => {
           Setup New Facility
         </h1>
 
-        <div className="flex  gap-4 my-4">
+        <div className="flex gap-4 my-4">
           <div className="flex gap-2 items-center">
             <input
               type="radio"
@@ -468,7 +425,7 @@ const SetupFacility = () => {
         </div>
 
         <div>
-          <h2 className="border-b border-black text-lg  font-medium my-3">
+          <h2 className="border-b border-black text-lg font-medium my-3">
             Facility Details
           </h2>
           <div className="grid md:grid-cols-4 gap-2">
@@ -523,7 +480,7 @@ const SetupFacility = () => {
                 className="ml-2"
                 name="payment_type"
                 value="prepaid"
-                checked={formData.amenity.prepaid} 
+                checked={formData.amenity.prepaid}
                 onChange={handelPayemntRadioChange}
               />
             </span>
@@ -534,7 +491,7 @@ const SetupFacility = () => {
                 className="ml-2"
                 name="payment_type"
                 value="postpaid"
-                checked={formData.amenity.postpaid} 
+                checked={formData.amenity.postpaid}
                 onChange={handelPayemntRadioChange}
               />
             </span>
@@ -551,6 +508,7 @@ const SetupFacility = () => {
               <p className="text-center font-medium"> Child</p>
               <p className="text-center font-medium"> Flat Amount</p>
             </div>
+
             {/* Member Section */}
             <div className="grid grid-cols-4 items-center border-b">
               <div className="flex justify-center my-2">
@@ -563,10 +521,21 @@ const SetupFacility = () => {
                   Member
                 </label>
               </div>
+
+              {/* Adult */}
               <div className="flex justify-center my-2">
+                {/* Adult Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_member_adult}
+                  disabled={!formData.amenity.member}
+                  onChange={() => handleChildToggle("is_member_adult")}
+                />
+                {/* Adult Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.member}
+                  disabled={!formData.amenity.member || !formData.amenity.is_member_adult}
                   value={formData.amenity.member_price_adult || ""}
                   onChange={(e) =>
                     handlePriceChange("member_price_adult", e.target.value)
@@ -575,10 +544,24 @@ const SetupFacility = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Child */}
               <div className="flex justify-center my-2">
+                {/* Child Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_member_child}
+                  disabled={!formData.amenity.member}
+                  onChange={() => handleChildToggle("is_member_child")}
+                />
+                {/* Child Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.member}
+                  disabled={
+                    !formData.amenity.member ||
+                    !formData.amenity.is_member_child
+                  }
                   value={formData.amenity.member_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("member_price_child", e.target.value)
@@ -587,15 +570,11 @@ const SetupFacility = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Flat */}
               <div className="flex justify-center my-2">
                 <input
                   type="text"
-                  disabled={
-                    !(
-                      formData.amenity.fac_type === "request" &&
-                      formData.amenity.postpaid === true || formData.amenity.prepaid
-                    )
-                  }
                   value={formData.amenity.fixed_amount || ""}
                   onChange={(e) =>
                     handlePriceChange("fixed_amount", e.target.value)
@@ -618,10 +597,21 @@ const SetupFacility = () => {
                   Guest
                 </label>
               </div>
+
+              {/* Adult */}
               <div className="flex justify-center my-2">
+                {/* Adult Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_guest_adult}
+                  disabled={!formData.amenity.guest}
+                  onChange={() => handleChildToggle("is_guest_adult")}
+                />
+                {/* Adult Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.guest}
+                  disabled={!formData.amenity.guest || !formData.amenity.is_guest_adult}
                   value={formData.amenity.guest_price_adult || ""}
                   onChange={(e) =>
                     handlePriceChange("guest_price_adult", e.target.value)
@@ -630,10 +620,24 @@ const SetupFacility = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Child */}
               <div className="flex justify-center my-2">
+                {/* Child Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_guest_child}
+                  disabled={!formData.amenity.guest}
+                  onChange={() => handleChildToggle("is_guest_child")}
+                />
+                {/* Child Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.guest}
+                  disabled={
+                    !formData.amenity.guest ||
+                    !formData.amenity.is_guest_child
+                  }
                   value={formData.amenity.guest_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("guest_price_child", e.target.value)
@@ -656,10 +660,21 @@ const SetupFacility = () => {
                   Tenant
                 </label>
               </div>
+
+              {/* Adult */}
               <div className="flex justify-center my-2">
+                {/* Adult Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_tenant_adult}
+                  disabled={!formData.amenity.tenant}
+                  onChange={() => handleChildToggle("is_tenant_adult")}
+                />
+                {/* Adult Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.tenant}
+                  disabled={!formData.amenity.tenant || !formData.amenity.is_tenant_adult}
                   value={formData.amenity.tenant_price_adult || ""}
                   onChange={(e) =>
                     handlePriceChange("tenant_price_adult", e.target.value)
@@ -668,10 +683,24 @@ const SetupFacility = () => {
                   placeholder="₹100"
                 />
               </div>
+
+              {/* Child */}
               <div className="flex justify-center my-2">
+                {/* Child Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mx-2"
+                  checked={formData.amenity.is_tenant_child}
+                  disabled={!formData.amenity.tenant}
+                  onChange={() => handleChildToggle("is_tenant_child")}
+                />
+                {/* Child Price Input */}
                 <input
                   type="text"
-                  disabled={!formData.amenity.tenant}
+                  disabled={
+                    !formData.amenity.tenant ||
+                    !formData.amenity.is_tenant_child
+                  }
                   value={formData.amenity.tenant_price_child || ""}
                   onChange={(e) =>
                     handlePriceChange("tenant_price_child", e.target.value)
@@ -694,25 +723,10 @@ const SetupFacility = () => {
                   Pay On Facility
                 </label>
               </div>
-              {/* GST Input */}
-              {/* <div className="flex items-center space-x-2">
-                <label htmlFor="gst">GST:</label>
-                <input
-                  type="number"
-                  id="gst"
-                  name="gst"
-                  value={formData.amenity.gst || ""}
-                  onChange={(e) =>
-                    handlePriceChange("gst", e.target.value)
-                  }
-                  step="0.01"
-                  placeholder="Enter GST"
-                  className="border border-gray-400 rounded p-2 outline-none"
-                />
-              </div> */}
+
               <div className="flex items-center space-x-2">
                 <label htmlFor="gst_no" className="font-medium">
-                  GST
+                  GST:
                 </label>
                 <input
                   type="number"
@@ -720,13 +734,13 @@ const SetupFacility = () => {
                   id="gst_no"
                   className="border border-gray-400 rounded p-2 outline-none"
                   placeholder="GST(%)"
-                  value={formData.amenity.gst_no || ""} // Add GST to the state if necessary
+                  value={formData.amenity.gst_no || ""}
                   onChange={(e) =>
                     setFormData((prevState) => ({
                       ...prevState,
                       amenity: {
                         ...prevState.amenity,
-                        gst_no: e.target.value, // Add GST handler
+                        gst_no: e.target.value,
                       },
                     }))
                   }
@@ -734,7 +748,7 @@ const SetupFacility = () => {
               </div>
 
               {/* SGST Input */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mx-6">
                 <label className="font-medium" htmlFor="sgst">
                   SGST:
                 </label>
@@ -802,8 +816,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Day"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -814,8 +828,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Hour"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -826,8 +840,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Mins"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
 
               <input
@@ -853,8 +867,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Day"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -865,8 +879,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Hour"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -877,8 +891,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Mins"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
           </div>
@@ -901,8 +915,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Day"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -913,8 +927,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Hour"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
             <div className="flex justify-center my-2 w-full">
@@ -925,8 +939,8 @@ const SetupFacility = () => {
                 onChange={handleInputChange}
                 className="border border-gray-400 rounded-md p-2 outline-none w-full"
                 placeholder="Mins"
-                onBlur={validateInput} // Validate on losing focus
-                maxLength="2" // Restrict input to a maximum of 2 characters
+                onBlur={validateInput}
+                maxLength="2"
               />
             </div>
           </div>
@@ -963,8 +977,8 @@ const SetupFacility = () => {
               cols="80"
               rows="3"
               className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
-              value={formData.amenity.description} // Bind value to state
-              onChange={handleDescriptionChange} // Handle change
+              value={formData.amenity.description}
+              onChange={handleDescriptionChange}
               placeholder="Enter a description..."
             />
           </div>
@@ -1043,8 +1057,8 @@ const SetupFacility = () => {
               id="terms"
               rows="3"
               className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
-              value={formData.amenity.terms} // Bind value to state
-              onChange={handleTermsChange} // Handle change
+              value={formData.amenity.terms}
+              onChange={handleTermsChange}
               placeholder="Enter terms and conditions..."
             />
           </div>
@@ -1059,8 +1073,8 @@ const SetupFacility = () => {
               id="cancellation_policy"
               rows="3"
               className="border border-gray-400 p-1 placeholder:text-sm rounded-md"
-              value={formData.amenity.cancellation_policy} // Bind value to state
-              onChange={handleCancellationPolicyChange} // Handle change
+              value={formData.amenity.cancellation_policy}
+              onChange={handleCancellationPolicyChange}
               placeholder="Enter cancellation policy..."
             />
           </div>
