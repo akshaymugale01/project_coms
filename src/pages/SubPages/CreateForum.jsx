@@ -15,6 +15,9 @@ import toast from "react-hot-toast";
 function CreateForum() {
   const navigate = useNavigate();
   const themeColor = useSelector((state) => state.theme.color);
+  const [errors, setErrors] = useState({});
+
+
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -22,6 +25,18 @@ function CreateForum() {
     description: "",
     attachments: "",
   });
+
+const validateForm = () => {
+  if (
+    !formData.title.trim() ||
+    !formData.category ||
+    !formData.description.trim()
+  ) {
+    return false;
+  }
+  return true;
+
+};
 
   const handleFileChange = (event) => {
     const file = event.target.files[0]; // Get the first selected file
@@ -36,7 +51,12 @@ function CreateForum() {
   };
 
   const handleCreateForum = async () => {
+      if (!validateForm()) {
+    toast.error("Please fill all mandatory fields");
+    return;
+  }
     const postData = new FormData();
+   
     postData.append("forum[thread_title]", formData.title);
     postData.append("forum[thread_category]", formData.category);
     postData.append("forum[thread_tags]", formData.tags);
@@ -54,6 +74,7 @@ function CreateForum() {
       console.log(error);
     }
   };
+
   return (
     <section className="flex">
       <div className="hidden md:block">

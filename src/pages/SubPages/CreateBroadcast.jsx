@@ -36,6 +36,7 @@ const CreateBroadcast = () => {
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [members, setMembers] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     site_id: siteId,
     notice_title: "",
@@ -207,60 +208,59 @@ const CreateBroadcast = () => {
     }));
   };
 
-  const handleCreateBroadCast = async () => {
-    if (formData.notice_title === "" || formData.expiry_date === "") {
-      return toast.error("Please Enter Title & Expiry Date");
+ const handleCreateBroadCast = async () => {
+  if (formData.notice_title === "" || formData.expiry_date === "") {
+    return toast.error("Please Enter Title & Expiry Date");
+  }
+
+  try {
+    setSubmitting(true);
+    toast.loading("Creating Broadcast Please Wait!");
+
+    const formDataSend = new FormData();
+
+    formDataSend.append("notice[created_by_id]", currentUser);
+    formDataSend.append("notice[site_id]", formData.site_id);
+    formDataSend.append("notice[notice_title]", formData.notice_title);
+    formDataSend.append("notice[important]", formData.important);
+    formDataSend.append("notice[send_email]", formData.send_email);
+    formDataSend.append(
+      "notice[notice_discription]",
+      formData.notice_discription
+    );
+    formDataSend.append("notice[expiry_date]", formData.expiry_date);
+
+    if (share === "all") {
+      const allUserIds = users.map((user) => user.value).join(",");
+      formDataSend.append("notice[shared]", "all");
+      formDataSend.append("notice[user_ids]", allUserIds);
+    } else if (share === "individual") {
+      formDataSend.append("notice[shared]", "individual");
+      formDataSend.append("notice[user_ids]", formData.user_ids);
+    } else if (share === "groups") {
+      formDataSend.append("notice[shared]", "groups");
+      formDataSend.append("notice[group_id]", formData.group_id);
+      formDataSend.append("notice[group_name]", formData.group_name);
     }
-    try {
-      toast.loading("Creating Broadcast Please Wait!");
-      const formDataSend = new FormData();
 
-      // Common fields
-      formDataSend.append("notice[created_by_id]", currentUser);
-      formDataSend.append("notice[site_id]", formData.site_id);
-      formDataSend.append("notice[notice_title]", formData.notice_title);
-      formDataSend.append("notice[important]", formData.important);
-      formDataSend.append("notice[send_email]", formData.send_email);
-      formDataSend.append(
-        "notice[notice_discription]",
-        formData.notice_discription
-      );
-      formDataSend.append("notice[expiry_date]", formData.expiry_date);
-      if (share === "all") {
-        const allUserIds = users.map((user) => user.value).join(",");
-        formDataSend.append("notice[shared]", "all");
-        formDataSend.append("notice[user_ids]", allUserIds);
-      } else if (share === "individual") {
-        formDataSend.append("notice[shared]", "individual");
-        formDataSend.append("notice[user_ids]", formData.user_ids);
-      } else if (share === "groups") {
-        formDataSend.append("notice[shared]", "groups");
-        formDataSend.append("notice[group_id]", formData.group_id);
-        formDataSend.append("notice[group_name]", formData.group_name);
-      }
-
-      // Attach files
-      formData.notice_image.forEach((file) => {
-        formDataSend.append("attachfiles[]", file);
-      });
-
-      const response = await postBroadCast(formDataSend);
-      toast.success("Broadcast Created Successfully");
-      navigate("/communication/broadcast");
-      console.log("Response:", response.data);
-      toast.dismiss();
-    } catch (error) {
-      console.error("Error creating broadcast:", error);
-      toast.dismiss();
-    }
-  };
-
-  const handleFileChange = (files, fieldName) => {
-    setFormData({
-      ...formData,
-      [fieldName]: files,
+    formData.notice_image.forEach((file) => {
+      formDataSend.append("attachfiles[]", file);
     });
-  };
+
+    await postBroadCast(formDataSend);
+
+    toast.dismiss();
+    toast.success("Broadcast Created Successfully");
+    navigate("/communication/broadcast");
+  } catch (error) {
+    console.error("Error creating broadcast:", error);
+    toast.dismiss();
+    toast.error("Something went wrong");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const handlePreview = () => {
     // before preview you can add validations if needed
@@ -584,14 +584,16 @@ const CreateBroadcast = () => {
                 </button>
               </div> */}
               <div className="flex justify-center mt-10 my-5">
-                <button
-                  className={`${submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
-                    } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-400`}
-                  onClick={handleCreateEvent}
-                  disabled={submitting}
-                >
-                  <FaCheck /> {submitting ? "Submitting..." : "Submit"}
-                </button>
+               <button
+  className={`${
+    submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
+  } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200`}
+  onClick={handleCreateBroadCast}
+  disabled={submitting}
+>
+  <FaCheck /> {submitting ? "Submitting..." : "Submit"}
+</button>
+
               </div>
             </div>
           </div>

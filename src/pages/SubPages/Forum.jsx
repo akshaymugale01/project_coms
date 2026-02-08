@@ -1,12 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import  { useState,  useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { FaRegComment } from "react-icons/fa";
-import { IoMdShareAlt } from "react-icons/io";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegHeart } from "react-icons/fa";
 import image from "/profile.png";
-import interview from "/01.jpg";
 import ForumCommentsModal from "../../containers/modals/ForumCommentModal";
 import Navbar from "../../components/Navbar";
 import Communication from "../Communication";

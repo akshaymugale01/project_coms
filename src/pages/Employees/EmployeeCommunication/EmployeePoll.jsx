@@ -1,38 +1,59 @@
-import React, { useEffect, useState } from "react";
-import { getPolls, postPollVote } from "../../../api"; // Ensure postPollVote is imported
+import { useEffect, useState } from "react";
+import { getPolls, postPollVote } from "../../../api";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
 import EmployeeCommunication from "./EmployeeCommunication";
 import Navbar from "../../../components/Navbar";
+
 function EmployeePolls() {
-  const [pollsData, setPollsData] = useState([]);
-  const [selectedOptions, setSelectedOptions] = useState({}); // Track selected options per poll
+  const [pollsData, setPollsData] = useState([]); // Master data
+  const [filteredPolls, setFilteredPolls] = useState([]); // Data to display
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+
   const userId = getItemInLocalStorage("UserId");
 
+  // 1. Fetch Data
   useEffect(() => {
     const fetchPolls = async () => {
       try {
         const response = await getPolls();
-        const poll = response.data.sort((a, b) => {
-          return new Date(b.created_at) - new Date(a.created_at);
-        });
-        console.log("response employee from api", response);
+
+        const poll = response.data.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+
         setPollsData(poll);
       } catch (err) {
-        console.error("Failed to fetch polls data:", err);
+        console.error("Failed to fetch polls:", err);
       }
     };
 
-    fetchPolls(); // Call the API
+    fetchPolls();
   }, []);
 
+  // ✅ Search by TITLE (dynamic & clean)
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredPolls(pollsData);
+      return;
+    }
+
+    const lowerSearch = searchTerm.toLowerCase();
+
+    const filtered = pollsData.filter((poll) =>
+      poll.title?.toLowerCase().includes(lowerSearch)
+    );
+
+    setFilteredPolls(filtered);
+  }, [searchTerm, pollsData]);
+
+
   const handleOptionSelect = async (pollId, optionId) => {
-    // Check if the user has already voted for this poll
     if (selectedOptions[pollId]) {
       alert("You have already voted for this poll.");
       return;
     }
 
-    // Update the local state with the selected option
     setSelectedOptions((prevSelectedOptions) => ({
       ...prevSelectedOptions,
       [pollId]: optionId, // Store the selected option for each poll
@@ -63,24 +84,25 @@ function EmployeePolls() {
         <div className="flex justify-between md:flex-row flex-col w-full">
           <input
             type="text"
-            placeholder="Search"
-            className="border p-2 w-full border-border mx-2 rounded-md "
+            placeholder="Search by poll title"
+            className="border p-2 w-full border-border mx-2 rounded-md"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="md:grid grid-cols-2">
-          {pollsData.length > 0 ? (
-            pollsData.map((poll) => {
+          {filteredPolls.length > 0 ? (
+            filteredPolls.map((poll) => {
               const totalVotes = poll.poll_options.reduce(
                 (sum, option) => sum + option.votes,
                 0
               );
 
-              const startDate = new Date(poll.start_date);
               const endDate = new Date(poll.end_date);
               const currentDate = new Date();
-              const timeDiff = endDate - currentDate; // Time difference in milliseconds
-              const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Convert to days
-
+              const daysLeft = Math.ceil(
+                (endDate - currentDate) / (1000 * 60 * 60 * 24)
+              );
               return (
                 <div key={poll.id} className="flex justify-start w-full p-2 ">
                   <div className="max-w-2xl w-full py-2 ">
@@ -90,7 +112,7 @@ function EmployeePolls() {
                       </h2>
                       <div className="flex justify-between my-3">
                         <span className="text-gray-500 text-sm">
-                          1/20 responded
+                          {totalVotes} 1/20 responded
                         </span>
                         <span className="text-gray-500 text-sm">
                           {poll.visibility}

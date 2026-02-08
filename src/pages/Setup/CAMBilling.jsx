@@ -240,6 +240,30 @@ function CAMBilling() {
     }
   };
 
+  const importCamBillingData = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/importCamBilling", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to import data");
+      }
+
+      const data = await response.json();
+      // Handle the imported data (e.g., update state)
+      toast.success("Data imported successfully");
+      // Optionally refresh the data or update the state
+    } catch (error) {
+      console.error("Error importing data:", error);
+      toast.error("Error importing data");
+    }
+  };
+
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
@@ -254,6 +278,21 @@ function CAMBilling() {
           item?.status?.toLowerCase().includes(searchValue.toLowerCase())
       );
       setFilteredData(filterResult);
+    }
+  };
+
+  const handleImport = async (file) => {
+    try {
+      const response = await importCamBillingData(file);
+      if (response.success) {
+        toast.success('Import successful!');
+        fetchCamBilling(); // Refresh the data after import
+      } else {
+        toast.error('Import failed!');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('An error occurred during import.');
     }
   };
 
