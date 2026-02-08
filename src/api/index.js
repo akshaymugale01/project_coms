@@ -488,6 +488,19 @@ export const getFitoutDocs = async () =>
     },
   });
 
+  export const postBusinesscard = async (data) =>
+  axiosInstance.post("/business_cards.json", data, {
+    params: {
+      token: token,
+    },
+  });
+export const getBusinessCard = async () =>
+  axiosInstance.get("/business_cards.json", {
+    params: {
+      token: token,
+    },
+  });
+
 // ticket download section
 export const getTicketStatusDownload = async (
   startDate = null,
@@ -1270,6 +1283,18 @@ export const getCalendarBooking = async (data) =>
       token: token,
     },
   });
+
+export const getAmenityExport = async (start_date, end_date) => {
+  return axiosInstance.get("/amenity_bookings/export_amenity.xlsx", {
+    params: {
+      token: token,
+      start_date,
+      end_date,
+    },
+    responseType: "blob",
+  });
+};
+
 export const postOtherProject = async (data) =>
   axiosInstance.post(`/other_projects.json`, data, {
     params: {

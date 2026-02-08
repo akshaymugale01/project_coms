@@ -138,20 +138,21 @@ function AddReceiptInvoiceCamBilling() {
                 <label htmlFor="invoiceNumber" className="font-semibold my-2">
                   Invoice Number
                 </label>
-                <select
+                <input
                   name="invoiceNumber"
                   id="invoiceNumber"
                   value={formData.invoiceNumber}
+                  placeholder="Enter Invoice Number"
                   onChange={handleChange}
                   className="border p-1 px-4 border-gray-500 rounded-md"
                 >
-                  <option value="">Select Invoice Number</option>
+                  {/* <option value="">Select Invoice Number</option>
                   {camBilling.map((invoiceNumber, index) => (
                     <option key={index} value={invoiceNumber}>
                       {invoiceNumber}
                     </option>
-                  ))}
-                </select>
+                  ))} */}
+                </input>
               </div>
               {/* Block */}
               {/* <div className="flex flex-col">

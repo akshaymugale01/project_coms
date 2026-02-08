@@ -1,6 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { BiEdit } from "react-icons/bi";
+import  { useState, useRef, useEffect } from "react";
 import image from "/profile.png";
 import interview from "/01.jpg";
 import { FcLike } from "react-icons/fc";
@@ -115,8 +113,8 @@ function EmployeeForum() {
             </div>
             <div>
               <p className="px-8">
-                I'm thrilled to share that I've completed a graduate certificate
-                course in project management with the president's honor roll.
+                I&apos;m thrilled to share that I &apos;ve completed a graduate certificate
+                course in project management with the president&apos;s honor roll.
               </p>
               <img
                 src={interview}
@@ -208,8 +206,8 @@ function EmployeeForum() {
             </div>
             <div>
               <p className="px-8">
-                I'm thrilled to share that I've completed a graduate certificate
-                course in project management with the president's honor roll.
+                I&apos;m thrilled to share that I&apos;ve completed a graduate certificate
+                course in project management with the president&apos;s honor roll.
               </p>
               <img
                 src={interview}

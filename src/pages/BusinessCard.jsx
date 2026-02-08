@@ -15,6 +15,7 @@ import AddBusinesscardModal from "./AddBusinesscardModal";
 import html2canvas from "html2canvas";
 import { sendBusinessCard } from "../api";
 import businessCardTemplate from "/newCard.jpeg";
+// import {postBusinessCard} from "../api";
 // import businessCardTemplate from "/businessCardTemp.jpeg";
 import VCLogo from "./SVG/VCLogo.svg";
 const BusinessCard = () => {
@@ -88,6 +89,7 @@ const BusinessCard = () => {
   const [showVerifiedLoaderSend, setShowVerifiedLoaderSend] = useState("none");
   const user_id = getItemInLocalStorage("VIBEUSERID");
   const [sending, setSending] = useState(false);
+  
   const sendNewBusinessCard = async () => {
     const content = document.querySelector(".bCard");
     const canvas = await html2canvas(content);

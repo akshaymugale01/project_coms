@@ -45,16 +45,25 @@ const AccountGroups = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this account group?"))
+    if (
+      !window.confirm("Are you sure you want to delete this account group?")
+    ) {
       return;
+    }
 
     try {
-      await deleteAccountGroup(id);
+      const res = await deleteAccountGroup(id);
+      console.log("Delete response:", res);
+
       toast.success("Account group deleted successfully");
-      fetchAccountGroups();
+
+      // Optimistic UI update (recommended)
+      setAccountGroups((prev) => prev.filter((g) => g.id !== id));
     } catch (error) {
-      toast.error("Failed to delete account group");
-      console.error(error);
+      console.error("Delete error:", error?.response?.data || error);
+      toast.error(
+        error?.response?.data?.message || "Failed to delete account group",
+      );
     }
   };
 
@@ -90,142 +99,154 @@ const AccountGroups = () => {
   };
 
   const filteredGroups = accountGroups.filter((group) =>
-    (group.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (group.name || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <section className="flex">
       <Navbar />
-    <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Account Groups</h1>
-        <div className="flex gap-3">
-          <button
-            onClick={handleSeedDefaults}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Seed Defaults
-          </button>
-          <button
-            onClick={handleCreate}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            + Add Account Group
-          </button>
+      <div className="w-full flex mx-3 mb-10 flex-col overflow-hidden p-6 bg-white/80 mt-2">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Account Groups</h1>
+          <div className="flex gap-3">
+            <button
+              onClick={handleSeedDefaults}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Seed Defaults
+            </button>
+            <button
+              onClick={handleCreate}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              + Add Account Group
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search account groups..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full max-w-md px-4 py-2 border rounded"
-        />
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search account groups..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full max-w-md px-4 py-2 border rounded"
+          />
         </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Group / Sub-Group
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Code
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Level
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredGroups.length === 0 ? (
+
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                    No account groups found
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Group / Sub-Group
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Level
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ) : (
-                filteredGroups.map((group) => (
-                  <React.Fragment key={group.id}>
-                    <tr className={group.parent_id ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-gray-50"}>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium">
-                        {group.parent_id ? (
-                          <span className="text-blue-600 pl-6">
-                            ↳ {group.name}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredGroups.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-6 py-4 text-center text-gray-500"
+                    >
+                      No account groups found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredGroups.map((group) => (
+                    <React.Fragment key={group.id}>
+                      <tr
+                        className={
+                          group.parent_id
+                            ? "bg-blue-50 hover:bg-blue-100"
+                            : "hover:bg-gray-50"
+                        }
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap font-medium">
+                          {group.parent_id ? (
+                            <span className="text-blue-600 pl-6">
+                              ↳ {group.name}
+                            </span>
+                          ) : (
+                            <span className="text-gray-900 font-bold text-lg">
+                              {group.name}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {group.code}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 py-1 rounded text-xs bg-gray-100">
+                            {group.group_type}
                           </span>
-                        ) : (
-                          <span className="text-gray-900 font-bold text-lg">
-                            {group.name}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {group.code}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 rounded text-xs bg-gray-100">
-                          {group.group_type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {group.parent_id ? (
-                          <span className="text-blue-600">Sub-Group</span>
-                        ) : (
-                          <span className="font-semibold text-gray-700">Primary</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {group.description || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(group)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(group.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  </React.Fragment>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {group.parent_id ? (
+                            <span className="text-blue-600">Sub-Group</span>
+                          ) : (
+                            <span className="font-semibold text-gray-700">
+                              Primary
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {group.description || "-"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleEdit(group)}
+                            className="text-blue-600 hover:text-blue-900 mr-3"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(group.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {isModalOpen && (
-        <AccountGroupModal
-          group={selectedGroup}
-          allGroups={accountGroups}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSave}
-        />
-      )}
-    </div>
+        {isModalOpen && (
+          <AccountGroupModal
+            group={selectedGroup}
+            allGroups={accountGroups}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSave}
+          />
+        )}
+      </div>
     </section>
   );
 };

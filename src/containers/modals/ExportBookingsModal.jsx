@@ -1,28 +1,48 @@
 import React, { useState } from "react";
 import ModalWrapper from "./ModalWrapper";
 import { IoAddCircle } from "react-icons/io5";
-import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
+import { getAmenityExport } from "../../api";
 
 const ExportBookingModal = ({ onclose }) => {
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
-    
-  const handleExport = () => {
-    const currentDate = new Date();
-    const options = { timeZone: "Asia/Kolkata" };
-    const ISTDate = currentDate.toLocaleString("en-IN", options);
-    const formattedISTDate = ISTDate.replace(/[/:]/g, "_");
-    const fileName = `bookings_${formattedISTDate}.xlsx`;
-    const data = [
-      ["Site", "User Type", "Department", "Month"],
-      ["Site 1", "Occupants", "Electrical", "Jan/2022"],
-      ["Site 2", "Admin", "Help Desk", "Feb/2022"],
-    ];
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-    XLSX.writeFile(wb, fileName);
-    onclose();
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleExport = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Please select From and To dates");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await getAmenityExport(startDate, endDate);
+
+      const blob = new Blob([response.data], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `amenity_bookings_${startDate}_to_${endDate}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success("Export downloaded successfully");
+      onclose();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to export bookings");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,43 +52,45 @@ const ExportBookingModal = ({ onclose }) => {
           <IoAddCircle size={20} />
           Export Booking Report
         </h2>
+
         <div className="flex gap-10 my-5">
           <div className="flex flex-col gap-2">
-            <label htmlFor="" className="font-medium">
-              From :
-            </label>
+            <label className="font-medium">From :</label>
             <input
               type="date"
-              name=""
-              id=""
               value={startDate}
-              onChange={(e) => setStartDate(e.value)}
+              onChange={(e) => setStartDate(e.target.value)}
               className="border border-gray-200 p-2 rounded-md"
             />
           </div>
+
           <div className="flex flex-col gap-2">
-            <label htmlFor="" className="font-medium">
-              To :
-            </label>
+            <label className="font-medium">To :</label>
             <input
               type="date"
-              name=""
-              id=""
               value={endDate}
-              onChange={(e) => setEndDate(e.value)}
+              onChange={(e) => setEndDate(e.target.value)}
               className="border border-gray-200 p-2 rounded-md"
             />
           </div>
         </div>
 
-     <div className=""> 
-         <button className="bg-black p-2 px-6 text-white rounded-md my-5 mx-4" onClick={handleExport}>
-          Submit
-        </button>
-          <button className="bg-black p-2 px-4 text-white rounded-md my-5" onClick={handleExport}>
-          Send Email
-        </button>
-     </div>
+        <div className="flex gap-4">
+          <button
+            onClick={handleExport}
+            disabled={loading}
+            className="bg-black p-2 px-6 text-white rounded-md my-5"
+          >
+            {loading ? "Exporting..." : "Submit"}
+          </button>
+
+          <button
+            onClick={onclose}
+            className="bg-gray-500 p-2 px-6 text-white rounded-md my-5"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </ModalWrapper>
   );
