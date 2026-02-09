@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   getAccountingInvoices,
@@ -9,7 +9,7 @@ import {
   sendInvoice,
   addPaymentToInvoice,
   getOverdueInvoices,
-  getInvoicesByUnit,
+  // getInvoicesByUnit,
 } from "../../api/accountingApi";
 import InvoiceModal from "./InvoiceModal";
 import AddPaymentModal from "./AddPaymentModal";
@@ -24,6 +24,7 @@ const AccountingInvoices = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showOverdueOnly, setShowOverdueOnly] = useState(false);
+  
 
   useEffect(() => {
     fetchInvoices();
@@ -49,9 +50,13 @@ const AccountingInvoices = () => {
     setIsModalOpen(true);
   };
 
-  const handleEdit = async (invoice) => {
+ const handleEdit = async (invoice) => {
+    if (invoice.status === "paid") {
+      toast.error("Paid invoices cannot be edited");
+      return;
+    }
+
     try {
-      // Fetch full invoice details including items and payments
       const response = await getAccountingInvoice(invoice.id);
       const fullInvoice = response.data.data || response.data;
       setSelectedInvoice(fullInvoice);
@@ -62,16 +67,26 @@ const AccountingInvoices = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (invoice) => {
+
+       if (["paid", "partially_paid", "sent"].includes(invoice.status)) {
+      toast.error("This invoice cannot be deleted");
+      return;
+    }
+
     if (!window.confirm("Are you sure you want to delete this invoice?"))
       return;
 
     try {
-      await deleteAccountingInvoice(id);
+      await deleteAccountingInvoice(invoice.id);
       toast.success("Invoice deleted successfully");
       fetchInvoices();
     } catch (error) {
-      toast.error("Failed to delete invoice");
+const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Invoice cannot be deleted";
+      toast.error(msg);
       console.error(error);
     }
   };
@@ -207,7 +222,7 @@ const AccountingInvoices = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Invoice #
+                  Invoice 
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer
@@ -229,84 +244,110 @@ const AccountingInvoices = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredInvoices.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
-                    No invoices found
-                  </td>
-                </tr>
-              ) : (
-                filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">
-                      {invoice.invoice_number}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {invoice.customer_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(invoice.invoice_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(invoice.due_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      ₹{parseFloat(invoice.total_amount || 0).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          invoice.status === "paid"
-                            ? "bg-green-100 text-green-800"
-                            : invoice.status === "overdue"
-                            ? "bg-red-100 text-red-800"
-                            : invoice.status === "sent"
-                            ? "bg-blue-100 text-blue-800"
-                            : invoice.status === "partially_paid"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {invoice.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {invoice.status === "draft" && (
-                        <button
-                          onClick={() => handleSendInvoice(invoice.id)}
-                          className="text-purple-600 hover:text-purple-900 mr-3"
-                        >
-                          Send
-                        </button>
-                      )}
-                      {(invoice.status === "sent" ||
-                        invoice.status === "overdue" ||
-                        invoice.status === "partially_paid") && (
-                        <button
-                          onClick={() => handleAddPayment(invoice)}
-                          className="text-green-600 hover:text-green-900 mr-3"
-                        >
-                          Add Payment
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleEdit(invoice)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(invoice.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+         <tbody className="bg-white divide-y divide-gray-200">
+  {filteredInvoices.length === 0 ? (
+    <tr>
+      <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+        No invoices found
+      </td>
+    </tr>
+  ) : (
+    filteredInvoices.map((invoice) => {
+      const deleteDisabled = ["paid", "partially_paid", "sent"].includes(
+        invoice.status
+      );
+
+      return (
+        <tr key={invoice.id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 whitespace-nowrap font-medium">
+            {invoice.invoice_number}
+          </td>
+
+          <td className="px-6 py-4 whitespace-nowrap">
+            {invoice.customer_name}
+          </td>
+
+          <td className="px-6 py-4 whitespace-nowrap">
+            {new Date(invoice.invoice_date).toLocaleDateString()}
+          </td>
+
+          <td className="px-6 py-4 whitespace-nowrap">
+            {new Date(invoice.due_date).toLocaleDateString()}
+          </td>
+
+          <td className="px-6 py-4 whitespace-nowrap">
+            ₹{parseFloat(invoice.total_amount || 0).toFixed(2)}
+          </td>
+
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span
+              className={`px-2 py-1 rounded text-xs ${
+                invoice.status === "paid"
+                  ? "bg-green-100 text-green-800"
+                  : invoice.status === "overdue"
+                  ? "bg-red-100 text-red-800"
+                  : invoice.status === "sent"
+                  ? "bg-blue-100 text-blue-800"
+                  : invoice.status === "partially_paid"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {invoice.status}
+            </span>
+          </td>
+
+          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            {invoice.status === "draft" && (
+              <button
+                onClick={() => handleSendInvoice(invoice.id)}
+                className="text-purple-600 hover:text-purple-900 mr-3"
+              >
+                Send
+              </button>
+            )}
+
+            {(invoice.status === "sent" ||
+              invoice.status === "overdue" ||
+              invoice.status === "partially_paid") && (
+              <button
+                onClick={() => handleAddPayment(invoice)}
+                className="text-green-600 hover:text-green-900 mr-3"
+              >
+                Add Payment
+              </button>
+            )}
+
+            <button
+              onClick={() => handleEdit(invoice)}
+              disabled={invoice.status === "paid"}
+              className={`mr-3 ${
+                invoice.status === "paid"
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-blue-600 hover:text-blue-900"
+              }`}
+            >
+              Edit
+            </button>
+
+            <button
+              onClick={() => handleDelete(invoice)}
+              disabled={deleteDisabled}
+              className={`${
+                deleteDisabled
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-red-600 hover:text-red-900"
+              }`}
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      );
+    })
+  )}
+</tbody>
+
           </table>
         </div>
       )}

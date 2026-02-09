@@ -7408,6 +7408,45 @@ export const deleteFlexiBenefitCategory = async (flexiId) => {
     throw error;
   }
 };
+
+export const getIncidentData = async (id) =>
+  axiosInstance.get(`/incidents/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const getIncidents = async (page=1) =>
+  axiosInstance.get(`/incidents.json`, {
+    params: {
+      token: token,
+      page:page,
+      per_page:10,
+    },
+  });
+
+  export const getIncidentDetails = async (incidentId) =>
+  axiosInstance.get(`/incidents/${incidentId}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const postIncidents = async (id) =>
+  axiosInstance.post(`/incidents.json`, id, {
+    params: {
+      token: token,
+    },
+  });
+
+  export const updateIncidents = async (id, data) =>
+  axiosInstance.put(`/incidents/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+  
 export const getPerformanceGoal = async (orgId) => {
   try {
     const response = await HrmsAuth.get(
