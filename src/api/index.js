@@ -251,21 +251,31 @@ export const editOtherBillsDetails = async (id, data) =>
 export const postPolls = async (data) =>
   axiosInstance.post("/polls.json", data, {
     params: {
-      token: "775d6ae27272741669a65456ea10cc56cd4cce2bb99287b6",
+      token: token,
     },
   });
 export const postPollVote = async (id, data) =>
   axiosInstance.post(`/polls/${id}/poll_votes.json`, data, {
     params: {
-      token: "775d6ae27272741669a65456ea10cc56cd4cce2bb99287b6",
+      token: token,
     },
   });
 export const getPolls = async () =>
   axiosInstance.get("/polls.json", {
     params: {
-      token: "775d6ae27272741669a65456ea10cc56cd4cce2bb99287b6",
+      token: token,
     },
   });
+
+export const getSearchPolls = async (title) => {
+  const trimmedTitle = title?.trim() || "";
+  return axiosInstance.get("/polls.json", {
+    params: {
+      token: token,
+      ...(trimmedTitle && { "q[title_cont]": trimmedTitle }),
+    },
+  });
+};
 
 // vendor
 export const getVendors = async () =>
@@ -7446,6 +7456,79 @@ export const getIncidentData = async (id) =>
     },
   });
 
+  
+export const getIncidentSubTags = async (tagType, parentId) =>
+  axiosInstance.get(
+    `/incidence_tags.json?q[tag_type_cont]=${tagType}&q[parent_id_eq]=${parentId}`,
+    {
+      params: {
+        token: token,
+      },
+    }
+  );
+export const getIncidentSubTag = async (parentId) =>
+  axiosInstance.get(`/incidence_tags.json?q[parent_id_eq]=${parentId}`, {
+    params: {
+      token: token,
+    },
+  });
+export const getIncidentTreeNode = async (tagType) =>
+  axiosInstance.get(`/incidence_tags/tree_structure.json?tag_type=${tagType}`, {
+    params: {
+      token: token,
+    },
+  });
+export const deleteIncidentTags = async () =>
+  axiosInstance.delete(`/incidence_tags.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const getIncidentCatDetails = async (id) =>
+  axiosInstance.get(`/incidence_tags/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+export const editIncidentCatDetails = async (id, data) =>
+  axiosInstance.put(`/incidence_tags/${id}.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+ export const getIncidentTags = async (tagType, companyId) =>
+  axiosInstance.get("/incidence_tags.json", {
+    params: {
+      "q[tag_type_eq]": tagType,
+      "q[resource_id_eq]": companyId,
+      token: token,
+    },
+  });
+
+
+  
+  export const postIncidentTags = async (data) =>
+  axiosInstance.post(`/incidence_tags.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
+
+  export const getInjured = async (InjuredType) =>
+  axiosInstance.get(`/incidence_tags.json?q[tag_type_cont]=${InjuredType}`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const postInjured = async (data) =>
+  axiosInstance.post(`/incidence_tags.json`, data, {
+    params: {
+      token: token,
+    },
+  });
   
 export const getPerformanceGoal = async (orgId) => {
   try {

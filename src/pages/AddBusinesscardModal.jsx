@@ -11,10 +11,10 @@ const AddBusinesscardModal = ({ onClose }) => {
 
   const [formData, setFormData] = useState({
     full_name: "",
-    designation: "",
-    contact: "",
-    email: "",
-    website: "",
+    profession: "",
+    contact_number: "",
+    email_id: "",
+    website_url: "",
     address: "",
     profile_image: null,
   });
@@ -34,24 +34,24 @@ const validateForm = () => {
     return false;
   }
 
-  if (!formData.contact.trim()) {
+  if (!formData.contact_number.trim()) {
     toast.error("Contact number is required");
     return false;
   }
 
-  if (!/^\d{10}$/.test(formData.contact)) {
+  if (!/^\d{10}$/.test(formData.contact_number)) {
     toast.error("Contact number must be exactly 10 digits");
     return false;
   }
 
-  if (!formData.email.trim()) {
+  if (!formData.email_id.trim()) {
     toast.error("Email is required");
     return false;
   }
 
   // ✅ Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(formData.email)) {
+  if (!emailRegex.test(formData.email_id)) {
     toast.error("Please enter a valid email address");
     return false;
   }
@@ -66,10 +66,10 @@ const validateForm = () => {
 
     const payload = new FormData();
     payload.append("business_card[full_name]", formData.full_name);
-    payload.append("business_card[designation]", formData.designation);
-    payload.append("business_card[contact]", formData.contact);
-    payload.append("business_card[email]", formData.email);
-    payload.append("business_card[website]", formData.website);
+    payload.append("business_card[profession]", formData.profession);
+    payload.append("business_card[contact_number]", formData.contact_number);
+    payload.append("business_card[email_id]", formData.email_id);
+    payload.append("business_card[website_url]", formData.website_url);
     payload.append("business_card[address]", formData.address);
 
     if (formData.profile_image) {
@@ -113,10 +113,10 @@ const validateForm = () => {
             <label className="font-medium">Profession/Designation</label>
             <input
               type="text"
-              name="designation"
+              name="profession"
               className="border-b border-gray-600 p-1 focus:outline-none"
               placeholder="Profession/Designation"
-              value={formData.designation}
+              value={formData.profession}
               onChange={handleChange}
             />
           </div>
@@ -125,10 +125,10 @@ const validateForm = () => {
             <label className="font-medium">Contact number</label>
             <input
               type="text"
-              name="contact"
+              name="contact_number"
               className="border-b border-gray-600 p-1 focus:outline-none"
               placeholder="Contact number"
-              value={formData.contact}
+              value={formData.contact_number}
               onChange={handleChange}
             />
           </div>
@@ -137,10 +137,10 @@ const validateForm = () => {
             <label className="font-medium">Email id</label>
             <input
               type="email"
-              name="email"
+              name="email_id"
               className="border-b border-gray-600 p-1 focus:outline-none"
               placeholder="Email id"
-              value={formData.email}
+              value={formData.email_id}
               onChange={handleChange}
             />
           </div>
@@ -149,10 +149,10 @@ const validateForm = () => {
             <label className="font-medium">Website</label>
             <input
               type="text"
-              name="website"
+              name="website_url"
               className="border-b border-gray-600 p-1 focus:outline-none"
               placeholder="Website url"
-              value={formData.website}
+              value={formData.website_url}
               onChange={handleChange}
             />
           </div>

@@ -36,16 +36,16 @@ const IncidentSetup = () => {
             >
               Category
             </h2>
-            <h2
+            {/* <h2
               className={`p-1 ${
                 page === "subCategory1" &&
                 "bg-white font-medium text-blue-500 shadow-custom-all-sides"
               } rounded-full hover:text-blue-500 px-2 cursor-pointer transition-all duration-300 ease-linear w-full`}
               onClick={() => setPage("subCategory1")}
             >
-              Sub Category
-            </h2>
-            <h2
+              Incidence status
+            </h2> */}
+            {/* <h2
               className={`p-1 ${
                 page === "subCategory2" &&
                 "bg-white font-medium text-blue-500 shadow-custom-all-sides"
@@ -53,8 +53,8 @@ const IncidentSetup = () => {
               onClick={() => setPage("subCategory2")}
             >
               Sub Sub Category
-            </h2>
-            <h2
+            </h2> */}
+            {/* <h2
               className={`p-1 ${
                 page === "subCategory3" &&
                 "bg-white font-medium text-blue-500 shadow-custom-all-sides"
@@ -62,7 +62,7 @@ const IncidentSetup = () => {
               onClick={() => setPage("subCategory3")}
             >
               Sub Sub Sub Category
-            </h2>
+            </h2> */}
             <h2
               className={`p-1 ${
                 page === "incidenceStatus" &&
@@ -109,7 +109,7 @@ const IncidentSetup = () => {
               Secondary Category
             </h2>
 
-            <h2
+            {/* <h2
               className={`p-1 ${
                 page === "secondarySubCategory" &&
                 "bg-white font-medium text-blue-500 shadow-custom-all-sides"
@@ -117,7 +117,7 @@ const IncidentSetup = () => {
               onClick={() => setPage("secondarySubCategory")}
             >
               Secondary Sub Category
-            </h2>
+            </h2> */}
             {/* <h2
                   className={`p-1 ${
                   page === "secondarySubSubCategory" &&
@@ -180,12 +180,12 @@ const IncidentSetup = () => {
                 <IncidentCategorySetup />
               </div>
             )}
-            {page === "subCategory1" && (
+            {/* {page === "subCategory" && (
               <div>
                 <IncidentSubCategorySetup />
               </div>
-            )}
-            {page === "subCategory2" && (
+            )} */}
+            {/* {page === "subCategory2" && (
               <div>
                 <SubSubCategorysetup />
               </div>
@@ -194,7 +194,7 @@ const IncidentSetup = () => {
               <div>
                 <SubSubSubCategorySetup />
               </div>
-            )}
+            )} */}
             {page === "incidenceStatus" && (
               <div>
                 <IncidenceStatusSetup />
@@ -220,11 +220,11 @@ const IncidentSetup = () => {
                 <IncidentSecondaryCategorySetup />
               </div>
             )}
-            {page === "secondarySubCategory" && (
+            {/* {page === "secondarySubCategory" && (
               <div>
                 <SecondarySubCategorysetup />
               </div>
-            )}
+            )} */}
             {/* {page === "secondarySubSubCategory" && (
                 <div>
                   <SecondarySubSubCategorySetup />
@@ -250,8 +250,8 @@ const IncidentSetup = () => {
                   <RCACategorySetup />
                </div>
             )}
-            {/*
-            {page === "incidentDisclaimer" && (
+            
+            {/* {page === "incidentDisclaimer" && (
                 <div>
                   <IncidentDisclaimerSetup />
                </div>
