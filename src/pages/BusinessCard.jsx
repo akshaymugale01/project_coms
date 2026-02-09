@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { FaPhoneAlt } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
@@ -14,74 +14,19 @@ import { PiPlus, PiPlusCircle } from "react-icons/pi";
 import AddBusinesscardModal from "./AddBusinesscardModal";
 import html2canvas from "html2canvas";
 import { sendBusinessCard } from "../api";
+import { getBusinessCard } from "../api";
 import businessCardTemplate from "/newCard.jpeg";
 // import {postBusinessCard} from "../api";
 // import businessCardTemplate from "/businessCardTemp.jpeg";
 import VCLogo from "./SVG/VCLogo.svg";
+
 const BusinessCard = () => {
-  const user = getItemInLocalStorage("user");
-  const [isQRVisible, setIsQRVisible] = useState(false);
-  const Email = user.email;
-  const handleEmailCopy = () => {
-    navigator.clipboard
-      .writeText(Email)
-      .then(() => {
-        toast.success("Email id Copied");
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err);
-      });
-  };
-  const Phone = "9930337986";
-  const handlePhoneCopy = () => {
-    navigator.clipboard
-      .writeText(Phone)
-      .then(() => {
-        toast.success("Phone Number Copied");
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err);
-      });
-  };
-  const web = "www.google.com";
-  const handleWebCopy = () => {
-    navigator.clipboard
-      .writeText(web)
-      .then(() => {
-        toast.success("Website Link Copied");
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err);
-      });
-  };
-  const toggleQRVisibility = () => {
-    setIsQRVisible(!isQRVisible);
-  };
-
-  const generateVCardData = () => {
-    // Create a new vCard
-    const vCard = new VCard();
-
-    // Add vCard fields
-    // vCard
-    //   .addName("Seth", "Pankti")
-    //   .addEmail("pankti.s@vibecopilot.ai")
-    //   .addPhoneNumber("7039590622", "CELL")
-    //   .addURL("https://vibeconnect.work/")
-    //   .addCompany("Vibecopilot");
-
-    // .addOrganization("Vibe Copilot");
-    vCard
-      .addName(user.lastname, user.firstname)
-      .addEmail(user.email)
-      .addPhoneNumber("9930337983", "CELL")
-      .addURL("https://vibecopilot.ai/");
-
-    // Return the formatted vCard string
-    return vCard.toString();
-  };
   const themeColor = useSelector((state) => state.theme.color);
+  const elementRef = useRef(null);
+
   const [addCard, setAddCard] = useState(false);
+  const [businessCards, setBusinessCards] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [recieverEmail, setRecieverEmail] = useState("");
 
@@ -89,7 +34,7 @@ const BusinessCard = () => {
   const [showVerifiedLoaderSend, setShowVerifiedLoaderSend] = useState("none");
   const user_id = getItemInLocalStorage("VIBEUSERID");
   const [sending, setSending] = useState(false);
-  
+
   const sendNewBusinessCard = async () => {
     const content = document.querySelector(".bCard");
     const canvas = await html2canvas(content);
@@ -167,18 +112,57 @@ const BusinessCard = () => {
       setIsEmailValid(false);
     }
   };
-  const elementRef = useRef(null);
+  // const elementRef = useRef(null);
 
   const captureAndShare = async () => {
     if (elementRef.current) {
-      
       const canvas = await html2canvas(elementRef.current);
-      const imgDataUrl = canvas.toDataURL('image/png');
+      const imgDataUrl = canvas.toDataURL("image/png");
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(imgDataUrl)}`;
-      window.open(whatsappUrl, '_blank');
+      window.open(whatsappUrl, "_blank");
     }
   };
 
+  const fetchBusinessCards = async () => {
+    try {
+      setLoading(true);
+      const res = await getBusinessCard();
+      setBusinessCards(res.data || []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load business cards");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBusinessCards();
+  }, []);
+
+  const generateVCardData = (card) => {
+    const vCard = new VCard();
+
+    const [firstName = "", lastName = ""] = card.full_name?.split(" ") || [];
+
+    vCard
+      .addName(lastName, firstName)
+      .addEmail(card.email_id || "")
+      .addPhoneNumber(card.contact_number || "", "CELL")
+      .addURL(card.website_url || "")
+      .addAddress("", "", card.address || "", "", "", "", "");
+
+    return vCard.toString();
+  };
+
+  const copyText = (text, msg) => {
+    if (!text) {
+      toast.error("Data not available");
+      return;
+    }
+    navigator.clipboard.writeText(text);
+    toast.success(msg);
+  };
 
   return (
     <section className="flex">
@@ -214,76 +198,79 @@ const BusinessCard = () => {
             <PiPlusCircle size={20} /> Add
           </button>
         </div>
-        <div ref={elementRef} className="bCard relative flex flex-col md:flex-row gap-4 justify-center md:justify-start   w-fit  md:px-4 py-10  rounded-2xl">
-          {/* <div className="bg-white  rounded-full z-10 h-20 w-20 absolute left-[10rem]  md:left-[8.5rem] top-2 shadow-custom-all-sides">
-            <img src={profile} alt="" />
-          </div> */}
-          <div
-            style={{
-              backgroundImage: `url(${businessCardTemplate})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-            className="bg-custom-gradient relative shadow-custom-all-sides h-48 w-80 rounded-2xl border border-gray-200"
-            // onClick={toggleQRVisibility}
-          >
-            {/* <div>
-              <img
-                src={VCLogo}
-                alt=""
-                width="100"
-                height="100"
-                className="absolute -top-4 left-[105px]"
-              />
-            </div> */}
-            <div className="flex flex-col justify-center my-2">
-              <p className="text-center font-bold  mt-10 flex flex-col gap-10 text-lg">
-                {/* <p className="text-center font-bold  mt-10 text-lg"> */}
-                {user.firstname} {user.lastname}
-              </p>
-              <p className="text-center font-medium mt-1">
-                Social Media Marketing
-              </p>
+        {/* LOADER */}
+        {loading && <p className="mt-4">Loading business cards...</p>}
+
+        {/* CARD LIST */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {businessCards.map((card) => (
+            <div
+              key={card.id}
+              ref={elementRef}
+              className="bCard flex flex-col md:flex-row gap-4 items-center p-6 rounded-2xl shadow-custom-all-sides w-fit"
+            >
+              {/* BUSINESS CARD */}
+              <div
+                style={{
+                  backgroundImage: `url(${businessCardTemplate})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+                className="h-48 w-80 rounded-2xl border border-gray-200"
+              >
+                <div className="mt-12 text-center">
+                  <p className="font-bold text-lg">{card.full_name}</p>
+                  <p className="text-sm font-medium">
+                    {card.profession || "—"}
+                  </p>
+                </div>
+
+                <div className="mt-9 flex justify-center gap-3">
+                  <button
+                    onClick={() =>
+                      copyText(card.contact_number, "Phone copied")
+                    }
+                    className="bg-white p-2 rounded-md"
+                  >
+                    <div className="flex items-center gap-1">
+                      <FaPhoneAlt />
+                      <span>Phone</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => copyText(card.email_id, "Email copied")}
+                    className="bg-white p-2 rounded-md"
+                  >
+                      <div className="flex items-center gap-1">
+                    <MdEmail />
+                      <span>Email</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => copyText(card.website_url, "Website copied")}
+                    className="bg-white p-2 rounded-md"
+                  >
+                    <div className="flex items-center gap-1">
+                    <ImEarth />
+                      <span>Website</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* QR CODE */}
+              <div className="bg-blue-400 p-2 rounded-2xl h-48 w-48 flex items-center justify-center">
+                <QRCodeCanvas
+                  value={generateVCardData(card)}
+                  size={130}
+                  includeMargin
+                  className="rounded-xl"
+                />
+              </div>
             </div>
-            {/* <div>
-              <p className="text-center text-xs ">
-                testing description of card
-              </p>
-            </div> */}
-            <div className="mt-9 flex justify-center gap-1 md:gap-2 ">
-              <button
-                className="bg-white p-2 flex justify-center items-center gap-2 rounded-l-md font-medium"
-                onClick={handlePhoneCopy}
-              >
-                <FaPhoneAlt /> Phone
-              </button>
-              <button
-                className="bg-white p-2 flex justify-center items-center gap-2  font-medium"
-                onClick={handleEmailCopy}
-              >
-                <MdEmail size={20} /> Email
-              </button>
-              <button
-                className="bg-white p-2 flex justify-center items-center gap-2  font-medium rounded-r-md"
-                onClick={handleWebCopy}
-              >
-                <ImEarth /> Website
-              </button>
-            </div>
-          </div>
-          {/* for now */}
-          {/* <div className="bg-black p-4 w-fit rounded-md shadow-custom-all-sides">
-            <img src={QR} alt="QR Code" className="h-40 min-w-40" />
-          </div> */}
-          <div className="bg-blue-400 p-2 flex justify-center items-center rounded-2xl shadow-custom-all-sides h-48 w-48">
-            <QRCodeCanvas
-              value={generateVCardData()}
-              renderAs="canvas"
-              size="130"
-              includeMargin={true}
-              className="rounded-xl"
-            />
-          </div>
+          ))}
         </div>
       </div>
       {addCard && <AddBusinesscardModal onClose={() => setAddCard(false)} />}
