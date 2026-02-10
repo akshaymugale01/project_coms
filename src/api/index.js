@@ -268,11 +268,10 @@ export const getPolls = async () =>
   });
 
 export const getSearchPolls = async (title) => {
-  const trimmedTitle = title?.trim() || "";
   return axiosInstance.get("/polls.json", {
     params: {
       token: token,
-      ...(trimmedTitle && { "q[title_cont]": trimmedTitle }),
+      "q[title_cont]": title,
     },
   });
 };
@@ -1295,6 +1294,10 @@ export const getCalendarBooking = async (data) =>
   });
 
 export const getAmenityExport = async (start_date, end_date) => {
+  if (!start_date || !end_date) {
+    throw new Error("Start date and end date are required");
+  }
+  
   return axiosInstance.get("/amenity_bookings/export_amenity.xlsx", {
     params: {
       token: token,
@@ -1302,6 +1305,7 @@ export const getAmenityExport = async (start_date, end_date) => {
       end_date,
     },
     responseType: "blob",
+    timeout: 30000, 
   });
 };
 
@@ -7529,7 +7533,14 @@ export const postInjured = async (data) =>
       token: token,
     },
   });
-  
+
+ export const postInjurydata = async (data) =>
+  axiosInstance.post(`/incident_injuries.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
 export const getPerformanceGoal = async (orgId) => {
   try {
     const response = await HrmsAuth.get(

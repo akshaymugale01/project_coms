@@ -1016,7 +1016,7 @@ const VisitorPage = () => {
     <div className="visitors-page">
       <section className="flex">
         <Navbar />
-        <div className=" w-full flex mx-3  flex-col overflow-hidden">
+        <div className=" w-full flex mx-3  flex-col overflow-x-hidden">
           <Passes />
           <div className="flex w-full  m-2">
             <div className="flex w-full md:flex-row flex-col space-x-4 border-b border-gray-400">
