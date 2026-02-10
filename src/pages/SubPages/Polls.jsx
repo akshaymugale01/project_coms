@@ -3,30 +3,71 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Communication from "../Communication";
-import { getPolls } from "../../api";
+import { getPolls, getSearchPolls } from "../../api";
 import { PiPlusCircleBold } from "react-icons/pi";
 
 function Polls() {
   const themeColor = "rgb(3 19 37)"
   const [pollsData, setPollsData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
+  // 1. Debounce Effect: Updates debouncedSearch only after user stops typing for 500ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // 2. Fetch Effect: Runs whenever debouncedSearch changes
   useEffect(() => {
     const fetchPolls = async () => {
+      setLoading(true);
       try {
-        const response = await getPolls();
-        const poll = response.data.sort((a, b) => {
+        let response;
+        const trimmedSearch = debouncedSearch.trim();
+
+        // Set searching state
+        setIsSearching(trimmedSearch.length >= 0);
+
+        // Logic: If there is a search term (>= 2 chars), call Search API. Otherwise, call Get All API.
+        if (trimmedSearch.length >= 0) {
+          response = await getSearchPolls(trimmedSearch);
+        } else if (trimmedSearch.length === 0) {
+          response = await getPolls();
+        } else {
+          // Do nothing for 1 character
+          setPollsData([]);
+          setLoading(false);
+          return;
+        }
+
+        const data = Array.isArray(response.data) ? response.data : [];
+
+        const poll = data.sort((a, b) => {
           return new Date(b.created_at) - new Date(a.created_at);
         });
-        console.log("response from api", response);
 
         setPollsData(poll);
       } catch (err) {
         console.error("Failed to fetch polls data:", err);
+        setPollsData([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchPolls(); // Call the API
-  }, []);
+    fetchPolls();
+  }, [debouncedSearch]);
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setDebouncedSearch("");
+  };
 
   return (
     <div className="flex">
@@ -34,21 +75,30 @@ function Polls() {
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <Communication />
         <div className="flex justify-between md:flex-row flex-col my-2 gap-2">
-          <input
-            type="text"
-            placeholder="Search by title"
-            className="border p-2 w-full border-gray-300 rounded-lg"
-          />
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Search polls by title..."
+              className="border p-2 pr-20 w-full border-gray-300 rounded-lg"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+         
+          </div>
           <Link
             to={`/admin/create-polls`}
             style={{ background: themeColor }}
-            className="font-semibold text-white px-4 py-1 flex gap-2 items-center rounded-md"
+            className="font-semibold text-white px-4 py-1 flex gap-2 items-center rounded-md whitespace-nowrap"
           >
             <PiPlusCircleBold size={20} /> Create
           </Link>
         </div>
+
+        {/* Loading Indicator */}
+        {loading && <p className="text-center text-gray-500 my-4">Loading...</p>}
+
         <div className="md:grid grid-cols-2">
-          {pollsData.length > 0 ? (
+          {!loading && pollsData.length > 0 ? (
             pollsData.map((poll) => {
               // Calculate total votes for the current poll
               const totalVotes = poll.poll_options.reduce(
@@ -109,7 +159,14 @@ function Polls() {
               );
             })
           ) : (
-            <p>No polls available</p>
+            !loading && (
+              <p className="text-center text-gray-500 w-full col-span-2">
+                {isSearching 
+                  ? "No polls match your search. Try different keywords."
+                  : "No polls available"
+                }
+              </p>
+            )
           )}
         </div>
       </div>

@@ -15,10 +15,25 @@ const ExportBookingModal = ({ onclose }) => {
       return;
     }
 
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+      toast.error("From date cannot be after To date");
+      return;
+    }
+
     try {
       setLoading(true);
+      toast.loading("Preparing export...", { id: "export-loading" });
 
       const response = await getAmenityExport(startDate, endDate);
+
+      // Check if response has data
+      if (!response.data || response.data.size === 0) {
+        toast.dismiss("export-loading");
+        toast.error("No data available for the selected date range");
+        setLoading(false);
+        return;
+      }
 
       const blob = new Blob([response.data], {
         type:
@@ -34,12 +49,31 @@ const ExportBookingModal = ({ onclose }) => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      
+      // Clean up the URL object
+      window.URL.revokeObjectURL(url);
 
+      toast.dismiss("export-loading");
       toast.success("Export downloaded successfully");
-      onclose();
+      
+      // Close modal after short delay
+      setTimeout(() => {
+        onclose();
+      }, 1000);
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to export bookings");
+      console.error("Export error:", error);
+      toast.dismiss("export-loading");
+      
+      if (error.response) {
+        // Server responded with error
+        toast.error(`Export failed: ${error.response.statusText || "Server error"}`);
+      } else if (error.request) {
+        // Request made but no response
+        toast.error("No response from server. Please check your connection.");
+      } else {
+        // Something else went wrong
+        toast.error("Failed to export bookings. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -60,7 +94,9 @@ const ExportBookingModal = ({ onclose }) => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              max={endDate || undefined}
               className="border border-gray-200 p-2 rounded-md"
+              required
             />
           </div>
 
@@ -70,7 +106,9 @@ const ExportBookingModal = ({ onclose }) => {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              min={startDate || undefined}
               className="border border-gray-200 p-2 rounded-md"
+              required
             />
           </div>
         </div>
@@ -78,15 +116,20 @@ const ExportBookingModal = ({ onclose }) => {
         <div className="flex gap-4">
           <button
             onClick={handleExport}
-            disabled={loading}
-            className="bg-black p-2 px-6 text-white rounded-md my-5"
+            disabled={loading || !startDate || !endDate}
+            className={`p-2 px-6 text-white rounded-md my-5 ${
+              loading || !startDate || !endDate
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-black hover:bg-gray-800"
+            }`}
           >
-            {loading ? "Exporting..." : "Submit"}
+            {loading ? "Exporting..." : "Export"}
           </button>
 
           <button
             onClick={onclose}
-            className="bg-gray-500 p-2 px-6 text-white rounded-md my-5"
+            disabled={loading}
+            className="bg-gray-500 hover:bg-gray-600 p-2 px-6 text-white rounded-md my-5"
           >
             Cancel
           </button>
