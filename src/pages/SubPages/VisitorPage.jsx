@@ -30,7 +30,7 @@ const VisitorPage = () => {
   const [visitorOut, setVisitorOut] = useState([]);
   const [unexpectedVisitor, setUnexpectedVisitor] = useState([]);
   const [FilteredUnexpectedVisitor, setFilteredUnexpectedVisitor] = useState(
-    []
+    [],
   );
   const [showPopup, setShowPopup] = useState(false);
   const [mobile, setMobile] = useState("");
@@ -44,38 +44,42 @@ const VisitorPage = () => {
   const [histories, setHistories] = useState([]);
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   // Add logs state variables here before pagination useEffect
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
-  
+
   // Pagination states - separate for each tab
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // History pagination states
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
   const [historyPerPage, setHistoryPerPage] = useState(10);
   const [historyTotalRows, setHistoryTotalRows] = useState(0);
   const [historyTotalPages, setHistoryTotalPages] = useState(1);
-  
+
   // Approval pagination states
   const [approvalCurrentPage, setApprovalCurrentPage] = useState(1);
   const [approvalPerPage, setApprovalPerPage] = useState(10);
   const [approvalTotalRows, setApprovalTotalRows] = useState(0);
   const [approvalTotalPages, setApprovalTotalPages] = useState(1);
-  
+
   // Logs pagination states
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
   const [logsPerPage, setLogsPerPage] = useState(10);
   const [logsTotalRows, setLogsTotalRows] = useState(0);
   const [logsTotalPages, setLogsTotalPages] = useState(1);
-  
+
   // Filter states
   const [appliedFilters, setAppliedFilters] = useState({});
-  
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  const [filterMobile, setFilterMobile] = useState("");
+  const [filterHost, setFilterHost] = useState("");
+
   const handleApplyFilters = (filters) => {
     console.log("Applying filters:", filters);
     setAppliedFilters(filters);
@@ -87,7 +91,7 @@ const VisitorPage = () => {
     setAppliedFilters({});
     setCurrentPage(1); // Reset to first page when resetting filters
   };
-  
+
   const handleClick = (visitorType) => {
     setSelectedVisitor(visitorType);
   };
@@ -102,7 +106,9 @@ const VisitorPage = () => {
 
   // Pagination helper functions
   const handlePageChange = (newPage) => {
-    console.log(`Changing page from ${currentPage} to ${newPage} for ${page} tab`);
+    console.log(
+      `Changing page from ${currentPage} to ${newPage} for ${page} tab`,
+    );
     setCurrentPage(newPage);
   };
 
@@ -114,7 +120,9 @@ const VisitorPage = () => {
 
   // History pagination helper functions
   const handleHistoryPageChange = (newPage) => {
-    console.log(`Changing history page from ${historyCurrentPage} to ${newPage}`);
+    console.log(
+      `Changing history page from ${historyCurrentPage} to ${newPage}`,
+    );
     setHistoryCurrentPage(newPage);
   };
 
@@ -126,7 +134,9 @@ const VisitorPage = () => {
 
   // Approval pagination helper functions
   const handleApprovalPageChange = (newPage) => {
-    console.log(`Changing approval page from ${approvalCurrentPage} to ${newPage}`);
+    console.log(
+      `Changing approval page from ${approvalCurrentPage} to ${newPage}`,
+    );
     setApprovalCurrentPage(newPage);
   };
 
@@ -177,49 +187,59 @@ const VisitorPage = () => {
     const fetchExpectedVisitor = async () => {
       try {
         setLoading(true);
-        
+
         // Prepare filters based on current page and visitor type
         let filters = { ...appliedFilters }; // Include applied filters from VisitorFilters component
-        
+
         if (page === "Visitor In") {
-          filters['q[visitor_in_out_eq]'] = 'IN';
+          filters["q[visitor_in_out_eq]"] = "IN";
         } else if (page === "Visitor Out") {
-          filters['q[visitor_in_out_eq]'] = 'OUT';
+          filters["q[visitor_in_out_eq]"] = "OUT";
         }
-        
+
         // Add expected/unexpected visitor filtering based on selectedVisitor
         if (selectedVisitor === "expected") {
-          filters['q[user_type_not_eq]'] = 'security_guard'; // Expected visitors are NOT security guards
+          filters["q[user_type_not_eq]"] = "security_guard"; // Expected visitors are NOT security guards
         } else if (selectedVisitor === "unexpected") {
-          filters['q[user_type_eq]'] = 'security_guard'; // Unexpected visitors ARE security guards
+          filters["q[user_type_eq]"] = "security_guard"; // Unexpected visitors ARE security guards
         }
-        
-        console.log(`Fetching visitors - Page: ${currentPage}, PerPage: ${perPage}, Filters:`, filters);
-        
-        const visitorResp = await getExpectedVisitor(currentPage, perPage, filters);
+
+        console.log(
+          `Fetching visitors - Page: ${currentPage}, PerPage: ${perPage}, Filters:`,
+          filters,
+        );
+
+        const visitorResp = await getExpectedVisitor(
+          currentPage,
+          perPage,
+          filters,
+        );
         console.log("API Response:", visitorResp);
-        
+
         if (!visitorResp || !visitorResp.data) {
           console.warn("No data received from getExpectedVisitor API");
           setLoading(false);
           return;
         }
-        
+
         // Handle new API response format with pagination
-        if (visitorResp.data.visitors && visitorResp.data.total_pages !== undefined) {
+        if (
+          visitorResp.data.visitors &&
+          visitorResp.data.total_pages !== undefined
+        ) {
           const visitors = visitorResp.data.visitors;
           setTotalPages(visitorResp.data.total_pages || 1);
           setTotalRows(visitorResp.data.total_count || visitors.length);
-          
+
           console.log("Pagination info:", {
             total_pages: visitorResp.data.total_pages,
             current_page: visitorResp.data.current_page,
             total_count: visitorResp.data.total_count,
             visitors_received: visitors.length,
             selectedVisitor: selectedVisitor,
-            appliedFilters: filters
+            appliedFilters: filters,
           });
-          
+
           // Since backend filtering is applied, visitors array already contains the correct data
           if (page === "Visitor In") {
             // Backend filtered for IN visitors and user_type based on selectedVisitor
@@ -229,8 +249,10 @@ const VisitorPage = () => {
             setFilteredUnexpectedVisitor(visitors);
             setExpectedVisitor(visitors);
             setFilteredExpectedVisitor(visitors);
-            
-            console.log(`Visitor In tab: ${visitors.length} visitors (${selectedVisitor})`);
+
+            console.log(
+              `Visitor In tab: ${visitors.length} visitors (${selectedVisitor})`,
+            );
           } else if (page === "Visitor Out") {
             // Backend filtered for OUT visitors and user_type based on selectedVisitor
             setVisitorOut(visitors);
@@ -239,25 +261,31 @@ const VisitorPage = () => {
             setFilteredExpectedVisitor(visitors);
             setUnexpectedVisitor(visitors);
             setFilteredUnexpectedVisitor(visitors);
-            
-            console.log(`Visitor Out tab: ${visitors.length} visitors (${selectedVisitor})`);
+
+            console.log(
+              `Visitor Out tab: ${visitors.length} visitors (${selectedVisitor})`,
+            );
           } else {
             // For "all" page, backend filtered by user_type based on selectedVisitor
             // No need for frontend filtering since backend handled it
-            setVisitorIn(visitors.filter(v => v.visitor_in_out === "IN"));
-            setVisitorOut(visitors.filter(v => v.visitor_in_out === "OUT"));
-            setFilteredVisitorOut(visitors.filter(v => v.visitor_in_out === "OUT"));
-            setFilteredData(visitors.filter(v => v.visitor_in_out === "IN"));
+            setVisitorIn(visitors.filter((v) => v.visitor_in_out === "IN"));
+            setVisitorOut(visitors.filter((v) => v.visitor_in_out === "OUT"));
+            setFilteredVisitorOut(
+              visitors.filter((v) => v.visitor_in_out === "OUT"),
+            );
+            setFilteredData(visitors.filter((v) => v.visitor_in_out === "IN"));
             setUnexpectedVisitor(visitors);
             setFilteredUnexpectedVisitor(visitors);
             setExpectedVisitor(visitors);
             setFilteredExpectedVisitor(visitors);
-            
+
             console.log("All page - backend filtered data:", {
               totalVisitors: visitors.length,
               selectedVisitor: selectedVisitor,
-              visitorIn: visitors.filter(v => v.visitor_in_out === "IN").length,
-              visitorOut: visitors.filter(v => v.visitor_in_out === "OUT").length
+              visitorIn: visitors.filter((v) => v.visitor_in_out === "IN")
+                .length,
+              visitorOut: visitors.filter((v) => v.visitor_in_out === "OUT")
+                .length,
             });
           }
         } else if (visitorResp.data.visitors) {
@@ -265,20 +293,20 @@ const VisitorPage = () => {
           const visitors = visitorResp.data.visitors;
           setTotalPages(visitorResp.data.total_pages || 1);
           setTotalRows(visitorResp.data.total_count || visitors.length);
-          
+
           const filteredUnexpectedVisitor = visitors.filter(
-            (visit) => visit.user_type === "security_guard"
+            (visit) => visit.user_type === "security_guard",
           );
           const filteredExpectedVisitor = visitors.filter(
-            (visit) => visit.user_type !== "security_guard"
+            (visit) => visit.user_type !== "security_guard",
           );
           const filteredVisitorIn = visitors.filter(
-            (visit) => visit.visitor_in_out === "IN"
+            (visit) => visit.visitor_in_out === "IN",
           );
           const filteredVisitorOut = visitors.filter(
-            (visit) => visit.visitor_in_out === "OUT"
+            (visit) => visit.visitor_in_out === "OUT",
           );
-          
+
           setVisitorIn(filteredVisitorIn);
           setVisitorOut(filteredVisitorOut);
           setFilteredVisitorOut(filteredVisitorOut);
@@ -287,52 +315,79 @@ const VisitorPage = () => {
           setFilteredUnexpectedVisitor(filteredUnexpectedVisitor);
           setExpectedVisitor(filteredExpectedVisitor);
           setFilteredExpectedVisitor(filteredExpectedVisitor);
-          
+
           console.log("Paginated visitor data:", visitors);
-        } else if (Array.isArray(visitorResp.data) && visitorResp.data.total_pages === undefined) {
+        } else if (
+          Array.isArray(visitorResp.data) &&
+          visitorResp.data.total_pages === undefined
+        ) {
           // Fallback for old API response format (array directly)
           const sortedVisitor = visitorResp.data.sort((a, b) => {
             return new Date(b.created_at) - new Date(a.created_at);
           });
-          
+
           // Apply frontend filtering for legacy format
           let filteredVisitors = sortedVisitor;
-          
+
           // Apply visitor in/out filtering
           if (page === "Visitor In") {
-            filteredVisitors = filteredVisitors.filter(v => v.visitor_in_out === "IN");
+            filteredVisitors = filteredVisitors.filter(
+              (v) => v.visitor_in_out === "IN",
+            );
           } else if (page === "Visitor Out") {
-            filteredVisitors = filteredVisitors.filter(v => v.visitor_in_out === "OUT");
+            filteredVisitors = filteredVisitors.filter(
+              (v) => v.visitor_in_out === "OUT",
+            );
           }
-          
+
           // Apply expected/unexpected filtering
           if (selectedVisitor === "expected") {
-            filteredVisitors = filteredVisitors.filter(v => v.user_type !== "security_guard");
+            filteredVisitors = filteredVisitors.filter(
+              (v) => v.user_type !== "security_guard",
+            );
           } else if (selectedVisitor === "unexpected") {
-            filteredVisitors = filteredVisitors.filter(v => v.user_type === "security_guard");
+            filteredVisitors = filteredVisitors.filter(
+              (v) => v.user_type === "security_guard",
+            );
           }
-          
+
           // For non-paginated response, set default pagination
           setTotalPages(1);
           setTotalRows(filteredVisitors.length);
-          
+
           // Set the filtered data to all state variables for consistency
-          setVisitorIn(filteredVisitors.filter(v => v.visitor_in_out === "IN"));
-          setVisitorOut(filteredVisitors.filter(v => v.visitor_in_out === "OUT"));
-          setFilteredVisitorOut(filteredVisitors.filter(v => v.visitor_in_out === "OUT"));
-          setFilteredData(filteredVisitors.filter(v => v.visitor_in_out === "IN"));
-          setUnexpectedVisitor(filteredVisitors.filter(v => v.user_type === "security_guard"));
-          setFilteredUnexpectedVisitor(filteredVisitors.filter(v => v.user_type === "security_guard"));
-          setExpectedVisitor(filteredVisitors.filter(v => v.user_type !== "security_guard"));
-          setFilteredExpectedVisitor(filteredVisitors.filter(v => v.user_type !== "security_guard"));
-          
+          setVisitorIn(
+            filteredVisitors.filter((v) => v.visitor_in_out === "IN"),
+          );
+          setVisitorOut(
+            filteredVisitors.filter((v) => v.visitor_in_out === "OUT"),
+          );
+          setFilteredVisitorOut(
+            filteredVisitors.filter((v) => v.visitor_in_out === "OUT"),
+          );
+          setFilteredData(
+            filteredVisitors.filter((v) => v.visitor_in_out === "IN"),
+          );
+          setUnexpectedVisitor(
+            filteredVisitors.filter((v) => v.user_type === "security_guard"),
+          );
+          setFilteredUnexpectedVisitor(
+            filteredVisitors.filter((v) => v.user_type === "security_guard"),
+          );
+          setExpectedVisitor(
+            filteredVisitors.filter((v) => v.user_type !== "security_guard"),
+          );
+          setFilteredExpectedVisitor(
+            filteredVisitors.filter((v) => v.user_type !== "security_guard"),
+          );
+
           console.log("Legacy format - Filtered visitor data:", {
             total: filteredVisitors.length,
             selectedVisitor: selectedVisitor,
-            page: page
+            page: page,
           });
         }
-        
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching expected visitor:", error);
@@ -346,49 +401,263 @@ const VisitorPage = () => {
     }
   }, [currentPage, perPage, page, selectedVisitor, appliedFilters]); // Added appliedFilters dependency
 
+  const csvEscape = (v) => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  // ✅ UPDATED: Export ALL Visitor data (All / In / Out) to CSV
+  const exportVisitorsToCSV = async () => {
+    if (page !== "all" && page !== "Visitor In" && page !== "Visitor Out") {
+      toast.error("Export is available for All / Visitor In / Visitor Out");
+      return;
+    }
+
+    try {
+      toast.loading("Preparing export... Please wait");
+
+      let allRows = [];
+      let pageNum = 1;
+      let hasMoreData = true;
+      const itemsPerPage = 1000; // Large page size to minimize API calls
+
+      // Build filters based on current page and selected visitor
+      let filters = { ...appliedFilters };
+      if (page === "Visitor In") {
+        filters["q[visitor_in_out_eq]"] = "IN";
+        if (selectedVisitor === "expected") {
+          filters["q[user_type_not_eq]"] = "security_guard";
+        } else {
+          filters["q[user_type_eq]"] = "security_guard";
+        }
+      } else if (page === "Visitor Out") {
+        filters["q[visitor_in_out_eq]"] = "OUT";
+        if (selectedVisitor === "expected") {
+          filters["q[user_type_not_eq]"] = "security_guard";
+        } else {
+          filters["q[user_type_eq]"] = "security_guard";
+        }
+      } else if (page === "all") {
+        if (selectedVisitor === "expected") {
+          filters["q[user_type_not_eq]"] = "security_guard";
+        } else {
+          filters["q[user_type_eq]"] = "security_guard";
+        }
+      }
+
+      // Fetch all pages
+      while (hasMoreData) {
+        const visitorResp = await getExpectedVisitor(
+          pageNum,
+          itemsPerPage,
+          filters,
+        );
+
+        let visitorData = [];
+        let totalPages = 1;
+
+        if (visitorResp?.data) {
+          if (Array.isArray(visitorResp.data)) {
+            visitorData = visitorResp.data;
+          } else if (
+            visitorResp.data.visitors &&
+            Array.isArray(visitorResp.data.visitors)
+          ) {
+            visitorData = visitorResp.data.visitors;
+            totalPages = visitorResp.data.total_pages || 1;
+          } else if (
+            visitorResp.data.data &&
+            Array.isArray(visitorResp.data.data)
+          ) {
+            visitorData = visitorResp.data.data;
+            totalPages = visitorResp.data.total_pages || 1;
+          }
+        }
+
+        if (visitorData.length === 0) {
+          hasMoreData = false;
+        } else {
+          // Process and add to allRows
+          const processedVisitors = visitorData.map((visitor) => ({
+            ...visitor,
+            hosts_display:
+              visitor.hosts && visitor.hosts.length > 0
+                ? visitor.hosts
+                    .map((host) => host.full_name || "Unknown")
+                    .filter(Boolean)
+                    .join(", ")
+                : "No Host",
+          }));
+
+          allRows = [...allRows, ...processedVisitors];
+
+          // Check if there are more pages
+          if (pageNum >= totalPages) {
+            hasMoreData = false;
+          } else {
+            pageNum++;
+          }
+        }
+      }
+
+      toast.dismiss();
+
+      if (!allRows || allRows.length === 0) {
+        toast.error("No data to export");
+        return;
+      }
+
+      const headers = [
+        "Visitor Type",
+        "Name",
+        "Contact No",
+        "Purpose",
+        "Coming From",
+        "Expected Date",
+        "Expected Time",
+        "Vehicle No",
+        "Host Approval",
+        "Pass Start",
+        "Pass End",
+        "Status",
+        "Created By",
+        "Host",
+        "Created At",
+      ];
+
+      const csvRows = allRows.map((r) => {
+        const createdBy = `${r?.created_by_name?.firstname || ""} ${
+          r?.created_by_name?.lastname || ""
+        }`.trim();
+
+        return [
+          csvEscape(r.visit_type || ""),
+          csvEscape(r.name || ""),
+          csvEscape(r.contact_no || ""),
+          csvEscape(r.purpose || ""),
+          csvEscape(r.coming_from || ""),
+          csvEscape(r.expected_date || ""),
+          csvEscape(r.expected_time ? formatTime(r.expected_time) : ""),
+          csvEscape(r.vehicle_number || ""),
+          csvEscape(r.skip_host_approval ? "Not Required" : "Required"),
+          csvEscape(r.start_pass ? dateFormat(r.start_pass) : ""),
+          csvEscape(r.end_pass ? dateFormat(r.end_pass) : ""),
+          csvEscape(r.visitor_in_out || ""),
+          csvEscape(createdBy),
+          csvEscape(r.hosts_display || (createdBy ? createdBy : "No Host")),
+          csvEscape(r.created_at ? dateTimeFormat(r.created_at) : ""),
+        ].join(",");
+      });
+
+      const fileName =
+        page === "all"
+          ? `visitors_all_${selectedVisitor}_${new Date().toISOString().split("T")[0]}.csv`
+          : page === "Visitor In"
+            ? `visitors_in_${selectedVisitor}_${new Date().toISOString().split("T")[0]}.csv`
+            : `visitors_out_${selectedVisitor}_${new Date().toISOString().split("T")[0]}.csv`;
+
+      const blob = new Blob([headers.join(",") + "\n" + csvRows.join("\n")], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`Export successfully....!!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Export failed. Please try again");
+    }
+  };
+
+  // Existing History export (kept)
+  const exportHistoryToCSV = () => {
+    if (filteredHistory.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+    const headers = ["Name", "Purpose", "Mobile", "Approval Date", "Status"];
+    const csvRows = filteredHistory.map((item) =>
+      [
+        csvEscape(item.name),
+        csvEscape(item.purpose),
+        csvEscape(item.contactno || item.contact_no),
+        csvEscape(dateTimeFormat(item.approvaldate)),
+        csvEscape(item.approved ? "Approved" : "Denied"),
+      ].join(","),
+    );
+
+    const blob = new Blob([headers.join(",") + "\n" + csvRows.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.setAttribute("download", "visitorhistory.csv");
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
   // Separate useEffect for History tab
   useEffect(() => {
     const fetchVisitorHistory = async () => {
       try {
         setLoading(true);
-        const historyResp = await getVisitorHistory(historyCurrentPage, historyPerPage);
+        const historyResp = await getVisitorHistory(
+          historyCurrentPage,
+          historyPerPage,
+        );
         console.log("History API Response:", historyResp);
-        
+
         if (!historyResp || !historyResp.data) {
           console.warn("No data received from getVisitorHistory API");
           setLoading(false);
           return;
         }
-        
+
         // Handle new API response format with approval_history
-        if (historyResp.data.approval_history && historyResp.data.total_pages !== undefined) {
+        if (
+          historyResp.data.approval_history &&
+          historyResp.data.total_pages !== undefined
+        ) {
           const approvalHistory = historyResp.data.approval_history;
           setHistoryTotalPages(historyResp.data.total_pages || 1);
-          setHistoryTotalRows(historyResp.data.total_count || approvalHistory.length);
-          
+          setHistoryTotalRows(
+            historyResp.data.total_count || approvalHistory.length,
+          );
+
           // For server-side pagination, only show the current page data
           setHistories(approvalHistory);
           setFilteredHistory(approvalHistory);
-          console.log(`Paginated history: ${approvalHistory.length} items out of ${historyResp.data.total_count} total`);
+          console.log(
+            `Paginated history: ${approvalHistory.length} items out of ${historyResp.data.total_count} total`,
+          );
           console.log("History pagination info:", {
             total_pages: historyResp.data.total_pages,
             current_page: historyResp.data.current_page,
-            total_count: historyResp.data.total_count
+            total_count: historyResp.data.total_count,
           });
         } else if (historyResp.data.visitors) {
           // Handle old API response format with visitors
           const visitors = historyResp.data.visitors;
           setHistoryTotalPages(historyResp.data.total_pages || 1);
           setHistoryTotalRows(historyResp.data.total_count || visitors.length);
-          
+
           // For server-side pagination, only show the current page data
           setHistories(visitors);
           setFilteredHistory(visitors);
-          console.log(`Paginated history: ${visitors.length} items out of ${historyResp.data.total_count} total`);
+          console.log(
+            `Paginated history: ${visitors.length} items out of ${historyResp.data.total_count} total`,
+          );
           console.log("History pagination info:", {
             total_pages: historyResp.data.total_pages,
             current_page: historyResp.data.current_page,
-            total_count: historyResp.data.total_count
+            total_count: historyResp.data.total_count,
           });
         } else {
           // Fallback for old API response format
@@ -399,13 +668,17 @@ const VisitorPage = () => {
           const startIndex = (historyCurrentPage - 1) * historyPerPage;
           const endIndex = startIndex + historyPerPage;
           const paginatedData = sortedVisitor.slice(startIndex, endIndex);
-          
-          setHistoryTotalPages(Math.ceil(sortedVisitor.length / historyPerPage));
+
+          setHistoryTotalPages(
+            Math.ceil(sortedVisitor.length / historyPerPage),
+          );
           setHistoryTotalRows(sortedVisitor.length);
-          
+
           setHistories(paginatedData);
           setFilteredHistory(paginatedData);
-          console.log(`Client-side paginated history: ${paginatedData.length} items, page ${historyCurrentPage}`);
+          console.log(
+            `Client-side paginated history: ${paginatedData.length} items, page ${historyCurrentPage}`,
+          );
         }
         setLoading(false);
       } catch (error) {
@@ -425,43 +698,57 @@ const VisitorPage = () => {
     const fetchApprovals = async () => {
       try {
         setLoading(true);
-        const approvalResp = await getVisitorApprovals(approvalCurrentPage, approvalPerPage);
+        const approvalResp = await getVisitorApprovals(
+          approvalCurrentPage,
+          approvalPerPage,
+        );
         console.log("Approvals API Response:", approvalResp);
         if (!approvalResp || !approvalResp.data) {
           console.warn("No data received from getVisitorApprovals API");
           setLoading(false);
           return;
         }
-        
+
         // Handle new API response format - check for approval_history first, then visitors
-        if (approvalResp.data.approval_history && approvalResp.data.total_pages !== undefined) {
+        if (
+          approvalResp.data.approval_history &&
+          approvalResp.data.total_pages !== undefined
+        ) {
           const approvalHistory = approvalResp.data.approval_history;
           setApprovalTotalPages(approvalResp.data.total_pages || 1);
-          setApprovalTotalRows(approvalResp.data.total_count || approvalHistory.length);
-          
+          setApprovalTotalRows(
+            approvalResp.data.total_count || approvalHistory.length,
+          );
+
           // For server-side pagination, only show the current page data
           setApprovals(approvalHistory);
           setFilteredApproval(approvalHistory);
-          console.log(`Paginated approvals: ${approvalHistory.length} items out of ${approvalResp.data.total_count} total`);
+          console.log(
+            `Paginated approvals: ${approvalHistory.length} items out of ${approvalResp.data.total_count} total`,
+          );
           console.log("Approvals pagination info:", {
             total_pages: approvalResp.data.total_pages,
             current_page: approvalResp.data.current_page,
-            total_count: approvalResp.data.total_count
+            total_count: approvalResp.data.total_count,
           });
         } else if (approvalResp.data.visitors) {
           // Handle server-side pagination response with visitors
           const visitors = approvalResp.data.visitors;
           setApprovalTotalPages(approvalResp.data.total_pages || 1);
-          setApprovalTotalRows(approvalResp.data.total_count || visitors.length);
-          
+          setApprovalTotalRows(
+            approvalResp.data.total_count || visitors.length,
+          );
+
           // For server-side pagination, only show the current page data
           setApprovals(visitors);
           setFilteredApproval(visitors);
-          console.log(`Paginated approvals: ${visitors.length} items out of ${approvalResp.data.total_count} total`);
+          console.log(
+            `Paginated approvals: ${visitors.length} items out of ${approvalResp.data.total_count} total`,
+          );
           console.log("Approvals pagination info:", {
             total_pages: approvalResp.data.total_pages,
             current_page: approvalResp.data.current_page,
-            total_count: approvalResp.data.total_count
+            total_count: approvalResp.data.total_count,
           });
         } else {
           // Fallback for old API response format
@@ -472,13 +759,17 @@ const VisitorPage = () => {
           const startIndex = (approvalCurrentPage - 1) * approvalPerPage;
           const endIndex = startIndex + approvalPerPage;
           const paginatedData = sortedApproval.slice(startIndex, endIndex);
-          
-          setApprovalTotalPages(Math.ceil(sortedApproval.length / approvalPerPage));
+
+          setApprovalTotalPages(
+            Math.ceil(sortedApproval.length / approvalPerPage),
+          );
           setApprovalTotalRows(sortedApproval.length);
-          
+
           setApprovals(paginatedData);
           setFilteredApproval(paginatedData);
-          console.log(`Client-side paginated approvals: ${paginatedData.length} items, page ${approvalCurrentPage}`);
+          console.log(
+            `Client-side paginated approvals: ${paginatedData.length} items, page ${approvalCurrentPage}`,
+          );
         }
         setLoading(false);
       } catch (error) {
@@ -497,41 +788,55 @@ const VisitorPage = () => {
   useEffect(() => {
     setCurrentPage(1); // Reset to first page when changing main tabs
     setHistoryCurrentPage(1); // Reset history pagination
-    setApprovalCurrentPage(1); // Reset approval pagination  
+    setApprovalCurrentPage(1); // Reset approval pagination
     setLogsCurrentPage(1); // Reset logs pagination
   }, [page]); // Only reset on main tab changes, not selectedVisitor changes
   // Simple fetch approvals function for refreshing after approval actions
   const fetchApprovals = async () => {
     try {
-      console.log(`Refreshing approvals with page: ${approvalCurrentPage}, perPage: ${approvalPerPage}`);
-      const approvalResp = await getVisitorApprovals(approvalCurrentPage, approvalPerPage);
+      console.log(
+        `Refreshing approvals with page: ${approvalCurrentPage}, perPage: ${approvalPerPage}`,
+      );
+      const approvalResp = await getVisitorApprovals(
+        approvalCurrentPage,
+        approvalPerPage,
+      );
       console.log("Refresh Approvals API Response:", approvalResp);
-      
+
       if (!approvalResp || !approvalResp.data) {
         console.warn("No data received from getVisitorApprovals API");
         return;
       }
-      
+
       // Handle new API response format - check for approval_history first, then visitors
-      if (approvalResp.data.approval_history && approvalResp.data.total_pages !== undefined) {
+      if (
+        approvalResp.data.approval_history &&
+        approvalResp.data.total_pages !== undefined
+      ) {
         const approvalHistory = approvalResp.data.approval_history;
         setApprovalTotalPages(approvalResp.data.total_pages || 1);
-        setApprovalTotalRows(approvalResp.data.total_count || approvalHistory.length);
-        
+        setApprovalTotalRows(
+          approvalResp.data.total_count || approvalHistory.length,
+        );
+
         // For server-side pagination, only show the current page data
         setApprovals(approvalHistory);
         setFilteredApproval(approvalHistory);
-        console.log(`Refreshed approvals: ${approvalHistory.length} items out of ${approvalResp.data.total_count} total`);
+        console.log(
+          `Refreshed approvals: ${approvalHistory.length} items out of ${approvalResp.data.total_count} total`,
+        );
       } else if (approvalResp.data.visitors) {
         // Handle server-side pagination response with visitors
         const visitors = approvalResp.data.visitors;
         setApprovalTotalPages(approvalResp.data.total_pages || 1);
         setApprovalTotalRows(approvalResp.data.total_count || visitors.length);
-        
+
         // For server-side pagination, only show the current page data
         setApprovals(visitors);
         setFilteredApproval(visitors);
-        console.log(`Refreshed approvals: ${visitors.length} items out of ${approvalResp.data.total_count} total`);
+        console.log(
+          `Refreshed approvals: ${visitors.length} items out of ${approvalResp.data.total_count} total`,
+        );
       } else {
         // Fallback for old API response format
         const sortedApproval = approvalResp.data.sort((a, b) => {
@@ -541,13 +846,17 @@ const VisitorPage = () => {
         const startIndex = (approvalCurrentPage - 1) * approvalPerPage;
         const endIndex = startIndex + approvalPerPage;
         const paginatedData = sortedApproval.slice(startIndex, endIndex);
-        
-        setApprovalTotalPages(Math.ceil(sortedApproval.length / approvalPerPage));
+
+        setApprovalTotalPages(
+          Math.ceil(sortedApproval.length / approvalPerPage),
+        );
         setApprovalTotalRows(sortedApproval.length);
-        
+
         setApprovals(paginatedData);
         setFilteredApproval(paginatedData);
-        console.log(`Refreshed approvals (fallback): ${paginatedData.length} items, page ${approvalCurrentPage}`);
+        console.log(
+          `Refreshed approvals (fallback): ${paginatedData.length} items, page ${approvalCurrentPage}`,
+        );
       }
     } catch (error) {
       console.error("Error refreshing visitor approvals:", error);
@@ -682,8 +991,7 @@ const VisitorPage = () => {
     },
     {
       name: "Host",
-      selector: (row) =>
-        `${row?.hosts[0]?.full_name}`,
+      selector: (row) => `${row?.hosts[0]?.full_name}`,
       sortable: true,
     },
   ];
@@ -702,17 +1010,17 @@ const VisitorPage = () => {
     } else {
       if (page === "Visitor In" && selectedVisitor === "expected") {
         const filteredResults = visitorIn.filter((item) =>
-          rowMatchesSearch(item, searchValue)
+          rowMatchesSearch(item, searchValue),
         );
         setFilteredData(filteredResults);
       } else if (page === "Visitor In" && selectedVisitor === "unexpected") {
         const filteredResults = unexpectedVisitor.filter((item) =>
-          rowMatchesSearch(item, searchValue)
+          rowMatchesSearch(item, searchValue),
         );
         setFilteredUnexpectedVisitor(filteredResults);
       } else if (page === "Visitor Out") {
         const filteredResults = visitorOut.filter((item) =>
-          rowMatchesSearch(item, searchValue)
+          rowMatchesSearch(item, searchValue),
         );
         setFilteredVisitorOut(filteredResults);
       }
@@ -730,10 +1038,10 @@ const VisitorPage = () => {
       setFilteredUnexpectedVisitor(unexpectedVisitor);
     } else {
       const filteredExpected = expectedVisitor.filter((item) =>
-        rowMatchesSearch(item, searchValue)
+        rowMatchesSearch(item, searchValue),
       );
       const filteredUnexpected = unexpectedVisitor.filter((item) =>
-        rowMatchesSearch(item, searchValue)
+        rowMatchesSearch(item, searchValue),
       );
       setFilteredExpectedVisitor(filteredExpected);
       setFilteredUnexpectedVisitor(filteredUnexpected);
@@ -745,19 +1053,38 @@ const VisitorPage = () => {
   const handleSearchHistory = (e) => {
     const searchValue = e.target.value;
     setSearchHistoryText(searchValue);
-    // For server-side pagination, we should implement server-side search
-    // For now, disable local filtering to respect pagination
-    console.log("History search:", searchValue);
-    // TODO: Implement server-side search with pagination
+    
+    if (searchValue.trim() === "") {
+      // Reset to original data when search is cleared
+      setFilteredHistory(histories);
+    } else {
+      // Filter history based on name or contact number
+      const filteredResults = histories.filter(
+        (item) =>
+          (item.name && item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.contact_no && item.contact_no.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.contactno && item.contactno.toLowerCase().includes(searchValue.toLowerCase()))
+      );
+      setFilteredHistory(filteredResults);
+    }
   };
   const [searchApprovalText, setSearchApprovalText] = useState("");
   const handleSearchApproval = (e) => {
     const searchValue = e.target.value;
     setSearchApprovalText(searchValue);
-    // For server-side pagination, we should implement server-side search
-    // For now, disable local filtering to respect pagination
-    console.log("Approval search:", searchValue);
-    // TODO: Implement server-side search with pagination
+    
+    if (searchValue.trim() === "") {
+      // Reset to original data when search is cleared
+      setFilteredApproval(approvals);
+    } else {
+      // Filter approvals based on name or contact number
+      const filteredResults = approvals.filter(
+        (item) =>
+          (item.name && item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.contact_no && item.contact_no.toLowerCase().includes(searchValue.toLowerCase()))
+      );
+      setFilteredApproval(filteredResults);
+    }
   };
 
   const historyColumn = [
@@ -871,6 +1198,7 @@ const VisitorPage = () => {
     },
   ];
   document.title = `Passes - Vibe Connect`;
+
   const getVisitorLogData = () => {
     const now = new Date();
     const offsetMinutes = now.getTimezoneOffset(); // Timezone offset in minutes
@@ -893,14 +1221,13 @@ const VisitorPage = () => {
   };
   useEffect(() => {
     const postLogs = async () => {
-      const visitorLogData = getVisitorLogData();
-      // if (visitorLogData?.InfoList?.length > 0) {
-      // const data = await postVisitorLogFromDevice(visitorLogData);
-      await postVisitorLogFromDevice(visitorLogData);
-      // await postVisitorLogToBackend(data); // Comment out until this function is available
-      // } else {
-      //   console.warn("No valid visitor log data to send.");
-      // }
+      try {
+        const visitorLogData = getVisitorLogData();
+        await postVisitorLogFromDevice(visitorLogData);
+      } catch (error) {
+        console.error("Error posting visitor logs from device:", error);
+        // Silently fail - device might not be available
+      }
     };
     const intervalId = setInterval(postLogs, 15 * 60 * 1000);
     postLogs();
@@ -941,6 +1268,9 @@ const VisitorPage = () => {
       sortable: true,
     },
   ];
+  // const [logs, setLogs] = useState([]);
+  // const [filteredLogs, setFilteredLogs] = useState([]);
+
   // Separate useEffect for Logs tab
   useEffect(() => {
     const fetchAllVisitorLogs = async () => {
@@ -948,42 +1278,56 @@ const VisitorPage = () => {
         setLoading(true);
         const res = await getAllVisitorLogs(logsCurrentPage, logsPerPage);
         console.log("Visitor logs API Response:", res);
+        
         if (!res || !res.data) {
           console.warn("No data received from getAllVisitorLogs API");
           setLoading(false);
           return;
         }
+        
         // Handle server-side pagination response
-        if (res.data.visitors) {
+        if (res.data.visitors && res.data.total_pages !== undefined) {
           const visitors = res.data.visitors;
           setLogsTotalPages(res.data.total_pages || 1);
           setLogsTotalRows(res.data.total_count || visitors.length);
-          
+
           // For server-side pagination, only show the current page data
           setFilteredLogs(visitors);
           setLogs(visitors);
-          console.log(`Paginated visitor logs: ${visitors.length} items out of ${res.data.total_count} total`);
+          console.log(
+            `Paginated visitor logs: ${visitors.length} items out of ${res.data.total_count} total`,
+          );
           console.log("Logs pagination info:", {
             total_pages: res.data.total_pages,
             current_page: res.data.current_page,
-            total_count: res.data.total_count
+            total_count: res.data.total_count,
           });
-        } else if (res.data.data) {
-          // For non-paginated response, limit to per page amount
+        } else if (res.data.data && Array.isArray(res.data.data)) {
+          // For non-paginated response, implement client-side pagination
+          const allData = res.data.data;
           const startIndex = (logsCurrentPage - 1) * logsPerPage;
           const endIndex = startIndex + logsPerPage;
-          const paginatedData = res.data.data.slice(startIndex, endIndex);
-          
-          setLogsTotalPages(Math.ceil(res.data.data.length / logsPerPage));
-          setLogsTotalRows(res.data.data.length);
-          
+          const paginatedData = allData.slice(startIndex, endIndex);
+
+          setLogsTotalPages(Math.ceil(allData.length / logsPerPage));
+          setLogsTotalRows(allData.length);
+
           setFilteredLogs(paginatedData);
-          setLogs(paginatedData);
-          console.log(`Client-side paginated visitor logs: ${paginatedData.length} items, page ${logsCurrentPage}`);
+          setLogs(allData); // Store all data for search
+          console.log(
+            `Client-side paginated visitor logs: ${paginatedData.length} items, page ${logsCurrentPage}`,
+          );
+        } else {
+          // Fallback for unknown response format
+          setFilteredLogs([]);
+          setLogs([]);
         }
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching visitor logs:", error);
+        setFilteredLogs([]);
+        setLogs([]);
         setLoading(false);
       }
     };
@@ -992,15 +1336,28 @@ const VisitorPage = () => {
     if (page === "logs") {
       fetchAllVisitorLogs();
     }
-  }, [logsCurrentPage, logsPerPage, page]); // Added page dependency
-  const [logSearchText, setLogSearchText] = useState();
+  }, [logsCurrentPage, logsPerPage, page]);
+
+  // Added page dependency
+  const [logSearchText, setLogSearchText] = useState("");
   const handleLogSearch = (e) => {
     const searchValue = e.target.value;
     setLogSearchText(searchValue);
-    // For server-side pagination, we should implement server-side search
-    // For now, disable local filtering to respect pagination
-    console.log("Logs search:", searchValue);
-    // TODO: Implement server-side search with pagination
+    
+    if (searchValue.trim() === "") {
+      // Reset to paginated data when search is cleared
+      const startIndex = (logsCurrentPage - 1) * logsPerPage;
+      const endIndex = startIndex + logsPerPage;
+      setFilteredLogs(logs.slice(startIndex, endIndex));
+    } else {
+      // Filter all logs and show results
+      const filteredResults = logs.filter(
+        (item) =>
+          (item.name && item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.employee_no && item.employee_no.toLowerCase().includes(searchValue.toLowerCase()))
+      );
+      setFilteredLogs(filteredResults);
+    }
   };
   const rowMatchesSearch = (row, searchValue) => {
     const lowerSearch = searchValue.toLowerCase();
@@ -1114,10 +1471,16 @@ const VisitorPage = () => {
                 </span>
               </div>
               <div className="flex justify-end gap-2">
-                <VisitorFilters 
+                <VisitorFilters
                   onApplyFilters={handleApplyFilters}
                   onResetFilters={handleResetFilters}
                 />
+                <button
+                  onClick={exportVisitorsToCSV}
+                    className="font-semibold border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 px-4 py-1 rounded-md"
+                >
+                  Export
+                </button>
                 <button
                   style={{ background: "rgb(3 19 37)" }}
                   className="font-semibold hover:text-white duration-150 transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
@@ -1163,11 +1526,17 @@ const VisitorPage = () => {
                   &nbsp; <span>Unexpected visitor</span>
                 </span>
               </div>
-              <div className="flex justify-end">
-                <VisitorFilters 
+              <div className="flex justify-end gap-3">
+                <VisitorFilters
                   onApplyFilters={handleApplyFilters}
                   onResetFilters={handleResetFilters}
                 />
+                <button
+                  onClick={exportVisitorsToCSV}
+                  className="font-semibold border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 px-4 py-1 rounded-md"
+                >
+                  Export
+                </button>
               </div>
             </div>
           )}
@@ -1243,15 +1612,21 @@ const VisitorPage = () => {
                     &nbsp; <span>Unexpected visitor</span>
                   </span>
                 </div>
-                
-                <div className="flex justify-end">
-                  <VisitorFilters 
+
+                <div className="flex justify-end gap-3">
+                  <VisitorFilters
                     onApplyFilters={handleApplyFilters}
                     onResetFilters={handleResetFilters}
                   />
+                  <button
+                    onClick={exportVisitorsToCSV}
+                    className="font-semibold border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 px-4 py-1 rounded-md"
+                  >
+                    Export
+                  </button>
                 </div>
               </div>
-              
+
               {loading ? (
                 <div className="flex justify-center items-center h-64">
                   <DNA
@@ -1264,9 +1639,9 @@ const VisitorPage = () => {
                   />
                 </div>
               ) : (
-                <Table 
-                  columns={VisitorColumns} 
-                  data={getData(filteredVisitorOut)} 
+                <Table
+                  columns={VisitorColumns}
+                  data={getData(filteredVisitorOut)}
                   pagination={true}
                   paginationServer={true}
                   paginationPerPage={perPage}
@@ -1280,13 +1655,21 @@ const VisitorPage = () => {
           )}
           {page === "History" && (
             <div className="">
-              <input
-                type="text"
-                placeholder="Search using Name or Mobile Number"
-                className="border p-2 rounded-md border-gray-300 w-full mb-2 placeholder:text-sm"
-                value={searchHIstoryText}
-                onChange={handleSearchHistory}
-              />
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Search using Name or Mobile Number"
+                  className="border p-2 rounded-md border-gray-300 w-full placeholder:text-sm"
+                  value={searchHIstoryText}
+                  onChange={handleSearchHistory}
+                  />
+                <button
+                  onClick={exportHistoryToCSV}
+                  className="px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-md text-sm hover:bg-blue-600 hover:text-white transition font-semibold"
+                >
+                  Export
+                </button>
+              </div>
               {loading ? (
                 <div className="flex justify-center items-center h-64">
                   <DNA
@@ -1299,9 +1682,9 @@ const VisitorPage = () => {
                   />
                 </div>
               ) : (
-                <Table 
-                  columns={historyColumn} 
-                  data={getData(filteredHistory)} 
+                <Table
+                  columns={historyColumn}
+                  data={getData(filteredHistory)}
                   pagination={true}
                   paginationServer={true}
                   paginationPerPage={historyPerPage}
@@ -1334,9 +1717,9 @@ const VisitorPage = () => {
                   />
                 </div>
               ) : (
-                <Table 
-                  columns={visitorDeviceLogColumn} 
-                  data={getData(filteredLogs)} 
+                <Table
+                  columns={visitorDeviceLogColumn}
+                  data={getData(filteredLogs)}
                   pagination={true}
                   paginationServer={true}
                   paginationPerPage={logsPerPage}
@@ -1369,9 +1752,9 @@ const VisitorPage = () => {
                   />
                 </div>
               ) : (
-                <Table 
-                  columns={approvalColumn} 
-                  data={getData(FilteredApproval)} 
+                <Table
+                  columns={approvalColumn}
+                  data={getData(FilteredApproval)}
                   pagination={true}
                   paginationServer={true}
                   paginationPerPage={approvalPerPage}
@@ -1400,9 +1783,9 @@ const VisitorPage = () => {
                 ) : (
                   <>
                     {selectedVisitor === "expected" && (
-                      <Table 
-                        columns={VisitorColumns} 
-                        data={getData(filteredData)} 
+                      <Table
+                        columns={VisitorColumns}
+                        data={getData(filteredData)}
                         pagination={true}
                         paginationServer={true}
                         paginationPerPage={perPage}
@@ -1448,7 +1831,7 @@ const VisitorPage = () => {
                       selectedVisitor,
                       expectedVisitors: FilteredExpectedVisitor?.length,
                       unexpectedVisitors: FilteredUnexpectedVisitor?.length,
-                      totalRows
+                      totalRows,
                     })}
                     {selectedVisitor === "expected" && (
                       <Table
@@ -1500,11 +1883,14 @@ const VisitorPage = () => {
                   No records found
                 </div>
               )}
-              {(page === "all" || page === "Visitor In" || page === "Visitor Out") && totalRows === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  No records found
-                </div>
-              )}
+              {(page === "all" ||
+                page === "Visitor In" ||
+                page === "Visitor Out") &&
+                totalRows === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No records found
+                  </div>
+                )}
             </>
           )}
         </div>

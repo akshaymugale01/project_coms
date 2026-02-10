@@ -3,19 +3,22 @@ import { BiEdit } from 'react-icons/bi'
 import { FaCheckCircle } from 'react-icons/fa'
 import { IoMdAdd } from 'react-icons/io'
 import { LuDownload } from 'react-icons/lu'
-import { Link } from 'react-router-dom'
+import { Link,useParams } from 'react-router-dom'
 import Navbar from '../../../components/Navbar'
 import IncidentUpdateModal from '../../../containers/modals/IncidentUpdateModal'
 import IncidentInjuryModal from '../../../containers/modals/IncidentInjuryModal'
+
+
 const IncidentsDetails = () => {
     const [modal, showModal] = useState(false);
     const [injurymodal, showInjurymodal] = useState(false);
+      const { id } = useParams();
   return (
     <section className='flex'>
         <Navbar/>
         <div className="w-full flex mx-3 flex-col overflow-hidden">
             <div className='flex gap-2 justify-end my-3  md:flex-row flex-col'>
-                <Link to={`/admin/edit-incidents`} className='font-semibold border-2 border-black px-4 p-1 flex gap-2 items-center rounded-md'>
+                <Link to={`/admin/edit-incidents/${id}`} className='font-semibold border-2 border-black px-4 p-1 flex gap-2 items-center rounded-md'>
                     <BiEdit/>Edit Details
                 </Link>
                 <Link to="" className='font-semibold border-2 border-black px-4 p-1 flex gap-2 items-center rounded-md' onClick={() => showModal(true)}>
