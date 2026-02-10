@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import image from "/profile.png";
 import { FaTrash } from "react-icons/fa";
 import { useSelector } from "react-redux";
@@ -8,7 +8,6 @@ import {
   domainPrefix,
   getAllUnits,
   getBuildings,
-  getFloors,
   getfloorsType,
   getHostList,
   getParkingConfig,
@@ -23,10 +22,12 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Webcam from "react-webcam";
 import FileInputBox from "../containers/Inputs/FileInputBox";
+
 const AddNewVisitor = () => {
   const siteId = getItemInLocalStorage("SITEID");
   const userId = getItemInLocalStorage("UserId");
   const [behalf, setbehalf] = useState("Visitor");
+
   const inputRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
   const [visitors, setVisitors] = useState([{ name: "", contact_no: "" }]);
@@ -88,7 +89,8 @@ const AddNewVisitor = () => {
   // const [formData, setFormData] = useState(null);
 
   const [passEndDate, setPassEndDate] = useState("");
-  const [formData, setFormData] = useState({
+
+  const initialFormData = {
     visitorName: "",
     mobile: "",
     purpose: "",
@@ -110,8 +112,8 @@ const AddNewVisitor = () => {
     building_id: "",
     unit_id: "",
     floor_id: "",
-  });
-
+  };
+  const [formData, setFormData] = useState(initialFormData);
 
   console.log("Form Data", formData);
 
@@ -119,44 +121,50 @@ const AddNewVisitor = () => {
     if (!mobile) return;
     try {
       const details = await getVisitorByNumber(mobile);
-      if (details?.data) {
-        const data = details?.data;
-        setFormData({
-          ...formData,
-          visitorName: data.name || "",
-          mobile: data.contact_no || "",
-          purpose: data.purpose || "",
-          comingFrom: data.coming_from || "",
-          vehicleNumber: data.vehicle_number || "",
-          vhost_id: data.vhost_id || "",
-          expectedDate: data.expected_date || new Date().toISOString().split("T")[0],
-          expectedTime: data.expected_time || getCurrentTime(),
-          hostApproval: data.skip_host_approval || false,
-          goodsInward: data.goods_inwards || false,
-          host: data.created_by_id || "",
-          supportCategory: data.support_category_id || "",
-          additionalVisitors: visitors,
-          passNumber: data.pass_number || "",
-          building_id: data.building_id || "",
-          unit_id: data.unit_id || "",
-          floor_id: data.floor_id || "",
-          noOfGoods: data.no_of_goods || "",
-          goodsDescription: data.goods_description || "",
-          goodsAttachments: data.goods_attachments || [],
-          profile_picture: data.profile_picture
-            ? `${domainPrefix}${data.profile_picture}`
-            : "", // Ensure full URL
-        });
-
-        setVisitors(data.extra_visitors || []);
-      } else {
-        console.warn("No visitor data found");
-        setFormData({});
+      if (!details?.data) {
+        setFormData(initialFormData);
         setVisitors([]);
       }
+
+      // if (details?.data) {
+      //   const data = details?.data;
+      //   setFormData({
+      //     ...formData,
+      //     visitorName: data.name || "",
+      //     mobile: data.contact_no || "",
+      //     purpose: data.purpose || "",
+      //     comingFrom: data.coming_from || "",
+      //     vehicleNumber: data.vehicle_number || "",
+      //     vhost_id: data.vhost_id || "",
+      //     expectedDate:
+      //       data.expected_date || new Date().toISOString().split("T")[0],
+      //     expectedTime: data.expected_time || getCurrentTime(),
+      //     hostApproval: data.skip_host_approval || false,
+      //     goodsInward: data.goods_inwards || false,
+      //     host: data.created_by_id || "",
+      //     supportCategory: data.support_category_id || "",
+      //     additionalVisitors: visitors,
+      //     passNumber: data.pass_number || "",
+      //     building_id: data.building_id || "",
+      //     unit_id: data.unit_id || "",
+      //     floor_id: data.floor_id || "",
+      //     noOfGoods: data.no_of_goods || "",
+      //     goodsDescription: data.goods_description || "",
+      //     goodsAttachments: data.goods_attachments || [],
+      //     profile_picture: data.profile_picture
+      //       ? `${domainPrefix}${data.profile_picture}`
+      //       : "", // Ensure full URL
+      //   });
+
+      //   setVisitors(data.extra_visitors || []);
+      // } else {
+      //   console.warn("No visitor data found");
+      //   setFormData({});
+      //   setVisitors([]);
+      // }
     } catch (error) {
       console.error("Error fetching visitor details:", error);
-      setFormData({});
+      setFormData({ initialFormData });
       setVisitors([]);
     }
   };
@@ -197,13 +205,13 @@ const AddNewVisitor = () => {
       const updatedWeekdaysMap = weekdaysMap.map((dayObj) =>
         dayObj.index === index
           ? { ...dayObj, isActive: !dayObj.isActive }
-          : dayObj
+          : dayObj,
       );
       setWeekdaysMap(updatedWeekdaysMap);
       setSelectedWeekdays((prevSelectedWeekdays) =>
         prevSelectedWeekdays.includes(weekday)
           ? prevSelectedWeekdays.filter((day) => day !== weekday)
-          : [...prevSelectedWeekdays, weekday]
+          : [...prevSelectedWeekdays, weekday],
       );
       // setSelectedWeekdays((prevSelectedWeekdays) =>
       //   prevSelectedWeekdays.includes(index)
@@ -292,17 +300,20 @@ const AddNewVisitor = () => {
     postData.append("visitor[site_id]", siteId || "");
     postData.append("visitor[created_by_id]", formData.host || "");
     postData.append("visitor[name]", formData.visitorName || "");
-    postData.append(
-      "visitor[visitor_staff_category_id]",
-      formData.supportCategory || ""
-    );
+   postData.append(
+  "visitor[visitor_staff_category_id]",
+  formData.supportCategory || ""
+);
     postData.append("visitor[contact_no]", formData.mobile || "");
     postData.append("visitor[purpose]", formData.purpose || "");
     postData.append("visitor[start_pass]", passStartDate || "");
     postData.append("visitor[end_pass]", passEndDate || "");
     postData.append("visitor[coming_from]", formData.comingFrom || "");
     postData.append("visitor[vehicle_number]", formData.vehicleNumber || "");
-    postData.append("visitor[expected_date]", formData.expectedDate || new Date().toISOString().split("T")[0]);
+    postData.append(
+      "visitor[expected_date]",
+      formData.expectedDate || new Date().toISOString().split("T")[0],
+    );
     postData.append("visitor[expected_time]", formData.expectedTime || "");
     postData.append("visitor[skip_host_approval]", formData.hostApproval || "");
     postData.append("visitor[goods_inwards]", formData.goodsInward || "");
@@ -331,13 +342,13 @@ const AddNewVisitor = () => {
           if (extraVisitor.name) {
             postData.append(
               `visitor[extra_visitors_attributes][${index}][name]`,
-              extraVisitor.name
+              extraVisitor.name,
             );
           }
           if (extraVisitor.mobile) {
             postData.append(
               `visitor[extra_visitors_attributes][${index}][contact_no]`,
-              extraVisitor.mobile
+              extraVisitor.mobile,
             );
           }
         }
@@ -396,7 +407,7 @@ const AddNewVisitor = () => {
     const fetchVisitorCategory = async () => {
       try {
         const visitorCat = await getVisitorStaffCategory();
-        setStaffCategories(visitorCat.data.categories);
+        setStaffCategories(visitorCat.data.staff_categories);
       } catch (error) {
         console.log(error);
       }
@@ -405,7 +416,7 @@ const AddNewVisitor = () => {
       try {
         const parkingRes = await getParkingConfig();
         console.log("Parking API response:", parkingRes.data);
-        setSlots(parkingRes.data.slots || []);
+        setSlots(Array.isArray(parkingRes.data) ? parkingRes.data : []);
       } catch (error) {
         console.log(error);
       }
@@ -419,10 +430,10 @@ const AddNewVisitor = () => {
   useEffect(() => {
     if (selectedBuilding) {
       const filteredFloors = floors.filter(
-        (floor) => floor.building_id === Number(selectedBuilding)
+        (floor) => floor.building_id === Number(selectedBuilding),
       );
       const filteredUnits = units.filter(
-        (unit) => unit.building_id === Number(selectedBuilding)
+        (unit) => unit.building_id === Number(selectedBuilding),
       );
 
       const combinedData = filteredFloors.map((floor) => ({
@@ -435,8 +446,9 @@ const AddNewVisitor = () => {
       setFilteredData([]);
     }
   }, [selectedBuilding, floors, units]);
+
   const filteredFloors = floors.filter(
-    (floor) => floor.building_id === Number(selectedBuilding)
+    (floor) => floor.building_id === Number(selectedBuilding),
   );
   // Filter Units based on selected Floor
   // const filteredUnits = units.filter(
@@ -470,23 +482,31 @@ const AddNewVisitor = () => {
     setShowDropdown(false); // Hide dropdown after selection
   };
 
-  const filteredUnits = filteredData.flatMap((floor) =>
-    floor.units
-      .filter((unit) =>
-        unit.name.toLowerCase().includes(searchUnit.toLowerCase())
+  const filteredUnits = Array.isArray(filteredData)
+    ? filteredData.flatMap(
+        (floor) =>
+          floor.units
+            ?.filter((unit) =>
+              unit.name.toLowerCase().includes(searchUnit.toLowerCase()),
+            )
+            .map((unit) => ({
+              id: unit.id,
+              name: `Floor: ${floor.floorName} - Unit: ${unit.name}`,
+            })) || [],
       )
-      .map((unit) => ({
-        id: unit.id,
-        name: `Floor: ${floor.floorName} - Unit: ${unit.name}`,
-      }))
-  );
+    : [];
 
   const unitOptions = filteredData.flatMap((floor) =>
     floor.units.map((unit) => ({
       value: unit.id,
       label: `Floor: ${floor.floorName} - Unit: ${unit.name}`,
-    }))
+    })),
   );
+
+  const filteredSlots = slots.filter(
+    (slot) => String(slot.building_id) === String(formData.building_id),
+  );
+
   return (
     <div className="flex justify-center items-center  w-full p-4">
       <div className="md:border border-gray-300 rounded-lg md:p-4 w-full md:mx-4 ">
@@ -635,11 +655,13 @@ const AddNewVisitor = () => {
                 name="supportCategory"
               >
                 <option value="">Select Category</option>
-                {staffCategories.map((staffCat) => (
-                  <option value={staffCat.id} key={staffCat.id}>
-                    {staffCat.name}
-                  </option>
-                ))}
+
+                {Array.isArray(staffCategories) &&
+                  staffCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
               </select>
             </div>
           )}
@@ -845,12 +867,11 @@ const AddNewVisitor = () => {
             >
               <option value="">Select Slot</option>
 
-              {Array.isArray(slots) &&
-                slots.map((slot) => (
-                  <option key={slot.id} value={slot.id}>
-                    {slot.name}
-                  </option>
-                ))}
+              {filteredSlots.map((slot) => (
+                <option key={slot.id} value={slot.id}>
+                  {slot.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -1050,12 +1071,13 @@ const AddNewVisitor = () => {
               {weekdaysMap.map((weekdayObj) => (
                 <button
                   key={weekdayObj.day}
-                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${selectedWeekdays?.includes(weekdayObj.day)
+                  className={` rounded-md p-2 px-4 shadow-custom-all-sides font-medium ${
+                    selectedWeekdays?.includes(weekdayObj.day)
                       ? // &&
-                      // weekdayObj.isActive
-                      "bg-green-400 text-white "
+                        // weekdayObj.isActive
+                        "bg-green-400 text-white "
                       : ""
-                    }`}
+                  }`}
                   onClick={(e) => {
                     e.preventDefault();
                     handleWeekdaySelection(weekdayObj.day);

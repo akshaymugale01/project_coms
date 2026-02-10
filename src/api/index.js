@@ -3427,6 +3427,13 @@ export const postApprovalLogs = async (id, data) =>
     },
   });
 
+  export const postVisitorLogToBackend = async (data) =>
+  axiosInstance.post(`/visitor_device_logs.json`, data, {
+    params: {
+      token: token,
+    },
+  });
+
 export const getLOI = async () =>
   axiosInstance.get(`/loi_details.json`, {
     params: {
