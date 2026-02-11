@@ -783,6 +783,11 @@ import AccountingInvoices from "./pages/Accounting/AccountingInvoices";
 import AccountingPayments from "./pages/Accounting/AccountingPayments";
 import AccountingReports from "./pages/Accounting/AccountingReports";
 import SnagAnswerDetails from "./pages/FitOut/SnagAnswerDetails.jsx";
+import AddPets from "./pages/Setup/AddPets.jsx";
+import ViewPets from "./pages/Setup/ViewPets.jsx";
+import EditPets from "./pages/Setup/EditPets.jsx";
+import PetDetails from "./pages/Setup/PetDetails.jsx";
+// import PetDetails from "./pages/Setup/PetDetails.jsx";
 
 // new admin hrms
 
@@ -1251,6 +1256,12 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
+
+          {/* Pets */}
+          <Route path="/setup/pets" element={<ViewPets />} />
+          <Route path="/setup/pets-add" element={<AddPets />} />
+          <Route path="/setup/pets-edit/:id" element={<EditPets />} />
+          <Route path="/setup/pets-details/:id" element={<PetDetails />} />
           {/* materials */}
 
           {/* AboutUS Pages */}

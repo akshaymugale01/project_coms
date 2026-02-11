@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
 import { getItemInLocalStorage } from '../../utils/localStorage';
-import { FaUser, FaBuilding, FaTicketAlt, FaTools, FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill, FaProjectDiagram, FaWizardsOfTheCoast, FaRProject } from 'react-icons/fa';
+import { FaUser, FaBuilding, FaTicketAlt, FaTools,  FaPaw , FaCar, FaFileInvoice, FaMeteor, FaMitten, FaCreativeCommonsSampling, FaTachometerAlt, FaVials, FaSpeakap, FaTimes, FaAddressBook, FaRegAddressBook, FaRegAddressCard, FaMoneyBill, FaProjectDiagram, FaWizardsOfTheCoast, FaRProject } from 'react-icons/fa';
 import { FaBilibili, FaDiagramProject, FaF, FaFaceAngry, FaMasksTheater, FaMoneyBill1Wave, FaMoneyBillTrendUp, FaTimeline } from 'react-icons/fa6';
 import { FcAbout } from 'react-icons/fc';
 import { ImTree } from "react-icons/im";
@@ -147,6 +147,10 @@ const SetupNavbar = () => {
               <FcAbout /> About Us
             </Link>
           )}
+             
+            <Link to="/setup/pets" className="hover:bg-gray-700 p-3 rounded-lg flex items-center gap-2">
+              <FaPaw /> Pets
+            </Link>
         </ul>
 
         <div className="w-full mt-6 p-8 bg-cover bg-center rounded-xl" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1510906594845-bc082582c8cc?q=80&w=1444&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")', backgroundSize: 'cover' }}>

@@ -9177,3 +9177,41 @@ export const getUnitsByUserId = async (userId) =>
       token: token,
     },
   });
+
+// Pets API
+export const getPets = async (page=1,perpage=10) =>
+  axiosInstance.get("/pets.json", {
+    params: {
+      token: token,
+      Page:page,
+      Per_Page:perpage,
+    },
+  });
+
+export const getPetById = async (id) =>
+  axiosInstance.get(`/pets/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const postPet = async (formData) =>
+  axiosInstance.post(`/pets.json?token=${token}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const updatePet = async (id, formData) =>
+  axiosInstance.put(`/pets/${id}.json?token=${token}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const deletePet = async (id) =>
+  axiosInstance.delete(`/pets/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
