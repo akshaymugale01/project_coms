@@ -13,6 +13,7 @@ import {
   getVisitorByNumber,
   getVisitorHistory,
   postVisitorLogFromDevice,
+  postVisitorLogToBackend,
   visitorApproval,
 } from "../../api";
 import { BsEye } from "react-icons/bs";
@@ -23,6 +24,8 @@ import { formatTime } from "../../utils/dateUtils";
 import { IoClose } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa6";
 import toast from "react-hot-toast";
+import { data } from "autoprefixer";
+
 const VisitorPage = () => {
   const [page, setPage] = useState("all");
   const [selectedVisitor, setSelectedVisitor] = useState("expected");
@@ -1224,6 +1227,7 @@ const VisitorPage = () => {
       try {
         const visitorLogData = getVisitorLogData();
         await postVisitorLogFromDevice(visitorLogData);
+        await postVisitorLogToBackend(data);
       } catch (error) {
         console.error("Error posting visitor logs from device:", error);
         // Silently fail - device might not be available
@@ -1425,7 +1429,7 @@ const VisitorPage = () => {
                 }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("History")}
               >
-                History
+               Approvals History
               </h2>
               <h2
                 className={`p-2 ${
