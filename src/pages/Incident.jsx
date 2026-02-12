@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
 import { IoMdAdd } from "react-icons/io";
@@ -13,6 +13,8 @@ const Incidents = () => {
   const [page, setPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const perPage = 10;
+  const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const columns = [
     {
@@ -54,9 +56,19 @@ const Incidents = () => {
     { name: "Current Status", selector: (row) => row.status, sortable: true },
   ];
 
-  const fetchIncidents = async (pageNo = 1) => {
+ useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  /* -------------------- Fetch API -------------------- */
+  const fetchIncidents = async (pageNo = 1, searchValue = "") => {
     try {
-      const res = await getIncidents(pageNo);
+      const res = await getIncidents(pageNo, searchValue);
+
       setIncidents(res.data?.incidents || []);
       setTotalRecords(res.data?.total_count || 0);
     } catch (error) {
@@ -65,10 +77,13 @@ const Incidents = () => {
   };
 
   useEffect(() => {
-    fetchIncidents(page);
-  }, [page]);
+    fetchIncidents(page, debouncedSearch);
+  }, [page, debouncedSearch]);
 
-  // document.title = "VC - Incidents";
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPage(1); 
+  };
 
   return (
     <section className="flex">
@@ -78,16 +93,18 @@ const Incidents = () => {
         <h2 className="text-lg font-semibold my-5">INCIDENTS LIST</h2>
 
         <div className="flex flex-col sm:flex-row md:justify-between gap-3">
-          <input
+            <input
             type="text"
-            placeholder="Search"
-            className="border-2 p-2 w-70 border-gray-300 rounded-lg"
-            disabled
+            placeholder="Search incidents by using  Building, Category, etc."
+            value={search}
+            onChange={handleSearchChange}
+            className="border p-2 border-gray-300 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-gray-300 
+                       w-full md:w-[400px]"
           />
-
           <Link
             to="/admin/add-incidents"
-            className="font-semibold border-2 border-black px-4 p-1 flex gap-2 items-center rounded-md"
+            className="font-semibold border-2 border-black px-4 p-1 flex gap-2 items-center rounded-md bg-black text-white md:mx-3"
           >
             <IoMdAdd /> Add
           </Link>

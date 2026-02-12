@@ -455,7 +455,9 @@ const FitOutChecklistPage = () => {
             >
               Create Checklist
             </button>
-            <button className="border border-gray-700 text-white bg-red-500 py-2 px-6 rounded">
+            <button
+              onClick={() => navigate("/fitout/checklist/list")} 
+            className="border border-gray-700 text-white bg-red-500 py-2 px-6 rounded">
               Cancel
             </button>
           </div>

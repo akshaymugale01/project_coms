@@ -7430,19 +7430,20 @@ export const deleteFlexiBenefitCategory = async (flexiId) => {
   }
 };
 
-export const getIncidentData = async (id) =>
+export const getIncidentById= async (id) =>
   axiosInstance.get(`/incidents/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const getIncidents = async (page=1) =>
+  export const getIncidents = async (page=1,search="") =>
   axiosInstance.get(`/incidents.json`, {
     params: {
       token: token,
       page:page,
       per_page:10,
+      search:search,
     },
   });
 
