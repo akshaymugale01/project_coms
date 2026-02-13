@@ -7,6 +7,7 @@ import Select from "react-select";
 import toast from "react-hot-toast";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import { useNavigate } from "react-router-dom";
+
 const AddGoods = () => {
   const [visitors, setVisitors] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -148,11 +149,11 @@ const handleChange = (e) => {
                 </div>
               </div>
               <div className="lg:flex grid grid-cols-2 items-center gap-5 my-2">
-                <p className="font-medium">Inward/Outward :</p>
+                <p className="font-medium px-2">Inward/Outward :</p>
                 <div className="flex gap-5">
                   <h2
                     onClick={() => setWard("in")}
-                    className={`rounded-full cursor-pointer p-1 px-5 border-gray-400 border ${
+                    className={`rounded-full cursor-pointer p-2 py-1  px-2 border-gray-400 border ${
                       ward === "in" && "bg-black text-white font-medium"
                     }`}
                   >

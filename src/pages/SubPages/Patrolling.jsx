@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PiPlusCircle } from "react-icons/pi";
 import { Link } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
@@ -24,7 +24,7 @@ const Patrolling = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [interval, setInterval] = useState("hrs");
   const hours = Array.from({ length: 24 }, (_, i) =>
-    i < 10 ? `0${i}` : `${i}`
+    i < 10 ? `0${i}` : `${i}`,
   );
   const [selectedHours, setSelectedHours] = useState([]);
   const [floors, setFloors] = useState([]);
@@ -37,7 +37,7 @@ const Patrolling = () => {
   const [scheduleCurrentPage, setScheduleCurrentPage] = useState(1);
   const [schedulePerPage, setSchedulePerPage] = useState(10);
   const [scheduleTotalRows, setScheduleTotalRows] = useState(0);
-  // Pagination states for Logs tab  
+  // Pagination states for Logs tab
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
   const [logsPerPage, setLogsPerPage] = useState(10);
   const [logsTotalRows, setLogsTotalRows] = useState(0);
@@ -58,7 +58,7 @@ const Patrolling = () => {
     // specificTimes:""
   });
   const [loading, setLoading] = useState(false);
-  
+
   // Pagination helper functions
   const handleSchedulePerPageChange = (newPerPage, page) => {
     console.log(`Changing schedule per page to ${newPerPage}, page: ${page}`);
@@ -98,155 +98,198 @@ const Patrolling = () => {
   useEffect(() => {
     const fetchPatrolling = async () => {
       if (page !== "schedule") return; // Only fetch when on schedule tab
-      
+
       setLoading(true);
       try {
         // Use server-side pagination
         const patrollingResp = await getPatrollings({
           page: scheduleCurrentPage,
           per_page: schedulePerPage,
-          search: debouncedSearchText.trim() || undefined
+          search: debouncedSearchText ? debouncedSearchText : "",
         });
-        
-        console.log('Schedule API Response:', patrollingResp);
-        console.log('Schedule Response keys:', Object.keys(patrollingResp));
-        console.log('Schedule Response data exists:', !!patrollingResp.data);
-        console.log('Schedule Response patrollings exists:', !!patrollingResp.patrollings);
-        console.log('Schedule Response current_page:', patrollingResp.current_page);
-        console.log('Schedule Response total_count:', patrollingResp.total_count);
-        console.log('Schedule Response total_pages:', patrollingResp.total_pages);
-        
+
+        console.log("Schedule API Response:", patrollingResp);
+        console.log("Schedule Response keys:", Object.keys(patrollingResp));
+        console.log("Schedule Response data exists:", !!patrollingResp.data);
+        console.log(
+          "Schedule Response patrollings exists:",
+          !!patrollingResp.patrollings,
+        );
+        console.log(
+          "Schedule Response current_page:",
+          patrollingResp.current_page,
+        );
+        console.log(
+          "Schedule Response total_count:",
+          patrollingResp.total_count,
+        );
+        console.log(
+          "Schedule Response total_pages:",
+          patrollingResp.total_pages,
+        );
+
         // Handle different possible API response structures
         let patrollings = [];
         let totalCount = 0;
-        
-        if (patrollingResp.patrollings && Array.isArray(patrollingResp.patrollings)) {
+
+        if (
+          patrollingResp.patrollings &&
+          Array.isArray(patrollingResp.patrollings)
+        ) {
           patrollings = patrollingResp.patrollings;
           totalCount = patrollingResp.total_count || patrollings.length;
-          console.log('Using top-level patrollings format for schedule');
-          console.log('Extracted total_count:', totalCount);
-        }
-        else if (patrollingResp.data) {
+          console.log("Using top-level patrollings format for schedule");
+          console.log("Extracted total_count:", totalCount);
+        } else if (patrollingResp.data) {
           const responseData = patrollingResp.data;
-          console.log('Schedule response data keys:', Object.keys(responseData));
-          
-          if (responseData.patrollings && Array.isArray(responseData.patrollings)) {
+          console.log(
+            "Schedule response data keys:",
+            Object.keys(responseData),
+          );
+
+          if (
+            responseData.patrollings &&
+            Array.isArray(responseData.patrollings)
+          ) {
             patrollings = responseData.patrollings;
-            totalCount = responseData.total_count || responseData.patrollings.length;
-            console.log('Using server-side pagination format for schedule');
+            totalCount =
+              responseData.total_count || responseData.patrollings.length;
+            console.log("Using server-side pagination format for schedule");
           }
           // Option 2: Direct array format
           else if (Array.isArray(responseData)) {
             patrollings = responseData;
             totalCount = responseData.length;
-            console.log('Using direct array format for schedule');
+            console.log("Using direct array format for schedule");
           }
           // Option 3: Response data has direct patrollings property
           else if (responseData.patrollings) {
-            patrollings = Array.isArray(responseData.patrollings) ? responseData.patrollings : [];
+            patrollings = Array.isArray(responseData.patrollings)
+              ? responseData.patrollings
+              : [];
             totalCount = responseData.total_count || patrollings.length;
-            console.log('Using nested patrollings format for schedule');
+            console.log("Using nested patrollings format for schedule");
           }
         }
-        
+
         // Sort data by created_at (if not already sorted by server)
         const sortedData = patrollings.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          (a, b) => new Date(b.created_at) - new Date(a.created_at),
         );
-        
-        console.log(`Schedule: Found ${sortedData.length} items, total count: ${totalCount}, page: ${scheduleCurrentPage}`);
+
+        console.log(
+          `Schedule: Found ${sortedData.length} items, total count: ${totalCount}, page: ${scheduleCurrentPage}`,
+        );
         if (sortedData.length > 0) {
-          console.log('Sample schedule item:', sortedData[0]);
+          console.log("Sample schedule item:", sortedData[0]);
         }
-        
+
         // Set the data directly from API (already paginated)
         setFilteredData(sortedData);
         setScheduleTotalRows(totalCount);
-        
       } catch (error) {
-        console.log('Schedule API Error:', error);
+        console.log("Schedule API Error:", error);
         setFilteredData([]);
         setScheduleTotalRows(0);
       } finally {
         setLoading(false);
       }
     };
-    
+
     const fetchPatrollingHistory = async () => {
       if (page !== "logs") return; // Only fetch when on logs tab
-      
+
       setLoading(true);
       try {
         // Use server-side pagination
         const patrollingHistoryResp = await getPatrollingHistory({
           page: logsCurrentPage,
           per_page: logsPerPage,
-          search: debouncedSearchHistory.trim() || undefined
+          search: debouncedSearchHistory ? debouncedSearchHistory : "",
         });
-        
-        console.log('Full API Response:', patrollingHistoryResp);
-        console.log('Response keys:', Object.keys(patrollingHistoryResp));
-        console.log('Response data type:', typeof patrollingHistoryResp.data);
-        
+
+        console.log("Full API Response:", patrollingHistoryResp);
+        console.log("Response keys:", Object.keys(patrollingHistoryResp));
+        console.log("Response data type:", typeof patrollingHistoryResp.data);
+
         // Handle different possible API response structures
         let histories = [];
         let totalCount = 0;
-        
+
         // Check if response has the expected pagination structure
         if (patrollingHistoryResp.data) {
           const responseData = patrollingHistoryResp.data;
-          console.log('Response data keys:', Object.keys(responseData));
-          
+          console.log("Response data keys:", Object.keys(responseData));
+
           // Option 1: Server-side pagination format
-          if (responseData.patrolling_histories && Array.isArray(responseData.patrolling_histories)) {
+          if (
+            responseData.patrolling_histories &&
+            Array.isArray(responseData.patrolling_histories)
+          ) {
             histories = responseData.patrolling_histories;
-            totalCount = responseData.total_count || responseData.patrolling_histories.length;
-            console.log('Using server-side pagination format');
+            totalCount =
+              responseData.total_count ||
+              responseData.patrolling_histories.length;
+            console.log("Using server-side pagination format");
           }
           // Option 2: Direct array format
           else if (Array.isArray(responseData)) {
             histories = responseData;
             totalCount = responseData.length;
-            console.log('Using direct array format');
+            console.log("Using direct array format");
           }
           // Option 3: Response data has direct patrolling_histories
           else if (responseData.patrolling_histories) {
-            histories = Array.isArray(responseData.patrolling_histories) ? responseData.patrolling_histories : [];
+            histories = Array.isArray(responseData.patrolling_histories)
+              ? responseData.patrolling_histories
+              : [];
             totalCount = responseData.total_count || histories.length;
-            console.log('Using nested patrolling_histories format');
+            console.log("Using nested patrolling_histories format");
           }
         }
         // Fallback: check if the response itself has patrolling_histories
         else if (patrollingHistoryResp.patrolling_histories) {
-          histories = Array.isArray(patrollingHistoryResp.patrolling_histories) ? patrollingHistoryResp.patrolling_histories : [];
+          histories = Array.isArray(patrollingHistoryResp.patrolling_histories)
+            ? patrollingHistoryResp.patrolling_histories
+            : [];
           totalCount = patrollingHistoryResp.total_count || histories.length;
-          console.log('Using top-level patrolling_histories format');
+          console.log("Using top-level patrolling_histories format");
         }
-        
-        console.log(`Logs: Found ${histories.length} items, total count: ${totalCount}, page: ${logsCurrentPage}`);
+
+        console.log(
+          `Logs: Found ${histories.length} items, total count: ${totalCount}, page: ${logsCurrentPage}`,
+        );
         if (histories.length > 0) {
-          console.log('Sample history item:', histories[0]);
+          console.log("Sample history item:", histories[0]);
         }
-        
+
         // Set the data
         setFilteredHistories(histories);
         setLogsTotalRows(totalCount);
-        
       } catch (error) {
-        console.log('API Error:', error);
+        console.log("API Error:", error);
         setFilteredHistories([]);
         setLogsTotalRows(0);
       } finally {
         setLoading(false);
       }
     };
-    
+
     if (page === "schedule") {
       fetchPatrolling();
     } else if (page === "logs") {
       fetchPatrollingHistory();
     }
-  }, [page, patrollingAdded, scheduleCurrentPage, schedulePerPage, logsCurrentPage, logsPerPage, debouncedSearchText, debouncedSearchHistory]);
+  }, [
+    page,
+    patrollingAdded,
+    scheduleCurrentPage,
+    schedulePerPage,
+    logsCurrentPage,
+    logsPerPage,
+    debouncedSearchText,
+    debouncedSearchHistory,
+  ]);
 
   // Reset pagination when switching tabs
   useEffect(() => {
@@ -345,7 +388,7 @@ const Patrolling = () => {
     },
     {
       name: "Actual Time",
-      selector: (row) => formatTime(row.actual_time),
+      selector: (row) => formatTime(row.actual_time) || "-",
       sortable: true,
     },
   ];
@@ -356,7 +399,7 @@ const Patrolling = () => {
     setSelectedHours((prevSelectedHours) =>
       prevSelectedHours.includes(hour)
         ? prevSelectedHours.filter((h) => h !== hour)
-        : [...prevSelectedHours, hour]
+        : [...prevSelectedHours, hour],
     );
   };
 
@@ -367,7 +410,7 @@ const Patrolling = () => {
       try {
         const floorResp = await getFloors(buildId);
         setFloors(
-          floorResp.data.map((floor) => ({ name: floor.name, id: floor.id }))
+          floorResp.data.map((floor) => ({ name: floor.name, id: floor.id })),
         );
       } catch (error) {
         console.log(error);
@@ -377,7 +420,7 @@ const Patrolling = () => {
       try {
         const unitResp = await getUnits(floorId);
         setUnits(
-          unitResp.data.map((unit) => ({ name: unit.name, id: unit.id }))
+          unitResp.data.map((unit) => ({ name: unit.name, id: unit.id })),
         );
       } catch (error) {
         console.log(error);
@@ -455,8 +498,9 @@ const Patrolling = () => {
   // Debounce search for schedule
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchText(searchText);
-      setScheduleCurrentPage(1); // Reset to first page when search changes
+      const trimmed = searchText.trim();
+      setDebouncedSearchText(trimmed);
+      setScheduleCurrentPage(1);
     }, 500);
 
     return () => clearTimeout(timer);
@@ -465,12 +509,43 @@ const Patrolling = () => {
   // Debounce search for logs
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchHistory(searchHistoryText);
-      setLogsCurrentPage(1); // Reset to first page when search changes
+      const trimmed = searchHistoryText.trim();
+      setDebouncedSearchHistory(trimmed);
+      setLogsCurrentPage(1);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchHistoryText]);
+
+  // Final Schedule Data (Client-side filter after API response)
+  const finalScheduleData = useMemo(() => {
+    if (!debouncedSearchText) return filteredData;
+
+    return filteredData.filter((item) =>
+      (
+        (item.building_name || "") +
+        (item.floor_name || "") +
+        (item.unit_name || "")
+      )
+        .toLowerCase()
+        .includes(debouncedSearchText.toLowerCase()),
+    );
+  }, [filteredData, debouncedSearchText]);
+
+  // Final Logs Data (Client-side filter after API response)
+  const finalLogsData = useMemo(() => {
+    if (!debouncedSearchHistory) return filteredHistories;
+
+    return filteredHistories.filter((item) =>
+      (
+        (item.building_name || "") +
+        (item.floor_name || "") +
+        (item.unit_name || "")
+      )
+        .toLowerCase()
+        .includes(debouncedSearchHistory.toLowerCase()),
+    );
+  }, [filteredHistories, debouncedSearchHistory]);
 
   const handleHistorySearch = (e) => {
     const searchValue = e.target.value;
@@ -504,27 +579,39 @@ const Patrolling = () => {
           </h2>
         </div>
         {page === "schedule" && (
-          <div className="mb-5">
-            <div className="flex md:flex-row flex-col gap-5 justify-between  my-2">
-              <input
-                type="search"
-                value={searchText}
-                onChange={handleSearch}
-                id=""
-                className="border border-gray-300 placeholder:text-sm w-full rounded-md p-2"
-                placeholder="Search by building, floor, unit"
-              />
-              <span className="flex gap-4">
-                <div
+          <div className="mb-2">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              {/* Search Input */}
+              <div className="w-full md:w-1/3 mt-4">
+                <input
+                  type="search"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="Search by building, floor, unit"
+                  className="w-[1090px] border border-gray-300 px-4 py-2 rounded-lg 
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 
+                   focus:border-blue-500 transition-all duration-200"
+                />
+              </div>
+
+              {/* Add Button */}
+              <div className="flex justify-end mt-4">
+                <button
                   onClick={openModal}
-                  className="border-2 font-semibold text-white hover:text-white transition-all p-2 rounded-md cursor-pointer text-center flex items-center gap-2 justify-center"
-                  style={{ background: "rgb(3 19 37)" }}
+                  className="flex items-center gap-2 bg-blue-600 
+                   hover:bg-blue-700 text-white font-medium 
+                   px-4 py-2 rounded-lg shadow-sm 
+                   transition-all duration-200"
                 >
                   <PiPlusCircle size={20} />
                   Add
-                </div>
-              </span>
+                </button>
+              </div>
             </div>
+          </div>
+        )}
+        {page === "schedule" && (
+          <div className="mb-2">
             {loading ? (
               <div className="flex justify-center items-center py-10">
                 <span className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></span>
@@ -535,9 +622,9 @@ const Patrolling = () => {
                 <div className="mb-2 text-sm text-gray-600">
                   {/* Debug: Showing {filteredData.length} records, Total: {scheduleTotalRows}, Page: {scheduleCurrentPage} */}
                 </div>
-                <Table 
-                  columns={columns} 
-                  data={filteredData}
+                <Table
+                  columns={columns}
+                  data={finalScheduleData}
                   pagination
                   paginationServer
                   paginationTotalRows={scheduleTotalRows}
@@ -557,10 +644,9 @@ const Patrolling = () => {
               <input
                 type="search"
                 value={searchHistoryText}
-                onChange={handleHistorySearch}
-                id=""
-                className="border border-gray-300 placeholder:text-sm w-full rounded-md p-2"
+                onChange={(e) => setSearchHistoryText(e.target.value)}
                 placeholder="Search by building, floor, unit"
+                className="border p-2 rounded-md my-3 w-[1190px]"
               />
             </div>
             {loading ? (
@@ -573,9 +659,9 @@ const Patrolling = () => {
                 <div className="mb-2 text-sm text-gray-600">
                   {/* Debug: Showing {filteredHistories.length} records, Total: {logsTotalRows}, Page: {logsCurrentPage} */}
                 </div>
-                <Table 
-                  columns={HistoryColumns} 
-                  data={filteredHistories}
+                <Table
+                  columns={HistoryColumns}
+                  data={finalLogsData}
                   pagination
                   paginationServer
                   paginationTotalRows={logsTotalRows}
