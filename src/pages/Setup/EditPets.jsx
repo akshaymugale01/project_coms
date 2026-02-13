@@ -320,19 +320,6 @@ petImages.forEach((img) => {
               </div>
 
               <div className="text-sm font-medium">
-                <label className="block mb-1">Owner Mobile *</label>
-                <input
-                  type="text"
-                  name="owner_mobile_no"
-                  value={formData.owner_mobile_no}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                  maxLength={10}
-                />
-              </div>
-
-              <div className="text-sm font-medium">
                 <label className="block mb-1">Pet Breed</label>
                 <input
                   type="text"
@@ -552,6 +539,19 @@ petImages.forEach((img) => {
                 ))}
               </select>
             </div>
+
+              <div className="text-sm font-medium">
+                <label className="block mb-1">Owner Mobile *</label>
+                <input
+                  type="text"
+                  name="owner_mobile_no"
+                  value={formData.owner_mobile_no}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                  maxLength={10}
+                />
+              </div>
           </div>
 
           {/* Existing Pet Images */}

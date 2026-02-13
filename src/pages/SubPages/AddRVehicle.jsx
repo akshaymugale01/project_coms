@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { getAllUnits, getParkingConfig, getSetupUsers, postRegisteredVehicle } from "../../api";
+import {
+  getAllUnits,
+  getParkingConfig,
+  getSetupUsers,
+  postRegisteredVehicle,
+} from "../../api";
 import toast from "react-hot-toast";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import Select from "react-select";
@@ -52,7 +57,7 @@ const AddRVehicles = () => {
         const userRes = await getSetupUsers();
         const userData = userRes.data.map((user) => ({
           value: user.id,
-          label:`${user.firstname} ${user.lastname}`,
+          label: `${user.firstname} ${user.lastname}`,
         }));
         setUsers(userData);
       } catch (error) {
@@ -78,29 +83,29 @@ const AddRVehicles = () => {
     postData.append("registered_vehicle[slot_number]", formData.slotNumber);
     postData.append(
       "registered_vehicle[vehicle_category]",
-      formData.vehicleCategory
+      formData.vehicleCategory,
     );
     postData.append("registered_vehicle[vehicle_type]", formData.vehicleType);
     postData.append(
       "registered_vehicle[sticker_number]",
-      formData.stickerNumber
+      formData.stickerNumber,
     );
     postData.append(
       "registered_vehicle[registration_number]",
-      formData.registrationNumber
+      formData.registrationNumber,
     );
     postData.append(
       "registered_vehicle[insurance_number]",
-      formData.InsuranceNumber
+      formData.InsuranceNumber,
     );
     postData.append(
       "registered_vehicle[insurance_valid_till]",
-      formData.InsuranceTill
+      formData.InsuranceTill,
     );
     postData.append("registered_vehicle[category]", formData.Category);
     postData.append(
       "registered_vehicle[vehicle_number]",
-      formData.vehicleNumber
+      formData.vehicleNumber,
     );
     postData.append("registered_vehicle[unit_id]", formData.unit);
     postData.append("registered_vehicle[created_by_id]", userId);
@@ -110,7 +115,7 @@ const AddRVehicles = () => {
       const registeredRes = await postRegisteredVehicle(postData);
       toast.success("Vehicle Registered Successfully");
       navigate("/admin/passes/registered-vehicles");
-      console.log(registeredRes)
+      console.log(registeredRes);
     } catch (error) {
       console.log(error);
     }
@@ -124,7 +129,6 @@ const AddRVehicles = () => {
         >
           Add Vehicles
         </h2>
-
         <div className="grid md:grid-cols-3 gap-5 my-2">
           <div className="flex flex-col">
             <label htmlFor="users" className="font-semibold">
@@ -295,11 +299,16 @@ const AddRVehicles = () => {
           </div>
         </div>
 
-        <div className="flex gap-5 justify-center items-center my-4">
+        <div className="flex gap-5 justify-end items-center my-4">
           <button
-           
+            onClick={() => navigate("/admin/passes/registered-vehicles")}
+            className="text-white bg-gray-400 hover:bg-white hover:text-black hover:border-1 hover:border-gray-800 font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            Cancel
+          </button>
+          <button
             onClick={handleAddRVehicle}
-            className="text-white bg-black hover:bg-white hover:text-black border-2 border-black font-semibold py-2 px-4 rounded transition-all duration-300"
+            className="text-white bg-indigo-600 hover:bg-indigo-700 border-2  font-semibold py-2 px-4 rounded-lg transition-all duration-300"
           >
             Submit
           </button>
