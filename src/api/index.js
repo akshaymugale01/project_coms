@@ -623,8 +623,8 @@ export const postHelpDeskEscalationSetup = async (data) =>
       token: token,
     },
   });
-export const deleteHelpDeskCategorySetup = async (id) =>
-  axiosInstance.delete(`/pms/admin/modify_helpdesk_category/${id}.json`, {
+export const deleteHelpDeskCategorySetup = async (id, data) =>
+  axiosInstance.patch(`/pms/admin/modify_helpdesk_category/${id}.json`, data, {
     params: {
       token: token,
     },

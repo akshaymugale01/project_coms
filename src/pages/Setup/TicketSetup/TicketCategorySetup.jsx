@@ -154,7 +154,7 @@ const TicketCategorySetup = () => {
 
   console.log("category --", categories);
 
-  const handleCatDelete = async (id) => {
+   const handleCatDelete = async (id) => {
     const formData = new FormData();
     formData.append("helpdesk_category[active]", 0);
     formData.append("id", id);
@@ -232,9 +232,9 @@ const TicketCategorySetup = () => {
           <button onClick={() => openCatEditModal(row.id)}>
             <BiEdit size={15} />
           </button>
-          {/* <button onClick={() => handleCatDelete(row.id)}>
+            <button onClick={() => handleCatDelete(row.id)}>
             <FaTrash size={15} />
-          </button> */}
+          </button>
         </div>
       ),
     },
@@ -260,6 +260,7 @@ const TicketCategorySetup = () => {
   const [isModalOpen1, setIsModalOpen1] = useState(false);
   const [catId, setCatId] = useState(null);
   const [subCatId, setSubCatId] = useState(null);
+  
   const openCatEditModal = async (id) => {
     const fetchCatDetails = await getHelpDeskCategoriesSetupDetails(id);
     setCatId(id);
@@ -291,6 +292,19 @@ const TicketCategorySetup = () => {
   const closeModal1 = () => setIsModalOpen1(false);
 
   const subCatColumns = [
+       {
+      name: "Action",
+      cell: (row) => (
+        <div className="flex items-center gap-4">
+          <button onClick={() => openSubCatEditModal(row.id)}>
+            <BiEdit size={15} />
+          </button>
+          {/* <button>
+            <FaTrash size={15} />
+          </button> */}
+        </div>
+      ),
+    },
     {
       name: "Sr.no.",
       selector: (row, index) => index + 1,
@@ -333,19 +347,7 @@ const TicketCategorySetup = () => {
     //   selector: (row) => row.Icon,
     //   sortable: true,
     // },
-    {
-      name: "Action",
-      cell: (row) => (
-        <div className="flex items-center gap-4">
-          <button onClick={() => openSubCatEditModal(row.id)}>
-            <BiEdit size={15} />
-          </button>
-          {/* <button>
-            <FaTrash size={15} />
-          </button> */}
-        </div>
-      ),
-    },
+ 
   ];
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

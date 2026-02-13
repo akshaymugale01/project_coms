@@ -15,13 +15,13 @@ import {
 } from "../../../api";
 import { IoClose } from "react-icons/io5";
 import toast from "react-hot-toast";
-const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
+const TicketSubCategory = ({ handleToggleCategoryPage1, setCAtAdded }) => {
   //   const [faqs, setFaqs] = useState([{ question: '', answer: '' }]);
   const themeColor = useSelector((state) => state.theme.color);
   const [isModalOpen1, setIsModalOpen1] = useState(false);
   const openModal1 = () => setIsModalOpen1(true);
   const closeModal1 = () => setIsModalOpen1(false);
-  
+
   const [isOpen, setIsOpen] = useState({
     building: false,
     wing: false,
@@ -89,8 +89,8 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
   const [formData, setFormData] = useState({
     category: "",
     subCategory: [],
-    twobhk: "",
-    threebhk: "",
+    // twobhk: "",
+    // threebhk: "",
   });
   useEffect(() => {
     const fetchCategory = async () => {
@@ -103,43 +103,49 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
     };
     fetchCategory();
   }, []);
+
   const handleAddSubCat = async () => {
-    if (formData.category === "" || formData.subCategory.length === 0) {
-      return toast.error("All fields are required!");
-    }
+  // ✅ auto-push inputValue if user didn't press Enter
+  if (inputValue.trim()) {
+    setFormData((prev) => ({
+      ...prev,
+      subCategory: [...prev.subCategory, inputValue.trim()],
+    }));
+    setInputValue("");
+  }
 
-    const sendData = new FormData();
-    sendData.append(
-      "helpdesk_sub_category[helpdesk_category_id]",
-      formData.category
-    );
-    // formData.subCategory.forEach((tag) => {
-    //   sendData.append("sub_category_tags[]", tag);
-    // });
-    const subCategoryString = formData.subCategory.join(",");
-    sendData.append("sub_category_tags[]", subCategoryString);
+  // ⏳ Wait for state update
+  const updatedSubCategory =
+    inputValue.trim()
+      ? [...formData.subCategory, inputValue.trim()]
+      : formData.subCategory;
 
-    try {
-      const resp = await postHelpDeskSubCategoriesSetup(sendData);
-      console.log(resp);
-      toast.success("Sub Category Added Successfully");
-      setCAtAdded(true);
-      handleToggleCategoryPage1();
-      setFormData({
-        ...formData,
-        category:"",
-        subCategory:[],
-        twobhk: "",
-        threebhk: "",
-      })
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setTimeout(() => {
-        setCAtAdded(false);
-      }, 500);
-    }
-  };
+  if (formData.category === "" || updatedSubCategory.length === 0) {
+    return toast.error("All fields are required!");
+  }
+
+  const sendData = new FormData();
+  sendData.append(
+    "helpdesk_sub_category[helpdesk_category_id]",
+    formData.category
+  );
+  sendData.append("sub_category_tags[]", updatedSubCategory.join(","));
+
+  try {
+    await postHelpDeskSubCategoriesSetup(sendData);
+    toast.success("Sub Category Added Successfully");
+
+    setCAtAdded(true);
+    handleToggleCategoryPage1();
+
+    setFormData({ category: "", subCategory: [] });
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setTimeout(() => setCAtAdded(false), 500);
+  }
+};
+
   const [inputValue, setInputValue] = useState("");
 
   const AddSubCat = (e) => {
@@ -182,94 +188,93 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
           placeholder="Enter Sub Category and press Enter"
           className="border p-2 rounded-md"
         />
-        <div className="grid grid-cols-3 gap-2">
+        {/* <div className="grid grid-cols-3 gap-2">
+          <input
+            type="number"
+            value={formData.twobhk}
+            onChange={handleChange}
+            placeholder="2BHK Price"
+            className="border p-1 rounded-md"
+          />
+          <input
+            type="number"
+            value={formData.threebhk}
+            onChange={handleChange}
+            placeholder="3BHK Price"
+            className="border p-1 rounded-md"
+          />
+          <input
+            type="number"
+            value={inputValue}
+            placeholder="4BHK Price"
+            className="border p-1 rounded-md"
+          />
+          <input
+            type="number"
+            value={inputValue}
+            placeholder="Flat RK Price"
+            className="border p-1 rounded-md"
+          />
+          <input
+            type="number"
+            value={inputValue}
+            placeholder="Flat 1Rk Price"
+            className="border p-1 rounded-md"
+          />
+          <input
+            type="number"
+            value={inputValue}
+            placeholder="2BHK Price"
+            className="border p-1 rounded-md"
+          />
+        </div>
         <input
-          type="number"
-          value={formData.twobhk}
-          onChange={handleChange}
-          placeholder="2BHK Price"
-          className="border p-1 rounded-md"
-        />
-        <input
-          type="number"
-          value={formData.threebhk}
-          onChange={handleChange}
-          placeholder="3BHK Price"
-          className="border p-1 rounded-md"
-        />
-        <input
-          type="number"
-          value={inputValue}
-          placeholder="4BHK Price"
-          className="border p-1 rounded-md"
-        />
-        <input
-          type="number"
-          value={inputValue}
-          placeholder="Flat RK Price"
-          className="border p-1 rounded-md"
-        />
-        <input
-          type="number"
-          value={inputValue}
-          placeholder="Flat 1Rk Price"
-          className="border p-1 rounded-md"
-        />
-        <input
-          type="number"
-          value={inputValue}
-          placeholder="2BHK Price"
-          className="border p-1 rounded-md"
-        />
-       </div>
-       <input
           type="text"
           value={inputValue}
           placeholder="Enter Description"
           className="border p-1 rounded-md"
-        />
+        /> */}
       </div>
       <div className="flex item-center justify-center py-3 gap-2">
         <button
-         style={{ background: themeColor }}
-         type="submit"
-         className="px-4 py-2 bg-blue-500 text-white rounded-md"
-         onClick={handleAddSubCat}
-       >
-         Submit
-       </button>
-       <button
-         onClick={handleToggleCategoryPage1}
-         className="px-4 py-2 bg-red-500 text-white rounded-md"
-       >
-         Cancel
-       </button>
+          style={{ background: themeColor }}
+          type="submit"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md"
+          onClick={handleAddSubCat}
+        >
+          Submit
+        </button>
+        <button
+          onClick={handleToggleCategoryPage1}
+          className="px-4 py-2 bg-red-500 text-white rounded-md"
+        >
+          Cancel
+        </button>
       </div>
 
-
       {/* <div className="flex flex-wrap gap-2 border border-gray-300 p-1 my-2 rounded-md"> */}
-        {formData.subCategory.map((subCat, index) => (
-          <div
-            key={index}
-            className="flex items-center bg-green-200 rounded-md p-1 px-2 gap-2"
+      {formData.subCategory.map((subCat, index) => (
+        <div
+          key={index}
+          className="flex items-center bg-green-200 rounded-md p-1 px-2 gap-2"
+        >
+          <span>{subCat}</span>
+          <button
+            type="button"
+            className="text-white bg-red-400 rounded-full"
+            onClick={() => {
+              setFormData((prevFormData) => ({
+                ...prevFormData,
+                subCategory: prevFormData.subCategory.filter(
+                  (_, i) => i !== index,
+                ),
+              }));
+            }}
           >
-            <span>{subCat}</span>
-            <button
-              type="button"
-              className="text-white bg-red-400 rounded-full"
-              onClick={() => {
-                setFormData((prevFormData) => ({
-                  ...prevFormData,
-                  subCategory: prevFormData.subCategory.filter(
-                    (_, i) => i !== index
-                  ),
-                }));
-              }}
-            >
-              <IoClose />
-            </button>
-          </div>
-        ))}
+            <IoClose />
+          </button>
+        </div>
+      ))}
       {/* </div> */}
 
       {isModalOpen1 && (
@@ -326,7 +331,7 @@ const TicketSubCategory = ({ handleToggleCategoryPage1 , setCAtAdded }) => {
                                     type="checkbox"
                                     value={option}
                                     checked={selectedOptions[section].includes(
-                                      option
+                                      option,
                                     )}
                                     onChange={() =>
                                       handleOptionChange(section, option)
