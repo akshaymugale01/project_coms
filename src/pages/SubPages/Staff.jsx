@@ -34,6 +34,115 @@ const Staff = () => {
   const [approvalRowsPerPage, setApprovalRowsPerPage] = useState(10);
   const [approvalTotalCount, setApprovalTotalCount] = useState(0);
 
+   // ✅ CSV helpers
+  const csvEscape = (v) => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  const downloadCSV = (headers, rows, filename) => {
+    const content = headers.join(",") + "\n" + rows.join("\n");
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // ✅ Export ALL staff data (fetch all pages from API)
+  const exportStaffToCSVAll = async () => {
+    try {
+      const EXPORT_PER_PAGE = 200; // can increase if backend allows
+      let page = 1;
+      let allRows = [];
+      let totalPagesFromApi = 1;
+
+      // fetch first page
+      const firstRes = await getStaff();
+      const firstData = firstRes?.data || {};
+      const firstList = Array.isArray(firstData.staffs) ? firstData.staffs : [];
+      allRows = allRows.concat(firstList);
+
+      // detect total pages
+      if (firstData.total_pages) {
+        totalPagesFromApi = firstData.total_pages;
+      } else if (firstData.total_count) {
+        totalPagesFromApi = Math.ceil(firstData.total_count / EXPORT_PER_PAGE) || 1;
+      }
+
+      // fetch remaining pages
+      for (page = 2; page <= totalPagesFromApi; page++) {
+        const res = await getStaff(page, EXPORT_PER_PAGE);
+        const data = res?.data || {};
+        const list = Array.isArray(data.staffs) ? data.staffs : [];
+        allRows = allRows.concat(list);
+      }
+
+      // optional: if search is active, export filtered results
+      let exportRows = allRows;
+      if (searchText.trim()) {
+        const q = searchText.toLowerCase();
+        exportRows = allRows.filter((item) => {
+          const fullName = `${item.firstname} ${item.lastname}`.toLowerCase();
+          return (
+            fullName.includes(q) ||
+            item.unit_name?.toLowerCase().includes(q) ||
+            item.mobile_no?.toLowerCase().includes(q)
+          );
+        });
+      }
+
+      if (!exportRows.length) {
+        alert("No data to export");
+        return;
+      }
+
+      const headers = [
+        "ID",
+        "Name",
+        "Unit",
+        "Email",
+        "Mobile",
+        "Work Type",
+        "Vendor",
+        "From",
+        "Till",
+        "Status",
+        "Profile Picture URL",
+      ];
+
+      const rows = exportRows.map((row) => {
+        const fullName = `${row.firstname || ""} ${row.lastname || ""}`.trim();
+        const profileUrl = row?.profile_picture?.url
+          ? domainPrefix + row.profile_picture.url
+          : "";
+
+        return [
+          csvEscape(row.id),
+          csvEscape(fullName),
+          csvEscape(row.unit_name || "—"),
+          csvEscape(row.email || "—"),
+          csvEscape(row.mobile_no || "—"),
+          csvEscape(row.work_type || "—"),
+          csvEscape(row.vendor_name || "—"),
+          csvEscape(row.valid_from ? dateFormat(row.valid_from) : ""),
+          csvEscape(row.valid_till ? dateFormat(row.valid_till) : ""),
+          csvEscape(row.status ? "Active" : "Inactive"),
+          csvEscape(profileUrl),
+        ].join(",");
+      });
+
+      downloadCSV(headers, rows, "staff_export.csv");
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Export failed");
+    }
+  };
+
   useEffect(() => {
     const fetchStaff = async () => {
       try {
@@ -330,10 +439,16 @@ const Staff = () => {
               placeholder="Search by name, unit, mobile"
             />
             <span className="flex gap-4">
+                <button
+              onClick={exportStaffToCSVAll}
+              className="border-2 border-blue-600 text-blue-600 font-semibold transition-all px-4 rounded-md hover:bg-blue-700 cursor-pointer text-center flex items-center gap-2 justify-center hover:text-white"
+            >
+              Export
+            </button>
               <Link
                 to={"/admin/passes/add-staff"}
                 style={{ background: "rgb(3 19 37)" }}
-                className="border-2 font-semibold transition-all p-2 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
+                className="border-2 font-semibold transition-all py-2.5 px-3 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
               >
                 <PiPlusCircle size={20} />
                 Add
