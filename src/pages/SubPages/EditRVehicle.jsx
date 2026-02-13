@@ -331,12 +331,18 @@ const EditRVehicle = () => {
           </div>
         </div>
 
-        <div className="flex gap-5 justify-center items-center my-4">
+        <div className="flex gap-5 justify-end items-center my-7">
+             <button
+            onClick={() => navigate("/admin/passes/registered-vehicles")}
+            className="text-white bg-gray-400 hover:bg-white hover:text-black border-2  font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+          >
+            Cancel
+          </button>
           <button
             onClick={handleEditRVehicle}
-            className="text-white bg-black hover:bg-white hover:text-black border-2 border-black font-semibold py-2 px-4 rounded transition-all duration-300"
+            className="text-white bg-indigo-700 hover:bg-white hover:text-black border-2  font-semibold py-2 px-4 rounded-lg transition-all duration-300"
           >
-            Save
+            Update Vehicle
           </button>
         </div>
       </div>

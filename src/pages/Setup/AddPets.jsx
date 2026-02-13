@@ -150,8 +150,8 @@ function AddPets() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.pet_name || !formData.owner_mobile_no) {
-      return toast.error("Please enter pet name and owner mobile number");
+    if (!formData.pet_name || !formData.owner_mobile_no || !formData.pet_breed) {
+      return toast.error("Please enter pet name, owner mobile number, and pet breed");
     }
 
     if (formData.owner_mobile_no.length !== 10) {
@@ -282,24 +282,9 @@ function AddPets() {
                   className="w-full border border-gray-300 p-2 rounded"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Owner Mobile *
-                </label>
-                <input
-                  type="text"
-                  name="owner_mobile_no"
-                  value={formData.owner_mobile_no}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 p-2 rounded"
-                  maxLength={10}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Pet Breed
+                  Pet Breed *
                 </label>
                 <input
                   type="text"
@@ -529,6 +514,19 @@ function AddPets() {
                 </option>
               ))}
             </select>
+                <div>
+                <label className="block text-sm font-medium mb-1">
+                  Owner Mobile *
+                </label>
+                <input
+                  type="text"
+                  name="owner_mobile_no"
+                  value={formData.owner_mobile_no}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 p-2 rounded"
+                  maxLength={10}
+                />
+              </div>
           </div>
 
           {/* Pet Images */}

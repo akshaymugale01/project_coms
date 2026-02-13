@@ -26,14 +26,18 @@ const AddGoods = () => {
     description: "",
     documents: [],
   });
+
   useEffect(() => {
     const fetchVisitor = async () => {
       try {
         const visitorRes = await getExpectedVisitor();
-        const visitorData = visitorRes.data.map((visitor) => ({
-          value: visitor.id,
-          label: visitor.name,
-        }));
+
+        const visitorData =
+          visitorRes?.data?.visitors?.map((visitor) => ({
+            value: visitor.id,
+            label: visitor.name,
+          })) || [];
+
         setVisitors(visitorData);
       } catch (error) {
         console.log(error);
@@ -42,10 +46,13 @@ const AddGoods = () => {
     const fetchStaff = async () => {
       try {
         const staffRes = await getStaff();
-        const staffData = staffRes.data.map((staff) => ({
-          value: staff.id,
-          label: ` ${staff.firstname} ${staff.lastname}`,
-        }));
+
+        const staffData =
+          staffRes?.data?.staffs?.map((staff) => ({
+            value: staff.id,
+            label: `${staff.firstname} ${staff.lastname}`,
+          })) || [];
+
         setStaff(staffData);
       } catch (error) {
         console.log(error);
@@ -64,7 +71,7 @@ const AddGoods = () => {
   };
 
   const handleVisitorSelection = (selectedOption) => {
-    console.log(selectedOption);
+    // console.log(selectedOption);
     setSelectedVisitor(selectedOption);
   };
   const handleStaffSelection = (selectedOption) => {
@@ -73,21 +80,24 @@ const AddGoods = () => {
   const userId = getItemInLocalStorage("UserId");
   const navigate = useNavigate();
   const handleAddGoodsInOut = async () => {
-    if ((!selectedVisitor && !selectedStaff) || !formData.noOfGoods) {
+    if ((type === "visitor" && !selectedVisitor) || (type === "staff" && !selectedStaff) || !formData.noOfGoods) {
       return toast.error("Please Provide all the data!");
     }
     const postData = new FormData();
 
-    const visitorId = selectedVisitor.value;
-    postData.append("goods_in_out[visitor_id]", visitorId);
+    if (type === "visitor" && selectedVisitor) {
+      postData.append("goods_in_out[visitor_id]", selectedVisitor.value);
+    }
+
+    if (type === "staff" && selectedStaff) {
+      postData.append("goods_in_out[staff_id]", selectedStaff.value);
+    }
 
     postData.append("goods_in_out[no_of_goods]", formData.noOfGoods);
     postData.append("goods_in_out[description]", formData.description);
     postData.append("goods_in_out[ward_type]", ward);
     postData.append("goods_in_out[vehicle_no]", formData.vehicleNumber);
     postData.append("goods_in_out[person_name]", formData.personName);
-    const staffId = selectedStaff.value;
-    postData.append("goods_in_out[staff_id]", staffId);
     postData.append("goods_in_out[created_by_id]", userId);
     formData.documents.forEach((docs) => {
       postData.append("goods_files[]", docs);
@@ -179,7 +189,7 @@ const handleChange = (e) => {
                   <Select
                     options={visitors}
                     onChange={handleVisitorSelection}
-                    noOptionsMessage={() => "Visitors nor available..."}
+                    noOptionsMessage={() => "Visitors not available..."}
                   />
                 </div>
               ) : (
@@ -190,7 +200,7 @@ const handleChange = (e) => {
                   <Select
                     options={staff}
                     onChange={handleStaffSelection}
-                    noOptionsMessage={() => "Visitors nor available..."}
+                    noOptionsMessage={() => "Staff not available..."}
                   />
                 </div>
               )}
@@ -261,11 +271,18 @@ const handleChange = (e) => {
               />
             </div>
 
-            <div className="flex gap-5 justify-center items-center my-4">
+            <div className="flex gap-5 justify-end items-center my-5">
+                <button
+                type="submit"
+                onClick={()=>navigate("/admin/passes/goods-in-out")}
+                className="text-white bg-gray-400 hover:bg-white hover:text-black font-semibold py-2 px-4 rounded-lg transition-all duration-300 hover:border-1 border-gray-400"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
                 onClick={handleAddGoodsInOut}
-                className="text-white bg-black hover:bg-white hover:text-black border-2 border-black font-semibold py-2 px-4 rounded transition-all duration-300"
+                className="text-white bg-indigo-600  border-2 font-semibold py-2 px-4 rounded-lg transition-all duration-300"
               >
                 Submit
               </button>
