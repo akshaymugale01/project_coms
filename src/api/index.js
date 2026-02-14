@@ -3158,6 +3158,15 @@ export const getCommunicationDashboard = async () =>
     },
   });
 
+   export const getVehicleHistory = async (params) => {
+  return axiosInstance.get(`/registered_vehicle_visits.json`, {
+    params: {
+      ...params,
+      token, 
+    },
+  });
+};
+
 export const getRegisteredVehicle = async () =>
   axiosInstance.get(`/registered_vehicles.json`, {
     params: {

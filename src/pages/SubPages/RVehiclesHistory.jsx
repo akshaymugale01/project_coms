@@ -10,6 +10,7 @@ import Table from "../../components/table/Table";
 const RVehiclesHistory = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const themeColor = useSelector((state)=> state.theme.color)
+  
 
   const columns = [
     {
