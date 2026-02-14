@@ -166,7 +166,6 @@
 //   </select>
 // </div>
 
-
 // <div>
 //   <label className="block text-sm font-medium text-gray-700 mb-1">
 //     Account *
@@ -187,8 +186,6 @@
 //     <option value="4">Expense Account</option>
 //   </select>
 // </div>
-
-
 
 //             <div>
 //               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -257,12 +254,11 @@
 
 // export default PaymentModal;
 
-
-
-
-
 import React, { useState, useEffect } from "react";
-import { getAccountingInvoices, getAccountingPayments } from "../../api/accountingApi";
+import {
+  getAccountingInvoices,
+  getAccountingPayments,
+} from "../../api/accountingApi";
 
 const PaymentModal = ({ payment, onClose, onSave }) => {
   const [invoices, setInvoices] = useState([]);
@@ -270,37 +266,49 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
 
   const [formData, setFormData] = useState({
     payment_date: new Date().toISOString().split("T")[0],
-    invoice_id: "",
+    accounting_invoice_id: "",
     account_id: "",
     amount: "",
-    payment_method: "cash",
+    payment_mode: "cash",
     payment_type: "",
-    reference: "",
+    reference_number: "",
     status: "completed",
-    notes: ""
+    notes: "",
   });
 
   // -----------------------------
   // LOAD INVOICES + ACCOUNTS
   // -----------------------------
   useEffect(() => {
-    fetchInvoices();
-    fetchAccounts();
-
     if (payment) {
       setFormData({
         payment_date: payment.payment_date?.split("T")[0] || "",
-        invoice_id: payment.invoice_id || "",
+        accounting_invoice_id: payment.accounting_invoice_id?.toString() || "",
         account_id: payment.account_id || "",
         amount: payment.amount || "",
-        payment_method: payment.payment_method || "cash",
+        payment_mode: payment.payment_mode || "cash",
         payment_type: payment.payment_type || "",
-        reference: payment.reference || "",
+        reference_number: payment.reference_number || "",
         status: payment.status || "completed",
-        notes: payment.notes || ""
+        notes: payment.notes || "",
       });
     }
   }, [payment]);
+  useEffect(() => {
+    if (!payment && formData.accounting_invoice_id && invoices.length > 0) {
+      const selectedInvoice = invoices.find(
+        (inv) => inv.id.toString() === formData.accounting_invoice_id
+      );
+
+      if (selectedInvoice) {
+        setFormData((prev) => ({
+          ...prev,
+          account_id: selectedInvoice.bank_account || "",
+        }));
+      }
+    }
+  }, [formData.accounting_invoice_id, invoices, payment]);
+
 
   const fetchInvoices = async () => {
     try {
@@ -311,14 +319,7 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
     }
   };
 
-  const fetchAccounts = async () => {
-    try {
-      const res = await getAccountingPayments();
-      setAccounts(res.data.data || res.data);
-    } catch (err) {
-      console.error("Failed to fetch accounts:", err);
-    }
-  };
+
 
   // -----------------------------
   // HANDLE FORM CHANGES
@@ -328,86 +329,85 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleInvoiceChange = (e) => {
+   const handleInvoiceChange = (e) => {
     const invoiceId = e.target.value;
-    const selectedInvoice = invoices.find((i) => i.id == invoiceId);
 
-    console.log("Selected Invoice:", selectedInvoice);
+    const selectedInvoice = invoices.find(
+      (inv) => inv.id == invoiceId
+    );
 
     setFormData((prev) => ({
       ...prev,
-      invoice_id: invoiceId,
-      account_id: selectedInvoice?.account_id || "" // Auto assign account
+      accounting_invoice_id: invoiceId,
+      account_id: selectedInvoice?.bank_account || "", // 🔥 directly set bank account
     }));
   };
-
   // -----------------------------
   // SUBMIT PAYMENT
   // -----------------------------
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("PAYLOAD SENT:", formData);
-    onSave(formData);
+
+    const payload = {
+      ...formData,
+      account_id: formData.account_id, // sending bank account number
+    };
+
+    console.log("FINAL PAYLOAD:", payload);
+    onSave(payload);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-
-        {/* HEADER */}
-        <div className="flex justify-between mb-4">
-          <h2 className="text-xl font-bold">
-            {payment ? "Edit Payment" : "Create Payment"}
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+          <div className="px-6 py-4 border-b flex justify-between items-center">
+          <h2 className="text-lg font-semibold">
+            {payment ? "Edit Payment" : "Add Payment"}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
-            ✕
-          </button>
+          <button onClick={onClose}>✕</button>
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-
+        <form onSubmit={handleSubmit} className="space-y-4 mx-8 mb-5">
           {/* INVOICE */}
           <div>
             <label className="block text-sm mb-1 font-medium">Invoice *</label>
             <select
               required
-              name="invoice_id"
-              value={formData.invoice_id}
+              name="accounting_invoice_id"
+              value={formData.accounting_invoice_id}
               onChange={handleInvoiceChange}
               className="w-full border px-3 py-2 rounded"
             >
               <option value="">Select Invoice</option>
               {invoices.map((inv) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.invoice_number} - (₹{inv.total_amount})
+                  {inv.invoice_number}
                 </option>
               ))}
             </select>
           </div>
 
           {/* ACCOUNT */}
-          <div>
-            <label className="block text-sm mb-1 font-medium">Account *</label>
-            <select
-              required
+        <div>
+            <label className="block text-sm font-medium mb-1">
+              Account *
+            </label>
+            <input
+              type="text"
               name="account_id"
               value={formData.account_id}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-            >
-              <option value="">Select Account</option>
-              {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.name}
-                </option>
-              ))}
-            </select>
+              readOnly
+              className="w-full border px-3 py-2 rounded bg-gray-100"
+            />
           </div>
 
           {/* PAYMENT DATE */}
           <div>
-            <label className="block text-sm mb-1 font-medium">Payment Date *</label>
+            <label className="block text-sm mb-1 font-medium">
+              Payment Date *
+            </label>
             <input
               type="date"
               name="payment_date"
@@ -433,12 +433,14 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
             />
           </div>
 
-          {/* METHOD */}
+          {/* PAYMENT MODE */}
           <div>
-            <label className="block text-sm mb-1 font-medium">Payment Method *</label>
+            <label className="block text-sm mb-1 font-medium">
+              Payment Method *
+            </label>
             <select
-              name="payment_method"
-              value={formData.payment_method}
+              name="payment_mode"
+              value={formData.payment_mode}
               onChange={handleChange}
               required
               className="w-full border px-3 py-2 rounded"
@@ -454,7 +456,9 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
 
           {/* PAYMENT TYPE */}
           <div>
-            <label className="block text-sm mb-1 font-medium">Payment Type *</label>
+            <label className="block text-sm mb-1 font-medium">
+              Payment Type *
+            </label>
             <select
               required
               name="payment_type"
@@ -469,13 +473,15 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
             </select>
           </div>
 
-          {/* REFERENCE */}
+          {/* REFERENCE NUMBER */}
           <div>
-            <label className="block text-sm mb-1 font-medium">Reference</label>
+            <label className="block text-sm mb-1 font-medium">
+              Reference Number
+            </label>
             <input
               type="text"
-              name="reference"
-              value={formData.reference}
+              name="reference_number"
+              value={formData.reference_number}
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded"
             />
@@ -524,7 +530,6 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
               {payment ? "Update" : "Create"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

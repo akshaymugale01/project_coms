@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Detail from "../../../containers/Detail";
 import image from "/profile.png";
 import { domainPrefix, getVisitorDetails } from "../../../api";
@@ -46,6 +46,42 @@ const VisitorDetails = () => {
     return date.toLocaleString();
   };
 
+   // ✅ FIXED: Flatten All Visit Logs
+  const visitorLogs = useMemo(() => {
+    if (!details.logs || details.logs.length === 0) return [];
+
+    return details.logs.flatMap((log) =>
+      (log.visits_log || []).map((visit) => ({
+        visitor_name: log.name,
+        check_in: visit.check_in,
+        check_out: visit.check_out || null,
+      }))
+    );
+  }, [details]);
+
+  const visitorLogColumn = [
+    {
+      name: "Sr. no.",
+      selector: (row, index) => index + 1,
+      sortable: false,
+    },
+    {
+      name: "Visitor Name",
+      selector: (row) => row.visitor_name,
+      sortable: true,
+    },
+    {
+      name: "Check In",
+      selector: (row) => dateTimeFormat(row.check_in),
+      sortable: true,
+    },
+    {
+      name: "Check Out",
+      selector: (row) => dateTimeFormat(row.check_out),
+      sortable: true,
+    },
+  ];
+
   const VisitorColumns = [
     // {
     //   name: "Action",
@@ -77,23 +113,23 @@ const VisitorDetails = () => {
     },
   ];
 
-  const visitorLogColumn = [
-    {
-      name: "Sr. no.",
-      selector: (row, index) => index + 1,
-      sortable: true,
-    },
-    {
-      name: " Check in",
-      selector: (row) => (row.check_in ? dateTimeFormat(row.check_in) : ""),
-      sortable: true,
-    },
-    {
-      name: " Check out",
-      selector: (row) => (row.check_in ? dateTimeFormat(row.check_out) : null),
-      sortable: true,
-    },
-  ];
+  // const visitorLogColumn = [
+  //   {
+  //     name: "Sr. no.",
+  //     selector: (row, index) => index + 1,
+  //     sortable: true,
+  //   },
+  //   {
+  //     name: " Check in",
+  //     selector: (row) => (row.check_in ? dateTimeFormat(row.check_in) : ""),
+  //     sortable: true,
+  //   },
+  //   {
+  //     name: " Check out",
+  //     selector: (row) => (row.check_in ? dateTimeFormat(row.check_out) : null),
+  //     sortable: true,
+  //   },
+  // ];
   // console.log("details", details.hosts[0]?.is_approved);
   const [qrModal, setQrmodal] = useState(false);
   return (
@@ -267,13 +303,14 @@ const VisitorDetails = () => {
             </div>
           )}
 
-          <div className="my-4">
-            <h2 className="font-medium border-b text-lg border-gray-400 px-2 ">
+         <div className="my-4">
+            <h2 className="font-medium border-b text-lg border-gray-400 px-2">
               Visitor Log
             </h2>
+
             <div className="m-4">
-              {details.visits_log && details.visits_log.length !== 0 ? (
-                <Table columns={visitorLogColumn} data={details.visits_log} />
+              {visitorLogs.length > 0 ? (
+                <Table columns={visitorLogColumn} data={visitorLogs} />
               ) : (
                 <p className="text-center">No Log Yet</p>
               )}
