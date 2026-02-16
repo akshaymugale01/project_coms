@@ -6,6 +6,7 @@ import {
   updateAccountingPayment,
   deleteAccountingPayment,
   getPaymentsByInvoice,
+  getAccountingPaymentById,
 } from "../../api/accountingApi";
 import PaymentModal from "./PaymentModal";
 import Navbar from "../../components/Navbar";
@@ -45,34 +46,49 @@ const AccountingPayments = () => {
     }
   };
 
- const handleFilterByInvoice = async (invoiceId) => {
-    setFilterInvoiceId(invoiceId);
+//  const handleFilterByInvoice = async (invoiceId) => {
+//     setFilterInvoiceId(invoiceId);
 
-    if (!invoiceId) {
-      fetchPayments();
-      return;
-    }
+//     if (!invoiceId) {
+//       fetchPayments();
+//       return;
+//     }
 
-    setLoading(true);
-    try {
-      const response = await getPaymentsByInvoice(invoiceId);
-      setPayments(response.data.data || response.data);
-    } catch (error) {
-      toast.error("Failed to filter payments");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+//     setLoading(true);
+//     try {
+//       const response = await getPaymentsByInvoice(invoiceId);
+//       setPayments(response.data.data || response.data);
+//     } catch (error) {
+//       toast.error("Failed to filter payments");
+//       console.error(error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
   const handleCreate = () => {
     setSelectedPayment(null);
     setIsModalOpen(true);
   };
 
-   const handleEdit = (payment) => {
-    setSelectedPayment(payment); // now passing full object
-    setIsModalOpen(true);
+   const handleEdit = async (payment) => {
+    try {
+      setLoading(true);
+
+      // Fetch full payment details by ID
+      const response = await getAccountingPaymentById(payment.id);
+
+      const fullPayment =
+        response.data.data || response.data;
+
+      setSelectedPayment(fullPayment);
+      setIsModalOpen(true);
+    } catch (error) {
+      toast.error("Failed to fetch payment details");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -230,7 +246,7 @@ const AccountingPayments = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          onClick={() => handleEdit(payment.id)}
+                          onClick={() => handleEdit(payment)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
                           Edit
