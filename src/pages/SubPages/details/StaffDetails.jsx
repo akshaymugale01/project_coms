@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import Navbar from "../../../components/Navbar";
 import { domainPrefix, getStaffDetails } from "../../../api";
@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import image from "/profile.png";
 import {
   dateFormat,
+  dateTimeFormat,
   FormattedDateToShowProperly,
   SendDateFormat,
 } from "../../../utils/dateUtils";
@@ -59,6 +60,71 @@ const StaffDetails = () => {
       sortable: true,
     },
   ];
+
+const staffLogs = useMemo(() => {
+  if (!details.attendances || details.attendances.length === 0) return [];
+
+  return details.attendances.map((attendance) => ({
+    id: attendance.id,
+    attendance_of_id: attendance.attendance_of_id,
+    attendance_of_type: attendance.attendance_of_type,
+    attendance_of_name: attendance.attendance_of_name,
+    staff_name: attendance.staff_name,
+    staff_number: attendance.staff_number,
+    staff_work_type: attendance.staff_work_type,
+    punched_in_at: attendance.punched_in_at,
+    punched_out_at: attendance.punched_out_at,
+  }));
+}, [details]);
+
+
+const visitorLogColumn = [
+  {
+    name: "Attendance ID",
+    selector: (row) => row.id,
+    sortable: true,
+  },
+  {
+    name: "Staff ID",
+    selector: (row) => row.attendance_of_id,
+    sortable: true,
+  },
+  {
+    name: "Staff Name",
+    selector: (row) => row.staff_name,
+    sortable: true,
+  },
+  {
+    name: "Mobile No",
+    selector: (row) => row.staff_number,
+    sortable: true,
+  },
+  {
+    name: "Work Type",
+    selector: (row) => row.staff_work_type,
+    sortable: true,
+  },
+  {
+    name: "Staff Type",
+    selector: (row) => row.attendance_of_type,
+    sortable: true,
+  },
+  {
+    name: "Check In",
+    selector: (row) =>
+      row.punched_in_at ? dateTimeFormat(row.punched_in_at) : "-",
+    sortable: true,
+  },
+  {
+    name: "Check Out",
+    selector: (row) =>
+      row.punched_out_at
+        ? dateTimeFormat(row.punched_out_at)
+        : "Still Working",
+    sortable: true,
+  },
+];
+
 
   const isImage = (filePath) => {
     const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "svg"];
@@ -187,11 +253,23 @@ const StaffDetails = () => {
             </div>
           </div>
           <div>
-            <h2 className="font-medium border-b border-gray-300 mb-2">
+            <h2 className="font-medium border-gray-300 mb-2 mt-3 border-b-2">
               Working Schedule
             </h2>
             <Table columns={columns} data={scheduleArray} />
           </div>
+          <div className="my-4">
+                      <h2 className="font-medium  text-lg border-gray-400 px-2 border-b-2 mb-2">
+                        Staff Attendence
+                      </h2>
+                      <div className="m-2">
+                        {staffLogs.length > 0 ? (
+                          <Table columns={visitorLogColumn} data={staffLogs} />
+                        ) : (
+                          <p className="text-center">No Log Yet</p>
+                        )}
+                      </div>
+                    </div>
           <div>
             <h2 className="font-medium border-b border-gray-300">
               Attachments

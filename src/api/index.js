@@ -2317,6 +2317,17 @@ export const getStaff = async (per_page, page) =>
     },
   });
 
+export const exportStaffWithDate = async (start_date, end_date) =>
+  axiosInstance.get(`/staffs/export_staffs.xlsx`, {
+    params: {
+      token: token,
+      start_date: start_date,
+      end_date: end_date,
+    },
+    responseType: "blob", 
+  });
+
+
 export const getPendingStaff = async () =>
   axiosInstance.get("/staffs.json", {
     params: {

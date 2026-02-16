@@ -52,13 +52,10 @@ const ServicePage = () => {
       selector: (row) => row.floor_name,
       sortable: true,
     },
-    {
+   {
       name: "Unit",
-      selector: (row) => row?.units.map((unit)=>(
-        <div className="flex gap-2">
-          <p key={unit.id}>{unit.name},</p>
-        </div>
-      )),
+      cell: (row) =>
+        row?.units?.map((unit) => unit.name).join(", "),
       sortable: true,
     },
 
@@ -75,22 +72,31 @@ const ServicePage = () => {
     },
   ];
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchService = async () => {
       try {
         const serviceResponse = await getSoftServices();
-        const sortedServiceData = serviceResponse.data.sort((a, b) => {
-          return new Date(b.created_at) - new Date(a.created_at);
-        });
+
+        const servicesArray =
+          serviceResponse?.data?.soft_services || [];
+
+        const sortedServiceData = servicesArray.sort(
+          (a, b) =>
+            new Date(b.created_at) -
+            new Date(a.created_at)
+        );
+
         setFilteredData(sortedServiceData);
         setServices(sortedServiceData);
-        console.log(serviceResponse);
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching services:", error);
+        toast.error("Failed to fetch services");
       }
     };
+
     fetchService();
   }, []);
+
   const handleSearch = (event) => {
     const searchValue = event.target.value;
     setSearchText(searchValue);
