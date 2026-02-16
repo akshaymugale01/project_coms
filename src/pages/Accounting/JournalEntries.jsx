@@ -630,6 +630,7 @@ const JournalEntries = () => {
               </tbody>
             </table>
           </div>
+          
         )}
 
         {isModalOpen && (
