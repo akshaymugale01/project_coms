@@ -14,6 +14,7 @@ import {
   getStaff,
   getPendingStaff,
   putStaffApproval,
+  exportStaffWithDate,
 } from "../../api";
 import { dateFormat } from "../../utils/dateUtils";
 import image from "/profile.png";
@@ -28,13 +29,16 @@ const Staff = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   // Approval pagination states
   const [approvalCurrentPage, setApprovalCurrentPage] = useState(1);
   const [approvalRowsPerPage, setApprovalRowsPerPage] = useState(10);
   const [approvalTotalCount, setApprovalTotalCount] = useState(0);
 
-   // ✅ CSV helpers
+  // ✅ CSV helpers
   const csvEscape = (v) => {
     if (v === null || v === undefined) return "";
     const s = String(v);
@@ -51,6 +55,37 @@ const Staff = () => {
     a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+  const handleDateExport = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Please select both dates");
+      return;
+    }
+
+    try {
+      const response = await exportStaffWithDate(startDate, endDate);
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "staff_export.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setShowExportModal(false);
+      setStartDate("");
+      setEndDate("");
+
+      toast.success("Export successful");
+    } catch (error) {
+      console.error(error);
+      toast.error("Export failed");
+    }
   };
 
   // ✅ Export ALL staff data (fetch all pages from API)
@@ -71,7 +106,8 @@ const Staff = () => {
       if (firstData.total_pages) {
         totalPagesFromApi = firstData.total_pages;
       } else if (firstData.total_count) {
-        totalPagesFromApi = Math.ceil(firstData.total_count / EXPORT_PER_PAGE) || 1;
+        totalPagesFromApi =
+          Math.ceil(firstData.total_count / EXPORT_PER_PAGE) || 1;
       }
 
       // fetch remaining pages
@@ -208,7 +244,6 @@ const Staff = () => {
     }
   };
 
-  
   useEffect(() => {
     if (page === "approval") {
       const timer = setTimeout(() => {
@@ -400,98 +435,169 @@ const Staff = () => {
     },
   ];
   return (
-    <section className="flex">
-      <Navbar />
-      <div className="w-full flex mx-3 flex-col overflow-hidden">
-        <Passes />
-        <div className="flex w-full m-2">
-          <div className="flex w-full md:flex-row flex-col space-x-4 border-b border-gray-400">
-            <h2
-              className={`p-2 px-4 ${
-                page === "all"
-                  ? "text-blue-500 font-medium  shadow-custom-all-sides"
-                  : "text-black"
-              } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
-              onClick={() => setPage("all")}
-            >
-              All
-            </h2>
-            <h2
-              className={`p-2 ${
-                page === "approval"
-                  ? "text-blue-500 font-medium shadow-custom-all-sides"
-                  : "text-black"
-              } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
-              onClick={() => setPage("approval")}
-            >
-              Approvals
-            </h2>
+    <>
+      <section className="flex">
+        <Navbar />
+        <div className="w-full flex mx-3 flex-col overflow-hidden">
+          <Passes />
+
+          <div className="flex w-full m-2">
+            <div className="flex w-full md:flex-row flex-col space-x-4 border-b border-gray-400">
+              <h2
+                className={`p-2 px-4 ${
+                  page === "all"
+                    ? "text-blue-500 font-medium shadow-custom-all-sides"
+                    : "text-black"
+                } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                onClick={() => setPage("all")}
+              >
+                All
+              </h2>
+              <h2
+                className={`p-2 ${
+                  page === "approval"
+                    ? "text-blue-500 font-medium shadow-custom-all-sides"
+                    : "text-black"
+                } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                onClick={() => setPage("approval")}
+              >
+                Approvals
+              </h2>
+            </div>
+          </div>
+
+          {page === "all" && (
+            <div className="flex md:flex-row flex-col gap-5 justify-between my-2">
+              <input
+                type="text"
+                value={searchText}
+                onChange={handleSearch}
+                className="border border-gray-300 rounded-md w-full px-2 placeholder:text-sm"
+                placeholder="Search by name, unit, mobile"
+              />
+              <span className="flex gap-4">
+                <button
+                  onClick={() => setShowExportModal(true)}
+                  className="border-2 border-blue-600 text-blue-600 font-semibold px-4 rounded-md hover:bg-blue-700 hover:text-white transition-all"
+                >
+                  Export
+                </button>
+
+                <Link
+                  to={"/admin/passes/add-staff"}
+                  style={{ background: "rgb(3 19 37)" }}
+                  className="border-2 font-semibold py-2.5 px-3 rounded-md text-white flex items-center gap-2"
+                >
+                  <PiPlusCircle size={20} />
+                  Add
+                </Link>
+              </span>
+            </div>
+          )}
+
+          {page === "all" && (
+            <Table
+              columns={columns}
+              data={filteredStaff}
+              pagination
+              paginationServer
+              paginationPerPage={rowsPerPage}
+              paginationTotalRows={totalCount}
+              currentPage={currentPage}
+              onChangePage={setCurrentPage}
+              onChangeRowsPerPage={(newPerPage) => {
+                setRowsPerPage(newPerPage);
+                setCurrentPage(1);
+              }}
+            />
+          )}
+
+          {page === "approval" && (
+            <Table
+              columns={approvalColumn}
+              data={FilteredApproval}
+              pagination
+              paginationPerPage={approvalRowsPerPage}
+              paginationTotalRows={approvalTotalCount}
+              currentPage={approvalCurrentPage}
+              onChangePage={setApprovalCurrentPage}
+              onChangeRowsPerPage={(newPerPage) => {
+                setApprovalRowsPerPage(newPerPage);
+                setApprovalCurrentPage(1);
+              }}
+            />
+          )}
+        </div>
+      </section>
+
+      {/* ✅ Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[420px] shadow-xl animate-fadeIn">
+            <div className="flex justify-between gap-2">
+              {/* Header */}
+              <h2 className="text-xl font-semibold mb-5 text-left ">
+                Export Staff Data
+              </h2>
+              {/* Close Icon */}
+              <button
+                onClick={() => setShowExportModal(false)}
+                className=" text-gray-900 text-2xl mb-6"
+              >
+                <IoClose />
+              </button>
+            </div>
+
+            {/* Date Section */}
+            <div className="space-y-4">
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">From Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">To Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="mt-6 space-y-3">
+              <button
+                onClick={handleDateExport}
+                className="bg-blue-600 hover:bg-blue-700 transition-all text-white font-semibold px-4 py-2 rounded-md w-full"
+              >
+                Export by Date
+              </button>
+
+              <button
+                onClick={exportStaffToCSVAll}
+                className="bg-green-600 hover:bg-green-700 transition-all text-white font-semibold px-4 py-2 rounded-md w-full"
+              >
+                Export All to CSV
+              </button>
+
+              {/* <button
+                onClick={() => setShowExportModal(false)}
+                className="bg-gray-400 hover:bg-gray-500 transition-all text-white font-semibold px-4 py-2 rounded-md w-full"
+              >
+                Cancel
+              </button> */}
+            </div>
           </div>
         </div>
-
-        {page === "all" && (
-          <div className="flex md:flex-row flex-col gap-5 justify-between my-2">
-            <input
-              type="text"
-              value={searchText}
-              onChange={handleSearch}
-              className="border border-gray-300 rounded-md w-full px-2 placeholder:text-sm"
-              placeholder="Search by name, unit, mobile"
-            />
-            <span className="flex gap-4">
-                <button
-              onClick={exportStaffToCSVAll}
-              className="border-2 border-blue-600 text-blue-600 font-semibold transition-all px-4 rounded-md hover:bg-blue-700 cursor-pointer text-center flex items-center gap-2 justify-center hover:text-white"
-            >
-              Export
-            </button>
-              <Link
-                to={"/admin/passes/add-staff"}
-                style={{ background: "rgb(3 19 37)" }}
-                className="border-2 font-semibold transition-all py-2.5 px-3 rounded-md text-white cursor-pointer text-center flex items-center gap-2 justify-center"
-              >
-                <PiPlusCircle size={20} />
-                Add
-              </Link>
-            </span>
-          </div>
-        )}
-
-        {page === "all" && (
-          <Table 
-            columns={columns} 
-            data={filteredStaff}
-            pagination={true}
-            paginationServer={true}
-            paginationPerPage={rowsPerPage}
-            paginationTotalRows={totalCount}
-            currentPage={currentPage}
-            onChangePage={setCurrentPage}
-            onChangeRowsPerPage={(newPerPage) => {
-              setRowsPerPage(newPerPage);
-              setCurrentPage(1);
-            }}
-          />
-        )}
-
-        {page === "approval" && (
-          <Table 
-            columns={approvalColumn} 
-            data={FilteredApproval}
-            pagination={true}
-            paginationServer={false}
-            paginationPerPage={approvalRowsPerPage}
-            paginationTotalRows={approvalTotalCount}
-            currentPage={approvalCurrentPage}
-            onChangePage={setApprovalCurrentPage}
-            onChangeRowsPerPage={(newPerPage) => {
-              setApprovalRowsPerPage(newPerPage);
-              setApprovalCurrentPage(1);
-            }}
-          />
-        )}
-      </div>
-    </section>
+      )}
+    </>
   );
 };
 

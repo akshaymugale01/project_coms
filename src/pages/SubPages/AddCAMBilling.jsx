@@ -1190,7 +1190,13 @@ function AddCAMBilling() {
                 <ErrorMessage error={errors.notes} />
               </div>
             </div>
-            <div className="flex justify-center my-8 gap-2 ">
+            <div className="flex justify-end my-8 gap-2 ">
+                 <button
+                onClick={() => navigate("/admin/cam-billing")}
+                className="bg-gray-300 text-black p-2 px-4 rounded-md font-medium"
+              >
+                Cancel
+              </button>
               <button
                 onClick={handleSubmit}
                 style={{ background: "rgb(3 19 36)" }}

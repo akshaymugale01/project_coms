@@ -296,6 +296,22 @@ function CAMBilling() {
     }
   };
 
+    const handleReset = () => {
+    setFormData({
+      block: "",
+      floor_name: "",
+      flat: "",
+      status: "",
+      dueDate: "",
+    });
+
+    setBillingPeriod([null, null]);
+    setFloors([]);
+    setUnits([]);
+    setSearchText("");
+    setFilteredData(camBilling); // restore original data
+  };
+
   return (
     <section className="flex">
       <Navbar />
@@ -441,11 +457,7 @@ function CAMBilling() {
             </button>
             <button
               className="bg-red-400 p-1 px-4 text-white rounded-md"
-              onClick={() => {
-                fetchCamBilling();
-                setFilter(!filter);
-              }}
-            >
+              onClick={handleReset}>
               Reset
             </button>
           </div>

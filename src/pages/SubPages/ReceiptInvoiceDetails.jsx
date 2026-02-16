@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
+import Navbar from "../../components/Navbar";
 import { useSelector } from "react-redux";
+import Table from "../../components/table/Table";
 import { FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import {
@@ -10,8 +12,6 @@ import {
 } from "../../api";
 import { toWords } from "number-to-words";
 import toast from "react-hot-toast";
-import Table from "../../components/table/Table";
-import Navbar from "../../components/Navbar";
 function ReceiptInvoiceDetails() {
   const themeColor = useSelector((state) => state.theme.color);
   const [receiptInvoice, setReceiptInvoice] = useState({});
@@ -97,7 +97,6 @@ function ReceiptInvoiceDetails() {
       </div>
       <div className="w-full flex  flex-col overflow-hidden">
         <h2
-          style={{ background: "rgb(3 19 37)" }}
           className="text-center text-xl font-bold my-5 p-2 bg-black rounded-full text-white mx-10"
         >
           Invoice Receipt Details
@@ -107,8 +106,7 @@ function ReceiptInvoiceDetails() {
             <div className="md:flex grid grid-cols-1 sm:flex-row flex-col gap-2">
               <button
                 onClick={handleDownload}
-                className="font-semibold text-white px-4 p-1 flex gap-2 items-center justify-center rounded-md"
-                style={{ background: "rgb(3 19 37)" }}
+                className="font-semibold text-white bg-black px-4 p-1 flex gap-2 items-center justify-center rounded-md"
               >
                 <FaDownload />
                 Download Receipt

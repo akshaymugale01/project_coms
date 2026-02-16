@@ -335,7 +335,13 @@ function AddReceiptInvoiceCamBilling() {
               </div>
             </div>
 
-            <div className="flex justify-center my-5">
+            <div className="flex justify-end my-5 gap-3">
+               <button
+                onClick={() => navigate("/cam_bill/reciept-invoice")}
+                className="p-1 px-4 border-2 rounded-md text-black font-medium bg-gray-300"
+              >
+                Cancel
+              </button>
               <button
                 onClick={handleSubmit}
                 className="p-1 px-4 border-2 rounded-md text-white font-medium"
