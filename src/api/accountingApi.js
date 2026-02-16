@@ -80,6 +80,7 @@ export const getInvoicesByUnit = (unitId) => API.get(`/accounting_invoices/by_un
 export const findInvoiceByNumber = (invoiceNumber) =>
     API.get("/accounting_invoices/find_by_number.json", { params: { invoice_number: invoiceNumber } });
 
+
 // Accounting Payments
 export const getAccountingPayments = () => API.get("/accounting_payments.json");
 export const getAccountingPayment = (id) => API.get(`/accounting_payments/${id}.json`);
