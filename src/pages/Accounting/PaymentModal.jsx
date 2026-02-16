@@ -276,14 +276,18 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
     notes: "",
   });
 
-  // -----------------------------
-  // LOAD INVOICES + ACCOUNTS
-  // -----------------------------
+useEffect(()=>{
+  fetchInvoices();
+},[]);
+
+// Edit Payment
+
   useEffect(() => {
     if (payment) {
       setFormData({
         payment_date: payment.payment_date?.split("T")[0] || "",
-        accounting_invoice_id: payment.accounting_invoice_id?.toString() || "",
+        accounting_invoice_id:
+          payment.accounting_invoice?.id?.toString() || "",
         account_id: payment.account_id || "",
         amount: payment.amount || "",
         payment_mode: payment.payment_mode || "cash",
@@ -294,6 +298,8 @@ const PaymentModal = ({ payment, onClose, onSave }) => {
       });
     }
   }, [payment]);
+
+
   useEffect(() => {
     if (!payment && formData.accounting_invoice_id && invoices.length > 0) {
       const selectedInvoice = invoices.find(

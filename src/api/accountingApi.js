@@ -83,6 +83,7 @@ export const findInvoiceByNumber = (invoiceNumber) =>
 // Accounting Payments
 export const getAccountingPayments = () => API.get("/accounting_payments.json");
 export const getAccountingPayment = (id) => API.get(`/accounting_payments/${id}.json`);
+export const getAccountingPaymentById = (id) => API.get(`/accounting_payments/${id}.json`);
 export const createAccountingPayment = (data) => API.post("/accounting_payments.json", data);
 export const updateAccountingPayment = (id, data) => API.put(`/accounting_payments/${id}.json`, data);
 export const deleteAccountingPayment = (id) => API.delete(`/accounting_payments/${id}.json`);
