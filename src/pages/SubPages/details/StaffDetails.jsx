@@ -104,11 +104,11 @@ const visitorLogColumn = [
     selector: (row) => row.staff_work_type,
     sortable: true,
   },
-  {
-    name: "Staff Type",
-    selector: (row) => row.attendance_of_type,
-    sortable: true,
-  },
+  // {
+  //   name: "Staff Type",
+  //   selector: (row) => row.attendance_of_type,
+  //   sortable: true,
+  // },
   {
     name: "Check In",
     selector: (row) =>
@@ -120,7 +120,7 @@ const visitorLogColumn = [
     selector: (row) =>
       row.punched_out_at
         ? dateTimeFormat(row.punched_out_at)
-        : "Still Working",
+        : "Not Checked Out Yet",
     sortable: true,
   },
 ];

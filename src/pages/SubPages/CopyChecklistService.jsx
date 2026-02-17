@@ -6,6 +6,8 @@ import {
   getAssignedTo,
   getChecklistDetails,
   getChecklistGroupReading,
+  getGenericGroupAssetChecklist,
+  getGenericSubGroupAssetChecklist,
   getHostList,
   getMasterChecklist,
   getSiteAsset,
@@ -20,13 +22,15 @@ import Select from "react-select";
 import Cron from "react-js-cron";
 import "react-js-cron/dist/styles.css";
 import { FaTrash } from "react-icons/fa";
+import { useParams } from "react-router-dom";
 
-const AddServicesChecklist = () => {
+const CopyChecklistService = () => {
   const categories = getItemInLocalStorage("categories");
   const [assignedUser, setAssignedUser] = useState([]);
   const [catid, setcatid] = useState("");
   const [assignid, setassignid] = useState("");
   const today = new Date().toISOString().split("T")[0];
+  const { id } = useParams();
   const toDay = new Date();
   const year = toDay.getFullYear();
   const [hosts, setHosts] = useState([]);
@@ -49,8 +53,6 @@ const AddServicesChecklist = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [ticketType, setTicketType] = useState("Question");
   const [prioritylevel, setPrioritylevel] = useState("");
-  const [graceperiodvalue, setGraceperiodvalue] = useState("");
-  const [graceperiodunit, setGraceperiodunit] = useState("");
 
   // Handle radio button change
   const handleTicketTypeChange = (event) => {
@@ -123,60 +125,6 @@ const AddServicesChecklist = () => {
       },
     ]);
   };
-  useEffect(() => {
-    const fetchServicesChecklistDetails = async () => {
-      if (!masterid) return; // ✅ Prevent empty API call
-
-      try {
-        const checklistDetailsResponse = await getChecklistDetails(masterid);
-        const data = checklistDetailsResponse?.data;
-
-        if (!data) return;
-
-        setName(data.name || "");
-        setFrequency(data.frequency || "");
-        setStartDate(data.start_date || formattedDate);
-        setEndDate(data.end_date || formattedDate);
-
-        if (Array.isArray(data.groups)) {
-          setSections(
-            data.groups.map((group) => ({
-              group: group.group_id || "",
-              questions:
-                group.questions?.map((q) => ({
-                  name: q.name || "",
-                  type: q.qtype || "",
-                  options: [
-                    q.option1 || "",
-                    q.option2 || "",
-                    q.option3 || "",
-                    q.option4 || "",
-                  ],
-                  value_types: [
-                    q.value_type1 || "",
-                    q.value_type2 || "",
-                    q.value_type3 || "",
-                    q.value_type4 || "",
-                  ],
-                  question_mandatory: q.question_mandatory || false,
-                  reading: q.reading || false,
-                  showHelpText: q.help_text_enbled || false,
-                  help_text: q.help_text || "",
-                  rating: q.rating || false,
-                  weightage: q.weightage || "",
-                  image_for_question: [],
-                })) || [],
-            })),
-          );
-        }
-      } catch (error) {
-        console.error("Checklist Details Error:", error);
-        toast.error("Failed to load template details");
-      }
-    };
-
-    fetchServicesChecklistDetails();
-  }, [masterid]);
 
   const [sections, setSections] = useState([
     {
@@ -267,42 +215,34 @@ const AddServicesChecklist = () => {
     value,
     optionIndex = null,
   ) => {
-    const updatedSections = [...sections]; // Shallow copy of sections
-    const updatedQuestions = [...updatedSections[sectionIndex].questions]; // Shallow copy of questions in that section
-
-    // Deep copy the specific question being modified
-    const updatedQuestion = { ...updatedQuestions[questionIndex] };
-
+    const updatedSections = [...sections];
+    // updatedSections[sectionIndex].questions[questionIndex][field] = value;
     if (field === "name" || field === "type") {
-      updatedQuestion[field] = value;
+      updatedSections[sectionIndex].questions[questionIndex][field] = value;
     } else if (field === "option") {
-      const updatedOptions = [...updatedQuestion.options];
-      updatedOptions[optionIndex] = value;
-      updatedQuestion.options = updatedOptions;
+      updatedSections[sectionIndex].questions[questionIndex].options[
+        optionIndex
+      ] = value;
     } else if (field === "value_type") {
-      const updatedValueTypes = [...updatedQuestion.value_types];
-      updatedValueTypes[optionIndex] = value;
-      updatedQuestion.value_types = updatedValueTypes;
+      updatedSections[sectionIndex].questions[questionIndex].value_types[
+        optionIndex
+      ] = value;
     } else if (
       field === "question_mandatory" ||
       field === "reading" ||
       field === "showHelpText" ||
       field === "rating"
     ) {
-      updatedQuestion[field] = value;
+      updatedSections[sectionIndex].questions[questionIndex][field] = value;
     } else if (field === "help_text") {
-      updatedQuestion.help_text = value;
+      updatedSections[sectionIndex].questions[questionIndex].help_text = value;
     } else if (field === "image_for_question") {
-      updatedQuestion.image_for_question = [...value]; // Ensure it's a new array
+      updatedSections[sectionIndex].questions[
+        questionIndex
+      ].image_for_question = value;
     } else if (field === "weightage") {
-      updatedQuestion.weightage = value;
+      updatedSections[sectionIndex].questions[questionIndex].weightage = value;
     }
-
-    // Update the questions array with the modified question
-    updatedQuestions[questionIndex] = updatedQuestion;
-    updatedSections[sectionIndex].questions = updatedQuestions;
-
-    // Update the sections state
     setSections(updatedSections);
   };
 
@@ -311,6 +251,105 @@ const AddServicesChecklist = () => {
   const handleCronChange = (newCron) => {
     setCronExpression(newCron);
   };
+  useEffect(() => {
+    const fetchServicesChecklistDetails = async () => {
+      const checklistDetailsResponse = await getChecklistDetails(masterid);
+      const data = checklistDetailsResponse.data;
+      console.log(data);
+      setName(data.name);
+      setFrequency(data.frequency);
+      setStartDate(data.start_date);
+      setEndDate(data.end_date);
+      setWeightage(data.weightage_enabled);
+      setSections(
+        data.groups.map((group) => ({
+          group: group.group_id,
+          questions: group.questions.map((q) => ({
+            name: q.name,
+            type: q.qtype,
+            options: [q.option1, q.option2, q.option3, q.option4],
+            value_types: [
+              q.value_type1,
+              q.value_type2,
+              q.value_type3,
+              q.value_type4,
+            ],
+            question_mandatory: q.question_mandatory,
+            reading: q.reading,
+            showHelpText: q.help_text_enbled,
+            help_text: q.help_text,
+            rating: q.rating,
+            weightage: q.weightage,
+            image_for_question: [], // Assuming you need an empty array here
+          })),
+        })),
+      );
+    };
+    fetchServicesChecklistDetails();
+  }, [masterid]);
+  useEffect(() => {
+    const fetchServicesChecklistDetails = async () => {
+      const checklistDetailsResponse = await getChecklistDetails(id);
+      const data = checklistDetailsResponse.data;
+      console.log(data);
+      setName(data.name);
+      setFrequency(data.frequency);
+      setStartDate(data.start_date);
+      setEndDate(data.end_date);
+      setsupplierid(data.supplier_id);
+      setPrioritylevel(data.priority_level);
+      setLockOverdueTask(data.lock_overdue);
+      setCronExpression(data?.checklist_cron?.expression || "0 0 * * *");
+      setCreateTicket(data.ticket_enabled);
+      setWeightage(data.weightage_enabled);
+      setSelectedOptionssupervisior(
+        data.supervisors?.map((sup) => ({
+          value: sup,
+          label: sup,
+        })) || [],
+      );
+      setSections(
+        data.groups.map((group) => ({
+          group: group.group_id,
+          questions: group.questions.map((q) => ({
+            name: q.name,
+            type: q.qtype,
+            options: [q.option1, q.option2, q.option3, q.option4],
+            value_types: [
+              q.value_type1,
+              q.value_type2,
+              q.value_type3,
+              q.value_type4,
+            ],
+            question_mandatory: q.question_mandatory,
+            reading: q.reading,
+            showHelpText: q.help_text_enbled,
+            help_text: q.help_text,
+            rating: q.rating,
+            weightage: q.weightage,
+            image_for_question: [], // Assuming you need an empty array here
+          })),
+        })),
+      );
+      const totalMinutes = data.grace_period;
+      const days = Math.floor(totalMinutes / (24 * 60));
+      const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+      const minutes = totalMinutes % 60;
+
+      setSubmitDays(days);
+      setSubmitHours(hours);
+      setSubmitMinutes(minutes);
+      const totalExtensionMinutes = data.grace_period_unit;
+      const extDays = Math.floor(totalExtensionMinutes / (24 * 60));
+      const extHours = Math.floor((totalExtensionMinutes % (24 * 60)) / 60);
+      const extMinutes = totalExtensionMinutes % 60;
+
+      setExtensionDays(extDays);
+      setExtensionHours(extHours);
+      setExtensionMinutes(extMinutes);
+    };
+    fetchServicesChecklistDetails();
+  }, [id]);
 
   const siteId = getItemInLocalStorage("SITEID");
   const userId = getItemInLocalStorage("UserId");
@@ -345,13 +384,11 @@ const AddServicesChecklist = () => {
     formData.append("checklist[lock_overdue]", lockOverdueTask === "true");
     formData.append("checklist[ctype]", "soft_service");
     formData.append("checklist[ticket_enabled]", createTicket);
+    formData.append("checklist[priority_level]", prioritylevel);
+
     formData.append("checklist[ticket_level_type]", ticketType);
     formData.append("checklist[category_id]", catid);
     formData.append("assigned_to", assignid);
-    formData.append("checklist[priority_level]", prioritylevel);
-    // formData.append("checklist[grace_period_value]",graceperiodvalue);
-    // formData.append("checklist[grace_period_unit]",graceperiodunit);
-
     // Add supervisor IDs
     selectedOptionssupervisior.forEach((option) => {
       formData.append(`checklist[supervisior_id][]`, option.value);
@@ -426,7 +463,7 @@ const AddServicesChecklist = () => {
         }));
         console.log(usersResp);
         setHosts(usersResp.data.hosts);
-        // setOptionssupervisior(supervisors);
+        setOptionssupervisior(supervisors);
         console.log(usersResp);
       } catch (error) {
         console.log(error);
@@ -439,27 +476,17 @@ const AddServicesChecklist = () => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const supplierResp = await getVendors();
-
-        const formattedSuppliers = supplierResp.data.map((vendor) => ({
-          id: vendor.id, // ✅ Always send vendor id
-          label:
-            vendor.company_name?.trim() ||
-            vendor.vendor_name?.trim() ||
-            vendor.supplier?.name ||
-            "Unnamed Supplier",
-        }));
-
-        setSuppliers(formattedSuppliers);
+        const supplierResp = await getVendors(); // Call API to get suppliers
+        console.log(supplierResp);
+        setSuppliers(supplierResp.data); // Set the fetched suppliers in state
       } catch (error) {
         console.error("Error fetching suppliers:", error);
-        toast.error("Failed to load suppliers");
+        // toast.error("Failed to load suppliers");
       }
     };
 
-    fetchSuppliers();
+    fetchSuppliers(); // Execute the function to fetch suppliers
   }, []);
-
   useEffect(() => {
     const fetchMasters = async () => {
       try {
@@ -473,7 +500,7 @@ const AddServicesChecklist = () => {
         setMasters(mastershow);
       } catch (error) {
         console.error("Error fetching suppliers:", error);
-        toast.error("Failed to load suppliers");
+        // toast.error("Failed to load suppliers");
       }
     };
 
@@ -523,10 +550,9 @@ const AddServicesChecklist = () => {
     <section>
       <div className="m-2">
         <h2
-          style={{ background: themeColor }}
-          className="text-center text-xl font-bold p-2  rounded-full text-white"
+          className="text-center text-xl font-bold p-2  rounded-full text-white bg-gray-800"
         >
-          Add Checklist
+          Copy Checklist
         </h2>
         <div className="md:mx-20 my-5 mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg sm:shadow-xl">
           <div className="py-4">
@@ -572,7 +598,7 @@ const AddServicesChecklist = () => {
                 <div
                   onClick={() => handleToggle("weightage")}
                   className={`w-10 h-4 flex items-center bg-gray-300 rounded-full  cursor-pointer ${
-                    weightage ? "bg-green-500" : ""
+                    weightage ? "bg-red-500" : ""
                   }`}
                 >
                   <div
@@ -756,29 +782,6 @@ const AddServicesChecklist = () => {
                   <option value="Low">Low</option>
                 </select>
               </div>
-              {/* <div className="flex flex-col">
-                  <label htmlFor="grace_period_value" className="font-semibold">Grace Period Value</label>
-                  <input
-                    name="grace_period_value"
-                    id="grace_period_value"
-                    type="text"
-                    value={graceperiodvalue}
-                    onChange={(e) => setGraceperiodvalue(e.target.value)}
-                    className="border p-1 px-4 border-gray-500 rounded-md"
-                    placeholder="Enter Grace Period Value"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label htmlFor="grace_period_unit" className="font-semibold">Grace Period Unit</label>
-                  <input
-                     name="grace_period_unit"
-                     id="grace_period_unit"
-                     type="text"
-                     value={graceperiodunit}
-                     onChange={(e) => setGraceperiodunit(e.target.value)}
-                    className="border p-1 px-4 border-gray-500 rounded-md"
-                    placeholder="Enter Grace Period Unit" />
-                </div> */}
             </div>
             <div>
               <div className=" my-4  bg-white ">
@@ -797,7 +800,7 @@ const AddServicesChecklist = () => {
                         <label className="font-semibold">Group</label>
                         <select
                           value={section.group}
-                          className="p-1 px-4 border w-full border-gray-500 rounded-md"
+                          className="p-1 px-4 border w-64 border-gray-500 rounded-md"
                           onChange={(e) =>
                             handleSectionChange(
                               sectionIndex,
@@ -816,10 +819,10 @@ const AddServicesChecklist = () => {
                       </div>
                       <div>
                         <button
-                          className="p-1 border-2 border-red-500 text-white hover:bg-white hover:text-red-500 bg-red-500 px-4 transition-all duration-300 rounded-md "
+                          className="p-1 border-2 border-red-500 text-white hover:bg-white hover:text-red-500 bg-red-700 px-4 transition-all duration-300 rounded-md "
                           onClick={() => removeSection(sectionIndex)}
                         >
-                          <IoClose />
+                          <FaTrash />
                         </button>
                       </div>
                     </div>
@@ -832,7 +835,7 @@ const AddServicesChecklist = () => {
                             type="text"
                             placeholder="Enter Question Name"
                             value={question.name}
-                            className="p-1 px-4 border w-64 border-gray-500 rounded-md"
+                            className="p-1 px-4 border w-full border-gray-500 rounded-md"
                             onChange={(e) =>
                               handleQuestionChange(
                                 sectionIndex,
@@ -1194,24 +1197,24 @@ const AddServicesChecklist = () => {
                   <label className="font-semibold">
                     Allowed time to submit
                   </label>
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     <input
                       type="number"
-                      className="border p-1 px-2 border-gray-500 rounded-md"
+                      className="border p-1 px-2 border-gray-500 w-44 rounded-md"
                       placeholder="Enter Days"
                       value={submitDays}
                       onChange={(e) => setSubmitDays(e.target.value)}
                     />
                     <input
                       type="number"
-                      className="border p-1 px-2 border-gray-500  rounded-md"
+                      className="border p-1 px-2 border-gray-500 w-44 rounded-md"
                       placeholder="Enter Hours"
                       value={submitHours}
                       onChange={(e) => setSubmitHours(e.target.value)}
                     />
                     <input
                       type="number"
-                      className="border p-1 px-2 border-gray-500  rounded-md"
+                      className="border p-1 px-2 border-gray-500 w-44 rounded-md"
                       placeholder="Enter Minutes"
                       value={submitMinutes}
                       onChange={(e) => setSubmitMinutes(e.target.value)}
@@ -1225,21 +1228,21 @@ const AddServicesChecklist = () => {
                   <div className="flex gap-2">
                     <input
                       type="number"
-                      className="border p-1 px-2 border-gray-500  rounded-md"
+                      className="border p-1 px-2 border-gray-500 w-44 rounded-md"
                       placeholder="Enter Days"
                       value={extensionDays}
                       onChange={(e) => setExtensionDays(e.target.value)}
                     />
                     <input
                       type="number"
-                      className="border p-1 px-2 border-gray-500  rounded-md"
+                      className="border p-1 px-2 border-gray-500 w-44 rounded-md"
                       placeholder="Enter Hours"
                       value={extensionHours}
                       onChange={(e) => setExtensionHours(e.target.value)}
                     />
                     <input
                       type="number"
-                      className="border p-1 px-2 border-gray-500  rounded-md"
+                      className="border p-1 px-2 border-gray-500 w-44 rounded-md"
                       placeholder="Enter Minutes"
                       value={extensionMinutes}
                       onChange={(e) => setExtensionMinutes(e.target.value)}
@@ -1262,7 +1265,7 @@ const AddServicesChecklist = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4  ">
+              <div className="flex flex-col gap-4 ">
                 <div>
                   <label className="font-semibold">Supervisors</label>
                   <Select
@@ -1285,7 +1288,7 @@ const AddServicesChecklist = () => {
                     <option value="">Select Supplier</option>
                     {suppliers.map((supplier) => (
                       <option value={supplier.id} key={supplier.id}>
-                        {supplier.label}
+                        {supplier.company_name}
                       </option>
                     ))}
                   </select>
@@ -1298,7 +1301,7 @@ const AddServicesChecklist = () => {
             <div className="my-2 border-2 border-dashed flex items-center p-2 rounded-md border-gray-300">
               <Cron value={cronExpression} setValue={handleCronChange} />
             </div>
-            <div className="flex justify-end gap-4 mt-4">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => navigate("/services/checklist")}
                 className="bg-gray-300 text-black p-2 px-4 rounded-md font-medium"
@@ -1319,4 +1322,4 @@ const AddServicesChecklist = () => {
   );
 };
 
-export default AddServicesChecklist;
+export default CopyChecklistService;

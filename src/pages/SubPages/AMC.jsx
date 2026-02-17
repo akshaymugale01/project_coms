@@ -11,15 +11,19 @@ import AssetNav from "../../components/navbars/AssetNav";
 import { DNA } from "react-loader-spinner";
 import * as XLSX from "xlsx";
 import { useSelector } from "react-redux";
+
 const AMC = () => {
   const [searchText, setSearchText] = useState("");
   const [amc, setAmc] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-const themeColor = "rgb(3 19 37)";
+  const themeColor = useSelector((state) => state.theme.color);
+
   useEffect(() => {
     const fetchAmc = async () => {
       const AMCResponse = await getAMC();
-      const sortedAmc = AMCResponse.data.sort((a,b)=> new Date(b.created_at)- new Date(a.created_at))
+      const sortedAmc = AMCResponse.data?.asset_amcs?.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
       setFilteredData(sortedAmc);
       setAmc(sortedAmc);
       console.log(AMCResponse);
@@ -42,9 +46,10 @@ const themeColor = "rgb(3 19 37)";
       setFilteredData(filteredResults);
     }
   };
+
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString(); // Adjust the format as needed
+    return date.toLocaleString();
   };
 
   const AMCColumn = [
@@ -58,54 +63,37 @@ const themeColor = "rgb(3 19 37)";
           <Link to={`/assets/edit-amc/${row.id}`}>
             <BiEdit size={15} />
           </Link>
-          
         </div>
       ),
     },
     { name: "Asset Name", selector: (row) => row.asset_name },
-
     { name: "Vendor", selector: (row) => row.vendor_name },
-
     { name: "Start Date", selector: (row) => row.start_date },
     { name: "End Date", selector: (row) => row.end_date },
     { name: "Frequency", selector: (row) => row.frequency },
-    
     { name: "First Service", selector: (row) => row.first_service },
     { name: "Status", selector: (row) => row.status },
     { name: "Created On", selector: (row) => dateFormat(row.created_at) },
   ];
+
   const defaultImage = { index: 0, src: "" };
   let selectedImageSrc = defaultImage.src;
   let selectedImageIndex = defaultImage.index;
   const [selectedImage, setSelectedImage] = useState(defaultImage);
   const [selectedIndex, setSelectedIndex] = useState(null);
+
   const Get_Background = async () => {
     try {
-      // const params = {
-      //   user_id: user_id,
-      // };
       const user_id = getItemInLocalStorage("VIBEUSERID");
       console.log(user_id);
       const data = await getVibeBackground(user_id);
 
       if (data.success) {
-        console.log("sucess");
-
-        console.log(data.data);
         selectedImageSrc = API_URL + data.data.image;
-
         selectedImageIndex = data.data.index;
 
-        // Now, you can use selectedImageSrc and selectedImageIndex as needed
-        console.log("Received response:", data);
-
-        // For example, update state or perform any other actions
         setSelectedImage(selectedImageSrc);
         setSelectedIndex(selectedImageIndex);
-        console.log("Received selectedImageSrc:", selectedImageSrc);
-        console.log("Received selectedImageIndex:", selectedImageIndex);
-        console.log(selectedImage);
-        // dispatch(setBackground(selectedImageSrc));
       } else {
         console.log("Something went wrong");
       }
@@ -113,8 +101,8 @@ const themeColor = "rgb(3 19 37)";
       console.error("Error:", error);
     }
   };
+
   useEffect(() => {
-    // Call the function to get the background image when the component mounts
     Get_Background();
   }, []);
 
@@ -143,7 +131,8 @@ const themeColor = "rgb(3 19 37)";
       <Navbar />
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <AssetNav />
-        <div className="flex md:flex-row flex-col justify-between items-center my-2 gap-2  ">
+
+        <div className="flex md:flex-row flex-col justify-between items-center my-2 gap-2">
           <input
             type="text"
             placeholder="Search By Asset Name, Vendor Name"
@@ -151,14 +140,24 @@ const themeColor = "rgb(3 19 37)";
             value={searchText}
             onChange={handleSearch}
           />
+
           <div className="md:flex grid grid-cols-2 sm:flex-row my-2 flex-col gap-2">
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+              className="bg-gray-900 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
               onClick={exportToExcel}
-              style={{ background: themeColor }}
+              // style={{ background: themeColor }}
             >
               Export
             </button>
+
+            <Link
+              to="/assets/add-amc"
+              className="text-white bg-gray-900 font-medium py-2 px-4 rounded flex items-center justify-center gap-2"
+              // style={{ background: themeColor }}
+            >
+              <IoAddCircleOutline size={20} />
+              Add
+            </Link>
           </div>
         </div>
 

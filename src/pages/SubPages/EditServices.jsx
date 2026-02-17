@@ -327,13 +327,19 @@ const EditService = () => {
               fieldName={"attachments"}
               isMulti={true}
             />
-            <div className="flex my-5 justify-center">
+            <div className="flex my-5 justify-end gap-3">
+               <button
+              className="bg-gray-300 text-black p-2 px-4 rounded-md font-medium"
+              onClick={() => navigate("/services/soft-service")}
+            >
+              Cancel 
+            </button>
               <button
                 style={{ background: "rgb(3 19 37)" }}
                 className="bg-black text-white p-1 px-4 rounded-md font-medium"
                 onClick={handleEditService}
               >
-                Save & Show Details
+                Update
               </button>
             </div>
           </div>

@@ -787,6 +787,7 @@ import AddPets from "./pages/Setup/AddPets.jsx";
 import ViewPets from "./pages/Setup/ViewPets.jsx";
 import EditPets from "./pages/Setup/EditPets.jsx";
 import PetDetails from "./pages/Setup/PetDetails.jsx";
+import CopyChecklistService from "./pages/SubPages/CopyChecklistService.jsx";
 // import PetDetails from "./pages/Setup/PetDetails.jsx";
 
 // new admin hrms
@@ -2229,6 +2230,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+  <Route
+          path="/admin/copy-checklist/service/:id"
+          element={
+            <ProtectedAdminRoutes>
+              <CopyChecklistService />
+            </ProtectedAdminRoutes>
+          }
+        />
 
           {/*parking setup */}
           <Route

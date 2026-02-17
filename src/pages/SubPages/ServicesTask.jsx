@@ -244,7 +244,7 @@ const ServicesTask = () => {
             onClick={handleClearDateFilter}
             className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
           >
-            Clear
+            Reset
           </button>
 
           <button

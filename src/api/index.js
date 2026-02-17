@@ -2845,7 +2845,18 @@ export const deleteAssociationList = async (
       },
     }
   );
-
+  
+export const deleteServiceAssociation = async ({
+  checklist_id,
+  soft_service_id,
+}) =>
+  axiosInstance.delete("/activities/bulk_destroy.json", {
+    params: {
+      checklist_id,
+      soft_service_id: soft_service_id,
+      token: token,
+    },
+  });
 export const postServiceAssociation = async (data) =>
   axiosInstance.post(`/activities.json`, data, {
     params: {

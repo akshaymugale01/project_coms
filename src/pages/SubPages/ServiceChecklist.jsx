@@ -38,6 +38,7 @@ const ServiceChecklist = () => {
       name: "Name",
       selector: (row) => row.name,
       sortable: true,
+      width: "350px",
     },
 
     {
@@ -137,7 +138,7 @@ const ServiceChecklist = () => {
     link.click();
   };
 
-  const themeColor = "rgb(3 19 37)"
+  const themeColor = useSelector((state)=> state.theme.color)
   return (
     <section className="flex ">
       <Navbar />
