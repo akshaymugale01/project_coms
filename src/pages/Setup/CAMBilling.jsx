@@ -220,25 +220,46 @@ function CAMBilling() {
     !formData.block || !formData.floor_name || !units.length;
   const navigate = useNavigate();
 
-  const handleFilterData = async () => {
-    try {
-      const [startDate, endDate] = billingPeriod;
-      const resp = await gatCamBillFilter(
-        formData.block,
-        formData.floor_name,
-        formData.flat,
-        formData.status,
-        startDate,
-        endDate,
-        formData.dueDate
-      );
-      setFilteredData(resp.data?.cam_bills || []);
-      // navigate("/cam_bill/billing"); // Optional: keep URL in sync
-    } catch (error) {
-      console.error("Error filtering data:", error);
-      toast.error("Error filtering data");
+ const handleFilterData = async () => {
+  try {
+    const [startDate, endDate] = billingPeriod;
+
+    // ✅ Convert dates to YYYY-MM-DD format if selected
+    const formattedStart = startDate
+      ? new Date(startDate).toISOString().split("T")[0]
+      : "";
+
+    const formattedEnd = endDate
+      ? new Date(endDate).toISOString().split("T")[0]
+      : "";
+
+    const resp = await gatCamBillFilter(
+      formData.block || "",
+      formData.floor_name || "",
+      formData.flat || "",
+      formData.status || "",
+      formattedStart,
+      formattedEnd,
+      formData.dueDate || ""
+    );
+
+    const filteredList = Array.isArray(resp.data?.cam_bills)
+      ? resp.data.cam_bills
+      : [];
+
+    setFilteredData(filteredList);
+
+    if (filteredList.length === 0) {
+      toast("No records found");
     }
-  };
+
+  } catch (error) {
+    console.error("Error filtering data:", error);
+    toast.error("Error filtering data");
+  }
+};
+
+// console.log("Filtered Data:", filteredData); // Debugging log
 
   const importCamBillingData = async (file) => {
     try {
@@ -417,7 +438,7 @@ function CAMBilling() {
                 onChange={handleChange}
                 className="border p-1 px-4 border-gray-500 rounded-md"
               >
-                <option value="" selected>
+                <option value="">
                   Select Payment Status
                 </option>
                 <option value="paid">Paid</option>
@@ -469,6 +490,7 @@ function CAMBilling() {
           selectableRow={true}
           onSelectedRows={handleSelectedRows}
         />
+        
 
         {importModal && (
           <InvoiceImportModal
