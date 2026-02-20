@@ -50,55 +50,57 @@ const MonthlyExpenseSetup = () => {
   };
 
   const load = async () => {
-    setLoading(true);
-    try {
-      const [expenseRes, journalRes] = await Promise.all([
-        getMonthlyExpenses({ year, month }),
-        getJournalEntries()
-      ]);
-      
-      const data = expenseRes?.data?.data || expenseRes?.data || [];
-      const allJournals = journalRes?.data?.data || journalRes?.data || [];
-      
-      // Filter journal entries for the selected month/year
-      const monthNames = ["January", "February", "March", "April", "May", "June", 
-                          "July", "August", "September", "October", "November", "December"];
-      const filteredJournals = Array.isArray(allJournals) ? allJournals.filter(j => {
-        const expenseMonth = j.expense_month;
-        const expenseYear = parseInt(j.expense_year);
-        const targetMonth = monthNames.indexOf(expenseMonth) + 1;
-        return targetMonth === month && expenseYear === year;
-      }) : [];
-      
-      setJournalEntries(filteredJournals);
-      
-      // Extract custom categories from loaded data
-      if (Array.isArray(data) && data.length > 0) {
-        const customCats = data
-          .map(r => r.category)
-          .filter(cat => cat && !PREDEFINED_CATEGORIES.includes(cat))
-          .filter((cat, idx, arr) => arr.indexOf(cat) === idx); // unique
-        setCustomCategories(customCats);
-        setRows(data.map(r => ({
-          ...r,
-          isCustom: !PREDEFINED_CATEGORIES.includes(r.category)
-        })));
-      } else {
+      setLoading(true);
+      try {
+        const [expenseRes, journalRes] = await Promise.all([
+          getMonthlyExpenses({ year, month }),
+          getJournalEntries()
+        ]);
+        
+        const data = expenseRes?.data?.data || expenseRes?.data || [];
+        const allJournals = journalRes?.data?.data || journalRes?.data || [];
+        
+        // Filter journal entries for the selected month/year
+        const monthNames = ["January", "February", "March", "April", "May", "June", 
+                            "July", "August", "September", "October", "November", "December"];
+        const filteredJournals = Array.isArray(allJournals) ? allJournals.filter(j => {
+          const expenseMonth = j.expense_month;
+          const expenseYear = parseInt(j.expense_year);
+          const targetMonth = monthNames.indexOf(expenseMonth) + 1;
+          return targetMonth === month && expenseYear === year;
+        }) : [];
+        
+        setJournalEntries(filteredJournals);
+        
+        // Extract custom categories from loaded data
+        if (Array.isArray(data) && data.length > 0) {
+          const customCats = data
+            .map(r => r.category)
+            .filter(cat => cat && !PREDEFINED_CATEGORIES.includes(cat))
+            .filter((cat, idx, arr) => arr.indexOf(cat) === idx); // unique
+          setCustomCategories(customCats);
+          setRows(data.map(r => ({
+            ...r,
+            isCustom: !PREDEFINED_CATEGORIES.includes(r.category)
+          })));
+        } else {
+          setRows([defaultRow()]);
+        }
+        
+        // Fetch backend total
+        await fetchTotal(year, month);
+      } catch (e) {
+        console.error(e);
         setRows([defaultRow()]);
+        setJournalEntries([]);
+      } finally {
+        setLoading(false);
       }
-      
-      // Fetch backend total
-      await fetchTotal(year, month);
-    } catch (e) {
-      console.error(e);
-      setRows([defaultRow()]);
-      setJournalEntries([]);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  useEffect(() => { load(); }, [year, month]);
+  useEffect(() => {
+    load();
+  }, [year, month]);
 
   const handleChange = (idx, field, value) => {
     setRows((prev) => prev.map((r, i) => {
@@ -134,7 +136,7 @@ const MonthlyExpenseSetup = () => {
       });
       await Promise.all(ops);
       toast.success("Expenses saved");
-      await load();
+      load();
     } catch (e) {
       console.error(e);
       toast.error("Failed to save expenses");
@@ -187,7 +189,24 @@ const MonthlyExpenseSetup = () => {
         </div>
         <div>
           <label className="block text-sm text-gray-600 mb-1">Month</label>
-          <input type="number" min={1} max={12} value={month} onChange={(e) => setMonth(Number(e.target.value || 1))} className="w-full px-3 py-2 border rounded" />
+          <select 
+            value={month} 
+            onChange={(e) => setMonth(Number(e.target.value))} 
+            className="w-full px-3 py-2 border rounded"
+          >
+            <option value={1}>January</option>
+            <option value={2}>February</option>
+            <option value={3}>March</option>
+            <option value={4}>April</option>
+            <option value={5}>May</option>
+            <option value={6}>June</option>
+            <option value={7}>July</option>
+            <option value={8}>August</option>
+            <option value={9}>September</option>
+            <option value={10}>October</option>
+            <option value={11}>November</option>
+            <option value={12}>December</option>
+          </select>
         </div>
         <div className="md:col-span-2 flex items-end justify-end">
           <button onClick={saveAll} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save All</button>
