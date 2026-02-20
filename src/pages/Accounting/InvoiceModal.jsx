@@ -443,6 +443,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     customer_email: "",
     gst_no: "",
     customer_address: "",
+    user_id: "",
     unit_id: "",
     items: [
       { 
@@ -647,6 +648,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
         customer_email: invoice.customer_email || "",
         gst_no: invoice.gst_no || invoice.customer_gst_no || invoice.customer_gst_number || invoice.gst_number || "",
         customer_address: invoice.customer_address || "",
+        user_id: invoice.user_id ? String(invoice.user_id) : "",
         unit_id: resolvedInvoiceUnitId ? String(resolvedInvoiceUnitId) : "",
         items: (invoice.items || invoice.accounting_invoice_items || []).map((item, index) => ({
           id: item.id, // Include id for update operations
@@ -884,6 +886,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       if (selectedUser) {
         setFormData(prev => ({
           ...prev,
+          user_id: String(selectedUser.id),
           customer_name: selectedUser.name || selectedUser.full_name || "",
           customer_email: selectedUser.email || "",
           gst_no: selectedUser.gst_number || selectedUser.gst_no || "",
@@ -894,6 +897,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       // If "Select Customer" is chosen, clear the fields
       setFormData(prev => ({
         ...prev,
+        user_id: "",
         customer_name: "",
         customer_email: "",
         gst_no: "",
@@ -998,7 +1002,16 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     setShowDetails(false);
     setFloors([]);
     setUnits([]);
-    setFormData(prev => ({ ...prev, unit_no: "", unit_id: "" }));
+    setFormData(prev => ({
+      ...prev,
+      unit_no: "",
+      unit_id: "",
+      user_id: "",
+      customer_name: "",
+      customer_email: "",
+      gst_no: "",
+      customer_address: "",
+    }));
     
     if (buildingId) {
       await fetchFloors(buildingId);
@@ -1011,7 +1024,16 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     setSelectedUnit("");
     setShowDetails(false);
     setUnits([]);
-    setFormData(prev => ({ ...prev, unit_no: "", unit_id: "" }));
+    setFormData(prev => ({
+      ...prev,
+      unit_no: "",
+      unit_id: "",
+      user_id: "",
+      customer_name: "",
+      customer_email: "",
+      gst_no: "",
+      customer_address: "",
+    }));
     
     if (floorId) {
       await fetchUnits(floorId);
@@ -1027,14 +1049,32 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       if (unit) {
         setUnitDetails(unit);
         setShowDetails(true);
-        setFormData(prev => ({ ...prev, unit_no: unit.name || unitId, unit_id: unitId }));
+        setFormData(prev => ({
+          ...prev,
+          unit_no: unit.name || unitId,
+          unit_id: unitId,
+          user_id: "",
+          customer_name: "",
+          customer_email: "",
+          gst_no: "",
+          customer_address: "",
+        }));
         await fetchUsersByUnit(unitId);
       }
     } else {
       setShowDetails(false);
       setUnitDetails({});
       setUsers([]);
-      setFormData(prev => ({ ...prev, unit_no: "", unit_id: "", customer_name: "", customer_email: "", gst_no: "", customer_address: "" }));
+      setFormData(prev => ({
+        ...prev,
+        unit_no: "",
+        unit_id: "",
+        user_id: "",
+        customer_name: "",
+        customer_email: "",
+        gst_no: "",
+        customer_address: "",
+      }));
     }
   };
 
@@ -1252,6 +1292,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     const normalizedData = {
       ...formData,
       unit_id: resolvedUnitId ? String(resolvedUnitId) : "",
+      user_id: formData.user_id ? String(formData.user_id) : "",
       unit_no: formData.unit_no || unitName || selectedUnit || "",
     };
 
@@ -1507,6 +1548,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                       Select Customer {!selectedUnit && <span className="text-xs text-gray-500">(Select unit first)</span>}
                     </label>
                     <select
+                      value={formData.user_id || ""}
                       onChange={handleCustomerSelect}
                       disabled={!selectedUnit || loading || users.length === 0}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
