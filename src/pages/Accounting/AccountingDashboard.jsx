@@ -266,9 +266,16 @@ const AccountingDashboard = () => {
                   className="flex justify-between items-center py-2 border-b"
                 >
                   <div>
-                    <p className="font-medium">{payment.reference || "N/A"}</p>
+                    <p className="font-medium">
+                      {payment.reference_number ||
+                        payment.reference ||
+                        payment.payment_number ||
+                        payment.accounting_invoice?.invoice_number ||
+                        payment.invoice_number ||
+                        "N/A"}
+                    </p>
                     <p className="text-sm text-gray-500 capitalize">
-                      {payment.payment_method?.replace("_", " ")}
+                      {(payment.payment_mode || payment.payment_method || "N/A").replace("_", " ")}
                     </p>
                   </div>
                   <div className="text-right">
@@ -276,7 +283,9 @@ const AccountingDashboard = () => {
                       ₹{parseFloat(payment.amount || 0).toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(payment.payment_date).toLocaleDateString()}
+                      {payment.payment_date
+                        ? new Date(payment.payment_date).toLocaleDateString()
+                        : "-"}
                     </p>
                   </div>
                 </div>

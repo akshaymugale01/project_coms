@@ -318,6 +318,237 @@ const AccountingReports = () => {
     toast.success("Trial balance exported as XLSX");
   };
 
+  const exportBalanceSheet = () => {
+    if (activeReport !== "balance_sheet" || !reportData) {
+      toast.error("Generate balance sheet first");
+      return;
+    }
+
+    const liabilities = Array.isArray(reportData.liabilities) ? reportData.liabilities : [];
+    const assets = Array.isArray(reportData.assets) ? reportData.assets : [];
+
+    const liabilityExtraKeys = Array.from(
+      liabilities.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const assetExtraKeys = Array.from(
+      assets.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const liabilityHeaders = [
+      "Group Name",
+      "Group Code",
+      "Balance",
+      ...liabilityExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+    const assetHeaders = [
+      "Group Name",
+      "Group Code",
+      "Balance",
+      ...assetExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+
+    const selectedUnitName = filters.unit_id
+      ? units.find((u) => String(u.id) === String(filters.unit_id))?.name
+      : "";
+
+    const liabilityRows = liabilities.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...liabilityExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const assetRows = assets.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...assetExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const sheetData = [
+      ["Balance Sheet Report"],
+      [],
+      ["From Date", filters.start_date || reportData.from_date || "-"],
+      ["To Date", filters.end_date || reportData.to_date || "-"],
+      ["Unit", getUnitLabel(selectedUnitName)],
+      ["Total Liabilities & Equity", parseFloat(reportData.total_liabilities || 0).toFixed(2)],
+      ["Total Assets", parseFloat(reportData.total_assets || 0).toFixed(2)],
+      [],
+      ["Liabilities & Equity"],
+      liabilityHeaders,
+      ...liabilityRows,
+      ["Total Liabilities & Equity", "", parseFloat(reportData.total_liabilities || 0).toFixed(2)],
+      [],
+      ["Assets"],
+      assetHeaders,
+      ...assetRows,
+      ["Total Assets", "", parseFloat(reportData.total_assets || 0).toFixed(2)],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+
+    const maxCols = Math.max(liabilityHeaders.length, assetHeaders.length, 3);
+    const allDataRows = [...liabilityRows, ...assetRows];
+    ws["!cols"] = Array.from({ length: maxCols }, (_, colIdx) => {
+      const maxLen = Math.max(
+        colIdx < liabilityHeaders.length ? String(liabilityHeaders[colIdx]).length : 0,
+        colIdx < assetHeaders.length ? String(assetHeaders[colIdx]).length : 0,
+        ...allDataRows.map((row) => String(row[colIdx] ?? "").length)
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 14), 40) };
+    });
+
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: maxCols - 1 } },
+      { s: { r: 8, c: 0 }, e: { r: 8, c: maxCols - 1 } },
+      { s: { r: 13 + liabilityRows.length, c: 0 }, e: { r: 13 + liabilityRows.length, c: maxCols - 1 } },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "Balance Sheet");
+    const filename = `balance_sheet_${filters.start_date || "from"}_${filters.end_date || "to"}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast.success("Balance sheet exported as XLSX");
+  };
+
+  const exportProfitAndLoss = () => {
+    if (activeReport !== "profit_and_loss" || !reportData) {
+      toast.error("Generate profit & loss first");
+      return;
+    }
+
+    const income = Array.isArray(reportData.income) ? reportData.income : [];
+    const expenses = Array.isArray(reportData.expenses) ? reportData.expenses : [];
+
+    const incomeExtraKeys = Array.from(
+      income.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const expenseExtraKeys = Array.from(
+      expenses.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const incomeHeaders = [
+      "Group Name",
+      "Group Code",
+      "Amount",
+      ...incomeExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+    const expenseHeaders = [
+      "Group Name",
+      "Group Code",
+      "Amount",
+      ...expenseExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+
+    const selectedUnitName = filters.unit_id
+      ? units.find((u) => String(u.id) === String(filters.unit_id))?.name
+      : "";
+
+    const incomeRows = income.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...incomeExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const expenseRows = expenses.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...expenseExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const sheetData = [
+      ["Profit & Loss Report"],
+      [],
+      ["From Date", filters.start_date || reportData.from_date || "-"],
+      ["To Date", filters.end_date || reportData.to_date || "-"],
+      ["Unit", getUnitLabel(selectedUnitName)],
+      ["Total Revenue", parseFloat(reportData.total_income || 0).toFixed(2)],
+      ["Total Expenses", parseFloat(reportData.total_expenses || 0).toFixed(2)],
+      ["Net Profit/Loss", parseFloat(reportData.net_profit || 0).toFixed(2)],
+      [],
+      ["Revenue"],
+      incomeHeaders,
+      ...incomeRows,
+      ["Total Revenue", "", parseFloat(reportData.total_income || 0).toFixed(2)],
+      [],
+      ["Expenses"],
+      expenseHeaders,
+      ...expenseRows,
+      ["Total Expenses", "", parseFloat(reportData.total_expenses || 0).toFixed(2)],
+      [],
+      ["Net Profit/Loss", "", parseFloat(reportData.net_profit || 0).toFixed(2)],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+
+    const maxCols = Math.max(incomeHeaders.length, expenseHeaders.length, 3);
+    const allRows = [...incomeRows, ...expenseRows];
+    ws["!cols"] = Array.from({ length: maxCols }, (_, colIdx) => {
+      const maxLen = Math.max(
+        colIdx < incomeHeaders.length ? String(incomeHeaders[colIdx]).length : 0,
+        colIdx < expenseHeaders.length ? String(expenseHeaders[colIdx]).length : 0,
+        ...allRows.map((row) => String(row[colIdx] ?? "").length)
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 14), 40) };
+    });
+
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: maxCols - 1 } },
+      { s: { r: 9, c: 0 }, e: { r: 9, c: maxCols - 1 } },
+      { s: { r: 14 + incomeRows.length, c: 0 }, e: { r: 14 + incomeRows.length, c: maxCols - 1 } },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "Profit & Loss");
+    const filename = `profit_and_loss_${filters.start_date || "from"}_${filters.end_date || "to"}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast.success("Profit & Loss exported as XLSX");
+  };
+
   const handleMisDownload = async (kind) => {
     setMisBusy(true);
     try {
@@ -1303,12 +1534,26 @@ const AccountingReports = () => {
               >
                 {loading ? "Generating..." : "Generate Report"}
               </button>
-              {activeReport === "trial_balance" && (
+              {(activeReport === "trial_balance" || activeReport === "balance_sheet" || activeReport === "profit_and_loss") && (
                 <button
-                  onClick={exportTrialBalanceSheet}
+                  onClick={
+                    activeReport === "trial_balance"
+                      ? exportTrialBalanceSheet
+                      : activeReport === "balance_sheet"
+                        ? exportBalanceSheet
+                        : exportProfitAndLoss
+                  }
                   disabled={loading || !reportData}
                   className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 disabled:bg-gray-400"
-                  title={!reportData ? "Generate report first" : "Export trial balance"}
+                  title={
+                    !reportData
+                      ? "Generate report first"
+                      : activeReport === "trial_balance"
+                        ? "Export trial balance"
+                        : activeReport === "balance_sheet"
+                          ? "Export balance sheet"
+                          : "Export profit & loss"
+                  }
                 >
                   Export Sheet
                 </button>
