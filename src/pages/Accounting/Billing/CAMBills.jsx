@@ -75,8 +75,8 @@ const CAMBills = () => {
   // Unit-wise actual income (actual income received per unit from income_entries & invoices)
   const [unitWiseIncome, setUnitWiseIncome] = useState({});
 
-  const totalPreview = useMemo(() => previewRows.reduce((s, r) => s + Number(r.total_amount || 0), 0), [previewRows]);
-  const totalPersisted = useMemo(() => persistedRows.reduce((s, r) => s + Number(r.total_amount || 0), 0), [persistedRows]);
+  const totalPreview = useMemo(() => (Array.isArray(previewRows) ? previewRows : []).reduce((s, r) => s + Number(r.total_amount || 0), 0), [previewRows]);
+  const totalPersisted = useMemo(() => (Array.isArray(persistedRows) ? persistedRows : []).reduce((s, r) => s + Number(r.total_amount || 0), 0), [persistedRows]);
 
   // Use backend data if available, fallback to frontend calculation
   const incomeAllocation = useMemo(() => {
@@ -88,10 +88,10 @@ const CAMBills = () => {
     // Fallback to frontend calculation
     let totalIncome = backendIncomeTotal || 0;
     if (totalIncome === 0) {
-      if (selectedIncomeCategories.length === 0 || selectedIncomeCategories.length === incomeCategories.length) {
+      if (!Array.isArray(selectedIncomeCategories) || selectedIncomeCategories.length === 0 || selectedIncomeCategories.length === (Array.isArray(incomeCategories) ? incomeCategories : []).length) {
         totalIncome = Number(incomeTotal?.invoiced || 0);
       } else {
-        selectedIncomeCategories.forEach(cat => {
+        (Array.isArray(selectedIncomeCategories) ? selectedIncomeCategories : []).forEach(cat => {
           totalIncome += Number(incomeBreakdown?.byCategory?.[cat] || 0);
         });
       }
@@ -118,19 +118,20 @@ const CAMBills = () => {
 
   const incomeVsExpenseRows = useMemo(() => {
     const baseRows = Array.isArray(allocation?.rows) ? allocation.rows : [];
+    const incomeRows = Array.isArray(incomeAllocation?.rows) ? incomeAllocation.rows : [];
     return baseRows.map((r) => {
       const unitRow = unitOutstandingById?.[r.unit_id];
       const outstanding = unitRow?.outstanding ?? (unitRow ? (Number(unitRow.total_billed || 0) - Number(unitRow.total_received || 0)) : 0);
 
       return {
         ...r,
-        incomeShare: incomeAllocation.rows.find((x) => x.unit_id === r.unit_id)?.incomeShare || 0,
+        incomeShare: incomeRows.find((x) => x.unit_id === r.unit_id)?.incomeShare || 0,
         outstanding,
         received: unitRow?.total_received ?? 0,
         billed: unitRow?.total_billed ?? 0,
       };
     });
-  }, [allocation, incomeAllocation.rows, unitOutstandingById]);
+  }, [allocation, incomeAllocation, unitOutstandingById]);
 
   const incomeVsExpenseTotals = useMemo(() => {
     const income = Number(incomeTotal?.received || 0);
@@ -203,7 +204,8 @@ const CAMBills = () => {
         getSites(),
       ]);
       setSettings(sRes?.data?.data || sRes?.data || null);
-      setUnitConfigs(uRes?.data?.data || uRes?.data || []);
+      const unitConfigsData = uRes?.data?.data || uRes?.data || [];
+      setUnitConfigs(Array.isArray(unitConfigsData) ? unitConfigsData : []);
       const siteList = sitesRes?.data?.data || sitesRes?.data || [];
       setSites(Array.isArray(siteList) ? siteList : []);
       if (!siteId && Array.isArray(siteList) && siteList.length > 0) {
@@ -275,10 +277,11 @@ const CAMBills = () => {
               if (row.category) categoriesSet.add(row.category);
             });
 
+            const safeSelectedExpenseCategories = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
             const rowsToSum =
-              selectedExpenseCategories.length === 0
+              safeSelectedExpenseCategories.length === 0
                 ? expenseRows
-                : expenseRows.filter((r) => selectedExpenseCategories.includes(r.category));
+                : expenseRows.filter((r) => safeSelectedExpenseCategories.includes(r.category));
 
             totalExpense += rowsToSum.reduce((s, r) => s + Number(r.amount || 0), 0);
           }
@@ -295,21 +298,23 @@ const CAMBills = () => {
           }
         }
         const newCategories = Array.from(categoriesSet);
-        setExpenseCategories(newCategories);
+        const safeNewCategories = Array.isArray(newCategories) ? newCategories : [];
+        setExpenseCategories(safeNewCategories);
         
         // Sync selected categories with available categories
         // If selected categories are empty OR none of the selected categories exist in new categories, select all
-        const validSelectedCategories = selectedExpenseCategories.filter(cat => newCategories.includes(cat));
-        if (validSelectedCategories.length === 0 && newCategories.length > 0) {
-          setSelectedExpenseCategories(newCategories);
-        } else if (validSelectedCategories.length !== selectedExpenseCategories.length) {
+        const currentSelectedExpenseCategories = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
+        const validSelectedCategories = currentSelectedExpenseCategories.filter(cat => safeNewCategories.includes(cat));
+        if (validSelectedCategories.length === 0 && safeNewCategories.length > 0) {
+          setSelectedExpenseCategories(safeNewCategories);
+        } else if (validSelectedCategories.length !== currentSelectedExpenseCategories.length) {
           // Some selected categories no longer exist, update to only valid ones
-          setSelectedExpenseCategories(validSelectedCategories.length > 0 ? validSelectedCategories : newCategories);
+          setSelectedExpenseCategories(validSelectedCategories.length > 0 ? validSelectedCategories : safeNewCategories);
         }
         
         setIncomeTotal({ received: totalIncomeReceived, invoiced: totalIncomeInvoiced });
 
-        if (!unitConfigs || unitConfigs.length === 0) return;
+        if (!unitConfigs || !Array.isArray(unitConfigs) || unitConfigs.length === 0) return;
         const { start, end } = makePeriod(year, month);
         
         // Fetch unit details for each unit to get the name
@@ -467,11 +472,12 @@ const CAMBills = () => {
         }
 
         const newIncomeCategories = Array.from(categoriesSet);
-        setIncomeCategories(newIncomeCategories);
+        const safeIncomeCategories = Array.isArray(newIncomeCategories) ? newIncomeCategories : [];
+        setIncomeCategories(safeIncomeCategories);
         
         // Initialize selected categories if empty
-        if (selectedIncomeCategories.length === 0 && newIncomeCategories.length > 0) {
-          setSelectedIncomeCategories(newIncomeCategories);
+        if (selectedIncomeCategories.length === 0 && safeIncomeCategories.length > 0) {
+          setSelectedIncomeCategories(safeIncomeCategories);
         }
 
         setIncomeBreakdown({
@@ -499,6 +505,8 @@ const CAMBills = () => {
       try {
         const { from_date, to_date } = getPeriodDateRange();
         const { startMonth, endMonth } = getPeriodParams();
+        const safeExpenseCatsForParams = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
+        const safeIncomeCatsForParams = Array.isArray(selectedIncomeCategories) ? selectedIncomeCategories : [];
         const baseParams = { 
           year, 
           month: startMonth, 
@@ -506,8 +514,8 @@ const CAMBills = () => {
           from_date, 
           to_date,
           categories: overviewMode === 'expense' 
-            ? selectedExpenseCategories.join(',') 
-            : selectedIncomeCategories.join(',')
+            ? safeExpenseCatsForParams.join(',') 
+            : safeIncomeCatsForParams.join(',')
         };
         if (siteId) {
           baseParams.site_id = siteId;
@@ -515,20 +523,22 @@ const CAMBills = () => {
         }
 
         // Fetch totals from backend - pass selected categories for filtering
+        const safeExpenseCats = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
+        const safeIncomeCats = Array.isArray(selectedIncomeCategories) ? selectedIncomeCategories : [];
         const [expenseTotalRes, incomeTotalRes] = await Promise.allSettled([
           calculateMonthlyExpenseTotal({ 
             year, 
             month: startMonth, 
             end_month: endMonth, 
             project_id: siteId,
-            categories: selectedExpenseCategories.join(',')
+            categories: safeExpenseCats.join(',')
           }),
           getMonthlyIncomeTotal({ 
             year, 
             month: startMonth, 
             end_month: endMonth, 
             site_id: siteId,
-            categories: selectedIncomeCategories.join(',')
+            categories: safeIncomeCats.join(',')
           })
         ]);
 
@@ -544,8 +554,9 @@ const CAMBills = () => {
           try {
             const incomeAllocRes = await calculateIncomeAllocation(baseParams);
             const allocData = incomeAllocRes?.data?.data || incomeAllocRes?.data || {};
+            const incomeRows = allocData.rows || allocData.units || [];
             setBackendIncomeAllocation({
-              rows: allocData.rows || allocData.units || [],
+              rows: Array.isArray(incomeRows) ? incomeRows : [],
               totals: allocData.totals || { days: 0, income: 0 }
             });
           } catch (e) {
@@ -555,8 +566,9 @@ const CAMBills = () => {
           try {
             const expenseAllocRes = await calculateExpenseAllocation(baseParams);
             const allocData = expenseAllocRes?.data?.data || expenseAllocRes?.data || {};
+            const expenseRows = allocData.rows || allocData.units || [];
             setBackendExpenseAllocation({
-              rows: allocData.rows || allocData.units || [],
+              rows: Array.isArray(expenseRows) ? expenseRows : [],
               totals: allocData.totals || { days: 0, expense: 0 }
             });
           } catch (e) {
@@ -566,12 +578,13 @@ const CAMBills = () => {
           try {
             const comparisonRes = await calculateIncomeVsExpense({
               ...baseParams,
-              expense_categories: selectedExpenseCategories.join(','),
-              income_categories: selectedIncomeCategories.join(',')
+              expense_categories: safeExpenseCats.join(','),
+              income_categories: safeIncomeCats.join(',')
             });
             const compData = comparisonRes?.data?.data || comparisonRes?.data || {};
+            const compRows = compData.rows || compData.units || [];
             setBackendIncomeVsExpense({
-              rows: compData.rows || compData.units || [],
+              rows: Array.isArray(compRows) ? compRows : [],
               totals: compData.totals || { income: 0, expense: 0, net: 0 }
             });
           } catch (e) {
@@ -587,10 +600,12 @@ const CAMBills = () => {
           ]);
           
           if (dailyIncomeRes.status === 'fulfilled') {
-            setDailyIncomeData(dailyIncomeRes.value?.data?.data || dailyIncomeRes.value?.data || []);
+            const incomeData = dailyIncomeRes.value?.data?.data || dailyIncomeRes.value?.data || [];
+            setDailyIncomeData(Array.isArray(incomeData) ? incomeData : []);
           }
           if (dailyExpenseRes.status === 'fulfilled') {
-            setDailyExpenseData(dailyExpenseRes.value?.data?.data || dailyExpenseRes.value?.data || []);
+            const expenseData = dailyExpenseRes.value?.data?.data || dailyExpenseRes.value?.data || [];
+            setDailyExpenseData(Array.isArray(expenseData) ? expenseData : []);
           }
         } catch (e) {
           console.error('Daily reports failed:', e);
@@ -599,13 +614,14 @@ const CAMBills = () => {
         // Fetch unit-wise actual income (actual income received per unit)
         try {
           const unitIncomeRes = await getUnitWiseIncomeSummary({ ...baseParams });
-          const unitIncomeData = unitIncomeRes?.data?.data || unitIncomeRes?.data || [];
+          const rawUnitIncomeData = unitIncomeRes?.data?.data || unitIncomeRes?.data || [];
+          const unitIncomeData = Array.isArray(rawUnitIncomeData) ? rawUnitIncomeData : [];
           const incomeByUnit = {};
-          if (Array.isArray(unitIncomeData)) {
-            unitIncomeData.forEach(item => {
+          unitIncomeData.forEach(item => {
+            if (item && item.unit_id != null) {
               incomeByUnit[item.unit_id] = item.amount || 0;
-            });
-          }
+            }
+          });
           setUnitWiseIncome(incomeByUnit);
         } catch (e) {
           console.error('Unit-wise income fetch failed:', e);
@@ -624,42 +640,48 @@ const CAMBills = () => {
 
   const toggleExpenseCategory = (category) => {
     setSelectedExpenseCategories((prev) => {
-      if (prev.includes(category)) {
-        return prev.filter((c) => c !== category);
+      const safePrev = Array.isArray(prev) ? prev : [];
+      if (safePrev.includes(category)) {
+        return safePrev.filter((c) => c !== category);
       }
-      return [...prev, category];
+      return [...safePrev, category];
     });
   };
 
   const toggleIncomeCategory = (category) => {
     setSelectedIncomeCategories((prev) => {
-      if (prev.includes(category)) {
-        return prev.filter((c) => c !== category);
+      const safePrev = Array.isArray(prev) ? prev : [];
+      if (safePrev.includes(category)) {
+        return safePrev.filter((c) => c !== category);
       }
-      return [...prev, category];
+      return [...safePrev, category];
     });
   };
 
   const selectedExpenseLabel = useMemo(() => {
-    if (expenseCategories.length === 0) return "No expenses";
-    if (selectedExpenseCategories.length === 0 || selectedExpenseCategories.length === expenseCategories.length) {
+    const safeExpenseCategories = Array.isArray(expenseCategories) ? expenseCategories : [];
+    const safeSelectedExpenseCategories = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
+    if (safeExpenseCategories.length === 0) return "No expenses";
+    if (safeSelectedExpenseCategories.length === 0 || safeSelectedExpenseCategories.length === safeExpenseCategories.length) {
       return "All expenses";
     }
-    if (selectedExpenseCategories.length === 1) {
-      return selectedExpenseCategories[0];
+    if (safeSelectedExpenseCategories.length === 1) {
+      return safeSelectedExpenseCategories[0];
     }
-    return `${selectedExpenseCategories.length} selected`;
+    return `${safeSelectedExpenseCategories.length} selected`;
   }, [expenseCategories, selectedExpenseCategories]);
 
   const selectedIncomeLabel = useMemo(() => {
-    if (incomeCategories.length === 0) return "No income";
-    if (selectedIncomeCategories.length === 0 || selectedIncomeCategories.length === incomeCategories.length) {
+    const safeIncomeCategories = Array.isArray(incomeCategories) ? incomeCategories : [];
+    const safeSelectedIncomeCategories = Array.isArray(selectedIncomeCategories) ? selectedIncomeCategories : [];
+    if (safeIncomeCategories.length === 0) return "No income";
+    if (safeSelectedIncomeCategories.length === 0 || safeSelectedIncomeCategories.length === safeIncomeCategories.length) {
       return "All income";
     }
-    if (selectedIncomeCategories.length === 1) {
-      return selectedIncomeCategories[0];
+    if (safeSelectedIncomeCategories.length === 1) {
+      return safeSelectedIncomeCategories[0];
     }
-    return `${selectedIncomeCategories.length} selected`;
+    return `${safeSelectedIncomeCategories.length} selected`;
   }, [incomeCategories, selectedIncomeCategories]);
 
   // Calculate selected income total - prefer backend calculated values
@@ -668,12 +690,14 @@ const CAMBills = () => {
     if (backendIncomeTotal > 0) {
       return backendIncomeTotal;
     }
+    const safeSelectedIncomeCategories = Array.isArray(selectedIncomeCategories) ? selectedIncomeCategories : [];
+    const safeIncomeCategories = Array.isArray(incomeCategories) ? incomeCategories : [];
     // Fallback to frontend calculation
-    if (selectedIncomeCategories.length === 0 || selectedIncomeCategories.length === incomeCategories.length) {
+    if (safeSelectedIncomeCategories.length === 0 || safeSelectedIncomeCategories.length === safeIncomeCategories.length) {
       return Number(incomeTotal?.invoiced || 0) + Number(incomeBreakdown?.total || 0);
     }
     let total = 0;
-    selectedIncomeCategories.forEach(cat => {
+    safeSelectedIncomeCategories.forEach(cat => {
       total += Number(incomeBreakdown?.byCategory?.[cat] || 0);
     });
     return total;
@@ -776,7 +800,7 @@ const CAMBills = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select site</option>
-              {sites.map((s) => {
+              {Array.isArray(sites) && sites.map((s) => {
                 const id = s?.id || s?.site_id || s?.value;
                 const name = s?.name || s?.site_name || s?.label || `Site ${id}`;
                 return (
@@ -856,10 +880,10 @@ const CAMBills = () => {
                 </button>
                 {showExpenseDropdown && (
                   <div className="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg text-sm">
-                    {expenseCategories.length === 0 && (
+                    {(!Array.isArray(expenseCategories) || expenseCategories.length === 0) && (
                       <div className="px-3 py-2 text-gray-400 text-xs">No monthly expenses for this period</div>
                     )}
-                    {expenseCategories.map((cat) => (
+                    {Array.isArray(expenseCategories) && expenseCategories.map((cat) => (
                       <label
                         key={cat}
                         className="flex items-center gap-2 px-3 py-1 hover:bg-gray-50 cursor-pointer"
@@ -899,10 +923,10 @@ const CAMBills = () => {
                 </button>
                 {showIncomeDropdown && (
                   <div className="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg text-sm">
-                    {incomeCategories.length === 0 && (
+                    {(!Array.isArray(incomeCategories) || incomeCategories.length === 0) && (
                       <div className="px-3 py-2 text-gray-400 text-xs">No income data for this period</div>
                     )}
-                    {incomeCategories.map((cat) => (
+                    {Array.isArray(incomeCategories) && incomeCategories.map((cat) => (
                       <label
                         key={cat}
                         className="flex items-center gap-2 px-3 py-1 hover:bg-gray-50 cursor-pointer"
@@ -1107,7 +1131,7 @@ const CAMBills = () => {
                 </thead>
 
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {overviewMode === "expense" && allocation.rows.map((r, idx) => (
+                  {overviewMode === "expense" && Array.isArray(allocation?.rows) && allocation.rows.map((r, idx) => (
                     <tr key={r.unit_id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                         {r.flat || r.unit_name || `Unit ${r.unit_id}`}
@@ -1120,7 +1144,7 @@ const CAMBills = () => {
                     </tr>
                   ))}
 
-                  {overviewMode === "income" && incomeAllocation.rows.map((r, idx) => (
+                  {overviewMode === "income" && Array.isArray(incomeAllocation?.rows) && incomeAllocation.rows.map((r, idx) => (
                     <tr key={r.unit_id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                         {r.flat || r.unit_name || `Unit ${r.unit_id}`}
@@ -1136,7 +1160,7 @@ const CAMBills = () => {
                     </tr>
                   ))}
 
-                  {overviewMode === "income_vs_expense" && incomeVsExpenseRows.map((r, idx) => (
+                  {overviewMode === "income_vs_expense" && Array.isArray(incomeVsExpenseRows) && incomeVsExpenseRows.map((r, idx) => (
                     <tr key={r.unit_id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                         {r.flat || r.unit_name || `Unit ${r.unit_id}`}

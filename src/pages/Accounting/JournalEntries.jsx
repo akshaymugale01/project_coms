@@ -421,44 +421,43 @@ const JournalEntries = () => {
   };
 
   const filteredEntries = journalEntries.filter((entry) => {
-  const search = searchTerm.trim().toLowerCase();
+    const search = searchTerm.trim().toLowerCase();
 
-  const matchesStatus = statusFilter ? entry.status === statusFilter : true;
-  if (!search) return matchesStatus;
+    const matchesStatus = statusFilter ? entry.status === statusFilter : true;
+    if (!search) return matchesStatus;
 
-  // Format entry date in multiple searchable forms
-  let entryDateSearch = "";
-  if (entry.entry_date) {
-    const d = new Date(entry.entry_date);
-    entryDateSearch = [
-      d.toISOString().split("T")[0],              // 2024-01-12
-      d.toLocaleDateString(),                     // 12/01/2024
-      d.getFullYear().toString(),                 // 2024
-      d.toLocaleString("default", { month: "long" }), // January
-      d.toLocaleString("default", { month: "short" }) // Jan
+    // Format entry date in multiple searchable forms
+    let entryDateSearch = "";
+    if (entry.entry_date) {
+      const d = new Date(entry.entry_date);
+      entryDateSearch = [
+        d.toISOString().split("T")[0], // 2024-01-12
+        d.toLocaleDateString(), // 12/01/2024
+        d.getFullYear().toString(), // 2024
+        d.toLocaleString("default", { month: "long" }), // January
+        d.toLocaleString("default", { month: "short" }), // Jan
+      ]
+        .join(" ")
+        .toLowerCase();
+    }
+
+    const searchableText = [
+      entry.reference,
+      entry.entry_number,
+      entry.invoice_number,
+      entry.description,
+      entry.narration,
+      entry.entry_type,
+      entry.expense_year,
+      getMonthName(entry.expense_month),
+      entryDateSearch, // ✅ ADD THIS
     ]
+      .filter(Boolean)
       .join(" ")
       .toLowerCase();
-  }
 
-  const searchableText = [
-    entry.reference,
-    entry.entry_number,
-    entry.invoice_number,
-    entry.description,
-    entry.narration,
-    entry.entry_type,
-    entry.expense_year,
-    getMonthName(entry.expense_month),
-    entryDateSearch, // ✅ ADD THIS
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  return matchesStatus && searchableText.includes(search);
-});
-
+    return matchesStatus && searchableText.includes(search);
+  });
 
   return (
     <section className="flex">
@@ -630,7 +629,6 @@ const JournalEntries = () => {
               </tbody>
             </table>
           </div>
-          
         )}
 
         {isModalOpen && (
