@@ -18,6 +18,7 @@ import {
 import { getAllUnits } from "../../api/index";
 import Navbar from "../../components/Navbar";
 import FileInput from "../../Buttons/FileInput";
+import * as XLSX from "xlsx";
 
 const AccountingReports = () => {
   const [activeReport, setActiveReport] = useState("trial_balance");
@@ -228,6 +229,93 @@ const AccountingReports = () => {
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
+  };
+
+  const getUnitLabel = (unitName) => {
+    const normalized = unitName == null ? "" : String(unitName).trim();
+    return normalized || "Organization-wide";
+  };
+
+  const exportTrialBalanceSheet = () => {
+    if (activeReport !== "trial_balance" || !reportData) {
+      toast.error("Generate trial balance first");
+      return;
+    }
+
+    const reportRows = Array.isArray(reportData.report_data) ? reportData.report_data : [];
+    const totals = reportData.totals || {};
+
+    const dynamicKeys = Array.from(
+      reportRows.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    );
+
+    const preferredKeys = ["ledger_name", "unit_name", "side", "balance"];
+    const extraKeys = dynamicKeys.filter((key) => !preferredKeys.includes(key));
+    const detailHeaders = ["Ledger Name", "Unit Name", "Side", "Balance", "Debit", "Credit", ...extraKeys.map((key) => key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))];
+
+    const selectedUnitName = filters.unit_id
+      ? units.find((u) => String(u.id) === String(filters.unit_id))?.name
+      : "";
+
+    const detailRows = reportRows.map((row) => {
+      const side = String(row?.side || "").toLowerCase();
+      const balance = parseFloat(row?.balance || 0);
+      const debit = side === "debit" ? balance.toFixed(2) : "0.00";
+      const credit = side === "credit" ? balance.toFixed(2) : "0.00";
+
+      return [
+        row?.ledger_name || "-",
+        getUnitLabel(row?.unit_name),
+        row?.side || "-",
+        balance.toFixed(2),
+        debit,
+        credit,
+        ...extraKeys.map((key) => {
+          const value = row?.[key];
+          if (value === null || value === undefined) return "";
+          if (typeof value === "object") return JSON.stringify(value);
+          return value;
+        }),
+      ];
+    });
+
+    const sheetData = [
+      ["Trial Balance Report"],
+      [],
+      ["From Date", filters.start_date || reportData.from_date || "-"],
+      ["To Date", filters.end_date || reportData.to_date || "-"],
+      ["Unit", getUnitLabel(selectedUnitName)],
+      ["Total Debit", parseFloat(totals.total_debit || 0).toFixed(2)],
+      ["Total Credit", parseFloat(totals.total_credit || 0).toFixed(2)],
+      [],
+      detailHeaders,
+      ...detailRows,
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+
+    const columnCount = detailHeaders.length;
+    const cols = detailHeaders.map((header, colIdx) => {
+      const maxLen = Math.max(
+        String(header).length,
+        ...detailRows.map((row) => String(row[colIdx] ?? "").length)
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 14), 40) };
+    });
+    ws["!cols"] = cols;
+    ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(columnCount - 1, 1) } }];
+    ws["!autofilter"] = {
+      ref: `A9:${XLSX.utils.encode_col(Math.max(columnCount - 1, 0))}9`,
+    };
+
+    XLSX.utils.book_append_sheet(wb, ws, "Trial Balance");
+    const filename = `trial_balance_${filters.start_date || "from"}_${filters.end_date || "to"}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast.success("Trial balance exported as XLSX");
   };
 
   const handleMisDownload = async (kind) => {
@@ -458,8 +546,6 @@ const AccountingReports = () => {
               </div>
             </div>
           )}
-
-
         </div>
       );
     }
@@ -502,7 +588,7 @@ const AccountingReports = () => {
               {reportData.report_data?.map((ledger, index) => (
                 <tr key={index}>
                   <td className="px-6 py-2">{ledger.ledger_name}</td>
-                  <td className="px-6 py-2 text-right">{ledger.unit_name}</td>
+                  <td className="px-6 py-2 text-right">{getUnitLabel(ledger.unit_name)}</td>
                   <td className="px-6 py-2 text-right">{ledger.side}</td>
                   {(ledger.side === "debit" ?
                     <td className="px-6 py-4 text-right">
@@ -1209,14 +1295,24 @@ const AccountingReports = () => {
                 </select>
               </div>
             )}
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <button
                 onClick={generateReport}
                 disabled={loading}
-                className="w-full px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-900 disabled:bg-gray-400"
+                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-900 disabled:bg-gray-400"
               >
                 {loading ? "Generating..." : "Generate Report"}
               </button>
+              {activeReport === "trial_balance" && (
+                <button
+                  onClick={exportTrialBalanceSheet}
+                  disabled={loading || !reportData}
+                  className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 disabled:bg-gray-400"
+                  title={!reportData ? "Generate report first" : "Export trial balance"}
+                >
+                  Export Sheet
+                </button>
+              )}
             </div>
           </div>
         </div>
