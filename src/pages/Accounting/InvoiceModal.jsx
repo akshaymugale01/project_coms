@@ -419,7 +419,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       rate: "", 
       quantity: "1",
       taxable_value: "0.00", 
-      gst_type: enableIgst ? "igst" : "cgst_sgst", // New field: 'cgst_sgst' or 'igst'
+      gst_type: enableIgst ? "igst" : "cgst_sgst",
       cgst_rate: enableGstSplit && !enableIgst ? defaultGstRate : "0", 
       cgst_amount: "0.00", 
       sgst_rate: enableGstSplit && !enableIgst ? defaultGstRate : "0", 
@@ -637,6 +637,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     fetchBillingConfig();
     
     if (invoice) {
+      const resolvedInvoiceUnitId = invoice.unit_id || invoice.unit?.id || "";
       setFormData({
         invoice_date: invoice.invoice_date?.split("T")[0] || "",
         due_date: invoice.due_date?.split("T")[0] || "",
@@ -646,7 +647,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
         customer_email: invoice.customer_email || "",
         gst_no: invoice.gst_no || invoice.customer_gst_no || invoice.customer_gst_number || invoice.gst_number || "",
         customer_address: invoice.customer_address || "",
-        unit_id: invoice.unit_id || "",
+        unit_id: resolvedInvoiceUnitId ? String(resolvedInvoiceUnitId) : "",
         items: (invoice.items || invoice.accounting_invoice_items || []).map((item, index) => ({
           id: item.id, // Include id for update operations
           s_no: item.s_no || index + 1,
@@ -689,8 +690,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       }
       
       // Set selected unit if editing existing invoice
-      if (invoice.unit_id) {
-        loadEditInvoiceData(invoice.unit_id);
+      if (resolvedInvoiceUnitId) {
+        loadEditInvoiceData(String(resolvedInvoiceUnitId));
       }
     }
   }, [invoice]);
@@ -1040,20 +1041,18 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
   // Function to recalculate item totals
   const recalculateItemTotals = (item) => {
     const taxableValue = parseFloat(item.taxable_value) || 0;
-    
-    const enableIgst = billingConfig.enable_igst || false;
-    const enableGstSplit = billingConfig.enable_gst_split !== false;
-    
+
     let cgstAmount = 0;
     let sgstAmount = 0;
     let igstAmount = 0;
-    
-    if (enableIgst) {
+
+    // Use row-level GST type so per-row CGST/SGST or IGST works reliably.
+    if (item.gst_type === "igst") {
       const igstRate = parseFloat(item.igst_rate) || 0;
       igstAmount = taxableValue * (igstRate / 100);
       item.cgst_rate = "0";
       item.sgst_rate = "0";
-    } else if (enableGstSplit) {
+    } else {
       const cgstRate = parseFloat(item.cgst_rate) || 0;
       const sgstRate = parseFloat(item.sgst_rate) || 0;
       cgstAmount = taxableValue * (cgstRate / 100);
@@ -1087,9 +1086,10 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     newItems[index].gst_type = gstType;
     
     if (gstType === "igst") {
-      // Convert to IGST (usually double the individual GST rate)
-      const currentRate = parseFloat(newItems[index].cgst_rate) || 0;
-      newItems[index].igst_rate = (currentRate * 2).toString();
+      // Convert CGST+SGST to IGST by summing both rates.
+      const cgstRate = parseFloat(newItems[index].cgst_rate) || 0;
+      const sgstRate = parseFloat(newItems[index].sgst_rate) || 0;
+      newItems[index].igst_rate = (cgstRate + sgstRate).toString();
       newItems[index].cgst_rate = "0";
       newItems[index].sgst_rate = "0";
     } else {
@@ -1241,8 +1241,22 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Save invoice first
-    onSave(formData, paymentData);
+    const resolvedUnitId =
+      formData.unit_id ||
+      selectedUnit ||
+      unitDetails?.id ||
+      invoice?.unit_id ||
+      invoice?.unit?.id ||
+      "";
+
+    const normalizedData = {
+      ...formData,
+      unit_id: resolvedUnitId ? String(resolvedUnitId) : "",
+      unit_no: formData.unit_no || unitName || selectedUnit || "",
+    };
+
+    // Save invoice with normalized unit mapping
+    onSave(normalizedData, paymentData);
   };
 
   // No helper functions needed - using state directly
@@ -1755,13 +1769,15 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                             <select
                               onChange={(e) => {
                                 if (e.target.value) {
-                                  const selectedTax = getFilteredTaxRates(item.gst_type).find(t => t.id === parseInt(e.target.value));
+                                  const selectedTax = getFilteredTaxRates(item.gst_type).find(
+                                    (t) => String(t.id) === String(e.target.value)
+                                  );
                                   if (selectedTax) {
                                     handleTaxRateSelect(index, selectedTax);
                                   }
                                 }
                               }}
-                              defaultValue=""
+                              value={item.tax_rate_id ? String(item.tax_rate_id) : ""}
                               className="flex-1 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm bg-green-50"
                               title={item.gst_type === "igst" ? "IGST Rates" : "CGST/SGST Rates"}
                             >
@@ -1830,7 +1846,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                         {totals.taxableValue.toFixed(2)}
                       </td>
                       <td className="px-4 py-4 text-center border-r text-gray-700">
-                        {enableIgst ? `${totals.igst.toFixed(2)}` : `${(totals.cgst + totals.sgst).toFixed(2)}`}
+                        {(totals.cgst + totals.sgst + totals.igst).toFixed(2)}
                       </td>
                       {showCgstSgst && (
                         <>

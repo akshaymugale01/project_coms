@@ -328,7 +328,7 @@ const AccountingDashboard = () => {
               ) : (
                 stats.recentJournalEntries.map((entry) => (
                   <tr key={entry.id}>
-                    <td className="px-4 py-3">{entry.reference}</td>
+                    <td className="px-4 py-3">{entry.reference || entry.entry_number || "-"}</td>
                     <td className="px-4 py-3">
                       {new Date(entry.entry_date).toLocaleDateString()}
                     </td>
@@ -336,7 +336,15 @@ const AccountingDashboard = () => {
                       {entry.description || "-"}
                     </td>
                     <td className="px-4 py-3">
-                      ₹{parseFloat(entry.total_amount || 0).toFixed(2)}
+                      ₹
+                      {(
+                        parseFloat(
+                          entry.total_amount ??
+                          entry.total_debit ??
+                          entry.total_credit ??
+                          0,
+                        ) || 0
+                      ).toFixed(2)}
                     </td>
                     <td className="px-4 py-3">
                       <span
