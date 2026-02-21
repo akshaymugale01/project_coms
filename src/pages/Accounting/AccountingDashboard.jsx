@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import {
+  getAccountingDashboard,
   getAccountingInvoices,
   getAccountingPayments,
   getJournalEntries,
@@ -16,6 +17,7 @@ const AccountingDashboard = () => {
     totalPayments: 0,
     overdueInvoices: 0,
     totalRevenue: 0,
+    totalExpenses: 0,
     pendingAmount: 0,
     recentInvoices: [],
     recentPayments: [],
@@ -30,37 +32,103 @@ const AccountingDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [invoicesRes, paymentsRes, journalRes, overdueRes] =
-        await Promise.all([
-          getAccountingInvoices(),
-          getAccountingPayments(),
-          getJournalEntries(),
-          getOverdueInvoices(),
+      const toArray = (value) => (Array.isArray(value) ? value : []);
+      const num = (...values) => {
+        for (const value of values) {
+          const parsed = Number(value);
+          if (Number.isFinite(parsed)) return parsed;
+        }
+        return 0;
+      };
+
+      const dashboardRes = await getAccountingDashboard();
+      const dashboardData = dashboardRes?.data?.data || dashboardRes?.data || {};
+      const summary = dashboardData.summary || dashboardData.stats || {};
+
+      let invoices = toArray(dashboardData.invoices);
+      let payments = toArray(dashboardData.payments);
+      let journalEntries = toArray(dashboardData.journal_entries || dashboardData.journalEntries);
+      let overdueInvoices = toArray(
+        dashboardData.overdue_invoices || dashboardData.overdueInvoices,
+      );
+
+      // Fallback to legacy endpoints if dashboard payload does not include full datasets.
+      if (!invoices.length || !payments.length || !journalEntries.length) {
+        const [invoicesRes, paymentsRes, journalRes, overdueRes] = await Promise.all([
+          invoices.length ? Promise.resolve({ data: invoices }) : getAccountingInvoices(),
+          payments.length ? Promise.resolve({ data: payments }) : getAccountingPayments(),
+          journalEntries.length ? Promise.resolve({ data: journalEntries }) : getJournalEntries(),
+          overdueInvoices.length ? Promise.resolve({ data: overdueInvoices }) : getOverdueInvoices(),
         ]);
 
-      const invoices = invoicesRes.data.data || invoicesRes.data || [];
-      const payments = paymentsRes.data.data || paymentsRes.data || [];
-      const journalEntries = journalRes.data.data || journalRes.data || [];
-      const overdueInvoices = overdueRes.data.data || overdueRes.data || [];
+        invoices = toArray(invoicesRes?.data?.data || invoicesRes?.data);
+        payments = toArray(paymentsRes?.data?.data || paymentsRes?.data);
+        journalEntries = toArray(journalRes?.data?.data || journalRes?.data);
+        overdueInvoices = toArray(overdueRes?.data?.data || overdueRes?.data);
+      }
 
       const totalRevenue = payments.reduce(
         (sum, payment) => sum + parseFloat(payment.amount || 0),
         0
       );
+      const totalExpenses = journalEntries
+        .filter((entry) => entry.status !== "cancelled")
+        .filter((entry) => {
+          const entryType = (entry.entry_type || "").toString().toLowerCase();
+          return (
+            entryType.includes("expense") ||
+            Boolean(entry.expense_month) ||
+            Boolean(entry.expense_year)
+          );
+        })
+        .reduce(
+          (sum, entry) =>
+            sum +
+            parseFloat(
+              entry.total_amount ??
+                entry.total_debit ??
+                entry.amount ??
+                0,
+            ),
+          0,
+        );
 
-      const pendingAmount = invoices
+      const pendingAmountFromRows = invoices
         .filter((inv) => inv.status !== "paid")
         .reduce((sum, inv) => sum + parseFloat(inv.total_amount || 0), 0);
 
       setStats({
-        totalInvoices: invoices.length,
-        totalPayments: payments.length,
-        overdueInvoices: overdueInvoices.length,
-        totalRevenue,
-        pendingAmount,
-        recentInvoices: invoices.slice(0, 5),
-        recentPayments: payments.slice(0, 5),
-        recentJournalEntries: journalEntries.slice(0, 5),
+        totalInvoices: num(summary.total_invoices, dashboardData.total_invoices, invoices.length),
+        totalPayments: num(summary.total_payments, dashboardData.total_payments, payments.length),
+        overdueInvoices: num(
+          summary.overdue_invoices,
+          dashboardData.overdue_invoices_count,
+          overdueInvoices.length,
+        ),
+        totalRevenue: num(
+          summary.total_revenue,
+          dashboardData.total_revenue,
+          totalRevenue,
+        ),
+        totalExpenses: num(
+          summary.total_expenses,
+          dashboardData.total_expenses,
+          totalExpenses,
+        ),
+        pendingAmount: num(
+          summary.pending_amount,
+          dashboardData.pending_amount,
+          pendingAmountFromRows,
+        ),
+        recentInvoices: toArray(dashboardData.recent_invoices).length
+          ? toArray(dashboardData.recent_invoices).slice(0, 5)
+          : invoices.slice(0, 5),
+        recentPayments: toArray(dashboardData.recent_payments).length
+          ? toArray(dashboardData.recent_payments).slice(0, 5)
+          : payments.slice(0, 5),
+        recentJournalEntries: toArray(dashboardData.recent_journal_entries).length
+          ? toArray(dashboardData.recent_journal_entries).slice(0, 5)
+          : journalEntries.slice(0, 5),
       });
     } catch (error) {
       toast.error("Failed to fetch dashboard data");
@@ -130,7 +198,7 @@ const AccountingDashboard = () => {
       <h1 className="text-3xl font-bold mb-6">Accounting Dashboard</h1>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -162,6 +230,18 @@ const AccountingDashboard = () => {
               </p>
             </div>
             <div className="text-4xl">⏳</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Total Expenses</p>
+              <p className="text-3xl font-bold text-red-600">
+                ₹{parseFloat(stats.totalExpenses).toFixed(2)}
+              </p>
+            </div>
+            <div className="text-4xl">💸</div>
           </div>
         </div>
 
@@ -266,9 +346,16 @@ const AccountingDashboard = () => {
                   className="flex justify-between items-center py-2 border-b"
                 >
                   <div>
-                    <p className="font-medium">{payment.reference || "N/A"}</p>
+                    <p className="font-medium">
+                      {payment.reference_number ||
+                        payment.reference ||
+                        payment.payment_number ||
+                        payment.accounting_invoice?.invoice_number ||
+                        payment.invoice_number ||
+                        "N/A"}
+                    </p>
                     <p className="text-sm text-gray-500 capitalize">
-                      {payment.payment_method?.replace("_", " ")}
+                      {(payment.payment_mode || payment.payment_method || "N/A").replace("_", " ")}
                     </p>
                   </div>
                   <div className="text-right">
@@ -276,7 +363,9 @@ const AccountingDashboard = () => {
                       ₹{parseFloat(payment.amount || 0).toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(payment.payment_date).toLocaleDateString()}
+                      {payment.payment_date
+                        ? new Date(payment.payment_date).toLocaleDateString()
+                        : "-"}
                     </p>
                   </div>
                 </div>
@@ -341,6 +430,7 @@ const AccountingDashboard = () => {
                         parseFloat(
                           entry.total_amount ??
                           entry.total_debit ??
+                          entry.amount ??
                           entry.total_credit ??
                           0,
                         ) || 0

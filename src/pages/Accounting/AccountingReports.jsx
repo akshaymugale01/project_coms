@@ -6,6 +6,7 @@ import {
   getProfitAndLoss,
   getLedgerStatement,
   getUnitStatement,
+  getUnitStatementDetailed,
   getReceivablesSummary,
   downloadExpensesMIS,
   downloadIncomeMIS,
@@ -19,6 +20,7 @@ import { getAllUnits } from "../../api/index";
 import Navbar from "../../components/Navbar";
 import FileInput from "../../Buttons/FileInput";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
 
 const AccountingReports = () => {
   const [activeReport, setActiveReport] = useState("trial_balance");
@@ -172,7 +174,7 @@ const AccountingReports = () => {
           response = await getLedgerStatement(params);
           break;
         case "unit_statement":
-          response = await getUnitStatement(params);
+          response = await getUnitStatementDetailed(params);
           break;
         case "receivables_summary":
           response = await getReceivablesSummary(params);
@@ -180,8 +182,13 @@ const AccountingReports = () => {
         default:
           throw new Error("Invalid report type");
       }
-      console.log("response data.....", response.data);
-      setReportData(response.data);
+      const responseData = response?.data || {};
+      const normalizedData =
+        activeReport === "unit_statement"
+          ? (responseData?.data || responseData)
+          : responseData;
+      console.log("response data.....", responseData);
+      setReportData(normalizedData);
       toast.success("Report generated successfully");
     } catch (error) {
       toast.error("Failed to generate report");
@@ -316,6 +323,508 @@ const AccountingReports = () => {
     const filename = `trial_balance_${filters.start_date || "from"}_${filters.end_date || "to"}.xlsx`;
     XLSX.writeFile(wb, filename);
     toast.success("Trial balance exported as XLSX");
+  };
+
+  const exportBalanceSheet = () => {
+    if (activeReport !== "balance_sheet" || !reportData) {
+      toast.error("Generate balance sheet first");
+      return;
+    }
+
+    const liabilities = Array.isArray(reportData.liabilities) ? reportData.liabilities : [];
+    const assets = Array.isArray(reportData.assets) ? reportData.assets : [];
+
+    const liabilityExtraKeys = Array.from(
+      liabilities.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const assetExtraKeys = Array.from(
+      assets.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const liabilityHeaders = [
+      "Group Name",
+      "Group Code",
+      "Balance",
+      ...liabilityExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+    const assetHeaders = [
+      "Group Name",
+      "Group Code",
+      "Balance",
+      ...assetExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+
+    const selectedUnitName = filters.unit_id
+      ? units.find((u) => String(u.id) === String(filters.unit_id))?.name
+      : "";
+
+    const liabilityRows = liabilities.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...liabilityExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const assetRows = assets.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...assetExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const sheetData = [
+      ["Balance Sheet Report"],
+      [],
+      ["From Date", filters.start_date || reportData.from_date || "-"],
+      ["To Date", filters.end_date || reportData.to_date || "-"],
+      ["Unit", getUnitLabel(selectedUnitName)],
+      ["Total Liabilities & Equity", parseFloat(reportData.total_liabilities || 0).toFixed(2)],
+      ["Total Assets", parseFloat(reportData.total_assets || 0).toFixed(2)],
+      [],
+      ["Liabilities & Equity"],
+      liabilityHeaders,
+      ...liabilityRows,
+      ["Total Liabilities & Equity", "", parseFloat(reportData.total_liabilities || 0).toFixed(2)],
+      [],
+      ["Assets"],
+      assetHeaders,
+      ...assetRows,
+      ["Total Assets", "", parseFloat(reportData.total_assets || 0).toFixed(2)],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+
+    const maxCols = Math.max(liabilityHeaders.length, assetHeaders.length, 3);
+    const allDataRows = [...liabilityRows, ...assetRows];
+    ws["!cols"] = Array.from({ length: maxCols }, (_, colIdx) => {
+      const maxLen = Math.max(
+        colIdx < liabilityHeaders.length ? String(liabilityHeaders[colIdx]).length : 0,
+        colIdx < assetHeaders.length ? String(assetHeaders[colIdx]).length : 0,
+        ...allDataRows.map((row) => String(row[colIdx] ?? "").length)
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 14), 40) };
+    });
+
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: maxCols - 1 } },
+      { s: { r: 8, c: 0 }, e: { r: 8, c: maxCols - 1 } },
+      { s: { r: 13 + liabilityRows.length, c: 0 }, e: { r: 13 + liabilityRows.length, c: maxCols - 1 } },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "Balance Sheet");
+    const filename = `balance_sheet_${filters.start_date || "from"}_${filters.end_date || "to"}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast.success("Balance sheet exported as XLSX");
+  };
+
+  const exportProfitAndLoss = () => {
+    if (activeReport !== "profit_and_loss" || !reportData) {
+      toast.error("Generate profit & loss first");
+      return;
+    }
+
+    const income = Array.isArray(reportData.income) ? reportData.income : [];
+    const expenses = Array.isArray(reportData.expenses) ? reportData.expenses : [];
+
+    const incomeExtraKeys = Array.from(
+      income.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const expenseExtraKeys = Array.from(
+      expenses.reduce((acc, row) => {
+        Object.keys(row || {}).forEach((key) => acc.add(key));
+        return acc;
+      }, new Set())
+    ).filter((key) => !["group_name", "group_code", "balance"].includes(key));
+
+    const incomeHeaders = [
+      "Group Name",
+      "Group Code",
+      "Amount",
+      ...incomeExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+    const expenseHeaders = [
+      "Group Name",
+      "Group Code",
+      "Amount",
+      ...expenseExtraKeys.map((key) =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      ),
+    ];
+
+    const selectedUnitName = filters.unit_id
+      ? units.find((u) => String(u.id) === String(filters.unit_id))?.name
+      : "";
+
+    const incomeRows = income.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...incomeExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const expenseRows = expenses.map((item) => [
+      item.group_name || "-",
+      item.group_code || "-",
+      parseFloat(item.balance || 0).toFixed(2),
+      ...expenseExtraKeys.map((key) => {
+        const value = item?.[key];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") return JSON.stringify(value);
+        return value;
+      }),
+    ]);
+
+    const sheetData = [
+      ["Profit & Loss Report"],
+      [],
+      ["From Date", filters.start_date || reportData.from_date || "-"],
+      ["To Date", filters.end_date || reportData.to_date || "-"],
+      ["Unit", getUnitLabel(selectedUnitName)],
+      ["Total Revenue", parseFloat(reportData.total_income || 0).toFixed(2)],
+      ["Total Expenses", parseFloat(reportData.total_expenses || 0).toFixed(2)],
+      ["Net Profit/Loss", parseFloat(reportData.net_profit || 0).toFixed(2)],
+      [],
+      ["Revenue"],
+      incomeHeaders,
+      ...incomeRows,
+      ["Total Revenue", "", parseFloat(reportData.total_income || 0).toFixed(2)],
+      [],
+      ["Expenses"],
+      expenseHeaders,
+      ...expenseRows,
+      ["Total Expenses", "", parseFloat(reportData.total_expenses || 0).toFixed(2)],
+      [],
+      ["Net Profit/Loss", "", parseFloat(reportData.net_profit || 0).toFixed(2)],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+
+    const maxCols = Math.max(incomeHeaders.length, expenseHeaders.length, 3);
+    const allRows = [...incomeRows, ...expenseRows];
+    ws["!cols"] = Array.from({ length: maxCols }, (_, colIdx) => {
+      const maxLen = Math.max(
+        colIdx < incomeHeaders.length ? String(incomeHeaders[colIdx]).length : 0,
+        colIdx < expenseHeaders.length ? String(expenseHeaders[colIdx]).length : 0,
+        ...allRows.map((row) => String(row[colIdx] ?? "").length)
+      );
+      return { wch: Math.min(Math.max(maxLen + 2, 14), 40) };
+    });
+
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: maxCols - 1 } },
+      { s: { r: 9, c: 0 }, e: { r: 9, c: maxCols - 1 } },
+      { s: { r: 14 + incomeRows.length, c: 0 }, e: { r: 14 + incomeRows.length, c: maxCols - 1 } },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, "Profit & Loss");
+    const filename = `profit_and_loss_${filters.start_date || "from"}_${filters.end_date || "to"}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast.success("Profit & Loss exported as XLSX");
+  };
+
+  const exportUnitStatementPdf = () => {
+    if (activeReport !== "unit_statement" || !reportData) {
+      toast.error("Generate unit statement first");
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const marginX = 14;
+    const tableWidth = pageWidth - marginX * 2;
+    let y = 12;
+
+    const num = (...values) => {
+      for (const value of values) {
+        const parsed = parseFloat(value);
+        if (!Number.isNaN(parsed)) return parsed;
+      }
+      return 0;
+    };
+    const money = (value) => (num(value)).toFixed(2);
+    const text = (value, fallback = "-") => {
+      if (value === null || value === undefined) return fallback;
+      const str = String(value).trim();
+      return str || fallback;
+    };
+    const dateText = (value) => (value ? new Date(value).toLocaleDateString() : "-");
+    const addPageIfNeeded = (h) => {
+      if (y + h > pageHeight - 14) {
+        doc.addPage();
+        y = 12;
+      }
+    };
+
+    const company = reportData.company_details || reportData.company || reportData.organization || {};
+    const unit = reportData.unit || {};
+    const summary = reportData.summary || {};
+    const details = reportData.details || reportData.statement_details || {};
+    const period = reportData.period || reportData.statement_details || {};
+    const invoices = reportData.invoices || reportData.invoice_details || {};
+    const payments = reportData.payments || reportData.payment_details || {};
+    const income_breakdown = reportData.income_breakdown || reportData.transaction_details || {};
+    const income_by_category = reportData.income_by_category || reportData.income_details || {};
+    const cam_bills = reportData.cam_bills || reportData.cam_bill_details || {};
+    const expense_breakdown = reportData.expense_breakdown || reportData.expense_details || {};
+    const expense_by_category = reportData.expenses_by_category || reportData.receipt_details || {};
+    const expenses = reportData.expenses || reportData.expense_details || {};
+  
+    const statements = reportData.statements || reportData.statement_details || {};
+
+    const companyName = text(
+      company.company_name || company.name || reportData.company_name || "ORGANIZATION NAME"
+    );
+    const address1 = text(
+      company.address || company.address1 || reportData.company_address || "",
+      ""
+    );
+    const address2 = [
+      company.address_line2,
+      company.city,
+      company.state,
+      company.pincode,
+      company.country,
+    ]
+      .filter((part) => part !== null && part !== undefined && String(part).trim() !== "")
+      .join(", ");
+    const siteName = text(
+      company.site_name || reportData.site?.name || unit.site || "SITE"
+    );
+
+    const periodFrom = reportData.from_date || filters.start_date;
+    const periodTo = reportData.to_date || filters.end_date;
+    const periodLabel = `${dateText(periodFrom)} to ${dateText(periodTo)}`;
+    const statementNo = text(
+      reportData.statement_number || reportData.statement_no || reportData.reference_no || reportData.number,
+      `US/${new Date().getFullYear()}`
+    );
+    const statementDate = dateText(
+      reportData.statement_date || reportData.generated_at || new Date().toISOString()
+    );
+    const residentName = text(
+      reportData.customer_name || unit.owner_name || unit.resident_name || unit.name
+    );
+    const flatNo = text(unit.flat_no || unit.name || unit.unit_no || "Organization-wide");
+
+    const advanceReceived = num(
+      details.advance_maintenance_received,
+      details.advance_received,
+      reportData.advance_maintenance_received,
+      reportData.advance_received,
+      summary.advance_maintenance_received,
+      summary.total_paid
+    );
+    const transferToApex = num(
+      details.transfer_to_apex,
+      details.apex_transfer,
+      reportData.transfer_to_apex,
+      summary.transfer_to_apex
+    );
+    const balanceForBuilding = num(
+      details.balance_for_building_maintenance,
+      reportData.balance_for_building_maintenance,
+      advanceReceived - transferToApex
+    );
+    const maintenanceCharges = num(
+      details.maintenance_charges_period,
+      details.maintenance_charges,
+      reportData.maintenance_charges,
+      summary.total_invoiced
+    );
+    const totalIncome = num(
+      details.total_income,
+      reportData.total_income,
+      summary.other_income
+    );
+    const balanceFund = num(
+      details.balance_fund_available,
+      reportData.balance_fund_available,
+      balanceForBuilding - maintenanceCharges + totalIncome
+    );
+
+    const rawExpenseRows =
+      reportData.expense_breakdown ||
+      reportData.expense_details ||
+      reportData.maintenance_breakdown ||
+      reportData.expenses ||
+      [];
+    let expenseRows = Array.isArray(rawExpenseRows)
+      ? rawExpenseRows.map((row, idx) => ({
+        srNo: idx + 1,
+        label: text(
+          row.particular || row.description || row.name || row.head || `Expense ${idx + 1}`
+        ),
+        amount: num(row.amount, row.value, row.expense_amount, row.debit),
+      }))
+      : [];
+
+    if (expenseRows.length === 0 && Array.isArray(reportData.transactions)) {
+      expenseRows = reportData.transactions
+        .filter((txn) => num(txn.debit, txn.amount) > 0)
+        .map((txn, idx) => ({
+          srNo: idx + 1,
+          label: text(txn.description || txn.particular || `Expense ${idx + 1}`),
+          amount: num(txn.debit, txn.amount),
+        }));
+    }
+
+    // Company box (dynamic height + wrapped text)
+    const addressLines = [
+      ...(address1 ? doc.splitTextToSize(address1, tableWidth - 12) : []),
+      ...(address2 ? doc.splitTextToSize(address2, tableWidth - 12) : []),
+    ];
+    const headerTopPad = 7;
+    const headerLineH = 5.2;
+    const siteGap = 3.5;
+    const siteH = 5;
+    const headerBottomPad = 5;
+    const headerHeight =
+      headerTopPad +
+      headerLineH + // company name
+      addressLines.length * headerLineH +
+      siteGap +
+      siteH +
+      headerBottomPad;
+
+    addPageIfNeeded(headerHeight);
+    doc.setDrawColor(60, 60, 60);
+    doc.roundedRect(marginX, y, tableWidth, headerHeight, 5, 5);
+
+    let headerY = y + headerTopPad;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(companyName.toUpperCase(), pageWidth / 2, headerY, { align: "center" });
+
+    headerY += headerLineH;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.8);
+    addressLines.forEach((line) => {
+      doc.text(String(line), pageWidth / 2, headerY, { align: "center" });
+      headerY += headerLineH;
+    });
+    
+    doc.setTextColor(200, 0, 0);
+    doc.setFont("helvetica", "bold");
+    doc.text(`SITE: ${siteName}`, pageWidth / 2, headerY + siteGap, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    y += headerHeight + 6;
+
+    // Title + details grid
+    addPageIfNeeded(30);
+    doc.rect(marginX, y, tableWidth, 10);
+    doc.setFont("times", "normal");
+    doc.setFontSize(10.5);
+    doc.text("STATEMENT OF COMMON AREA MAINTENANCE EXPENSES", pageWidth / 2, y + 6.5, {
+      align: "center",
+    });
+    y += 10;
+    doc.rect(marginX, y, tableWidth, 24);
+    doc.line(marginX + tableWidth / 2, y, marginX + tableWidth / 2, y + 16);
+    doc.line(marginX, y + 8, marginX + tableWidth, y + 8);
+    doc.line(marginX, y + 16, marginX + tableWidth, y + 16);
+    doc.setFontSize(9.6);
+    doc.text(`Period: ${periodLabel}`, marginX + 2, y + 5.5);
+    doc.text(`No.: ${statementNo}`, marginX + tableWidth / 2 + 2, y + 5.5);
+    doc.text(`Flat No: ${flatNo}`, marginX + 2, y + 13.5);
+    doc.text(`Date: ${statementDate}`, marginX + tableWidth - 2, y + 13.5, { align: "right" });
+    doc.text(`Name: ${residentName}`, marginX + 2, y + 21.5);
+    y += 30;
+
+    // Main particulars table (sample structure)
+    const col1 = 22;
+    const col2 = 108;
+    const col3 = tableWidth - col1 - col2;
+    const drawRow = (c1, c2, c3, options = {}) => {
+      const rowH = options.h || 7;
+      addPageIfNeeded(rowH + 1);
+      doc.rect(marginX, y, tableWidth, rowH);
+      doc.line(marginX + col1, y, marginX + col1, y + rowH);
+      doc.line(marginX + col1 + col2, y, marginX + col1 + col2, y + rowH);
+      doc.setFont("times", options.bold ? "bold" : "normal");
+      doc.setFontSize(options.size || 8.8);
+      doc.text(String(c1 ?? ""), marginX + col1 / 2, y + rowH - 2.2, { align: "center" });
+      doc.text(String(c2 ?? ""), marginX + col1 + 1.5, y + rowH - 2.2);
+      doc.text(String(c3 ?? ""), marginX + tableWidth - 1.5, y + rowH - 2.2, { align: "right" });
+      y += rowH;
+    };
+
+    drawRow("Sr. No.", "Particulars", "Amount (in Rs.)", { bold: true });
+    drawRow("A", "Advance Maintenance charges received", money(advanceReceived));
+    drawRow("B", "Less: Transfer to Apex Body @ 30%", money(transferToApex));
+    drawRow("C", "Balance for Building Maintenance Charges", money(balanceForBuilding));
+    drawRow("D", "Less: Maintenance Charges for the above period", money(maintenanceCharges));
+    drawRow("Sr. No.", "Particular", "Amt. (Rs.)", { bold: true });
+
+    expenseRows.forEach((item) => {
+      drawRow(item.srNo, item.label, money(item.amount));
+    });
+
+    drawRow("E", "Add: Total Income", money(totalIncome));
+    drawRow("F", "Balance Fund Available (F=C-D+E)", money(balanceFund), { bold: true });
+
+    // Footer notes
+    const notes =
+      (Array.isArray(reportData.notes) && reportData.notes.length > 0
+        ? reportData.notes
+        : [
+          "Any Debit / Credit of expenses will be adjusted in next statement of expenses.",
+          "This is computer generated statement, signature is not required.",
+          "For queries write to support@example.com",
+          "These are consolidated expenses for the selected period.",
+        ]);
+    y += 8;
+    doc.setFont("times", "normal");
+    doc.setFontSize(8.2);
+    notes.forEach((note, idx) => {
+      const lines = doc.splitTextToSize(`${idx + 1}) ${note}`, tableWidth);
+      addPageIfNeeded(lines.length * 4.2 + 1);
+      doc.text(lines, marginX, y);
+      y += lines.length * 4.2 + 1;
+    });
+
+    const safeUnit = (unit.name || "organization_wide")
+      .toString()
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[^\w-]/g, "");
+    const filename = `unit_statement_${safeUnit}_${filters.start_date || "from"}_${filters.end_date || "to"}.pdf`;
+    doc.save(filename);
+    toast.success("Unit statement PDF exported");
   };
 
   const handleMisDownload = async (kind) => {
@@ -1303,14 +1812,38 @@ const AccountingReports = () => {
               >
                 {loading ? "Generating..." : "Generate Report"}
               </button>
-              {activeReport === "trial_balance" && (
+              {(activeReport === "trial_balance" || activeReport === "balance_sheet" || activeReport === "profit_and_loss") && (
                 <button
-                  onClick={exportTrialBalanceSheet}
+                  onClick={
+                    activeReport === "trial_balance"
+                      ? exportTrialBalanceSheet
+                      : activeReport === "balance_sheet"
+                        ? exportBalanceSheet
+                        : exportProfitAndLoss
+                  }
                   disabled={loading || !reportData}
                   className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 disabled:bg-gray-400"
-                  title={!reportData ? "Generate report first" : "Export trial balance"}
+                  title={
+                    !reportData
+                      ? "Generate report first"
+                      : activeReport === "trial_balance"
+                        ? "Export trial balance"
+                        : activeReport === "balance_sheet"
+                          ? "Export balance sheet"
+                          : "Export profit & loss"
+                  }
                 >
                   Export Sheet
+                </button>
+              )}
+              {activeReport === "unit_statement" && (
+                <button
+                  onClick={exportUnitStatementPdf}
+                  disabled={loading || !reportData}
+                  className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-800 disabled:bg-gray-400"
+                  title={!reportData ? "Generate report first" : "Export unit statement PDF"}
+                >
+                  Export PDF
                 </button>
               )}
             </div>

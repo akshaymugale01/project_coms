@@ -75,7 +75,9 @@ const Login = () => {
       toast.error("Please fill in all fields.");
       return;
     }
-
+    
+    
+    
     try {
       const response = await login({
         user: {
@@ -161,7 +163,7 @@ const Login = () => {
       //   navigate(selectedSiteId === 10 ? "/employee/dashboard" : "/mytickets");
       // }
       const route =
-        userType === "pms_admin"
+        userType === "pms_admin" || userType === "project_head"
           ? "/dashboard"
           : selectedSiteId === 10
           ? "/employee/dashboard"

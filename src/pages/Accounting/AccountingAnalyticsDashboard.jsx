@@ -2,11 +2,7 @@ import { useEffect, useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import {
-  getAccountingInvoices,
-  getAccountingPayments,
-  getJournalEntries,
-  getLedgers,
-  getAccountGroups,
+  getAccountingAnalytics,
 } from "../../api/accountingApi";
 import { FaSpinner } from "react-icons/fa";
 
@@ -19,39 +15,226 @@ const AccountingAnalyticsDashboard = () => {
     journalEntries: [],
     ledgers: [],
     accountGroups: [],
+    invoiceStatusRows: [],
+    paymentModesRows: [],
+    paymentModesAmountRows: [],
+    topCustomersRows: [],
+  });
+  const [dashboardMeta, setDashboardMeta] = useState({
+    monthlyRevenue: null,
+    monthlyExpenses: null,
+    monthlyInvoices: null,
+    totals: {},
+  });
+  const currentYear = new Date().getFullYear();
+  const [dateRange, setDateRange] = useState({
+    startDate: `${currentYear}-01-01`,
+    endDate: `${currentYear}-12-31`,
   });
 
   useEffect(() => {
-    fetchAccountingAnalytics();
+    fetchAccountingAnalytics(dateRange);
   }, []);
 
-  const fetchAccountingAnalytics = async (retry = 0) => {
+  const fetchAccountingAnalytics = async (range, retry = 0) => {
     try {
       setLoading(true);
-      const [invoicesRes, paymentsRes, journalRes, ledgersRes, groupsRes] =
-        await Promise.all([
-          getAccountingInvoices(),
-          getAccountingPayments(),
-          getJournalEntries(),
-          getLedgers(),
-          getAccountGroups(),
-        ]);
+      const toArray = (value) => (Array.isArray(value) ? value : []);
+      const num = (...values) => {
+        for (const value of values) {
+          const parsed = Number(value);
+          if (Number.isFinite(parsed)) return parsed;
+        }
+        return 0;
+      };
+      const normalizeMonthLabel = (rawLabel) => {
+        const label = String(rawLabel || "").trim();
+        if (!label) return null;
+        if (/^\d+$/.test(label)) {
+          const monthNumber = Number(label);
+          if (monthNumber >= 1 && monthNumber <= 12) return monthLabels[monthNumber - 1];
+        }
+        const shortLabel = label.slice(0, 3).toLowerCase();
+        return monthLabels.find((month) => month.toLowerCase() === shortLabel) || null;
+      };
+      const buildEmptyMonthSeries = () => {
+        const result = {};
+        monthLabels.forEach((month) => {
+          result[month] = 0;
+        });
+        return result;
+      };
+      const normalizeMonthlySeries = (series, preferredKeys = []) => {
+        if (!series) return null;
+        const normalized = buildEmptyMonthSeries();
 
-      const data = {
-        invoices: invoicesRes.data.data || invoicesRes.data || [],
-        payments: paymentsRes.data.data || paymentsRes.data || [],
-        journalEntries: journalRes.data.data || journalRes.data || [],
-        ledgers: ledgersRes.data.data || ledgersRes.data || [],
-        accountGroups: groupsRes.data.data || groupsRes.data || [],
+        if (Array.isArray(series)) {
+          series.forEach((row) => {
+            const month = normalizeMonthLabel(
+              row?.month_name || row?.month || row?.label || row?.name || row?.key,
+            );
+            if (month) {
+              normalized[month] += num(
+                ...preferredKeys.map((key) => row?.[key]),
+                row?.amount,
+                row?.value,
+                row?.total,
+                0,
+              );
+            }
+          });
+          return normalized;
+        }
+
+        if (typeof series === "object") {
+          Object.entries(series).forEach(([rawMonth, rawValue]) => {
+            const month = normalizeMonthLabel(rawMonth);
+            const value =
+              typeof rawValue === "object" && rawValue !== null
+                ? num(
+                    ...preferredKeys.map((key) => rawValue?.[key]),
+                    rawValue.amount,
+                    rawValue.value,
+                    rawValue.total,
+                    0,
+                  )
+                : num(rawValue, 0);
+            if (month) normalized[month] += value;
+          });
+          return normalized;
+        }
+
+        return null;
       };
 
-      setDashboardData(data);
+      const response = await getAccountingAnalytics({
+        start_date: range?.startDate,
+        end_date: range?.endDate,
+      });
+      const payload = response?.data?.data || response?.data || {};
+      const payloadObj = Array.isArray(payload) ? {} : payload;
+      const analyticsRaw = payloadObj.analytics || payloadObj;
+      const analytics = Array.isArray(analyticsRaw) ? {} : analyticsRaw;
+      const trendRows = toArray(
+        Array.isArray(payload)
+          ? payload
+          : analytics.monthly_trend ||
+              analytics.monthlyTrend ||
+              analytics.monthly_data ||
+              analytics.monthlyData ||
+              payloadObj.monthly_data ||
+              payloadObj.monthlyData ||
+              payloadObj.monthly_trend ||
+              payloadObj.monthlyTrend,
+      );
+      const summary =
+        payloadObj.summary ||
+        analytics.summary ||
+        payloadObj.totals ||
+        analytics.totals ||
+        payloadObj.stats ||
+        analytics.stats ||
+        {};
+
+      const invoices = toArray(analytics.invoices || payloadObj.invoices);
+      const payments = toArray(analytics.payments || payloadObj.payments);
+      const journalEntries = toArray(
+        analytics.journal_entries ||
+          analytics.recent_journal_entries ||
+          payloadObj.journal_entries ||
+          payloadObj.recent_journal_entries,
+      );
+      const ledgers = toArray(analytics.ledgers || payloadObj.ledgers);
+      const accountGroups = toArray(
+        analytics.account_groups || analytics.accountGroups || payloadObj.account_groups || payloadObj.accountGroups,
+      );
+      const invoiceStatusRows = toArray(analytics.invoice_status || payloadObj.invoice_status);
+      const paymentModesRows = toArray(analytics.payment_modes || payloadObj.payment_modes);
+      const paymentModesAmountRows = toArray(
+        analytics.payment_modes_amount || payloadObj.payment_modes_amount,
+      );
+      const topCustomersRows = toArray(analytics.top_customers || payloadObj.top_customers);
+
+      setDashboardData({
+        invoices,
+        payments,
+        journalEntries,
+        ledgers,
+        accountGroups,
+        invoiceStatusRows,
+        paymentModesRows,
+        paymentModesAmountRows,
+        topCustomersRows,
+      });
+      setDashboardMeta({
+        monthlyRevenue: normalizeMonthlySeries(
+          analytics.monthly_revenue ||
+            analytics.monthlyRevenue ||
+            analytics.monthly_trend ||
+            analytics.monthlyTrend ||
+            payloadObj.monthly_revenue ||
+            payloadObj.monthlyRevenue ||
+            trendRows,
+          ["revenue", "income", "collected"],
+        ),
+        monthlyExpenses: normalizeMonthlySeries(
+          analytics.monthly_expenses ||
+            analytics.monthlyExpenses ||
+            analytics.expense_trend ||
+            analytics.expenseTrend ||
+            analytics.monthly_trend ||
+            analytics.monthlyTrend ||
+            payloadObj.monthly_expenses ||
+            payloadObj.monthlyExpenses ||
+            trendRows,
+          ["expense", "expenses"],
+        ),
+        monthlyInvoices: normalizeMonthlySeries(
+          analytics.monthly_invoices ||
+            analytics.monthlyInvoices ||
+            payloadObj.monthly_invoices ||
+            payloadObj.monthlyInvoices ||
+            trendRows,
+          ["invoice", "invoiced", "invoices", "amount", "value", "total"],
+        ),
+        totals: {
+          totalInvoices: num(
+            summary.total_invoices,
+            analytics.total_invoices,
+            payloadObj.total_invoices,
+            invoiceStatusRows.reduce((sum, row) => sum + num(row?.count, 0), 0),
+          ),
+          totalPayments: num(
+            summary.total_payments,
+            analytics.total_payments,
+            payloadObj.total_payments,
+            paymentModesRows.reduce((sum, row) => sum + num(row?.count, 0), 0),
+          ),
+          totalExpenses: num(summary.total_expenses, analytics.total_expenses, payloadObj.total_expenses),
+          totalRevenue: num(
+            summary.total_revenue,
+            analytics.total_revenue,
+            payloadObj.total_revenue,
+          ),
+          totalJournalEntries: num(
+            summary.journal_entries,
+            analytics.total_journal_entries,
+            payloadObj.total_journal_entries,
+          ),
+          totalLedgers: num(
+            summary.active_ledgers,
+            analytics.total_ledgers,
+            payloadObj.total_ledgers,
+            accountGroups.length,
+          ),
+        },
+      });
       setLoading(false);
     } catch (error) {
       if (retry < 1) {
         setTimeout(() => {
           console.log("Retrying Accounting Analytics fetch", error);
-          fetchAccountingAnalytics(retry + 1);
+          fetchAccountingAnalytics(range, retry + 1);
         }, 100);
       } else {
         console.error("Error fetching accounting analytics:", error);
@@ -60,20 +243,71 @@ const AccountingAnalyticsDashboard = () => {
     }
   };
 
+  const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const isExpenseEntry = (entry) => {
+    const entryType = (entry?.entry_type || "").toString().toLowerCase();
+    return entryType.includes("expense") || Boolean(entry?.expense_month) || Boolean(entry?.expense_year);
+  };
+
   // Calculate monthly revenue from payments
   const getMonthlyRevenue = () => {
+    if (dashboardMeta.monthlyRevenue) return dashboardMeta.monthlyRevenue;
+
     const monthlyData = {};
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    
-    months.forEach((month) => {
+    monthLabels.forEach((month) => {
       monthlyData[month] = 0;
     });
 
     dashboardData.payments.forEach((payment) => {
       const date = new Date(payment.payment_date);
-      const month = months[date.getMonth()];
+      const month = monthLabels[date.getMonth()];
       monthlyData[month] += parseFloat(payment.amount || 0);
     });
+
+    return monthlyData;
+  };
+
+  // Calculate monthly expenses from journal entries
+  const getMonthlyExpenses = () => {
+    if (dashboardMeta.monthlyExpenses) return dashboardMeta.monthlyExpenses;
+
+    const monthlyData = {};
+    monthLabels.forEach((month) => {
+      monthlyData[month] = 0;
+    });
+
+    dashboardData.journalEntries
+      .filter((entry) => entry.status !== "cancelled")
+      .filter(isExpenseEntry)
+      .forEach((entry) => {
+        const expenseMonthValue = entry?.expense_month;
+        const monthIndex =
+          typeof expenseMonthValue === "number"
+            ? expenseMonthValue - 1
+            : monthLabels.findIndex(
+                (label) =>
+                  label.toLowerCase() === String(expenseMonthValue || "").slice(0, 3).toLowerCase(),
+              );
+
+        const fallbackDate = entry?.entry_date ? new Date(entry.entry_date) : null;
+        const resolvedMonthIndex =
+          monthIndex >= 0 && monthIndex < 12
+            ? monthIndex
+            : fallbackDate && !Number.isNaN(fallbackDate.getTime())
+              ? fallbackDate.getMonth()
+              : -1;
+
+        if (resolvedMonthIndex >= 0) {
+          const month = monthLabels[resolvedMonthIndex];
+          monthlyData[month] += parseFloat(
+            entry.total_amount ??
+              entry.total_debit ??
+              entry.amount ??
+              0,
+          );
+        }
+      });
 
     return monthlyData;
   };
@@ -88,6 +322,14 @@ const AccountingAnalyticsDashboard = () => {
       cancelled: 0,
     };
 
+    if (dashboardData.invoiceStatusRows.length) {
+      dashboardData.invoiceStatusRows.forEach((row) => {
+        const status = String(row?.status || "draft").toLowerCase();
+        statusCount[status] = (statusCount[status] || 0) + Number(row?.count || 0);
+      });
+      return statusCount;
+    }
+
     dashboardData.invoices.forEach((invoice) => {
       const status = invoice.status?.toLowerCase() || "draft";
       statusCount[status] = (statusCount[status] || 0) + 1;
@@ -99,6 +341,14 @@ const AccountingAnalyticsDashboard = () => {
   // Calculate payment method breakdown
   const getPaymentMethodBreakdown = () => {
     const methodCount = {};
+
+    if (dashboardData.paymentModesAmountRows.length) {
+      dashboardData.paymentModesAmountRows.forEach((row) => {
+        const method = row?.mode || "Unknown";
+        methodCount[method] = (methodCount[method] || 0) + parseFloat(row?.amount || 0);
+      });
+      return methodCount;
+    }
 
     dashboardData.payments.forEach((payment) => {
       const method = payment.payment_method || "Unknown";
@@ -112,6 +362,15 @@ const AccountingAnalyticsDashboard = () => {
   const getAccountGroupDistribution = () => {
     const groupBalance = {};
 
+    if (dashboardData.accountGroups.length) {
+      dashboardData.accountGroups.forEach((group) => {
+        const groupName = group.name || group.account_group_name || "Uncategorized";
+        const balance = parseFloat(group.balance || group.current_balance || 0);
+        groupBalance[groupName] = (groupBalance[groupName] || 0) + balance;
+      });
+      return groupBalance;
+    }
+
     dashboardData.ledgers.forEach((ledger) => {
       const groupName = ledger.account_group_name || "Uncategorized";
       const balance = parseFloat(ledger.current_balance || 0);
@@ -122,9 +381,39 @@ const AccountingAnalyticsDashboard = () => {
   };
 
   const monthlyRevenue = getMonthlyRevenue();
+  const monthlyExpenses = getMonthlyExpenses();
+  const monthlyInvoices =
+    dashboardMeta.monthlyInvoices ||
+    Object.keys(monthlyRevenue).reduce((acc, month) => {
+      acc[month] = dashboardData.invoices
+        .filter((inv) => {
+          const invMonth = new Date(inv.invoice_date).toLocaleString("default", {
+            month: "short",
+          });
+          return invMonth === month;
+        })
+        .reduce((sum, inv) => sum + parseFloat(inv.total_amount || 0), 0);
+      return acc;
+    }, {});
   const invoiceStatus = getInvoiceStatusBreakdown();
   const paymentMethods = getPaymentMethodBreakdown();
   const accountGroups = getAccountGroupDistribution();
+  const totalExpenses =
+    dashboardMeta.totals?.totalExpenses ||
+    Object.values(monthlyExpenses).reduce((sum, value) => sum + value, 0);
+  const totalInvoices = dashboardMeta.totals?.totalInvoices || dashboardData.invoices.length;
+  const totalPayments = dashboardMeta.totals?.totalPayments || dashboardData.payments.length;
+  const totalJournalEntries =
+    dashboardMeta.totals?.totalJournalEntries || dashboardData.journalEntries.length;
+  const totalLedgers = dashboardMeta.totals?.totalLedgers || dashboardData.ledgers.length;
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    setDateRange((prev) => ({ ...prev, [name]: value }));
+  };
+  const applyDateFilter = () => {
+    if (!dateRange.startDate || !dateRange.endDate) return;
+    fetchAccountingAnalytics(dateRange);
+  };
 
   // Monthly Revenue Line Chart
   const monthlyRevenueChart = {
@@ -164,6 +453,56 @@ const AccountingAnalyticsDashboard = () => {
         name: "Revenue",
         data: Object.values(monthlyRevenue),
         color: "#10B981",
+      },
+      {
+        name: "Expenses",
+        data: Object.values(monthlyExpenses),
+        color: "#EF4444",
+      },
+    ],
+    legend: {
+      itemStyle: { color: "#9CA3AF" },
+    },
+  };
+
+  // Monthly Expenses Line Chart
+  const monthlyExpenseChart = {
+    chart: {
+      type: "line",
+      backgroundColor: "transparent",
+    },
+    title: {
+      text: "Monthly Expenses Trend",
+      style: { color: "#fff", fontSize: "16px" },
+    },
+    xAxis: {
+      categories: Object.keys(monthlyExpenses),
+      labels: { style: { color: "#9CA3AF" } },
+    },
+    yAxis: {
+      title: {
+        text: "Expenses (₹)",
+        style: { color: "#9CA3AF" },
+      },
+      labels: { style: { color: "#9CA3AF" } },
+      gridLineColor: "#374151",
+    },
+    tooltip: {
+      pointFormat: "Expense: <b>₹{point.y:.2f}</b>",
+    },
+    plotOptions: {
+      line: {
+        dataLabels: {
+          enabled: false,
+        },
+        enableMouseTracking: true,
+      },
+    },
+    series: [
+      {
+        name: "Expenses",
+        data: Object.values(monthlyExpenses),
+        color: "#EF4444",
       },
     ],
     legend: {
@@ -325,17 +664,13 @@ const AccountingAnalyticsDashboard = () => {
       },
       {
         name: "Invoices Issued",
-        data: Object.keys(monthlyRevenue).map((month) => {
-          return dashboardData.invoices
-            .filter((inv) => {
-              const invMonth = new Date(inv.invoice_date).toLocaleString("default", {
-                month: "short",
-              });
-              return invMonth === month;
-            })
-            .reduce((sum, inv) => sum + parseFloat(inv.total_amount || 0), 0);
-        }),
+        data: Object.keys(monthlyRevenue).map((month) => monthlyInvoices[month] || 0),
         color: "#3B82F6",
+      },
+      {
+        name: "Expenses Incurred",
+        data: Object.values(monthlyExpenses),
+        color: "#EF4444",
       },
     ],
     legend: {
@@ -355,6 +690,11 @@ const AccountingAnalyticsDashboard = () => {
     },
     xAxis: {
       categories: (() => {
+        if (dashboardData.topCustomersRows.length) {
+          return dashboardData.topCustomersRows
+            .slice(0, 5)
+            .map((row) => row.customer_name || row.customer || row.name || "Unknown");
+        }
         const customerTotals = {};
         dashboardData.invoices.forEach((invoice) => {
           const customer = invoice.customer_name || "Unknown";
@@ -383,6 +723,11 @@ const AccountingAnalyticsDashboard = () => {
       {
         name: "Invoice Total",
         data: (() => {
+          if (dashboardData.topCustomersRows.length) {
+            return dashboardData.topCustomersRows
+              .slice(0, 5)
+              .map((row) => parseFloat(row.amount || row.total || row.value || 0));
+          }
           const customerTotals = {};
           dashboardData.invoices.forEach((invoice) => {
             const customer = invoice.customer_name || "Unknown";
@@ -412,6 +757,7 @@ const AccountingAnalyticsDashboard = () => {
 
   const chartOptions = [
     { id: "monthly_revenue", label: "Monthly Revenue", icon: "📈" },
+    { id: "monthly_expenses", label: "Monthly Expenses", icon: "💸" },
     { id: "invoice_status", label: "Invoice Status", icon: "📊" },
     { id: "payment_methods", label: "Payment Methods", icon: "💳" },
     { id: "account_groups", label: "Account Groups", icon: "📂" },
@@ -423,6 +769,8 @@ const AccountingAnalyticsDashboard = () => {
     switch (selectedChart) {
       case "monthly_revenue":
         return <HighchartsReact highcharts={Highcharts} options={monthlyRevenueChart} />;
+      case "monthly_expenses":
+        return <HighchartsReact highcharts={Highcharts} options={monthlyExpenseChart} />;
       case "invoice_status":
         return <HighchartsReact highcharts={Highcharts} options={invoiceStatusPieChart} />;
       case "payment_methods":
@@ -440,13 +788,42 @@ const AccountingAnalyticsDashboard = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-end gap-3 bg-gray-800 p-4 rounded-lg">
+        <div>
+          <label className="block text-xs text-gray-300 mb-1">From</label>
+          <input
+            type="date"
+            name="startDate"
+            value={dateRange.startDate}
+            onChange={handleDateChange}
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-600"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-300 mb-1">To</label>
+          <input
+            type="date"
+            name="endDate"
+            value={dateRange.endDate}
+            onChange={handleDateChange}
+            className="px-3 py-2 rounded bg-gray-900 text-white border border-gray-600"
+          />
+        </div>
+        <button
+          onClick={applyDateFilter}
+          className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+        >
+          Apply
+        </button>
+      </div>
+
       {/* Chart Selection Buttons */}
       <div className="flex flex-wrap gap-2">
         {chartOptions.map((option) => (
           <button
             key={option.id}
             onClick={() => setSelectedChart(option.id)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ₹{
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
               selectedChart === option.id
                 ? "bg-blue-600 text-white shadow-lg"
                 : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -464,22 +841,26 @@ const AccountingAnalyticsDashboard = () => {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-gray-800 p-4 rounded-lg text-center">
           <p className="text-gray-400 text-sm">Total Invoices</p>
-          <p className="text-2xl font-bold text-white">{dashboardData.invoices.length}</p>
+          <p className="text-2xl font-bold text-white">{totalInvoices}</p>
         </div>
         <div className="bg-gray-800 p-4 rounded-lg text-center">
           <p className="text-gray-400 text-sm">Total Payments</p>
-          <p className="text-2xl font-bold text-white">{dashboardData.payments.length}</p>
+          <p className="text-2xl font-bold text-white">{totalPayments}</p>
+        </div>
+        <div className="bg-gray-800 p-4 rounded-lg text-center">
+          <p className="text-gray-400 text-sm">Total Expenses</p>
+          <p className="text-2xl font-bold text-red-400">₹{totalExpenses.toFixed(2)}</p>
         </div>
         <div className="bg-gray-800 p-4 rounded-lg text-center">
           <p className="text-gray-400 text-sm">Journal Entries</p>
-          <p className="text-2xl font-bold text-white">{dashboardData.journalEntries.length}</p>
+          <p className="text-2xl font-bold text-white">{totalJournalEntries}</p>
         </div>
         <div className="bg-gray-800 p-4 rounded-lg text-center">
           <p className="text-gray-400 text-sm">Active Ledgers</p>
-          <p className="text-2xl font-bold text-white">{dashboardData.ledgers.length}</p>
+          <p className="text-2xl font-bold text-white">{totalLedgers}</p>
         </div>
       </div>
     </div>

@@ -96,7 +96,26 @@ export const getBalanceSheet = (params) => API.get("/accounting_reports/balance_
 export const getProfitAndLoss = (params) => API.get("/accounting_reports/profit_and_loss.json", { params });
 export const getLedgerStatement = (params) => API.get("/accounting_reports/ledger_statement.json", { params });
 export const getUnitStatement = (params) => API.get("/accounting_reports/unit_statement.json", { params });
+export const getUnitStatementDetailed = (params) => API.get("/accounting_reports/unit_statement_detailed.json", { params });
 export const getReceivablesSummary = (params) => API.get("/accounting_reports/receivables_summary.json", { params });
+export const getAccountingDashboard = (params = {}) => {
+  const token = getItemInLocalStorage("TOKEN");
+  return API.get("/accounting_reports/dashboard.json", {
+    params: {
+      ...(token ? { token } : {}),
+      ...params,
+    },
+  });
+};
+export const getAccountingAnalytics = (params = {}) => {
+  const token = getItemInLocalStorage("TOKEN");
+  return API.get("/accounting_reports/analytics.json", {
+    params: {
+      ...(token ? { token } : {}),
+      ...params,
+    },
+  });
+};
 
 // MIS (Excel)
 export const downloadExpensesMIS = (params) =>
