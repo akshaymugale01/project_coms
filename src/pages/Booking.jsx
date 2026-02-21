@@ -15,6 +15,8 @@ import {
   getFacitilitySetup,
   getHotelSetup,
 } from "../api";
+import { FaCalendarCheck } from "react-icons/fa";
+import AmenitiesCalendar from "./SubPages/AmenitiesCalendar";
 
 const Booking = () => {
   const [searchText, setSearchText] = useState("");
@@ -30,6 +32,7 @@ const Booking = () => {
   const [filteredBookings, setFilteredBookings] = useState([]); // Filtered amenities bookings
   const [filteredHotelBookings, setFilteredHotelBookings] = useState([]); // Filtered hotel bookings
   const themeColor = "rgb(3, 19 37)";
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -419,6 +422,15 @@ const Booking = () => {
             >
               Guest Room Bookings
             </h2>
+             <h2
+                          className={`p-1 ${
+                            page === "Calendar" &&
+                            "bg-white text-blue-500 shadow-custom-all-sides"
+                          } rounded-full px-4 cursor-pointer text-center transition-all duration-300 ease-linear`}
+                          onClick={() => setPage("Calendar")}
+                        >
+                          <FaCalendarCheck size={25} />
+                        </h2>
           </div>
         </div>
         {page === "meetingBooking" && (
@@ -510,6 +522,12 @@ const Booking = () => {
             {modal && <ExportBookingModal onclose={() => showModal(false)} />}
           </div>
         )}
+
+         {page === "Calendar" && (
+                  <div className="p-4 mb-10 relative">
+                    <AmenitiesCalendar />
+                  </div>
+                )}
 
         {page === "seatBooking" && (
           <div>
