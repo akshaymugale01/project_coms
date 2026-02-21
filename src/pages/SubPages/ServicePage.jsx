@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getSoftServices, softServiceDownloadQrCode} from "../../api";
-import { BiEdit, BiFilterAlt } from "react-icons/bi";
+import { BiEdit } from "react-icons/bi";
 import { IoAddCircleOutline } from "react-icons/io5";
 import Table from "../../components/table/Table";
 import { Link } from "react-router-dom";
@@ -9,15 +9,18 @@ import Services from "../Services";
 import Navbar from "../../components/Navbar";
 import * as XLSX from "xlsx";
 import { DNA } from "react-loader-spinner";
-import { useSelector } from "react-redux";
-import { FaDownload } from "react-icons/fa";
+// import { useSelector } from "react-redux";
+import { FaDownload, FaUpload } from "react-icons/fa";
 import toast from "react-hot-toast";
+import ServiceImportModal from "../../containers/modals/ServiceImportModal";
 
 const ServicePage = () => {
   const [searchText, setSearchText] = useState("");
-  const [filter, setFilter] = useState(false);
+  // const [filter, setFilter] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
   const [servicess, setServices] = useState([]);
+  const [importModal, setImportModal] = useState(false);
+
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString();
@@ -71,9 +74,7 @@ const ServicePage = () => {
       sortable: true,
     },
   ];
-
- useEffect(() => {
-    const fetchService = async () => {
+const fetchService = async () => {
       try {
         const serviceResponse = await getSoftServices();
 
@@ -94,42 +95,58 @@ const ServicePage = () => {
       }
     };
 
+ useEffect(() => {
     fetchService();
   }, []);
+
 
   const handleSearch = (event) => {
     const searchValue = event.target.value;
     setSearchText(searchValue);
+
     if (searchValue.trim() === "") {
       setFilteredData(servicess);
     } else {
-      const filteredResults = filteredData.filter((item) =>
+      const filteredResults = servicess.filter((item) =>
         item.name.toLowerCase().includes(searchValue.toLowerCase())
       );
       setFilteredData(filteredResults);
     }
   };
   const exportToExcel = () => {
-    const mappedData = filteredData.map((serv) => ({
-      "Service Name": serv.name,
-      building: serv.building_name,
-      Floor: serv.floor_name,
-      Unit: serv.unit_name,
-      "Created On": dateFormat(serv.created_at),
-    }));
-    const fileType =
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
-    const fileName = "service_data.xlsx";
-    const ws = XLSX.utils.json_to_sheet(mappedData);
-    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: fileType });
-    const url = URL.createObjectURL(data);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    link.click();
-  };
+  if (selectedRows.length === 0) {
+    return toast.error("Please select at least one record to export.");
+  }
+
+  // Filter only selected rows
+  const selectedData = filteredData.filter((serv) =>
+    selectedRows.includes(serv.id)
+  );
+
+  const mappedData = selectedData.map((serv) => ({
+    "Service Name": serv.name,
+    Building: serv.building_name,
+    Floor: serv.floor_name,
+    Unit: serv?.units?.map((u) => u.name).join(", "),
+    "Created On": dateFormat(serv.created_at),
+    "Created By": serv.user_name,
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(mappedData);
+  const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+  const blob = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "service_file_download.xlsx";
+  link.click();
+};
+
+
   const themeColor = "rgb(3 19 37)";
 
 
@@ -149,26 +166,31 @@ const ServicePage = () => {
     console.log(selectedRows);
     toast.loading("Qr code downloading, please wait!");
   
+
     try {
       const response = await softServiceDownloadQrCode(selectedRows);
+
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
+
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", "qr_codes.pdf");
       document.body.appendChild(link);
       link.click();
+
       window.URL.revokeObjectURL(url);
-      link.parentNode.removeChild(link);
-      console.log(response);
+      link.remove();
+
       toast.dismiss();
-      toast.success("Qr code downloaded successfully");
+      toast.success("QR code downloaded successfully");
     } catch (error) {
       toast.dismiss();
-      console.error("Error downloading Qr code:", error);
-      toast.error("Something went wrong, please try again");
+      console.error(error);
+      toast.error("Download failed");
     }
   };
+
   return (
     <section className="flex ">
       <Navbar />
@@ -230,12 +252,20 @@ const ServicePage = () => {
 
             <Link
               to={"/services/add-service"}
-              className="bg-black  rounded-lg flex font-semibold  items-center gap-2 text-white p-2 "
+              className="bg-black  rounded-md flex font-semibold  items-center gap-2 text-white p-2 "
               style={{ background: themeColor }}
             >
               <IoAddCircleOutline size={20} />
               Add
             </Link>
+              {/* ✅ IMPORT BUTTON */}
+            <button
+              onClick={() => setImportModal(true)}
+              className="flex items-center gap-2 text-white px-4 py-2 rounded"
+              style={{ background: themeColor }}
+            >
+              <FaUpload /> Import
+            </button>
             <button
               style={{ background: themeColor }}
               className="px-4 py-2  font-medium text-white rounded-md flex gap-2 items-center justify-center"
@@ -244,8 +274,9 @@ const ServicePage = () => {
               <FaDownload />
               QR Code
             </button>
+
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"
               onClick={exportToExcel}
               style={{ background: themeColor }}
             >
@@ -273,6 +304,13 @@ const ServicePage = () => {
               wrapperClass="dna-wrapper"
             />
           </div>
+        )}
+        {/* ✅ IMPORT MODAL */}
+        {importModal && (
+          <ServiceImportModal
+            onclose={() => setImportModal(false)}
+            fetchCamBilling={fetchService}   // refresh service list after import
+          />
         )}
         {/* <DataTable
           selectableRows

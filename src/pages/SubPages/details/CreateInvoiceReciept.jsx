@@ -7,7 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 function CreateInvoiceReceipt() {
   const themeColor = "rgb(3 19 37)";
   // const [invoiceAdd, setInvoiceAdd] = useState([]);
-  const { id } = useParams();
+    const { id } = useParams();
   const [invoiceNumber, setInvoiceNumber] = useState([]);
   const [formData, setFormData] = useState({
     receiptNumber: "",

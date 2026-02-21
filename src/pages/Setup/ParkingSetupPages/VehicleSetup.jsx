@@ -214,7 +214,7 @@ const VehicleSetup = () => {
                 <option value="2-wheeler">2-Wheeler</option>
                 <option value="3-wheeler">3-Wheeler</option>
                 <option value="4-wheeler">4-Wheeler</option>
-                <option value="4-wheeler">6-Wheeler</option>
+                <option value="6-wheeler">6-Wheeler</option>
               </select>
             </div>
 
