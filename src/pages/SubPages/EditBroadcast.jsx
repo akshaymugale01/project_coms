@@ -1,20 +1,47 @@
 import React, { useEffect, useRef, useState } from "react";
-import FileInput from "../../Buttons/FileInput";
 import { useSelector } from "react-redux";
 import ReactDatePicker from "react-datepicker";
 import Select from "react-select";
-import { editBroadcastDetails, getAssignedTo, getBroadcastDetails, postBroadCast } from "../../api";
+import {
+  getAssignedTo,
+  getBuildings,
+  getGroups,
+  getSetupUsers,
+  getBroadcastDetails,
+  editBroadcastDetails,
+} from "../../api";
 import FileInputBox from "../../containers/Inputs/FileInputBox";
 import { getItemInLocalStorage } from "../../utils/localStorage";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import { FaCheck } from "react-icons/fa";
+import ReactQuill from "react-quill";
+
 const EditBroadcast = () => {
-  const [share, setShare] = useState("all");
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const themeColor = useSelector((state) => state.theme.color);
   const siteId = getItemInLocalStorage("SITEID");
+  const currentUser = getItemInLocalStorage("UserId");
+
+  const [share, setShare] = useState("all");
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [groupMembers, setGroupMembers] = useState([]);
+  const [units, setUnits] = useState([]);
   const [users, setUsers] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [selectedOwnership, setSelectedOwnership] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const datePickerRef = useRef(null);
+  const currentDate = new Date();
+
   const [formData, setFormData] = useState({
     site_id: siteId,
     notice_title: "",
@@ -22,104 +49,214 @@ const EditBroadcast = () => {
     expiry_date: "",
     user_ids: "",
     notice_image: [],
+    shared: "",
+    group_id: "",
+    group_name: "",
+    important: false,
+    send_email: false,
   });
-  console.log(formData);
-  const datePickerRef = useRef(null);
-  const currentDate = new Date();
+
+  // ---------------- FETCH INITIAL DATA ----------------
+
+  useEffect(() => {
+    fetchUsers();
+    fetchUnitsAndMembers();
+    fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    if (users.length > 0 && groups.length > 0) {
+      fetchBroadcastDetails();
+    }
+  }, [users, groups]);
+
+  const fetchUsers = async () => {
+    const res = await getAssignedTo();
+    const transformed = res.data.map((user) => ({
+      value: user.id,
+      label: `${user.firstname} ${user.lastname}`,
+    }));
+    setUsers(transformed);
+  };
+
+  const fetchUnitsAndMembers = async () => {
+    const usersRes = await getSetupUsers();
+    const unitsRes = await getBuildings();
+    setUnits(unitsRes.data);
+
+    const employeesList = usersRes.data.map((emp) => ({
+      id: emp.id,
+      name: `${emp.firstname} ${emp.lastname}`,
+      building_id: emp.building_id || emp.building?.id || null,
+      userSites: emp.user_sites || [],
+    }));
+
+    setMembers(employeesList);
+  };
+
+  const fetchGroups = async () => {
+    const res = await getGroups();
+    setGroups(res.data || []);
+  };
+
+  const fetchBroadcastDetails = async () => {
+    try {
+      const res = await getBroadcastDetails(id);
+      const data = res.data;
+
+      setFormData((prev) => ({
+        ...prev,
+        notice_title: data.notice_title || "",
+        notice_discription: data.notice_discription || "",
+        expiry_date: data.expiry_date ? new Date(data.expiry_date) : "",
+        user_ids: data.users ? data.users.map((u) => u.user_id).join(",") : "",
+        shared: data.shared || "all",
+        group_id: data.group_id || "",
+        group_name: data.group_name || "",
+        important: data.important || false,
+        send_email: data.send_email || false,
+      }));
+
+      setShare(data.shared || "all");
+
+      // ✅ INDIVIDUAL FIX
+      if (data.shared === "individual" && data.users) {
+        const selected = data.users.map(u => ({
+  value: u.user_id,
+  label: u.name
+}))
+
+        setSelectedMembers(selected);
+      }
+
+      // ✅ GROUP FIX
+      if (data.shared === "groups") {
+        const groupId = Number(data.group_id);
+        setSelectedGroup(groupId);
+
+        const groupObj = groups.find((g) => Number(g.id) === groupId);
+
+        setGroupMembers(groupObj?.group_members || []);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // ---------------- FILTER ----------------
+
+  const handleFilter = () => {
+    const filtered = members.filter((member) => {
+      const buildingMatch =
+        !selectedUnit || Number(member.building_id) === Number(selectedUnit);
+
+      const ownershipMatch =
+        !selectedOwnership ||
+        member.userSites.some(
+          (site) =>
+            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase(),
+        );
+
+      return buildingMatch && ownershipMatch;
+    });
+
+    setFilteredMembers(filtered);
+    toast.success("Filter applied");
+  };
+
+  // ---------------- SELECT USERS ----------------
+
+  const handleSelectChange = (selectedOptions) => {
+    setSelectedMembers(selectedOptions);
+    const ids = selectedOptions.map((opt) => opt.value).join(",");
+    setFormData((prev) => ({ ...prev, user_ids: ids }));
+  };
+
+  const handleGroupChange = (e) => {
+    const groupId = parseInt(e.target.value, 10);
+    const groupObj = groups.find((g) => g.id === groupId);
+
+    setSelectedGroup(groupId);
+    setGroupMembers(groupObj?.group_members || []);
+
+    setFormData((prev) => ({
+      ...prev,
+      group_id: groupId,
+      group_name: groupObj?.group_name || "",
+    }));
+  };
+
+  const handleFileChange = (files) => {
+    setFormData((prev) => ({ ...prev, notice_image: files }));
+  };
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleExpiryDateChange = (date) => {
-    setFormData({ ...formData, expiry_date: date });
-  };
-  const { id } = useParams();
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await getAssignedTo();
-        const transformedUsers = response.data.map((user) => ({
-          value: user.id,
-          label: `${user.firstname} ${user.lastname}`,
-        }));
-        setUsers(transformedUsers);
-        console.log(response);
-      } catch (error) {
-        console.error("Error fetching assigned users:", error);
-      }
-    };
-    const fetchBroadcastDetails = async () => {
-      try {
-        const res = await getBroadcastDetails(id);
-        const response = res.data;
-        setFormData({
-          ...formData,
-          notice_title: response.notice_title,
-          notice_discription: response.notice_discription,
-          expiry_date: response.expiry_date
-            ? new Date(response.expiry_date)
-            : null,
-          // user_ids:
-          notice_image: response.notice_image,
-        });
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchBroadcastDetails();
-    fetchUsers();
-  }, []);
-
-  const navigate = useNavigate();
-
-  const handleSelectChange = (selectedOptions) => {
-    const selectedIds = selectedOptions
-      ? selectedOptions.map((option) => option.value)
-      : [];
-    const userIdsString = selectedIds.join(",");
-    setFormData({ ...formData, user_ids: userIdsString });
+    setFormData((prev) => ({
+      ...prev,
+      expiry_date: date,
+    }));
   };
 
+  // ---------------- UPDATE BROADCAST ----------------
 
-  const handleEditBroadCast = async () => {
-    if (formData.notice_title === "" || formData.expiry_date === "") {
+  const handleUpdateBroadcast = async () => {
+    if (!formData.notice_title || !formData.expiry_date) {
       return toast.error("Please Enter Title & Expiry Date");
     }
+
     try {
-      toast.loading("Updating Broadcast Please Wait!");
+      setSubmitting(true);
+      toast.loading("Updating Broadcast...");
+
       const formDataSend = new FormData();
 
-      formDataSend.append("notice[site_id", formData.site_id);
+      formDataSend.append("notice[created_by_id]", currentUser);
+      formDataSend.append("notice[site_id]", formData.site_id);
       formDataSend.append("notice[notice_title]", formData.notice_title);
+      formDataSend.append("notice[important]", formData.important);
+      formDataSend.append("notice[send_email]", formData.send_email);
       formDataSend.append(
         "notice[notice_discription]",
-        formData.notice_discription
+        formData.notice_discription,
       );
       formDataSend.append("notice[expiry_date]", formData.expiry_date);
-      formDataSend.append("notice[user_ids]", formData.user_ids);
+
+      if (share === "all") {
+        formDataSend.append("notice[shared]", "all");
+      } else if (share === "individual") {
+        formDataSend.append("notice[shared]", "individual");
+        formDataSend.append("notice[user_ids]", formData.user_ids);
+      } else if (share === "groups") {
+        formDataSend.append("notice[shared]", "groups");
+        formDataSend.append("notice[group_id]", formData.group_id);
+        formDataSend.append("notice[group_name]", formData.group_name);
+      }
 
       formData.notice_image.forEach((file) => {
         formDataSend.append("attachfiles[]", file);
       });
 
-      const response = await editBroadcastDetails(id,formDataSend);
-      toast.success("Broadcast Created Successfully");
-      navigate("/communication/broadcast");
-      console.log("Response:", response.data);
-      toast.dismiss();
-    } catch (error) {
-      console.log(error);
+      await editBroadcastDetails(id, formDataSend);
 
       toast.dismiss();
+      toast.success("Broadcast Updated Successfully");
+      navigate("/communication/broadcast");
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   };
-  const handleFileChange = (files, fieldName) => {
-    setFormData({
-      ...formData,
-      [fieldName]: files,
-    });
-  };
 
+  // ---------------- UI (Same as Create Page) ----------------
   return (
     <section className="flex">
       <div className="hidden md:block">
@@ -129,8 +266,8 @@ const EditBroadcast = () => {
         <div className="flex justify-center">
           <div className="md:mx-20 my-5 mb-10 md:border md:p-2 md:px-2 rounded-lg w-full">
             <h2
-              style={{ background: themeColor }}
-              className="text-center text-xl font-bold p-2 mb-2  rounded-md text-white"
+              // style={{ background: themeColor }}
+              className="text-center text-xl font-bold p-2 mb-2  rounded-md text-white bg-black"
             >
               Edit Broadcast
             </h2>
@@ -182,7 +319,17 @@ const EditBroadcast = () => {
                   />
                 </div>
                 <div className="flex gap-2 items-center">
-                  <input type="checkbox" name="" id="imp" />
+                  <input
+                    type="checkbox"
+                    id="imp"
+                    checked={formData.important}
+                    onChange={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        important: !prev.important,
+                      }))
+                    }
+                  />
                   <label htmlFor="imp">Mark as Important</label>
                 </div>
               </div>
@@ -220,30 +367,111 @@ const EditBroadcast = () => {
                   </div>
                   <div className="my-2 flex w-full">
                     {share === "individual" && (
-                      // <Select
-                      //   options={users}
-                      //   placeholder="Select User"
-                      //   value={formData.user_ids}
+                      <div className="flex flex-col gap-2 mt-2 w-full">
+                        {/* First Row: Unit Select, Ownership Select, and Filter Button */}
+                        <div className="flex gap-2 items-end">
+                          {/* Unit Select Dropdown */}
+                          <select
+                            className="border p-3 border-gray-300 rounded-md flex-1"
+                            value={selectedUnit || ""}
+                            onChange={(e) =>
+                              setSelectedUnit(Number(e.target.value))
+                            }
+                          >
+                            <option value="">Select Tower</option>
+                            {units.map((unit) => (
+                              <option key={unit.id} value={unit.id}>
+                                {unit.name}
+                              </option>
+                            ))}
+                          </select>
 
-                      //   onChange={(selectedOption) =>
-                      //     setFormData({ ...formData, user_ids: selectedOption })
-                      //   }
-                      //   isMulti
-                      //   className="w-full"
-                      // />
-                      <Select
-                        options={users}
-                        closeMenuOnSelect={false}
-                        placeholder="Select User"
-                        value={users.filter((user) =>
-                          formData.user_ids.includes(user.value)
-                        )}
-                        onChange={handleSelectChange}
-                        isMulti
-                        className="w-full"
-                      />
+                          {/* Ownership Select Dropdown */}
+                          <select
+                            className="border p-3 border-gray-300 rounded-md flex-1"
+                            value={selectedOwnership}
+                            onChange={(e) =>
+                              setSelectedOwnership(e.target.value)
+                            }
+                          >
+                            <option value="">Select Ownership</option>
+                            <option value="tenant">Tenant</option>
+                            <option value="owner">Owner</option>
+                          </select>
+
+                          {/* Filter Button */}
+                          <button
+                            style={{ background: themeColor }}
+                            onClick={handleFilter}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                          >
+                            Filter
+                          </button>
+                        </div>
+                        <div className="w-full mt-3 mb-3">
+                          <Select
+                            options={filteredMembers.map((member) => ({
+                              value: member.id,
+                              label: member.name,
+                            }))}
+                            className="w-full"
+                            title="Select Members"
+                            onChange={handleSelectChange}
+                            value={selectedMembers}
+                            isMulti
+                          />
+                        </div>
+                      </div>
                     )}
-                    {share === "groups" && <p>list of groups</p>}
+                    {share === "groups" && (
+                      <div className="flex flex-col gap-2 mt-2 w-full">
+                        <label
+                          htmlFor="groupSelect"
+                          className="font-medium mb-1"
+                        >
+                          Select Group
+                        </label>
+                        <select
+                          id="groupSelect"
+                          className="border p-3 border-gray-300 rounded-md"
+                          value={selectedGroup}
+                          onChange={handleGroupChange}
+                        >
+                          <option value="">Select Group</option>
+                          {groups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.group_name}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Display group members as per group selection */}
+                        {selectedGroup && (
+                          <div className="mt-4 p-4 border rounded-md bg-gray-50">
+                            <h2 className="text-lg font-semibold mb-2">
+                              Group Members
+                            </h2>
+
+                            {groupMembers.length > 0 ? (
+                              <div className="space-y-2">
+                                {groupMembers.map((member, index) => (
+                                  <div
+                                    key={index}
+                                    className="p-2 border rounded bg-white shadow-sm"
+                                  >
+                                    {member.user_name}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-600">
+                                No members exist inside this group.
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="my-5">
@@ -263,7 +491,7 @@ const EditBroadcast = () => {
               <div className="flex justify-center mt-10 my-5">
                 <button
                   style={{ background: themeColor }}
-                  onClick={handleEditBroadCast}
+                  onClick={handleUpdateBroadcast}
                   className="px-4 text-white p-2 rounded-md  flex items-center gap-2"
                 >
                   <FaCheck /> Submit

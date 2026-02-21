@@ -2423,6 +2423,13 @@ export const postEvents = async (data) =>
     },
   });
 
+  // export const postEvent = async (data, id) =>
+  // axiosInstance.patch(`/events/${id}.json`, data, {
+  //   params: {
+  //     token: token,
+  //   },
+  // });
+
 //user tree event
 export const getEventsCreatedByUserId = async (id) =>
   axiosInstance.get(`/events.json`, {
@@ -2845,7 +2852,7 @@ export const deleteAssociationList = async (
       },
     }
   );
-  
+
 export const deleteServiceAssociation = async ({
   checklist_id,
   soft_service_id,

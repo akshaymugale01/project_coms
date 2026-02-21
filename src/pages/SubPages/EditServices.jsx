@@ -6,7 +6,8 @@ import {
   getFloors,
   getSoftServicesDetails,
   getUnits,
-  postSoftServices,
+  // getGenericInfo,       
+  // getGenericSubInfo,    
 } from "../../api";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
@@ -14,124 +15,150 @@ import { useNavigate, useParams } from "react-router-dom";
 import FileInputBox from "../../containers/Inputs/FileInputBox";
 import Select from "react-select";
 import Navbar from "../../components/Navbar";
+import CronChecklist from "../../components/Cron";
+
 const EditService = () => {
-  const [floors, setFloors] = useState([]);
-  const [units, setUnits] = useState([]);
-  const siteId = getItemInLocalStorage("SITEID");
-  const userId = getItemInLocalStorage("UserId");
-  const themeColor = useSelector((state) => state.theme.color);
   const { id } = useParams();
   const navigate = useNavigate();
+  const themeColor = useSelector((state) => state.theme.color);
+
+  const siteId = getItemInLocalStorage("SITEID");
+  const userId = getItemInLocalStorage("UserId");
+  const buildings = getItemInLocalStorage("Building");
+
+  const [floors, setFloors] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [groups, setGroups] = useState([]);         // ✅ FIX
+  const [subgroups, setSubgroups] = useState([]);   // ✅ FIX
+  const [selectedOption, setSelectedOption] = useState([]);
+
   const [formData, setFormData] = useState({
-    site_id: "",
+    site_id: siteId,
     building_id: "",
     floor_id: "",
     unit_id: "",
-    user_id: "",
+    user_id: userId,
     name: "",
-    // wing_id: "",
-    // area_id: "",
+    generic_info_id: "",
+    generic_sub_info_id: "",
+    latitude: "",
+    longitude: "",
     attachments: [],
   });
-  console.log(formData);
-  const buildings = getItemInLocalStorage("Building");
+
+  // ---------------- FETCH INITIAL DATA ----------------
 
   useEffect(() => {
-    const fetchServiceDetails = async () => {
-      const ServiceDetailsResponse = await getSoftServicesDetails(id);
-      setFormData(ServiceDetailsResponse.data);
-      fetchFloor(ServiceDetailsResponse.data.building_id);
-      getUnit(ServiceDetailsResponse.data.floor_id);
-      console.log(ServiceDetailsResponse);
-      const selectedUnits = ServiceDetailsResponse.data.units.map((unit) => ({
-        value: unit.id,
-        label: unit.name,
-      }));
-      setSelectedOption(selectedUnits);
-    };
-
-    const fetchFloor = async (floorID) => {
-      try {
-        const build = await getFloors(floorID);
-        setFloors(build.data.map((item) => ({ name: item.name, id: item.id })));
-      } catch (e) {
-        console.log(e);
-      }
-    };
-    const getUnit = async (UnitID) => {
-      try {
-        const unit = await getUnits(UnitID);
-        // setUnits(unit.data.map((item) => ({ name: item.name, id: item.id })));
-        // console.log(unit);
-        const unitList = unit.data.map((uni) => ({
-          value: uni.id,
-          label: uni.name,
-        }));
-        setUnits(unitList);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchServiceDetails();
+    fetchInitialData();
   }, []);
 
-  const handleChange = async (e) => {
-    async function fetchFloor(floorID) {
-      try {
-        const build = await getFloors(floorID);
-        setFloors(build.data.map((item) => ({ name: item.name, id: item.id })));
-      } catch (e) {
-        console.log(e);
-      }
+  const fetchInitialData = async () => {
+    try {
+      await fetchGroups();
+      await fetchServiceDetails();
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    async function getUnit(UnitID) {
-      try {
-        const unit = await getUnits(UnitID);
-        // setUnits(unit.data.map((item) => ({ name: item.name, id: item.id })));
-        // console.log(unit);
-        const unitList = unit.data.map((uni) => ({
-          value: uni.id,
-          label: uni.name,
+  const fetchGroups = async () => {
+    try {
+      // const res = await getGenericInfo();
+      setGroups(res.data || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchSubGroups = async (groupId) => {
+    try {
+      // const res = await getGenericSubInfo(groupId);
+      setSubgroups(res.data || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchServiceDetails = async () => {
+    try {
+      const res = await getSoftServicesDetails(id);
+      const data = res.data;
+
+      setFormData((prev) => ({
+        ...prev,
+        ...data,
+      }));
+
+      if (data.building_id) {
+        await fetchFloors(data.building_id);
+      }
+
+      if (data.floor_id) {
+        await fetchUnits(data.floor_id);
+      }
+
+      if (data.generic_info_id) {
+        await fetchSubGroups(data.generic_info_id);
+      }
+
+      if (data.units) {
+        const selectedUnits = data.units.map((unit) => ({
+          value: unit.id,
+          label: unit.name,
         }));
-        setUnits(unitList);
-      } catch (error) {
-        console.log(error);
+        setSelectedOption(selectedUnits);
       }
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    if (e.target.type === "select-one" && e.target.name === "building_id") {
-      const BuildID = Number(e.target.value);
-      await fetchFloor(BuildID);
+  const fetchFloors = async (buildingId) => {
+    const res = await getFloors(buildingId);
+    setFloors(res.data.map((f) => ({ id: f.id, name: f.name })));
+  };
 
-      setFormData({
-        ...formData,
-        building_id: BuildID,
-      });
-    } else if (
-      e.target.type === "select-one" &&
-      e.target.name === "floor_name"
-    ) {
-      const UnitID = Number(e.target.value);
-      await getUnit(UnitID);
-      setFormData({
-        ...formData,
-        floor_id: UnitID,
-      });
+  const fetchUnits = async (floorId) => {
+    const res = await getUnits(floorId);
+    setUnits(
+      res.data.map((u) => ({
+        value: u.id,
+        label: u.name,
+      }))
+    );
+  };
+
+  // ---------------- HANDLE CHANGE ----------------
+
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+
+    if (name === "building_id") {
+      await fetchFloors(value);
+      setFormData((prev) => ({ ...prev, building_id: value, floor_id: "" }));
+    } else if (name === "floor_id") {
+      await fetchUnits(value);
+      setFormData((prev) => ({ ...prev, floor_id: value }));
+    } else if (name === "generic_info_id") {
+      await fetchSubGroups(value);
+      setFormData((prev) => ({
+        ...prev,
+        generic_info_id: value,
+        generic_sub_info_id: "",
+      }));
     } else {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+
   const handleFileChange = (files, fieldName) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [fieldName]: files,
-    });
-    console.log(fieldName);
+    }));
   };
+
+  // ---------------- SUBMIT ----------------
 
   const handleEditService = async () => {
     if (!formData.name || !formData.building_id || !formData.floor_id) {
@@ -139,209 +166,173 @@ const EditService = () => {
     }
 
     try {
-      toast.loading("Editing Service Please Wait!");
+      toast.loading("Updating Service...");
+
       const dataToSend = new FormData();
+
       dataToSend.append("soft_service[site_id]", formData.site_id);
       dataToSend.append("soft_service[name]", formData.name);
       dataToSend.append("soft_service[building_id]", formData.building_id);
       dataToSend.append("soft_service[floor_id]", formData.floor_id);
+      dataToSend.append("soft_service[user_id]", formData.user_id);
+      dataToSend.append(
+        "soft_service[generic_info_id]",
+        formData.generic_info_id
+      );
+      dataToSend.append(
+        "soft_service[generic_sub_info_id]",
+        formData.generic_sub_info_id
+      );
+      dataToSend.append("soft_service[latitude]", formData.latitude);
+      dataToSend.append("soft_service[longitude]", formData.longitude);
+
       selectedOption.forEach((option) => {
         dataToSend.append("soft_service[unit_id][]", option.value);
       });
-      dataToSend.append("soft_service[user_id]", formData.user_id);
-      (formData.attachments || []).forEach((file, index) => {
-        dataToSend.append(`attachfiles[]`, file);
+
+      (formData.attachments || []).forEach((file) => {
+        dataToSend.append("attachfiles[]", file);
       });
-      const serviceResponse = await EditSoftServices(dataToSend, id);
-      console.log(serviceResponse);
+
+      await EditSoftServices(dataToSend, id);
+
       toast.dismiss();
-      toast.success("Service Edited Successfully");
+      toast.success("Service Updated Successfully");
       navigate(`/services/service-details/${id}`);
     } catch (error) {
-      toast.error("Error Creating Service");
-      console.log(error);
       toast.dismiss();
+      toast.error("Error Updating Service");
+      console.log(error);
     }
   };
 
-  const [selectedOption, setSelectedOption] = useState([]);
-  var handleChangeSelect = (selectedOption) => {
-    console.log(selectedOption);
-    setSelectedOption(selectedOption);
-  };
+  // ---------------- UI ----------------
 
   return (
-    <section className="flex ">
+    <section className="flex">
       <Navbar />
-      <div className="p-4 overflow-hidden w-full  flex  flex-col">
-        <div className="">
-          <div className="md:mx-20 my-5 md:mb-10 sm:border border-gray-400 p-5  rounded-lg ">
-            <h2
-              style={{ background: "rgb(3 19 37)" }}
-              className="text-center text-xl font-bold p-2 bg-black rounded-md text-white"
-            >
-              Edit Service
-            </h2>
-            <div className="grid md:grid-cols-3 gap-4 my-5">
-              <div className="flex flex-col ">
-                <label htmlFor="" className="font-semibold">
-                  Service Name:
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter Service Name"
-                  className="border p-1 px-4 border-gray-500 rounded-md placeholder:text-sm"
-                />
-              </div>
-              {/* <div className="flex flex-col">
-              <label htmlFor="" className="font-semibold">
-                Select Site:
-              </label>
-              <select
-                className="border p-1 px-4 border-gray-500 rounded-md"
-                value={formData.site_id}
-                name="site_id"
+      <div className="p-4 w-full flex flex-col">
+        <div className="md:mx-20 my-5 border p-5 rounded-lg">
+          <h2 className="text-center text-xl font-bold p-2 bg-black text-white rounded-md">
+            Edit Service
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-4 my-5">
+
+            <div className="flex flex-col">
+              <label className="font-semibold">Service Name:</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
-              >
-                <option value="">Select Site</option>
-                <option value="unit1">Site 1</option>
-                <option value="unit2">Site 2</option>
-                <option value="unit2">Site 3</option>
-              </select>
-            </div> */}
-              <div className="flex flex-col ">
-                <label htmlFor="" className="font-semibold">
-                  Select Building:
-                </label>
-                <select
-                  className="border p-1 px-4 border-gray-500 rounded-md"
-                  value={formData.building_id}
-                  onChange={handleChange}
-                  name="building_id"
-                >
-                  <option value="">Select Building</option>
-                  {buildings?.map((building) => (
-                    <option value={building.id} key={building.id}>
-                      {building.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col">
-                <label htmlFor="" className="font-semibold">
-                  Select Floor:
-                </label>
-                <select
-                  className="border p-1 px-4 border-gray-500 rounded-md"
-                  value={formData.floor_id}
-                  onChange={handleChange}
-                  name="floor_name"
-                >
-                  <option value="">Select Floor</option>
-                  {floors?.map((floor) => (
-                    <option value={floor.id} key={floor.id}>
-                      {floor.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="" className="font-semibold">
-                  Select Units:
-                </label>
-
-                <Select
-                  value={selectedOption}
-                  closeMenuOnSelect={false}
-                  isMulti
-                  onChange={handleChangeSelect}
-                  options={units}
-                  noOptionsMessage={() => "No Units Available"}
-                  //   maxMenuHeight={90}
-                  placeholder="Select Units"
-                />
-              </div>
+                className="border p-2 rounded-md"
+              />
             </div>
-            <h2 className="border-b text-center text-xl border-black mb-6 font-bold">
-              Attachments
-            </h2>
 
-            {/* Show previously uploaded attachments if any */}
-            {Array.isArray(formData.attachments) &&
-              formData.attachments.length > 0 && (
-                <div className="mb-4">
-                  <p className="font-semibold mb-2">Previously Uploaded:</p>
-                  <ul className="list-disc list-inside">
-                    {formData.attachments.map((file, idx) => (
-                      <div key={idx} className="mb-2">
-                        {/* Existing file from backend */}
-                        {"document" in file ? (
-                          <>
-                            <a
-                              href={domainPrefix + file.document}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 underline"
-                            >
-                              {/* {file.document.split("/").pop()} */}
-                              <img
-                                src={domainPrefix + file.document}
-                                alt={file.document.split("/").pop()}
-                                style={{
-                                  maxWidth: "120px",
-                                  marginTop: "4px",
-                                  borderRadius: "6px",
-                                }}
-                              />
-                            </a>
-                          </>
-                        ) : (
-                          // New file from local (File object)
-                          <>
-                            <span className="text-gray-700">{file.name}</span>
-                            <div>
-                              <img
-                                src={URL.createObjectURL(file)}
-                                alt={file.name}
-                                style={{
-                                  maxWidth: "120px",
-                                  marginTop: "4px",
-                                  borderRadius: "6px",
-                                }}
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            <div className="flex flex-col">
+              <label className="font-semibold">Select Building:</label>
+              <select
+                name="building_id"
+                value={formData.building_id}
+                onChange={handleChange}
+                className="border p-2 rounded-md"
+              >
+                <option value="">Select Building</option>
+                {buildings?.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <FileInputBox
-              handleChange={(files) => handleFileChange(files, "attachments")}
-              fieldName={"attachments"}
-              isMulti={true}
-            />
-            <div className="flex my-5 justify-end gap-3">
-               <button
-              className="bg-gray-300 text-black p-2 px-4 rounded-md font-medium"
+            <div className="flex flex-col">
+              <label className="font-semibold">Select Floor:</label>
+              <select
+                name="floor_id"
+                value={formData.floor_id}
+                onChange={handleChange}
+                className="border p-2 rounded-md"
+              >
+                <option value="">Select Floor</option>
+                {floors.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col">
+              <label className="font-semibold">Select Units:</label>
+              <Select
+                value={selectedOption}
+                isMulti
+                onChange={setSelectedOption}
+                options={units}
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="font-semibold">Service Groups:</label>
+              <select
+                name="generic_info_id"
+                value={formData.generic_info_id}
+                onChange={handleChange}
+                className="border p-2 rounded-md"
+              >
+                <option value="">Select Group</option>
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col">
+              <label className="font-semibold">Service SubGroups:</label>
+              <select
+                name="generic_sub_info_id"
+                value={formData.generic_sub_info_id}
+                onChange={handleChange}
+                className="border p-2 rounded-md"
+              >
+                <option value="">Select SubGroup</option>
+                {subgroups.map((sg) => (
+                  <option key={sg.id} value={sg.id}>
+                    {sg.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+<p className="font-medium border-b ">Cron setting</p>
+
+          <CronChecklist />
+<h2 className="border-b text-center text-xl border-black mb-6 font-bold">
+            Attachments
+          </h2>
+          <FileInputBox
+            handleChange={(files) => handleFileChange(files, "attachments")}
+            fieldName="attachments"
+            isMulti
+          />
+
+          <div className="flex justify-end gap-3 mt-5">
+            <button
+              className="bg-gray-300 px-4 py-2 rounded-md"
               onClick={() => navigate("/services/soft-service")}
             >
-              Cancel 
+              Cancel
             </button>
-              <button
-                style={{ background: "rgb(3 19 37)" }}
-                className="bg-black text-white p-1 px-4 rounded-md font-medium"
-                onClick={handleEditService}
-              >
-                Update
-              </button>
-            </div>
+            <button
+              className="bg-black text-white px-4 py-2 rounded-md"
+              onClick={handleEditService}
+            >
+              Update
+            </button>
           </div>
         </div>
       </div>

@@ -3,14 +3,18 @@ import { BiCalendarExclamation, BiLike } from "react-icons/bi";
 import { BsClock } from "react-icons/bs";
 import wave from "/wave.png";
 import { HiLocationMarker } from "react-icons/hi";
-import { domainPrefix, getEventsDetails } from "../../../api";
+import { domainPrefix, getEventsDetails,  postEvents } from "../../../api";
 import { useParams } from "react-router-dom";
 import { FaRegFileAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { getItemInLocalStorage } from "../../../utils/localStorage";
+import { toast } from "react-toastify";
 
 const EventDetails = () => {
   const [eventDetails, setEventDetails] = useState([]);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   console.log("EventDetails component rendered", eventDetails);
   const userFirst = getItemInLocalStorage("Name");
   const userLast = getItemInLocalStorage("LASTNAME");
@@ -19,16 +23,18 @@ const EventDetails = () => {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
+
+  const fetchEventDetails = async () => {
+    try {
+      const eventDetailsResp = await getEventsDetails(id);
+      console.log(eventDetailsResp);
+      setEventDetails(eventDetailsResp.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
-    const fetchEventDetails = async () => {
-      try {
-        const eventDetailsResp = await getEventsDetails(id);
-        console.log(eventDetailsResp);
-        setEventDetails(eventDetailsResp.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
     fetchEventDetails();
   }, [id]);
 
@@ -43,6 +49,37 @@ const EventDetails = () => {
   // const getFileName = (filePath) => {
   //   return filePath.split("/").pop().split("?")[0];
   // };
+
+  const handleSubmitFeedback = async () => {
+  if (!feedbackText.trim()) {
+    return toast.error("Please enter feedback");
+  }
+
+  try {
+    setSubmitting(true);
+
+    const formData = new FormData();
+
+    // Correct Rails nested attribute
+    formData.append(
+      "event[feedbacks_attributes][0][comment]",
+      feedbackText
+    );
+
+    // await postEvent(formData, id);
+
+    toast.success("Feedback submitted successfully");
+
+    setFeedbackText("");
+    fetchEventDetails();
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to submit feedback");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const themeColor = useSelector((state) => state.theme.color);
   return (
@@ -138,7 +175,7 @@ const EventDetails = () => {
               eventDetails?.event_images.length > 0 ? (
                 eventDetails?.event_images
                   .filter(
-                    (img) => img && typeof img === "object" && img.document_url
+                    (img) => img && typeof img === "object" && img.document_url,
                   )
                   .map((img, idx) => (
                     <img
@@ -188,7 +225,40 @@ const EventDetails = () => {
             </div>
             <div>
               <h1 className="text-xl font-semibold">Feedback</h1>
-              <div className="border-dotted border-2 rounded-md border-gray-400 p-2"></div>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="Write your feedback here..."
+                className="w-full border rounded-md p-3 mb-3"
+                rows={4}
+              />
+
+              {/* Submit Button */}
+              <button
+                onClick={handleSubmitFeedback}
+                disabled={submitting}
+                style={{ background: themeColor }}
+                className="text-white px-4 py-2 rounded-md"
+              >
+                {submitting ? "Submitting..." : "Submit Feedback"}
+              </button>
+               <div className="mt-6 space-y-3">
+              {eventDetails.feedbacks &&
+              eventDetails.feedbacks.length > 0 ? (
+                eventDetails.feedbacks.map((fb, index) => (
+                  <div
+                    key={index}
+                    className="border p-3 rounded-md bg-gray-50"
+                  >
+                    <p>{fb.comment}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 mt-3">
+                  No feedback submitted yet.
+                </p>
+              )}
+            </div>
             </div>
           </div>
           <div></div>

@@ -203,16 +203,14 @@ const ServiceChecklist = () => {
 
             <Link
               to={"/services/add-service-checklist"}
-              className="bg-black  rounded-lg flex font-semibold  items-center gap-2 text-white p-2 "
-              style={{background: themeColor}}
+              className="bg-gray-900 rounded-lg flex font-semibold  items-center gap-2 text-white p-2 "
             >
               <IoAddCircleOutline size={20} />
               Add
             </Link>
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+              className="bg-gray-900 text-white font-medium py-2 px-4 rounded"
               onClick={exportToExcel}
-              style={{background: themeColor}}
             >
               Export
             </button>

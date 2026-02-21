@@ -345,38 +345,70 @@ const TicketDetails = () => {
               </ol>
             </div>
           ))}
-        <h2
-          style={{ background: "rgb(19 27 32)" }}
-          className="text-center  text-white font-semibold my-5 text-lg p-2 px-4 "
-        >
-          Escalations
-        </h2>
-        {/* <div className="border m-10 " /> */}
-        <div className="px-4 mb-10">
-          {ticketinfo.escalations &&
-            ticketinfo.escalations.map((esclate) => (
-              <div
-                className="md:flex rounded-md justify-between border p-4 border-black mb-5"
-                key={esclate.id}
-              >
-                <div className="flex flex-col gap-2">
-                  <div className="grid grid-cols-2 gap-x-5 items-center">
-                    <p className="font-semibold">Esclation Level :</p>
-                    <p>{esclate.level}</p>
-                  </div>
-                  <div className="grid grid-cols-2 items-center">
-                    <p className="font-semibold">Esclated To :</p>
-                    <p>{esclate.esc_to}</p>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <p className="text-sm mt-5 sm:mt-0 font-semibold text-gray-500">
-                    {dateFormat(esclate.esc_on)}
-                  </p>
-                </div>
-              </div>
-            ))}
+       <h2
+  style={{ background: "rgb(19 27 32)" }}
+  className="text-center text-white font-semibold my-5 text-lg p-2 px-4"
+>
+  Escalations
+</h2>
+
+<div className="px-4 mb-10">
+  {ticketinfo.escalations &&
+    ticketinfo.escalations.map((escalate) => (
+      <div
+        className="md:flex rounded-md justify-between border p-4 border-black mb-5"
+        key={escalate.id}
+      >
+        <div className="flex flex-col gap-2 w-full">
+          
+          {/* Escalation Level */}
+          <div className="grid grid-cols-2 gap-x-5 items-center">
+            <p className="font-semibold">Escalation Level :</p>
+            <p>{escalate.name}</p>
+          </div>
+
+          {/* Escalated To */}
+          <div className="grid grid-cols-2 gap-x-5 items-center">
+            <p className="font-semibold">Escalated To :</p>
+            <p>
+              {escalate.escalate_to_users_names &&
+              escalate.escalate_to_users_names.length > 0
+                ? escalate.escalate_to_users_names.join(", ")
+                : "Not Assigned"}
+            </p>
+          </div>
+
+          {/* Resolution Timers */}
+          <div className="grid grid-cols-2 gap-x-5 items-center">
+            <p className="font-semibold">P1 Time :</p>
+            <p>{escalate.p1 || 0} hrs</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-5 items-center">
+            <p className="font-semibold">P2 Time :</p>
+            <p>{escalate.p2 || 0} hrs</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-5 items-center">
+            <p className="font-semibold">P3 Time :</p>
+            <p>{escalate.p3 || 0} hrs</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-5 items-center">
+            <p className="font-semibold">P4 Time :</p>
+            <p>{escalate.p4 || 0} hrs</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-5 items-center">
+            <p className="font-semibold">P5 Time :</p>
+            <p>{escalate.p5 || 0} hrs</p>
+          </div>
+
         </div>
+      </div>
+    ))}
+</div>
+
       </div>
     </div>
   );
