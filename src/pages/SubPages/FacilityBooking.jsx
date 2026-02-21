@@ -346,10 +346,10 @@ const calculateBookingAmount = (facility, formData) => {
 
   const postBookFacility = async () => {
     const postData = new FormData();
-    if (!formData.user_id || !formData.amenity_slot_id) {
-      toast.error("All Details are mandatory!");
-      return;
-    }
+    // if (!formData.user_id || !formData.amenity_slot_id) {
+    //   toast.error("All Details are mandatory!");
+    //   return;
+    // }
 
     // Calculate total number of people for final validation
     const totalPeople = 
