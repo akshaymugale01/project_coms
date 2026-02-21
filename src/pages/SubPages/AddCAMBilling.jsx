@@ -49,7 +49,7 @@ function AddCAMBilling() {
       total: "",
     },
   ]);
-
+  
   const handleAdd = () => {
     setFields([
       ...fields,

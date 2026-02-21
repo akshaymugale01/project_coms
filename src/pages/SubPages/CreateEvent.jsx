@@ -19,10 +19,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaCheck } from "react-icons/fa";
+import { FaCheck, FaTimesCircle } from "react-icons/fa";
 import MultiSelect from "../AdminHrms/Components/MultiSelect";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { Close } from "react-ionicons";
 
 const CreateEvent = () => {
   const siteId = getItemInLocalStorage("SITEID");
@@ -97,19 +98,21 @@ const CreateEvent = () => {
       "Selected Building ID:",
       selectedUnit,
       "Selected Ownership:",
-      selectedOwnership
+      selectedOwnership,
     );
     console.log("Members Before Filtering:", members);
 
     const filtered = members.filter((member) => {
       // Check if the user belongs to the selected building
       const buildingMatch =
-        !selectedUnit || Number(member.building_id ?? member.building?.id) === Number(selectedUnit);
+        !selectedUnit ||
+        Number(member.building_id ?? member.building?.id) ===
+          Number(selectedUnit);
 
       console.log(
         "building_id type:",
         typeof member.building_id,
-        member.building_id
+        member.building_id,
       );
 
       // Check if any of the user's sites match the selected ownership
@@ -117,7 +120,7 @@ const CreateEvent = () => {
         !selectedOwnership ||
         member.userSites.some(
           (site) =>
-            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase()
+            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase(),
         );
 
       console.log(
@@ -126,7 +129,7 @@ const CreateEvent = () => {
         "Building Match:",
         buildingMatch,
         "Ownership Match:",
-        ownershipMatch
+        ownershipMatch,
       );
 
       return buildingMatch && ownershipMatch;
@@ -229,8 +232,8 @@ const CreateEvent = () => {
       user.userSites.some(
         (site) =>
           (!selectedUnit || site.unit_id === selectedUnit) &&
-          (!ownership || site.ownership === ownership)
-      )
+          (!ownership || site.ownership === ownership),
+      ),
     );
 
     setFilteredMembers(filtered);
@@ -289,11 +292,11 @@ const CreateEvent = () => {
       formDataSend.append("event[discription]", formData.description);
       formDataSend.append(
         "event[start_date_time]",
-        formatDateTime(formData.start_date_time)
+        formatDateTime(formData.start_date_time),
       );
       formDataSend.append(
         "event[end_date_time]",
-        formatDateTime(formData.end_date_time)
+        formatDateTime(formData.end_date_time),
       );
       formDataSend.append("event[venue]", formData.venue);
       formDataSend.append("event[user_ids]", formData.user_ids);
@@ -317,11 +320,12 @@ const CreateEvent = () => {
       //   formDataSend.append("event[user_ids]", user_id);
       // });
 
-      if (formData.event_images && formData.event_images.length > 0) {
-        formData.event_images.forEach((file, index) => {
-          formDataSend.append(`event[event_images][]`, file);
-        });
-      }
+ if (formData.event_images && formData.event_images.length > 0) {
+  formData.event_images.forEach((file) => {
+    formDataSend.append("attachfiles[]", file);  // ✅ Backend mapped parameter
+  });
+}
+
       const response = await postEvents(formDataSend);
       toast.success("Event Created Successfully");
       console.log("Response:", response.data);
@@ -527,22 +531,25 @@ const CreateEvent = () => {
               <div className="flex flex-col items-center justify-center">
                 <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                   <h2
-                    className={`p-1 ${share === "all" && "bg-black text-white"
-                      } rounded-full px-6 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "all" && "bg-black text-white"
+                    } rounded-full px-6 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("all")}
                   >
                     All
                   </h2>
                   <h2
-                    className={`p-1 ${share === "individual" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "individual" && "bg-black text-white"
+                    } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("individual")}
                   >
                     Individuals
                   </h2>
                   <h2
-                    className={`p-1 ${share === "groups" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                    className={`p-1 ${
+                      share === "groups" && "bg-black text-white"
+                    } rounded-full px-4 cursor-pointer border-2 border-black`}
                     onClick={() => setShare("groups")}
                   >
                     Groups
@@ -697,10 +704,18 @@ const CreateEvent = () => {
                 fileType="image/*"
               />
             </div>
-            <div className="flex justify-center mt-10 my-5">
+            <div className="flex justify-end mt-10 my-5 gap-3">
               <button
-                className={`${submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
-                  } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-400`}
+                className="bg-gray-400 text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200"
+                onClick={() => navigate("/communication/events")}
+              >
+                <FaTimesCircle className="text-white-600 text-xl" />
+                Cancel
+              </button>
+              <button
+                className={`${
+                  submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
+                } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-400`}
                 onClick={handleCreateEvent}
                 disabled={submitting}
               >

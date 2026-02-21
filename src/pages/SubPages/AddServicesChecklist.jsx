@@ -523,8 +523,7 @@ const AddServicesChecklist = () => {
     <section>
       <div className="m-2">
         <h2
-          style={{ background: themeColor }}
-          className="text-center text-xl font-bold p-2  rounded-full text-white"
+          className="text-center text-xl font-bold p-2  rounded-full text-white bg-black"
         >
           Add Checklist
         </h2>
