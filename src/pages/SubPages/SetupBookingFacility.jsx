@@ -291,7 +291,7 @@ const SetupBookingFacility = () => {
               } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
               onClick={() => setPage("facility")}
             >
-              Amenities
+              Amenities Bookings
             </h2>
             {/* <h2
               className={`p-1 ${
@@ -309,7 +309,7 @@ const SetupBookingFacility = () => {
               } rounded-full px-4 cursor-pointer text-center  transition-all duration-300 ease-linear`}
               onClick={() => setPage("HotelBooking")}
             >
-              Hotel
+              Guest Room Bookings
             </h2>
             <h2
               className={`p-1 ${

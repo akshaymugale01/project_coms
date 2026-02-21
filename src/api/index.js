@@ -1411,8 +1411,8 @@ export const getAmenitiesBooking = async (page, per_page) => {
   return axiosInstance.get(`/amenity_bookings.json`, {
     params: {
       token: token,
-      page,
-      per_page,
+      Page:page,
+      Per_page: per_page,
     },
     // headers: {
     //   "Cache-Control": "no-cache",
@@ -1589,8 +1589,8 @@ export const getFacitilitySetup = async (page, per_page) => {
     const response = await axiosInstance.get(`/amenities.json?q[is_hotel_null]=true`, {
       params: {
         token: token,
-        page,
-        per_page,
+        Page:page,
+        Per_Page:per_page,
       },
       headers: {
         "Cache-Control": "no-cache",
@@ -1605,10 +1605,12 @@ export const getFacitilitySetup = async (page, per_page) => {
   }
 };
 
-export const getAmenityBooking = async () =>
+export const getAmenityBooking = async (page,per_page) =>
   axiosInstance.get(`/amenity_bookings/all_records_of_amenity.json?`, {
     params: {
       token: token,
+      Page:page,
+      Per_Page:per_page
     },
   });
 

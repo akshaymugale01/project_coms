@@ -7,6 +7,7 @@ import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { enIN } from "date-fns/locale";
 import { getCalendarBooking } from "../../api";
+import { useNavigate } from "react-router-dom";
 
 const locales = {
   "en-IN": enIN,
@@ -25,16 +26,25 @@ const AmenitiesCalendar = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+
+  // ✅ FIXED TRANSFORM FUNCTION
   const transformBookings = (rawBookings) => {
     return rawBookings.map((booking) => ({
       id: booking.id,
       title: `${booking.title} - ${booking.booked_by}`,
-      start: new Date(booking.start),
-      end: new Date(booking.end),
+
+      // ✅ Use real check-in & check-out datetime
+      start: new Date(booking.hotel_booking?.checkin_at),
+      end: new Date(booking.hotel_booking?.checkout_at),
+
+      // ✅ Correct color field (colors not color)
       resource: {
-        color: booking.color,
-        url: booking.url,
+        color: booking.colors || "#3174ad",
       },
+
+      // ✅ Store full hotel booking object
+      originalData: booking.hotel_booking,
     }));
   };
 
@@ -42,12 +52,11 @@ const AmenitiesCalendar = () => {
     const fetchBooking = async () => {
       try {
         const response = await getCalendarBooking();
-        const rawData = response.data.bookings;
+        const rawData = response.data.bookings || [];
         const transformed = transformBookings(rawData);
         setBookings(transformed);
-        console.log("Response",  response.data.bookings)
       } catch (error) {
-        console.error("Error fetching facilities", error);
+        console.error("Error fetching booking facilities", error);
         setError("Failed to fetch booking facilities. Please try again.");
       } finally {
         setLoading(false);
@@ -60,12 +69,20 @@ const AmenitiesCalendar = () => {
   const eventStyleGetter = (event) => {
     return {
       style: {
-        backgroundColor: event.resource?.color || "#3174ad",
+        backgroundColor: event.resource?.color,
         color: "white",
-        borderRadius: "5px",
-        padding: "2px",
+        borderRadius: "6px",
+        padding: "4px",
+        cursor: "pointer",
       },
     };
+  };
+
+  // ✅ Navigate to Details Page
+  const handleEventClick = (event) => {
+    navigate(`/setup/facility-details/${event.id}`, {
+      state: { booking: event.originalData },
+    });
   };
 
   return (
@@ -81,6 +98,7 @@ const AmenitiesCalendar = () => {
           endAccessor="end"
           style={{ height: "100%" }}
           eventPropGetter={eventStyleGetter}
+          onSelectEvent={handleEventClick}
         />
       )}
     </div>
