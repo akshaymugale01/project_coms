@@ -26,6 +26,7 @@ const AmenitiesCalendar = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingType, setBookingType] = useState("");
+    const [currentView, setCurrentView] = useState("month");
   const [dateRange, setDateRange] = useState({
     start: startOfMonth(new Date()),
     end: endOfMonth(new Date()),
@@ -57,6 +58,8 @@ const AmenitiesCalendar = () => {
       const res = await getCalendarBooking(params);
       const raw = res?.data?.bookings || [];
       setBookings(transformBookings(raw));
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -88,125 +91,193 @@ const AmenitiesCalendar = () => {
     setDateRange({ start, end });
   };
 
-  const eventStyleGetter = (event) => ({
-    style: {
-      backgroundColor: event.resource?.color || "#031325",
+  
+  const eventStyleGetter = (event) => {
+    const baseStyle = {
+      backgroundColor: event.resource?.color,
       color: "#fff",
-      borderRadius: "8px",
+      borderRadius: "6px",
       padding: "6px",
-      fontSize: "13px",
       border: "none",
-    },
-  });
+    };
+
+    // 🔥 Special styling for Agenda view
+    if (currentView === "agenda") {
+      return {
+        style: {
+          ...baseStyle,
+          width: "100%",
+          height: "40px",
+          display: "block",
+        },
+      };
+    }
+
+    return { style: baseStyle };
+  };
+
+    
 
   const booking = selectedBooking?.details;
   const amenity = booking?.amenity;
 
   const bookingImage =
-    amenity?.covers?.length > 0
-      ? domainPrefix + amenity.covers[0].image_url
+    selectedBooking?.details?.amenity?.covers?.length > 0
+      ? domainPrefix + selectedBooking.details.amenity.covers[0].image_url
       : null;
 
   return (
-    <div style={{ height: "85vh", padding: "20px", background: "#f4f6fa" }}>
-      <Calendar
-        localizer={localizer}
-        events={bookings}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: "75vh", background: "#fff", padding: 15, borderRadius: 12 }}
-        eventPropGetter={eventStyleGetter}
-        onSelectEvent={handleEventClick}
-        onRangeChange={handleRangeChange}
-      />
-
-      {/* ================= MODAL ================= */}
-      {selectedBooking && (
-  <div style={overlayStyle}>
-    <div style={modalStyle}>
-      
-      {/* Header */}
-      <div style={headerStyle}>
-        <h1 className="text-[20px] text-blue-800"><b>{selectedBooking.title}</b></h1>
-        <button onClick={() => setSelectedBooking(null)} style={closeBtn}>
-          ✕
-        </button>
+    <div style={{ height: "85vh", padding: "20px", background: "#f8f9fc" }}>
+      {/* FILTER BUTTONS */}
+      <div style={{ marginBottom: "20px", display: "flex", gap: "12px" }}>
+        {["", "guest_room", "amenity"].map((type) => (
+          <button
+            key={type}
+            onClick={() => setBookingType(type)}
+            style={{
+              padding: "8px 16px",
+              background: bookingType === type ? "#031325" : "#e9ecef",
+              color: bookingType === type ? "#fff" : "#000",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 500,
+              transition: "0.3s",
+            }}
+          >
+            {type === ""
+              ? "All Bookings"
+              : type === "guest_room"
+                ? "Guest Room Bookings"
+                : "Amenity Bookings"}
+          </button>
+        ))}
       </div>
 
-      {/* ===== TOP SECTION (Left: Booking | Right: Image) ===== */}
-      <div style={topSectionStyle}>
-        
-        {/* LEFT SIDE - Booking Details */}
-        <div style={{ flex: 1 }}>
-          <Section title="Booking Information">
-            <Info label="Booking ID" value={booking?.id} />
-            <Info label="Booked By" value={booking?.book_by_user} />
-            <Info label="Status" value={booking?.status} />
-            <Info label="Amount" value={`₹${booking?.amount}`} />
-            <Info label="Payment Mode" value={booking?.payment_mode} />
-            <Info label="Booking Date" value={booking?.booking_date} />
-            <Info label="Selected Slot" value={booking?.slot?.twelve_hr_slot} />
-          </Section>
+      {loading ? (
+        <div style={{ textAlign: "center", marginTop: "40px" }}>
+          Loading bookings...
         </div>
-
-        {/* RIGHT SIDE - Cover Image */}
-        {bookingImage && (
-          <div style={imageContainerStyle}>
-            <img
-              src={bookingImage}
-              alt="cover"
-              style={imageStyle}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ===== BELOW SECTION (Same as Before) ===== */}
-
-      {/* People Details */}
-      <Section title="People Details">
-        <Info label="Member Adult" value={booking?.member_adult} />
-        <Info label="Member Child" value={booking?.member_child} />
-        <Info label="Guest Adult" value={booking?.guest_adult} />
-        <Info label="Guest Child" value={booking?.guest_child} />
-        <Info label="Tenant Adult" value={booking?.tenant_adult} />
-        <Info label="Tenant Child" value={booking?.tenant_child} />
-      </Section>
-
-      {/* Amenity Details */}
-      <Section title="Amenity Information">
-        <Info label="Facility Name" value={amenity?.fac_name} />
-        <Info label="Facility Type" value={amenity?.fac_type} />
-        <Info label="Min People" value={amenity?.min_people} />
-        <Info label="Max People" value={amenity?.max_people} />
-        <Info label="GST %" value={amenity?.gst_no} />
-        <Info label="Member Price Adult" value={amenity?.member_price_adult} />
-        <Info label="Member Price Child" value={amenity?.member_price_child} />
-        <Info label="Description" value={amenity?.description} />
-      </Section>
-
-      {/* Slots */}
-      {amenity?.amenity_slots?.length > 0 && (
-        <Section title="Available Slots">
-          {amenity.amenity_slots.map((slot) => (
-            <div key={slot.id} style={slotBox}>
-              {slot.twelve_hr_slot}
-            </div>
-          ))}
-        </Section>
+      ) : (
+        <div
+          style={{
+            background: "#fff",
+            padding: "15px",
+            borderRadius: "12px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+          }}
+        >
+          <Calendar
+            localizer={localizer}
+            events={bookings}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: "70vh" }}
+            eventPropGetter={eventStyleGetter}
+            onSelectEvent={handleEventClick}
+              view={currentView}               
+                        onView={(view) => setCurrentView(view)}   
+            onRangeChange={handleRangeChange}
+          />
+        </div>
       )}
-    </div>
-  </div>
-)}
+
+      {/* MODAL */}
+      {selectedBooking && (
+        <div style={overlayStyle}>
+          <div style={modalStyle}>
+            {/* Header */}
+            <div style={headerStyle}>
+              <h1 className="text-[20px] text-blue-800">
+                <b>{selectedBooking.title}</b>
+              </h1>
+              <button onClick={() => setSelectedBooking(null)} style={closeBtn}>
+                ✕
+              </button>
+            </div>
+
+            {/* ===== TOP SECTION (Left: Booking | Right: Image) ===== */}
+            <div style={topSectionStyle}>
+              {/* LEFT SIDE - Booking Details */}
+              <div style={{ flex: 1 }}>
+                <Section title="Booking Information">
+                  <Info label="Booking ID" value={booking?.id} />
+                  <Info label="Booked By" value={booking?.book_by_user} />
+                  <Info label="Status" value={booking?.status} />
+                  <Info label="Amount" value={`₹${booking?.amount}`} />
+                  <Info label="Payment Mode" value={booking?.payment_mode} />
+                  <Info label="Booking Date" value={booking?.booking_date} />
+                  <Info
+                    label="Selected Slot"
+                    value={booking?.slot?.twelve_hr_slot}
+                  />
+                </Section>
+              </div>
+
+              {/* RIGHT SIDE - Cover Image */}
+              {bookingImage && (
+                <div style={imageContainerStyle}>
+                  <img src={bookingImage} alt="cover" style={imageStyle} />
+                </div>
+              )}
+            </div>
+
+            {/* ===== BELOW SECTION (Same as Before) ===== */}
+
+            {/* People Details */}
+            <Section title="People Details">
+              <Info label="Member Adult" value={booking?.member_adult} />
+              <Info label="Member Child" value={booking?.member_child} />
+              <Info label="Guest Adult" value={booking?.guest_adult} />
+              <Info label="Guest Child" value={booking?.guest_child} />
+              <Info label="Tenant Adult" value={booking?.tenant_adult} />
+              <Info label="Tenant Child" value={booking?.tenant_child} />
+            </Section>
+
+            {/* Amenity Details */}
+            <Section title="Amenity Information">
+              <Info label="Facility Name" value={amenity?.fac_name} />
+              <Info label="Facility Type" value={amenity?.fac_type} />
+              <Info label="Min People" value={amenity?.min_people} />
+              <Info label="Max People" value={amenity?.max_people} />
+              <Info label="GST %" value={amenity?.gst_no} />
+              <Info
+                label="Member Price Adult"
+                value={amenity?.member_price_adult}
+              />
+              <Info
+                label="Member Price Child"
+                value={amenity?.member_price_child}
+              />
+              <Info label="Description" value={amenity?.description} />
+            </Section>
+
+            {/* Slots */}
+            {amenity?.amenity_slots?.length > 0 && (
+              <Section title="Available Slots">
+                {amenity.amenity_slots.map((slot) => (
+                  <div key={slot.id} style={slotBox}>
+                    {slot.twelve_hr_slot}
+                  </div>
+                ))}
+              </Section>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-/* ================= Reusable Components ================= */
-
 const Section = ({ title, children }) => (
   <div style={{ marginBottom: 25 }}>
-    <h3 style={{ marginBottom: 10, borderBottom: "1px solid #eee", paddingBottom: 5 }}>
+    <h3
+      style={{
+        marginBottom: 10,
+        borderBottom: "1px solid #eee",
+        paddingBottom: 5,
+      }}
+    >
       {title}
     </h3>
     <div style={gridStyle}>{children}</div>
