@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addHours , isSameDay } from "date-fns";
+import { MdCancel } from "react-icons/md";
 
 const HotelBooking = () => {
   const navigate = useNavigate();
@@ -1120,7 +1121,13 @@ const handleInputChange = (field, value) => {
                 />
               </div>
             </div>
-            <div className="flex justify-center">
+            <div className="flex justify-end gap-4 mt-10">
+              <button
+                onClick={() => {navigate("/bookings")}} // Navigate back to bookings page
+                className="p-2 px-4 flex items-center gap-2 bg-red-400 text-white rounded-md font-medium transition-all duration-300"
+              >
+                <MdCancel /> Cancel
+              </button>
               <button
                 onClick={postBookFacility} // Trigger the handleSubmit function on click
                 className="p-2 px-4 flex items-center gap-2 bg-green-400 text-white rounded-md font-medium transition-all duration-300"

@@ -20,6 +20,7 @@ import { getItemInLocalStorage } from "../../utils/localStorage";
 import { error } from "highcharts";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { MdCancel } from "react-icons/md";
 const FacilityBooking = () => {
   const navigate = useNavigate();
   const today = new Date();
@@ -911,7 +912,13 @@ const calculateBookingAmount = (facility, formData) => {
                 />
               </div>
             </div>
-            <div className="flex justify-center">
+            <div className="flex justify-end gap-4 mt-10">
+              <button
+                onClick={() => {navigate("/bookings")}} // Navigate back to bookings page
+                className="p-2 px-4 flex items-center gap-2 bg-red-400 text-white rounded-md font-medium transition-all duration-300"
+              >
+                <MdCancel /> Cancel
+              </button>
               <button
                 onClick={postBookFacility} // Trigger the handleSubmit function on click
                 className="p-2 px-4 flex items-center gap-2 bg-green-400 text-white rounded-md font-medium transition-all duration-300"

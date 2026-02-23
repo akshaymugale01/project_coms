@@ -1286,13 +1286,25 @@ export const postAmenitiesBooking = async (data) =>
     },
   });
 //Calendar
-export const getCalendarBooking = async (data) =>
-  axiosInstance.get(`amenity_bookings/calender_booking.json`, {
+// export const getCalendarBooking = async (data) =>
+//   axiosInstance.get(`amenity_bookings/calender_booking.json`, {
+//     params: {
+//       token: token,
+//     },
+//   });
+
+export const getCalendarBooking = async (data = {}) => {
+  return axiosInstance.get("amenity_bookings/calender_booking.json", {
     params: {
       token: token,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      ...(data.booking_type && {
+        "q[booking_type]": data.booking_type,
+      }),
     },
   });
-
+};
 export const getAmenityExport = async (start_date, end_date) => {
   if (!start_date || !end_date) {
     throw new Error("Start date and end date are required");
@@ -1407,11 +1419,11 @@ export const getAboutUs = async () =>
 //     },
 //   });
 
-export const getAmenitiesBooking = async (page, per_page) => {
+export const getAmenitiesBooking = async (page_no, per_page) => {
   return axiosInstance.get(`/amenity_bookings.json`, {
     params: {
       token: token,
-      Page:page,
+      Page:page_no,
       Per_page: per_page,
     },
     // headers: {
@@ -1586,7 +1598,7 @@ export const postParkingConfiguration = async (data) =>
 
 export const getFacitilitySetup = async (page, per_page) => {
   try {
-    const response = await axiosInstance.get(`/amenities.json?q[is_hotel_null]=true`, {
+    const response = await axiosInstance.get(`/amenities.json?q[amenity_is_hotel_not_null]=true`, {
       params: {
         token: token,
         Page:page,
@@ -1605,11 +1617,11 @@ export const getFacitilitySetup = async (page, per_page) => {
   }
 };
 
-export const getAmenityBooking = async (page,per_page) =>
+export const getAmenityBooking = async (page_no,per_page) =>
   axiosInstance.get(`/amenity_bookings/all_records_of_amenity.json?`, {
     params: {
       token: token,
-      Page:page,
+      Page:page_no,
       Per_Page:per_page
     },
   });
