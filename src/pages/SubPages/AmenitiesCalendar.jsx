@@ -9,7 +9,7 @@ import endOfMonth from "date-fns/endOfMonth";
 import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { enIN } from "date-fns/locale";
-import { getCalendarBooking } from "../../api";
+import { domainPrefix, getCalendarBooking } from "../../api";
 import { error } from "logrocket";
 
 const locales = { "en-IN": enIN };
@@ -106,6 +106,10 @@ const AmenitiesCalendar = () => {
       },
     };
   };
+
+  const bookingImage = domainPrefix + selectedBooking?.details?.amenity?.covers[0]?.image_url || ""
+  // console.log("booking details", bookingImage);
+  // console.log("details", selectedBooking);
 
   return (
      <div style={{ height: "80vh", padding: "10px", marginTop: "35px" }}>
@@ -229,7 +233,7 @@ const AmenitiesCalendar = () => {
             {/* 🔥 Cover Image */}
             {selectedBooking.details?.amenity?.covers?.length > 0 && (
               <img
-                src={`https://app.myciti.life${selectedBooking.details.amenity.covers[0].image_url}`}
+                src={bookingImage}
                 alt="cover"
                 style={{ width: "100%", marginTop: 10, borderRadius: 6 }}
               />
