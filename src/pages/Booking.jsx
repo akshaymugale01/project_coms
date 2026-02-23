@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import { IoAddCircleOutline } from "react-icons/io5";
 import Navbar from "../components/Navbar";
-import { BiEdit, BiExport } from "react-icons/bi";
+import { BiEdit, BiExport, BiFilter } from "react-icons/bi";
 import ExportBookingModal from "../containers/modals/ExportBookingsModal";
 import { Link } from "react-router-dom";
 import SeatBooking from "./SubPages/SeatBooking";
@@ -31,21 +31,21 @@ const Booking = () => {
   const [hotelbooking, setHotelBooking] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]); // Filtered amenities bookings
   const [filteredHotelBookings, setFilteredHotelBookings] = useState([]); // Filtered hotel bookings
-  const themeColor = "rgb(3, 19 37)";
   
+  const themeColor = "rgb(3, 19 37)";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const hotelbookingResponse = await getAmenitiesBooking();
+        const hotelbookingResponse = await getAmenitiesBooking(page_no, per_page); // Pass true to indicate hotel bookings
         console.log("Bookings Data:", hotelbookingResponse?.data);
         const hotelBookings = hotelbookingResponse?.data.amenity_bookings || [];
         setHotelBooking(hotelBookings);
         setFilteredHotelBookings(hotelBookings); // Initialize filtered hotel data
 
         // Fetch Bookings
-        const bookingsResponse = await getAmenityBooking();
+        const bookingsResponse = await getAmenityBooking(page_no, per_page);
         console.log("Bookings Data of only amenities:", bookingsResponse?.data);
         const amenityBookings = bookingsResponse?.data.amenity_bookings || [];
         setBookings(amenityBookings);
@@ -64,6 +64,17 @@ const Booking = () => {
 
     fetchData();
   }, [page_no, per_page]); // add dependencies if these are dynamic
+
+   // 🔥 Pagination Handlers
+  const handlePageChange = (page) => {
+    setPageNo(page);
+  };
+
+  const handlePerRowsChange = (newPerPage, page) => {
+    setPerPage(newPerPage);
+    setPageNo(page);
+  };
+
 
   useEffect(() => {
     console.log("Updated Booking Facility:", bookingFacility);
@@ -456,6 +467,13 @@ const Booking = () => {
                   style={{ background: themeColor }}
                   onClick={() => showModal(true)}
                   className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+                  >
+                    <BiFilter size={20}/> Filter
+                </button>
+                <button
+                  style={{ background: themeColor }}
+                  onClick={() => showModal(true)}
+                  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
                 >
                   <BiExport size={20} />
                   Export
@@ -497,6 +515,13 @@ const Booking = () => {
                   <IoAddCircleOutline size={20} />
                   Book
                 </Link>
+                <button
+                  style={{ background: themeColor }}
+                  onClick={() => showModal(true)}
+                  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+                  >
+                    <BiFilter size={20}/> Filter
+                </button>
                 <button
                   style={{ background: themeColor }}
                   onClick={() => showModal(true)}
