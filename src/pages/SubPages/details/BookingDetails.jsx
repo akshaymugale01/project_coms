@@ -588,8 +588,8 @@ const BookingDetails = () => {
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Booked On:</p>
-            <p>{created()}</p>
-            {/* <p>{facilityDetails.created_at}</p> */}
+            {/* <p>{created()}</p> */}
+            <p>{bookingDetails.created_at}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 items-center">
             <p className="font-medium">Booked By:</p>
