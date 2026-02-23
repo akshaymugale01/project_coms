@@ -10,8 +10,6 @@ import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { enIN } from "date-fns/locale";
 import { domainPrefix, getCalendarBooking } from "../../api";
-import { getCalendarBooking } from "../../api";
-import { error } from "logrocket";
 
 const locales = { "en-IN": enIN };
 
@@ -59,8 +57,6 @@ const AmenitiesCalendar = () => {
       const res = await getCalendarBooking(params);
       const raw = res?.data?.bookings || [];
       setBookings(transformBookings(raw));
-    } catch (err) {
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -74,7 +70,7 @@ const AmenitiesCalendar = () => {
     setSelectedBooking(event.resource.originalData);
   };
 
-    const handleRangeChange = (range, view) => {
+  const handleRangeChange = (range, view) => {
     let start;
     let end;
 
@@ -84,9 +80,6 @@ const AmenitiesCalendar = () => {
     } else if (view === "week") {
       start = startOfWeek(range.start, { locale: enIN });
       end = endOfWeek(range.start, { locale: enIN });
-    } else if (view === "day") {
-      start = range.start;
-      end = range.end;
     } else {
       start = range.start;
       end = range.end;
@@ -95,165 +88,143 @@ const AmenitiesCalendar = () => {
     setDateRange({ start, end });
   };
 
+  const eventStyleGetter = (event) => ({
+    style: {
+      backgroundColor: event.resource?.color || "#031325",
+      color: "#fff",
+      borderRadius: "8px",
+      padding: "6px",
+      fontSize: "13px",
+      border: "none",
+    },
+  });
 
-  const eventStyleGetter = (event) => {
-    return {
-      style: {
-        backgroundColor: event.resource?.color,
-        color: "white",
-        borderRadius: "6px",
-        padding: "4px",
-        cursor: "pointer",
-      },
-    };
-  };
-  const bookingImage = domainPrefix + selectedBooking?.details?.amenity?.covers[0]?.image_url || ""
-  // console.log("booking details", bookingImage);
-  // console.log("details", selectedBooking);
+  const booking = selectedBooking?.details;
+  const amenity = booking?.amenity;
+
+  const bookingImage =
+    amenity?.covers?.length > 0
+      ? domainPrefix + amenity.covers[0].image_url
+      : null;
+
   return (
-     <div style={{ height: "80vh", padding: "10px", marginTop: "35px" }}>
-      
-      {/* FILTER BUTTONS */}
-      <div style={{ marginBottom: "15px", display: "flex", gap: "10px" }}>
-        <button
-          onClick={() => setBookingType("")}
-          style={{
-            padding: "6px 12px",
-            background: bookingType === "" ? "#031325" : "#e5e5e5",
-            color: bookingType === "" ? "#fff" : "#000",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          All Bookings
-        </button>
-
-        <button
-          onClick={() => setBookingType("guest_room")}
-          style={{
-            padding: "6px 12px",
-            background: bookingType === "guest_room" ? "#031325" : "#e5e5e5",
-            color: bookingType === "guest_room" ? "#fff" : "#000",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          Guest Room Bookings
-        </button>
-
-        <button
-          onClick={() => setBookingType("amenity")}
-          style={{
-            padding: "6px 12px",
-            background: bookingType === "amenity" ? "#031325" : "#e5e5e5",
-            color: bookingType === "amenity" ? "#fff" : "#000",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          Amenity Bookings
-        </button>
-      </div>
-
-      {error && <div style={{ color: "red" }}>{error}</div>}
-
-      {loading ? (
-        <div>Loading bookings...</div>
-      ) : (
-        <Calendar
-          localizer={localizer}
-          events={bookings}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: "100%" }}
-          eventPropGetter={eventStyleGetter}
-          onSelectEvent={handleEventClick}
-          onRangeChange={handleRangeChange}
-        />
-      )}
+    <div style={{ height: "85vh", padding: "20px", background: "#f4f6fa" }}>
+      <Calendar
+        localizer={localizer}
+        events={bookings}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: "75vh", background: "#fff", padding: 15, borderRadius: 12 }}
+        eventPropGetter={eventStyleGetter}
+        onSelectEvent={handleEventClick}
+        onRangeChange={handleRangeChange}
+      />
 
       {/* ================= MODAL ================= */}
       {selectedBooking && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <h2>{selectedBooking.title}</h2>
+  <div style={overlayStyle}>
+    <div style={modalStyle}>
+      
+      {/* Header */}
+      <div style={headerStyle}>
+        <h1 className="text-[20px] text-blue-800"><b>{selectedBooking.title}</b></h1>
+        <button onClick={() => setSelectedBooking(null)} style={closeBtn}>
+          ✕
+        </button>
+      </div>
 
-            <p><strong>Type:</strong> {selectedBooking.type}</p>
-            <p><strong>Booked By:</strong> {selectedBooking.booked_by}</p>
-            <p><strong>Status:</strong> {selectedBooking.details?.status}</p>
-            <p><strong>Amount:</strong> ₹{selectedBooking.details?.amount}</p>
-
-            {/* ================= GUEST ROOM ================= */}
-            {selectedBooking.type === "guest_room" && (
-              <>
-                <p><strong>Check In:</strong> {selectedBooking.details?.checkin_at}</p>
-                <p><strong>Check Out:</strong> {selectedBooking.details?.checkout_at}</p>
-              </>
-            )}
-
-            {/* ================= AMENITY ================= */}
-            {selectedBooking.type === "amenity" && (
-              <>
-                <p><strong>Booking Date:</strong> {selectedBooking.details?.booking_date}</p>
-
-                <p><strong>Selected Slot:</strong>{" "}
-                  {selectedBooking.details?.slot?.twelve_hr_slot ||
-                    selectedBooking.details?.slot?.error}
-                </p>
-
-                {/* 🔥 All Available Slots */}
-                {selectedBooking.details?.amenity?.amenity_slots?.length > 0 && (
-                  <>
-                    <h4>Available Slots:</h4>
-                    <div style={{ maxHeight: 120, overflowY: "auto" }}>
-                      {selectedBooking.details.amenity.amenity_slots.map((slot) => (
-                        <div key={slot.id} style={slotBox}>
-                          {slot.twelve_hr_slot}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-
-            {/* ================= AMENITY DETAILS ================= */}
-            <hr />
-
-            <h4>Amenity Information</h4>
-            <p><strong>Name:</strong> {selectedBooking.details?.amenity?.fac_name}</p>
-            <p><strong>Description:</strong> {selectedBooking.details?.amenity?.description}</p>
-            <p><strong>Min People:</strong> {selectedBooking.details?.amenity?.min_people}</p>
-            <p><strong>Max People:</strong> {selectedBooking.details?.amenity?.max_people}</p>
-
-            {/* 🔥 Cover Image */}
-            {selectedBooking.details?.amenity?.covers?.length > 0 && (
-              <img
-                src={bookingImage}
-                alt="cover"
-                style={{ width: "100%", marginTop: 10, borderRadius: 6 }}
-              />
-            )}
-
-            <button onClick={() => setSelectedBooking(null)} style={closeBtn}>
-              Close
-            </button>
-          </div>
+      {/* ===== TOP SECTION (Left: Booking | Right: Image) ===== */}
+      <div style={topSectionStyle}>
+        
+        {/* LEFT SIDE - Booking Details */}
+        <div style={{ flex: 1 }}>
+          <Section title="Booking Information">
+            <Info label="Booking ID" value={booking?.id} />
+            <Info label="Booked By" value={booking?.book_by_user} />
+            <Info label="Status" value={booking?.status} />
+            <Info label="Amount" value={`₹${booking?.amount}`} />
+            <Info label="Payment Mode" value={booking?.payment_mode} />
+            <Info label="Booking Date" value={booking?.booking_date} />
+            <Info label="Selected Slot" value={booking?.slot?.twelve_hr_slot} />
+          </Section>
         </div>
+
+        {/* RIGHT SIDE - Cover Image */}
+        {bookingImage && (
+          <div style={imageContainerStyle}>
+            <img
+              src={bookingImage}
+              alt="cover"
+              style={imageStyle}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ===== BELOW SECTION (Same as Before) ===== */}
+
+      {/* People Details */}
+      <Section title="People Details">
+        <Info label="Member Adult" value={booking?.member_adult} />
+        <Info label="Member Child" value={booking?.member_child} />
+        <Info label="Guest Adult" value={booking?.guest_adult} />
+        <Info label="Guest Child" value={booking?.guest_child} />
+        <Info label="Tenant Adult" value={booking?.tenant_adult} />
+        <Info label="Tenant Child" value={booking?.tenant_child} />
+      </Section>
+
+      {/* Amenity Details */}
+      <Section title="Amenity Information">
+        <Info label="Facility Name" value={amenity?.fac_name} />
+        <Info label="Facility Type" value={amenity?.fac_type} />
+        <Info label="Min People" value={amenity?.min_people} />
+        <Info label="Max People" value={amenity?.max_people} />
+        <Info label="GST %" value={amenity?.gst_no} />
+        <Info label="Member Price Adult" value={amenity?.member_price_adult} />
+        <Info label="Member Price Child" value={amenity?.member_price_child} />
+        <Info label="Description" value={amenity?.description} />
+      </Section>
+
+      {/* Slots */}
+      {amenity?.amenity_slots?.length > 0 && (
+        <Section title="Available Slots">
+          {amenity.amenity_slots.map((slot) => (
+            <div key={slot.id} style={slotBox}>
+              {slot.twelve_hr_slot}
+            </div>
+          ))}
+        </Section>
       )}
+    </div>
+  </div>
+)}
     </div>
   );
 };
 
+/* ================= Reusable Components ================= */
+
+const Section = ({ title, children }) => (
+  <div style={{ marginBottom: 25 }}>
+    <h3 style={{ marginBottom: 10, borderBottom: "1px solid #eee", paddingBottom: 5 }}>
+      {title}
+    </h3>
+    <div style={gridStyle}>{children}</div>
+  </div>
+);
+
+const Info = ({ label, value }) => (
+  <div>
+    <strong>{label}:</strong>
+    <div style={{ color: "#555", marginTop: 4 }}>{value || "-"}</div>
+  </div>
+);
+
+/* ================= Styles ================= */
+
 const overlayStyle = {
   position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
+  inset: 0,
   background: "rgba(0,0,0,0.6)",
   display: "flex",
   justifyContent: "center",
@@ -262,29 +233,66 @@ const overlayStyle = {
 };
 
 const modalStyle = {
-  background: "#fff",
-  padding: 20,
-  width: 500,
+  width: "85%",
   maxHeight: "90vh",
   overflowY: "auto",
-  borderRadius: 8,
+  background: "#fff",
+  padding: "20px",
+  borderRadius: 16,
+  boxShadow: "0 25px 50px rgba(0,0,0,0.2)",
+};
+
+const headerStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 20,
+};
+
+const gridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 20,
 };
 
 const slotBox = {
-  padding: "6px 10px",
-  background: "#f2f2f2",
-  marginBottom: 5,
-  borderRadius: 4,
+  padding: 10,
+  background: "#f1f3f5",
+  borderRadius: 6,
+};
+
+const policyStyle = {
+  whiteSpace: "pre-line",
+  color: "#444",
 };
 
 const closeBtn = {
-  marginTop: 15,
-  padding: "6px 12px",
+  border: "none",
   background: "#031325",
   color: "#fff",
-  border: "none",
-  borderRadius: 4,
+  borderRadius: "50%",
+  width: 35,
+  height: 35,
   cursor: "pointer",
+};
+const topSectionStyle = {
+  display: "flex",
+  gap: 30,
+  marginBottom: 30,
+  alignItems: "flex-start",
+};
+
+const imageContainerStyle = {
+  width: "35%",
+  display: "flex",
+  justifyContent: "flex-end",
+};
+
+const imageStyle = {
+  width: "100%",
+  borderRadius: 12,
+  objectFit: "cover",
+  boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
 };
 
 export default AmenitiesCalendar;

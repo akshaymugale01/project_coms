@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { IoAddCircleOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoClose } from "react-icons/io5";
 import Navbar from "../components/Navbar";
 import { BiEdit, BiExport, BiFilter } from "react-icons/bi";
 import ExportBookingModal from "../containers/modals/ExportBookingsModal";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SeatBooking from "./SubPages/SeatBooking";
 import Table from "../components/table/Table";
 import { useSelector } from "react-redux";
@@ -20,8 +20,25 @@ import AmenitiesCalendar from "./SubPages/AmenitiesCalendar";
 
 const Booking = () => {
   const [searchText, setSearchText] = useState("");
-  const [modal, showModal] = useState(false);
-  const [page, setPage] = useState("meetingBooking");
+  const [filters, setFilters] = useState({
+  fac_name: "",
+  fac_type: "",
+  payment_status: "",
+  booked_by: "",
+  booking_status: "",
+});
+const [showFilterModal, setShowFilterModal] = useState(false);
+const [showExportModal, setShowExportModal] = useState(false);  
+// const [page, setPage] = useState(getInitialTab());
+const location = useLocation();
+
+const getInitialTab = () => {
+  const params = new URLSearchParams(location.search);
+  const tab = params.get("tab");
+  return tab || "meetingBooking";
+};
+
+const [page, setPage] = useState(getInitialTab());
   const [bookings, setBookings] = useState([]); // State to hold booking data
   const [page_no, setPageNo] = useState(1);
   const [per_page, setPerPage] = useState(10);
@@ -65,6 +82,77 @@ const Booking = () => {
     fetchData();
   }, [page_no, per_page]); // add dependencies if these are dynamic
 
+  const applyFilters = () => {
+  // ---- FILTER AMENITIES BOOKINGS ----
+  const filteredAmenity = bookings.filter((booking) => {
+    const facility = bookingFacility.find(
+      (fac) => fac.id === booking.amenity_id
+    );
+
+    const facName = facility?.fac_name?.toLowerCase() || "";
+    const facType = facility?.fac_type?.toLowerCase() || "";
+    const bookedBy = booking?.book_by_user?.toLowerCase() || "";
+    const paymentStatus = booking?.status?.toLowerCase() || "";
+    const bookingStatus = booking?.status?.toLowerCase() || "";
+
+    return (
+      (!filters.fac_name ||
+        facName.includes(filters.fac_name.toLowerCase())) &&
+      (!filters.fac_type ||
+        facType.includes(filters.fac_type.toLowerCase())) &&
+      (!filters.booked_by ||
+        bookedBy.includes(filters.booked_by.toLowerCase())) &&
+      (!filters.payment_status ||
+        paymentStatus === filters.payment_status.toLowerCase()) &&
+      (!filters.booking_status ||
+        bookingStatus === filters.booking_status.toLowerCase())
+    );
+  });
+
+  // ---- FILTER HOTEL BOOKINGS ----
+  const filteredHotel = hotelbooking.filter((booking) => {
+    const facility = bookingFacility.find(
+      (fac) => fac.id === booking.amenity_id
+    );
+
+    if (!facility || !facility.is_hotel) return false;
+
+    const facName = facility?.fac_name?.toLowerCase() || "";
+    const facType = facility?.fac_type?.toLowerCase() || "";
+    const bookedBy = booking?.book_by_user?.toLowerCase() || "";
+    const paymentStatus = booking?.status?.toLowerCase() || "";
+    const bookingStatus = booking?.status?.toLowerCase() || "";
+
+    return (
+      (!filters.fac_name ||
+        facName.includes(filters.fac_name.toLowerCase())) &&
+      (!filters.fac_type ||
+        facType.includes(filters.fac_type.toLowerCase())) &&
+      (!filters.booked_by ||
+        bookedBy.includes(filters.booked_by.toLowerCase())) &&
+      (!filters.payment_status ||
+        paymentStatus === filters.payment_status.toLowerCase()) &&
+      (!filters.booking_status ||
+        bookingStatus === filters.booking_status.toLowerCase())
+    );
+  });
+
+  setFilteredBookings(filteredAmenity);
+  setFilteredHotelBookings(filteredHotel);
+};
+
+const resetFilters = () => {
+  setFilters({
+    fac_name: "",
+    fac_type: "",
+    payment_status: "",
+    booked_by: "",
+    booking_status: "",
+  });
+
+  setFilteredBookings(bookings);
+  setFilteredHotelBookings(hotelbooking);
+};
    // 🔥 Pagination Handlers
   const handlePageChange = (page) => {
     setPageNo(page);
@@ -463,16 +551,17 @@ const Booking = () => {
                   <IoAddCircleOutline size={20} />
                   Book
                 </Link>
+               <button
+  style={{ background: themeColor }}
+  onClick={() => setShowFilterModal(true)}
+  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+>
+  <BiFilter size={20} />
+  Filter
+</button>
                 <button
                   style={{ background: themeColor }}
-                  onClick={() => showModal(true)}
-                  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
-                  >
-                    <BiFilter size={20}/> Filter
-                </button>
-                <button
-                  style={{ background: themeColor }}
-                  onClick={() => showModal(true)}
+                  onClick={() => setShowExportModal(true)}
                   className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
                 >
                   <BiExport size={20} />
@@ -492,7 +581,7 @@ const Booking = () => {
                 </div>
               )}
             </div>
-            {modal && <ExportBookingModal onclose={() => showModal(false)} />}
+            {showExportModal && <ExportBookingModal onclose={() => setShowExportModal(false)} />}
           </div>
         )}
 
@@ -516,15 +605,16 @@ const Booking = () => {
                   Book
                 </Link>
                 <button
-                  style={{ background: themeColor }}
-                  onClick={() => showModal(true)}
-                  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
-                  >
-                    <BiFilter size={20}/> Filter
-                </button>
+  style={{ background: themeColor }}
+  onClick={() => setShowFilterModal(true)}
+  className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
+>
+  <BiFilter size={20} />
+  Filter
+</button>
                 <button
                   style={{ background: themeColor }}
-                  onClick={() => showModal(true)}
+                  onClick={() => setShowExportModal(true)}
                   className="bg-black rounded-lg flex font-semibold items-center gap-2 text-white p-2 my-2"
                 >
                   <BiExport size={20} />
@@ -544,9 +634,104 @@ const Booking = () => {
                 </div>
               )}
             </div>
-            {modal && <ExportBookingModal onclose={() => showModal(false)} />}
+            {showExportModal && <ExportBookingModal onclose={() => setShowExportModal(false)} />}
           </div>
         )}
+
+      {showFilterModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-xl w-[450px] shadow-lg relative">
+
+      {/* 🔴 Cross Icon */}
+      <button
+        onClick={() => setShowFilterModal(false)}
+        className="absolute top-3 right-3 text-gray-600 hover:text-black text-xl"
+      >
+        <IoClose />
+      </button>
+
+      <h2 className="text-lg font-semibold mb-4">Filter Bookings</h2>
+
+      <div className="flex flex-col gap-3">
+
+        <input
+          type="text"
+          placeholder="Facility Name"
+          value={filters.fac_name}
+          onChange={(e) =>
+            setFilters({ ...filters, fac_name: e.target.value })
+          }
+          className="border p-2 rounded-md"
+        />
+
+        <input
+          type="text"
+          placeholder="Facility Type"
+          value={filters.fac_type}
+          onChange={(e) =>
+            setFilters({ ...filters, fac_type: e.target.value })
+          }
+          className="border p-2 rounded-md"
+        />
+
+        <input
+          type="text"
+          placeholder="Booked By"
+          value={filters.booked_by}
+          onChange={(e) =>
+            setFilters({ ...filters, booked_by: e.target.value })
+          }
+          className="border p-2 rounded-md"
+        />
+
+        <select
+          value={filters.payment_status}
+          onChange={(e) =>
+            setFilters({ ...filters, payment_status: e.target.value })
+          }
+          className="border p-2 rounded-md"
+        >
+          <option value="">Select Payment Status</option>
+          <option value="booked">Booked</option>
+          <option value="pending">Pending</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+
+        <select
+          value={filters.booking_status}
+          onChange={(e) =>
+            setFilters({ ...filters, booking_status: e.target.value })
+          }
+          className="border p-2 rounded-md"
+        >
+          <option value="">Select Booking Status</option>
+          <option value="booked">Booked</option>
+          <option value="pending">Pending</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div className="flex justify-end gap-3 mt-5">
+        <button
+          onClick={resetFilters}
+          className="px-4 py-2 bg-gray-400 text-white rounded-md"
+        >
+          Reset
+        </button>
+
+        <button
+          onClick={() => {
+            applyFilters();
+            setShowFilterModal(false);
+          }}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md"
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
          {page === "Calendar" && (
                   <div className="p-4 mb-10 relative">

@@ -168,6 +168,26 @@ const SetupBookingFacility = () => {
       },
       sortable: true,
     },
+    {
+  name: "Status",
+  cell: (row) => (
+    <label className="relative inline-flex items-center cursor-pointer">
+      <input
+        type="checkbox"
+checked={!!row.active}    
+    onChange={() => handleStatusToggle(row)}
+        className="sr-only peer"
+      />
+      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer 
+        peer-checked:bg-green-500 
+        after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+        after:bg-white after:border after:rounded-full after:h-5 after:w-5 
+        after:transition-all peer-checked:after:translate-x-full">
+      </div>
+    </label>
+  ),
+  sortable: true,
+},
     // {
     //   name: "Created By",
     //   selector: (row) => row.createdBy,
@@ -180,35 +200,63 @@ const SetupBookingFacility = () => {
     // },
   ];
 
-  const setupData = [
-    {
-      id: 1,
-      action: <ImEye />,
-      facility: "fac1",
-      type: "Bookable",
-      department: "Electrical",
-      bookBy: "slot",
-      bookBefore: "date/time",
-      advBooking: "date/time",
-      createdOn: "23/04/2024 - time",
-      createdBy: "user",
-      // status: <Switch checked={"checked"} />,
-    },
-    {
-      id: 2,
-      action: <ImEye />,
-      facility: "Test",
-      type: "Bookable",
-      department: "Electrical",
-      bookBy: "slot",
-      bookBefore: "date/time",
-      advBooking: "date/time",
-      createdOn: "23/04/2024 - time",
-      createdBy: "user",
-      // status: <Switch />,
-    },
-  ];
+  // const setupData = [
+  //   {
+  //     id: 1,
+  //     action: <ImEye />,
+  //     facility: "fac1",
+  //     type: "Bookable",
+  //     department: "Electrical",
+  //     bookBy: "slot",
+  //     bookBefore: "date/time",
+  //     advBooking: "date/time",
+  //     createdOn: "23/04/2024 - time",
+  //     createdBy: "user",
+  //     // status: <Switch checked={"checked"} />,
+  //   },
+  //   {
+  //     id: 2,
+  //     action: <ImEye />,
+  //     facility: "Test",
+  //     type: "Bookable",
+  //     department: "Electrical",
+  //     bookBy: "slot",
+  //     bookBefore: "date/time",
+  //     advBooking: "date/time",
+  //     createdOn: "23/04/2024 - time",
+  //     createdBy: "user",
+  //     // status: <Switch />,
+  //   },
+  // ];
 
+ const handleStatusToggle = async (row) => {
+  const updatedStatus = !row.active;
+
+  try {
+    // 🔥 Update in backend (replace with your actual API)
+    // await updateFacilityStatus(row.id, { active: updatedStatus });
+
+    if (page === "facility") {
+      const updatedData = bookingFacility.map((item) =>
+        item.id === row.id ? { ...item, active: updatedStatus } : item
+      );
+      SetBookingFacility(updatedData);
+      setOriginalFacilityData(updatedData);
+    }
+
+    if (page === "HotelBooking") {
+      const updatedData = hotelBooking.map((item) =>
+        item.id === row.id ? { ...item, active: updatedStatus } : item
+      );
+      setHotelBooking(updatedData);
+      setOriginalHotelData(updatedData);
+    }
+
+    console.log("Status Changed:", row.id, updatedStatus);
+  } catch (error) {
+    console.error("Status update failed", error);
+  }
+};
   const calendarData = [
     // Amenities: single-day bookings
     ...filteredBookings.map((booking) => {

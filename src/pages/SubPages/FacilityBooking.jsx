@@ -143,18 +143,22 @@ const calculateBookingAmount = (facility, formData) => {
     return (amount * gstNo) / 100;
   };
 
-  const fetchFacilities = async () => {
-    try {
-      const response = await getFacitilitySetup(); // Assuming getFacilitySetup is an API call
-      // console.log("Booking Setups", response);
-      const list_of_amenities = response.data.amenities.filter((facility) => facility.is_hotel !== true);
-      // console.log("List of all the amenities", list_of_amenities)
-      setFacilities(list_of_amenities);
-    } catch (error) {
-      console.log("Error Fetching facilities", error);
-    }
-  };
+const fetchFacilities = async () => {
+  try {
+    const response = await getFacitilitySetup();
 
+    const list_of_amenities = response.data.amenities
+      .filter(
+        (facility) =>
+          facility.is_hotel !== true &&
+          facility.active === true   // ✅ ONLY ACTIVE
+      );
+
+    setFacilities(list_of_amenities);
+  } catch (error) {
+    console.log("Error Fetching facilities", error);
+  }
+};
   console.log("Slots", slots);
 
   const formatTime = (hr, min) => {
@@ -487,9 +491,9 @@ const calculateBookingAmount = (facility, formData) => {
 
     fetchTermsPolicy(selectedFacilityId); // Fetch Terms
 
-    const selectedFacility = facilities.find(
-      (facility) => facility.id === parseInt(selectedFacilityId)
-    );
+const selectedFacility = facilities.find(
+  (facility) => facility.id === parseInt(selectedFacilityId, 10)
+);
     setFacility(selectedFacility);
 
     setFormData((prevData) => ({
@@ -523,9 +527,11 @@ const calculateBookingAmount = (facility, formData) => {
   const [searchFATerm, setSearchFATerm] = useState(""); // State for search input
   const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
 
-  const filteredFacilities = facilities.filter((facility) =>
-    facility.fac_name.toLowerCase().includes(searchFATerm.toLowerCase())
-  ); // Filter facilities based on search term
+const filteredFacilities = facilities.filter((facility) =>
+  facility?.fac_name
+    ?.toLowerCase()
+    .includes(searchFATerm.toLowerCase())
+);  // Filter facilities based on search term
 
   const handleFacSelect = (facility) => {
     setSearchFATerm(facility.fac_name); // Update the search input with the selected facility name

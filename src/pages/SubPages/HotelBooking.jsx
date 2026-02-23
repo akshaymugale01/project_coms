@@ -329,17 +329,20 @@ const formatToApiDate = (date) => {
     return (amount * gstNo) / 100;
   };
 
-  const fetchHotelSetup = async () => {
-    try {
-      const response = await getHotelSetupList(); // Fetches the amenities.json data
-      const allHotel = response.data.amenities;
-      // console.log("All Hotel Data:", allHotel);
+const fetchHotelSetup = async () => {
+  try {
+    const response = await getHotelSetupList();
 
-      setFacilities(allHotel); // Update your state with only hotel-specific amenities
-    } catch (error) {
-      console.log("Error Fetching hotel amenities", error);
-    }
-  };
+    // ✅ Only Active Hotels
+    const activeHotels = response.data.amenities.filter(
+      (hotel) => hotel.active === true
+    );
+
+    setFacilities(activeHotels);
+  } catch (error) {
+    console.log("Error Fetching hotel amenities", error);
+  }
+};
 
   //fetch terms ,cancel, gst, member price
   const fetchTermsPolicy = async (facilityId) => {
