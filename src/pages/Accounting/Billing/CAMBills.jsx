@@ -26,8 +26,19 @@ import {
   calculateMonthlyExpenseTotal,
   getMonthlyIncomeTotal,
 } from "../../../api/accountingApi";
-import { buildAllocationPreview, makePeriod } from "../utils/cam";
-import { getSites, getUnitDetails } from "../../../api";
+import { makePeriod } from "../utils/cam";
+import { getSites } from "../../../api";
+
+// Build unit_id -> unit_name map from allocation rows (backend already includes unit names)
+const unitNameMapFromAllocationRows = (rows) => {
+  const map = {};
+  (Array.isArray(rows) ? rows : []).forEach((r) => {
+    if (r?.unit_id != null) {
+      map[r.unit_id] = r.unit_name || r.flat || `Unit ${r.unit_id}`;
+    }
+  });
+  return map;
+};
 
 const CAMBills = () => {
   const [loading, setLoading] = useState(false);
@@ -224,22 +235,31 @@ const CAMBills = () => {
       if (siteId) params.site_id = siteId;
       const res = await getCamBills(params);
       const rows = res?.data?.data || res?.data || [];
-      
-      // Fetch unit names for each row
-      const rowsWithNames = await Promise.all(
-        (Array.isArray(rows) ? rows : []).map(async (row) => {
-          try {
-            const unitRes = await getUnitDetails(row.unit_id);
-            const unitData = unitRes?.data?.data || unitRes?.data;
-            const unitName = unitData?.name || unitData?.flat || unitData?.flat_no || `Unit ${row.unit_id}`;
-            return { ...row, flat_no: unitName, unit_name: unitName };
-          } catch (err) {
-            console.error(`Failed to fetch unit ${row.unit_id}:`, err);
-            return row;
-          }
-        })
-      );
-      
+      const rowsArray = Array.isArray(rows) ? rows : [];
+
+      // Unit names from backend allocation API (no /units/:id calls)
+      let unitNameMap = {};
+      if (siteId) {
+        try {
+          const { startMonth, endMonth } = getPeriodParams();
+          const allocRes = await calculateExpenseAllocation({
+            year,
+            month: startMonth,
+            end_month: endMonth,
+            site_id: siteId,
+          });
+          const allocData = allocRes?.data?.data || allocRes?.data || {};
+          unitNameMap = unitNameMapFromAllocationRows(allocData.rows || []);
+        } catch (err) {
+          console.error("Expense allocation for unit names failed:", err);
+        }
+      }
+
+      const rowsWithNames = rowsArray.map((row) => {
+        const unitName = unitNameMap[row.unit_id] || row.unit_name || row.flat_no || `Unit ${row.unit_id}`;
+        return { ...row, flat_no: unitName, unit_name: unitName };
+      });
+
       setPersistedRows(rowsWithNames);
     } catch (e) {
       console.error(e);
@@ -256,102 +276,99 @@ const CAMBills = () => {
   }, [year, month, siteId]);
 
   useEffect(() => {
-    // Load monthly expense and prepare allocation preview table
+    // Single source: backend total endpoint for categories + total, then allocation with same categories
     const run = async () => {
       try {
         const { startMonth, endMonth } = getPeriodParams();
-        let totalExpense = 0;
+
+        // Income summary from backend (for income total display only)
         let totalIncomeReceived = 0;
         let totalIncomeInvoiced = 0;
-        const categoriesSet = new Set();
-        
-        // Fetch expenses for all months in the period
-        for (let m = startMonth; m <= endMonth; m++) {
-          const baseParams = { year, month: m };
-          if (siteId) baseParams.project_id = siteId;
-
-          const res = await getMonthlyExpenses(baseParams);
-          const expenseRows = res?.data?.data || res?.data || [];
-          if (Array.isArray(expenseRows)) {
-            expenseRows.forEach((row) => {
-              if (row.category) categoriesSet.add(row.category);
-            });
-
-            const safeSelectedExpenseCategories = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
-            const rowsToSum =
-              safeSelectedExpenseCategories.length === 0
-                ? expenseRows
-                : expenseRows.filter((r) => safeSelectedExpenseCategories.includes(r.category));
-
-            totalExpense += rowsToSum.reduce((s, r) => s + Number(r.amount || 0), 0);
+        if (siteId) {
+          for (let m = startMonth; m <= endMonth; m++) {
+            try {
+              const incomeRes = await getCamIncomeExpenseSummary({ year, month: m, project_id: siteId });
+              totalIncomeReceived += Number(incomeRes?.data?.data?.receipts_total ?? incomeRes?.data?.data?.receiptsTotal ?? 0);
+              totalIncomeInvoiced += Number(incomeRes?.data?.data?.bills_total ?? incomeRes?.data?.data?.billsTotal ?? 0);
+            } catch (e) {
+              console.error(e);
+            }
           }
+        }
+        setIncomeTotal({ received: totalIncomeReceived, invoiced: totalIncomeInvoiced });
 
+        if (!siteId) {
+          setExpenseCategories([]);
+          setAllocation({ rows: [], totals: { days: 0, area: 0, areaDays: 0, expense: 0, daysInMonth: 0 } });
+          setBackendExpenseTotal(0);
+          return;
+        }
+
+        // 1) Categories + total from backend only (GET monthly_expenses/total)
+        const totalRes = await calculateMonthlyExpenseTotal({
+          year,
+          month: startMonth,
+          end_month: endMonth,
+          project_id: siteId,
+        });
+        const totalData = totalRes?.data || {};
+        const backendTotal = Number(totalData.total || 0);
+        const categoriesHash = totalData.categories || {};
+        let categoriesFromBackend = Object.keys(categoriesHash).filter(Boolean).sort();
+
+        // Fallback: if no categories for this site, get category names from index (e.g. when expenses saved without project_id)
+        if (categoriesFromBackend.length === 0) {
           try {
-            const incomeRes = await getCamIncomeExpenseSummary(baseParams);
-            const receiptsTotal = incomeRes?.data?.data?.receipts_total ?? incomeRes?.data?.data?.receiptsTotal ?? 0;
-            const billsTotal = incomeRes?.data?.data?.bills_total ?? incomeRes?.data?.data?.billsTotal ?? 0;
-            totalIncomeReceived += Number(receiptsTotal || 0);
-            totalIncomeInvoiced += Number(billsTotal || 0);
+            const indexRes = await getMonthlyExpenses({ year, month: startMonth });
+            const indexRows = indexRes?.data?.data || indexRes?.data || [];
+            const set = new Set();
+            (Array.isArray(indexRows) ? indexRows : []).forEach((row) => {
+              if (row.category) set.add(row.category);
+            });
+            categoriesFromBackend = Array.from(set).sort();
           } catch (e) {
-            // If income summary fails, keep income total as-is (0 for that month)
             console.error(e);
           }
         }
-        const newCategories = Array.from(categoriesSet);
-        const safeNewCategories = Array.isArray(newCategories) ? newCategories : [];
-        setExpenseCategories(safeNewCategories);
-        
-        // Sync selected categories with available categories
-        // If selected categories are empty OR none of the selected categories exist in new categories, select all
-        const currentSelectedExpenseCategories = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
-        const validSelectedCategories = currentSelectedExpenseCategories.filter(cat => safeNewCategories.includes(cat));
-        if (validSelectedCategories.length === 0 && safeNewCategories.length > 0) {
-          setSelectedExpenseCategories(safeNewCategories);
-        } else if (validSelectedCategories.length !== currentSelectedExpenseCategories.length) {
-          // Some selected categories no longer exist, update to only valid ones
-          setSelectedExpenseCategories(validSelectedCategories.length > 0 ? validSelectedCategories : safeNewCategories);
-        }
-        
-        setIncomeTotal({ received: totalIncomeReceived, invoiced: totalIncomeInvoiced });
 
-        if (!unitConfigs || !Array.isArray(unitConfigs) || unitConfigs.length === 0) return;
-        const { start, end } = makePeriod(year, month);
-        
-        // Fetch unit details for each unit to get the name
-        const rowsWithNames = await Promise.all(
-          unitConfigs.map(async (c) => {
-            let unitName = `Unit ${c.unit_id}`;
-            try {
-              const unitRes = await getUnitDetails(c.unit_id);
-              const unitData = unitRes?.data?.data || unitRes?.data;
-              unitName = unitData?.name || unitData?.flat || unitData?.flat_no || `Unit ${c.unit_id}`;
-            } catch (err) {
-              console.error(`Failed to fetch unit ${c.unit_id}:`, err);
-            }
-            
-            return {
-              unit_id: c.unit_id,
-              id: c.unit_id,
-              flat: unitName,
-              unit_name: unitName,
-              carpet_area: c.carpet_area_sqft ?? c.carpet_area ?? 0,
-              cam_start_date: c.cam_start_date,
-            };
-          })
-        );
-        
-        // console.log("----unitConfigs----", unitConfigs);
-        // console.log("----rowsWithNames----", rowsWithNames);
-        const preview = buildAllocationPreview({ totalExpense, units: rowsWithNames, periodStart: start, periodEnd: end });
-        setAllocation(preview);
+        setExpenseCategories(categoriesFromBackend);
+        setBackendExpenseTotal(backendTotal);
+
+        const currentSelected = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
+        const validSelected = currentSelected.filter((c) => categoriesFromBackend.includes(c));
+        if (validSelected.length === 0 && categoriesFromBackend.length > 0) {
+          setSelectedExpenseCategories(categoriesFromBackend);
+        } else if (validSelected.length !== currentSelected.length) {
+          setSelectedExpenseCategories(validSelected.length > 0 ? validSelected : categoriesFromBackend);
+        }
+
+        // 2) Allocation from backend only (POST calculate_expense_allocation) with same categories
+        const categoriesToUse =
+          currentSelected.length > 0 && currentSelected.every((c) => categoriesFromBackend.includes(c))
+            ? currentSelected
+            : categoriesFromBackend;
+
+        const allocRes = await calculateExpenseAllocation({
+          year,
+          month: startMonth,
+          end_month: endMonth,
+          site_id: siteId,
+          categories: categoriesToUse,
+        });
+        const allocData = allocRes?.data?.data || allocRes?.data || {};
+        const rows = allocData.rows || [];
+        const totals = allocData.totals || { days: 0, area: 0, areaDays: 0, expense: 0, daysInMonth: 0 };
+        setAllocation({ rows: Array.isArray(rows) ? rows : [], totals });
       } catch (e) {
         console.error(e);
+        setExpenseCategories([]);
         setAllocation({ rows: [], totals: { days: 0, area: 0, areaDays: 0, expense: 0, daysInMonth: 0 } });
+        setBackendExpenseTotal(0);
         setIncomeTotal({ received: 0, invoiced: 0 });
       }
     };
     run();
-  }, [year, month, period, unitConfigs, selectedExpenseCategories, siteId]);
+  }, [year, month, period, selectedExpenseCategories, siteId]);
 
   useEffect(() => {
     const run = async () => {
@@ -550,6 +567,7 @@ const CAMBills = () => {
         }
 
         // Fetch allocation calculations based on mode
+        // Expense allocation is already fetched in the main useEffect (single source) — skip duplicate API call
         if (overviewMode === 'income') {
           try {
             const incomeAllocRes = await calculateIncomeAllocation(baseParams);
@@ -561,18 +579,6 @@ const CAMBills = () => {
             });
           } catch (e) {
             console.error('Backend income allocation failed, using frontend:', e);
-          }
-        } else if (overviewMode === 'expense') {
-          try {
-            const expenseAllocRes = await calculateExpenseAllocation(baseParams);
-            const allocData = expenseAllocRes?.data?.data || expenseAllocRes?.data || {};
-            const expenseRows = allocData.rows || allocData.units || [];
-            setBackendExpenseAllocation({
-              rows: Array.isArray(expenseRows) ? expenseRows : [],
-              totals: allocData.totals || { days: 0, expense: 0 }
-            });
-          } catch (e) {
-            console.error('Backend expense allocation failed, using frontend:', e);
           }
         } else if (overviewMode === 'income_vs_expense') {
           try {
@@ -703,15 +709,10 @@ const CAMBills = () => {
     return total;
   }, [selectedIncomeCategories, incomeCategories, incomeTotal, incomeBreakdown, backendIncomeTotal]);
 
-  // Calculate selected expense total - prefer backend calculated values
+  // Single source: allocation total from backend (matches unit allocation table)
   const selectedExpenseTotal = useMemo(() => {
-    // Use backend total if available
-    if (backendExpenseTotal > 0) {
-      return backendExpenseTotal;
-    }
-    // Fallback to frontend calculation
-    return Number(allocation?.totals?.expense || 0);
-  }, [backendExpenseTotal, allocation]);
+    return Number(allocation?.totals?.expense ?? backendExpenseTotal ?? 0);
+  }, [allocation?.totals?.expense, backendExpenseTotal]);
 
   const doPreview = async () => {
     setLoading(true);
@@ -723,24 +724,30 @@ const CAMBills = () => {
       const { startMonth, endMonth } = getPeriodParams();
       const res = await previewCamBills({ year, month: startMonth, end_month: endMonth, site_id: siteId });
       const rows = res?.data?.data || res?.data || [];
-      
-      // Fetch unit names for each row
-      const rowsWithNames = await Promise.all(
-        (Array.isArray(rows) ? rows : []).map(async (row) => {
-          try {
-            const unitRes = await getUnitDetails(row.unit_id);
-            const unitData = unitRes?.data?.data || unitRes?.data;
-            const unitName = unitData?.name || unitData?.flat || unitData?.flat_no || `Unit ${row.unit_id}`;
-            return { ...row, flat_no: unitName, unit_name: unitName };
-          } catch (err) {
-            console.error(`Failed to fetch unit ${row.unit_id}:`, err);
-            return row;
-          }
-        })
-      );
-      
+      const rowsArray = Array.isArray(rows) ? rows : [];
+
+      // Unit names from backend allocation (no /units/:id calls)
+      let unitNameMap = {};
+      try {
+        const allocRes = await calculateExpenseAllocation({
+          year,
+          month: startMonth,
+          end_month: endMonth,
+          site_id: siteId,
+        });
+        const allocData = allocRes?.data?.data || allocRes?.data || {};
+        unitNameMap = unitNameMapFromAllocationRows(allocData.rows || []);
+      } catch (err) {
+        console.error("Expense allocation for unit names failed:", err);
+      }
+
+      const rowsWithNames = rowsArray.map((row) => {
+        const unitName = unitNameMap[row.unit_id] || row.unit_name || row.flat_no || `Unit ${row.unit_id}`;
+        return { ...row, flat_no: unitName, unit_name: unitName };
+      });
+
       setPreviewRows(rowsWithNames);
-      if (!rows.length) toast("No billable units for selected period");
+      if (!rowsArray.length) toast("No billable units for selected period");
     } catch (e) {
       console.error(e);
       toast.error("Preview failed");
@@ -759,22 +766,28 @@ const CAMBills = () => {
       const { startMonth, endMonth } = getPeriodParams();
       const res = await generateCamBills({ year, month: startMonth, end_month: endMonth, site_id: siteId });
       const rows = res?.data?.data || res?.data || [];
-      
-      // Fetch unit names for each row
-      const rowsWithNames = await Promise.all(
-        (Array.isArray(rows) ? rows : []).map(async (row) => {
-          try {
-            const unitRes = await getUnitDetails(row.unit_id);
-            const unitData = unitRes?.data?.data || unitRes?.data;
-            const unitName = unitData?.name || unitData?.flat || unitData?.flat_no || `Unit ${row.unit_id}`;
-            return { ...row, flat_no: unitName, unit_name: unitName };
-          } catch (err) {
-            console.error(`Failed to fetch unit ${row.unit_id}:`, err);
-            return row;
-          }
-        })
-      );
-      
+      const rowsArray = Array.isArray(rows) ? rows : [];
+
+      // Unit names from backend allocation (no /units/:id calls)
+      let unitNameMap = {};
+      try {
+        const allocRes = await calculateExpenseAllocation({
+          year,
+          month: startMonth,
+          end_month: endMonth,
+          site_id: siteId,
+        });
+        const allocData = allocRes?.data?.data || allocRes?.data || {};
+        unitNameMap = unitNameMapFromAllocationRows(allocData.rows || []);
+      } catch (err) {
+        console.error("Expense allocation for unit names failed:", err);
+      }
+
+      const rowsWithNames = rowsArray.map((row) => {
+        const unitName = unitNameMap[row.unit_id] || row.unit_name || row.flat_no || `Unit ${row.unit_id}`;
+        return { ...row, flat_no: unitName, unit_name: unitName };
+      });
+
       toast.success("Bills generated");
       setPreviewRows([]);
       setPersistedRows(rowsWithNames);
