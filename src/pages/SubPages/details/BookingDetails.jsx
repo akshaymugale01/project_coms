@@ -49,7 +49,7 @@ const BookingDetails = () => {
       console.log("data", bookingData);
 
       if (bookingData.length === 0) {
-        setError("No booking data found.");
+        setError("Booking Data are not available for the given ID.");
         return;
       }
 

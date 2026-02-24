@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ModalWrapper from "./ModalWrapper";
 import toast from "react-hot-toast";
-import { postVisitorCategory } from "../../api";
+import { postStaffCategory} from "../../api";
 import { useSelector } from "react-redux";
 const AddVisitorSetupModal = ({ onclose, setAdded}) => {
   const [visitorCategory, setVisitorCategory] = useState("");
@@ -14,8 +14,8 @@ const AddVisitorSetupModal = ({ onclose, setAdded}) => {
     const formData = new FormData();
     formData.append("name", visitorCategory);
     try {
-      const res = await postVisitorCategory(formData);
-      toast.success("Categery Name created  Successfully");
+      const res = await postStaffCategory(formData);
+      toast.success("Staff Category created  Successfully");
       setVisitorCategory("")
       setAdded(true);
       onclose();

@@ -28,7 +28,7 @@ import { data } from "autoprefixer";
 
 const VisitorPage = () => {
   const [page, setPage] = useState("all");
-  const [selectedVisitor, setSelectedVisitor] = useState("expected");
+  const [selectedVisitor, setSelectedVisitor] = useState("unexpected");
   const [visitorIn, setVisitorIn] = useState([]);
   const [visitorOut, setVisitorOut] = useState([]);
   const [unexpectedVisitor, setUnexpectedVisitor] = useState([]);
@@ -195,16 +195,19 @@ const VisitorPage = () => {
         let filters = { ...appliedFilters }; // Include applied filters from VisitorFilters component
 
         if (page === "Visitor In") {
-          filters["q[visitor_in_out_eq]"] = "IN";
+          filters = {
+            "q[visitor_in_out_null]": "true",
+            "q[host_is_approved_eq]": "true",
+          };
         } else if (page === "Visitor Out") {
-          filters["q[visitor_in_out_eq]"] = "OUT";
+          filters["q[visitor_in_out_eq]"] = "IN";
         }
 
         // Add expected/unexpected visitor filtering based on selectedVisitor
-        if (selectedVisitor === "expected") {
-          filters["q[user_type_not_eq]"] = "security_guard"; // Expected visitors are NOT security guards
-        } else if (selectedVisitor === "unexpected") {
+        if (selectedVisitor === "unexpected") {
           filters["q[user_type_eq]"] = "security_guard"; // Unexpected visitors ARE security guards
+        } else if (selectedVisitor === "expected") {
+          filters["q[user_type_not_eq]"] = "security_guard"; // Expected visitors are NOT security guards
         }
 
         console.log(
@@ -344,13 +347,13 @@ const VisitorPage = () => {
           }
 
           // Apply expected/unexpected filtering
-          if (selectedVisitor === "expected") {
-            filteredVisitors = filteredVisitors.filter(
-              (v) => v.user_type !== "security_guard",
-            );
-          } else if (selectedVisitor === "unexpected") {
+          if (selectedVisitor === "unexpected") {
             filteredVisitors = filteredVisitors.filter(
               (v) => v.user_type === "security_guard",
+            );
+          } else if (selectedVisitor === "expected") {
+            filteredVisitors = filteredVisitors.filter(
+              (v) => v.user_type !== "security_guard",
             );
           }
 
@@ -911,15 +914,20 @@ const VisitorPage = () => {
       sortable: true,
     },
     {
-      name: "Expected Date",
-      selector: (row) => row.expected_date,
+      name: "Host",
+      selector: (row) => `${row?.hosts[0]?.full_name}`,
       sortable: true,
     },
-    {
-      name: "Expected Time",
-      selector: (row) => row.expected_time,
-      sortable: true,
-    },
+    // {
+    //   name: "Expected Date",
+    //   selector: (row) => row.expected_date,
+    //   sortable: true,
+    // },
+    // {
+    //   name: "Expected Time",
+    //   selector: (row) => row.expected_time,
+    //   sortable: true,
+    // },
     {
       name: "Vehicle No.",
       selector: (row) => row.vehicle_number,
@@ -992,11 +1000,6 @@ const VisitorPage = () => {
       ),
       sortable: true,
     },
-    {
-      name: "Host",
-      selector: (row) => `${row?.hosts[0]?.full_name}`,
-      sortable: true,
-    },
   ];
   const [searchText, setSearchText] = useState("");
   const handleSearch = (e) => {
@@ -1056,7 +1059,7 @@ const VisitorPage = () => {
   const handleSearchHistory = (e) => {
     const searchValue = e.target.value;
     setSearchHistoryText(searchValue);
-    
+
     if (searchValue.trim() === "") {
       // Reset to original data when search is cleared
       setFilteredHistory(histories);
@@ -1064,9 +1067,14 @@ const VisitorPage = () => {
       // Filter history based on name or contact number
       const filteredResults = histories.filter(
         (item) =>
-          (item.name && item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.contact_no && item.contact_no.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.contactno && item.contactno.toLowerCase().includes(searchValue.toLowerCase()))
+          (item.name &&
+            item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.contact_no &&
+            item.contact_no
+              .toLowerCase()
+              .includes(searchValue.toLowerCase())) ||
+          (item.contactno &&
+            item.contactno.toLowerCase().includes(searchValue.toLowerCase())),
       );
       setFilteredHistory(filteredResults);
     }
@@ -1075,7 +1083,7 @@ const VisitorPage = () => {
   const handleSearchApproval = (e) => {
     const searchValue = e.target.value;
     setSearchApprovalText(searchValue);
-    
+
     if (searchValue.trim() === "") {
       // Reset to original data when search is cleared
       setFilteredApproval(approvals);
@@ -1083,8 +1091,10 @@ const VisitorPage = () => {
       // Filter approvals based on name or contact number
       const filteredResults = approvals.filter(
         (item) =>
-          (item.name && item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.contact_no && item.contact_no.toLowerCase().includes(searchValue.toLowerCase()))
+          (item.name &&
+            item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.contact_no &&
+            item.contact_no.toLowerCase().includes(searchValue.toLowerCase())),
       );
       setFilteredApproval(filteredResults);
     }
@@ -1244,7 +1254,7 @@ const VisitorPage = () => {
       cell: (row) => (
         <div className="flex items-center gap-4">
           <Link
-            to={`/admin/passes/visitors/visitor-details/${row.employee_no}`}
+            to={`/admin/passes/visitors/visitor-details/${row.id}`}
           >
             <BsEye size={15} />
           </Link>
@@ -1252,8 +1262,8 @@ const VisitorPage = () => {
       ),
     },
     {
-      name: "Sr. no.",
-      selector: (row, index) => index + 1,
+      name: "Visitor Id",
+      selector: (row) => row.id,
       sortable: true,
     },
     {
@@ -1261,16 +1271,23 @@ const VisitorPage = () => {
       selector: (row) => row.name,
       sortable: true,
     },
-    {
-      name: " Check in",
-      selector: (row) => (row.in_time ? dateTimeFormat(row.in_time) : ""),
-      sortable: true,
-    },
-    {
-      name: " Check out",
-      selector: (row) => (row.out_time ? dateTimeFormat(row.out_time) : null),
-      sortable: true,
-    },
+  {
+  name: "Check In",
+  selector: (row) =>
+    row.visits_log?.length > 0 && row.visits_log[0]?.check_in
+      ? dateTimeFormat(row.visits_log[0].check_in)
+      : "-",
+  sortable: true,
+},
+
+{
+  name: "Check Out",
+  selector: (row) =>
+    row.visits_log?.length > 0 && row.visits_log[0]?.check_out
+      ? dateTimeFormat(row.visits_log[0].check_out)
+      : "-",
+  sortable: true,
+},
   ];
   // const [logs, setLogs] = useState([]);
   // const [filteredLogs, setFilteredLogs] = useState([]);
@@ -1282,13 +1299,13 @@ const VisitorPage = () => {
         setLoading(true);
         const res = await getAllVisitorLogs(logsCurrentPage, logsPerPage);
         console.log("Visitor logs API Response:", res);
-        
+
         if (!res || !res.data) {
           console.warn("No data received from getAllVisitorLogs API");
           setLoading(false);
           return;
         }
-        
+
         // Handle server-side pagination response
         if (res.data.visitors && res.data.total_pages !== undefined) {
           const visitors = res.data.visitors;
@@ -1326,7 +1343,7 @@ const VisitorPage = () => {
           setFilteredLogs([]);
           setLogs([]);
         }
-        
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching visitor logs:", error);
@@ -1347,7 +1364,7 @@ const VisitorPage = () => {
   const handleLogSearch = (e) => {
     const searchValue = e.target.value;
     setLogSearchText(searchValue);
-    
+
     if (searchValue.trim() === "") {
       // Reset to paginated data when search is cleared
       const startIndex = (logsCurrentPage - 1) * logsPerPage;
@@ -1357,8 +1374,10 @@ const VisitorPage = () => {
       // Filter all logs and show results
       const filteredResults = logs.filter(
         (item) =>
-          (item.name && item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.employee_no && item.employee_no.toLowerCase().includes(searchValue.toLowerCase()))
+          (item.name &&
+            item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (item.employee_no &&
+            item.employee_no.toLowerCase().includes(searchValue.toLowerCase())),
       );
       setFilteredLogs(filteredResults);
     }
@@ -1429,7 +1448,7 @@ const VisitorPage = () => {
                 }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("History")}
               >
-               Approvals History
+                Approvals History
               </h2>
               <h2
                 className={`p-2 ${
@@ -1439,7 +1458,7 @@ const VisitorPage = () => {
                 }  rounded-t-md rounded-sm cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("logs")}
               >
-                Logs
+                Visitor Logs
               </h2>
             </div>
           </div>
@@ -1454,7 +1473,17 @@ const VisitorPage = () => {
               />
               <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                 <span
-                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${
+                  className={`md:border-r border-gray-700  px-2 cursor-pointer hover:underline ${
+                    selectedVisitor === "unexpected"
+                      ? "text-blue-600 underline"
+                      : ""
+                  } text-center`}
+                  onClick={() => handleClick("unexpected")}
+                >
+                  <span>Unexpected visitor</span>
+                </span>
+                <span
+                  className={`  px-2  cursor-pointer hover:underline ${
                     selectedVisitor === "expected"
                       ? "text-blue-600 underline"
                       : ""
@@ -1462,16 +1491,6 @@ const VisitorPage = () => {
                   onClick={() => handleClick("expected")}
                 >
                   <span>Expected visitor</span>
-                </span>
-                <span
-                  className={`cursor-pointer hover:underline ${
-                    selectedVisitor === "unexpected"
-                      ? "text-blue-600 underline"
-                      : ""
-                  } text-center`}
-                  onClick={() => handleClick("unexpected")}
-                >
-                  &nbsp; <span>Unexpected visitor</span>
                 </span>
               </div>
               <div className="flex justify-end gap-2">
@@ -1481,7 +1500,7 @@ const VisitorPage = () => {
                 />
                 <button
                   onClick={exportVisitorsToCSV}
-                    className="font-semibold border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 px-4 py-1 rounded-md"
+                  className="font-semibold border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 px-4 py-1 rounded-md"
                 >
                   Export
                 </button>
@@ -1510,17 +1529,7 @@ const VisitorPage = () => {
               />
               <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                 <span
-                  className={` md:border-r px-2 border-gray-300 cursor-pointer hover:underline ${
-                    selectedVisitor === "expected"
-                      ? "text-blue-600 underline"
-                      : ""
-                  } text-center`}
-                  onClick={() => handleClick("expected")}
-                >
-                  <span>Expected visitor</span>
-                </span>
-                <span
-                  className={`cursor-pointer hover:underline ${
+                  className={`md:border-r px-2 border-gray-700 cursor-pointer hover:underline ${
                     selectedVisitor === "unexpected"
                       ? "text-blue-600 underline"
                       : ""
@@ -1528,6 +1537,16 @@ const VisitorPage = () => {
                   onClick={() => handleClick("unexpected")}
                 >
                   &nbsp; <span>Unexpected visitor</span>
+                </span>
+                <span
+                  className={`px-2  cursor-pointer hover:underline ${
+                    selectedVisitor === "expected"
+                      ? "text-blue-600 underline"
+                      : ""
+                  } text-center`}
+                  onClick={() => handleClick("expected")}
+                >
+                  <span>Expected visitor</span>
                 </span>
               </div>
               <div className="flex justify-end gap-3">
@@ -1596,17 +1615,7 @@ const VisitorPage = () => {
 
                 <div className="border md:flex-row flex-col flex p-2 rounded-md text-center border-black">
                   <span
-                    className={` md:border-r px-2 border-black cursor-pointer hover:underline ${
-                      selectedVisitor === "expected"
-                        ? "text-blue-600 underline"
-                        : ""
-                    } text-center`}
-                    onClick={() => handleClick("expected")}
-                  >
-                    <span>Expected visitor</span>
-                  </span>
-                  <span
-                    className={`cursor-pointer hover:underline ${
+                    className={`md:border-r px-2 border-gray-700 cursor-pointer hover:underline ${
                       selectedVisitor === "unexpected"
                         ? "text-blue-600 underline"
                         : ""
@@ -1614,6 +1623,16 @@ const VisitorPage = () => {
                     onClick={() => handleClick("unexpected")}
                   >
                     &nbsp; <span>Unexpected visitor</span>
+                  </span>
+                  <span
+                    className={`px-2  border-black cursor-pointer hover:underline ${
+                      selectedVisitor === "expected"
+                        ? "text-blue-600 underline"
+                        : ""
+                    } text-center`}
+                    onClick={() => handleClick("expected")}
+                  >
+                    <span>Expected visitor</span>
                   </span>
                 </div>
 
@@ -1666,7 +1685,7 @@ const VisitorPage = () => {
                   className="border p-2 rounded-md border-gray-300 w-full placeholder:text-sm"
                   value={searchHIstoryText}
                   onChange={handleSearchHistory}
-                  />
+                />
                 <button
                   onClick={exportHistoryToCSV}
                   className="px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-md text-sm hover:bg-blue-600 hover:text-white transition font-semibold"
@@ -1874,17 +1893,17 @@ const VisitorPage = () => {
             <>
               {page === "History" && historyTotalRows === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No records found
+                  No Visitors History found
                 </div>
               )}
               {page === "approval" && approvalTotalRows === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No records found
+                  No Visitors Approvals found
                 </div>
               )}
               {page === "logs" && logsTotalRows === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No records found
+                  No visitor logs found
                 </div>
               )}
               {(page === "all" ||
@@ -1892,7 +1911,7 @@ const VisitorPage = () => {
                 page === "Visitor Out") &&
                 totalRows === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    No records found
+                    No Visitors  found
                   </div>
                 )}
             </>

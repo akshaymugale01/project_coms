@@ -3415,7 +3415,7 @@ export const editVisitorDetails = async (id, data) =>
     },
   });
 
-export const getVisitorCategory = async () =>
+export const getStaffCategory = async () =>
   axiosInstance.get("/visitor_staff_category.json", {
     params: {
       token: token,
@@ -3423,7 +3423,7 @@ export const getVisitorCategory = async () =>
   });
 
 export const getAllVisitorLogs = async (page = 1, perPage = 10) =>
-  axiosInstance.get(`/visitor_device_logs.json`, {
+  axiosInstance.get(`/visitors.json`, {
     params: {
       token: token,
       page: page,
@@ -3436,28 +3436,28 @@ export const getAllVisitorLogs = async (page = 1, perPage = 10) =>
     },
   });
 
-export const postVisitorCategory = async (data) =>
+export const postStaffCategory = async (data) =>
   axiosInstance.post("/visitor_staff_categories.json", data, {
     params: {
       token: token,
     },
   });
 
-export const deleteVisitorCategory = async (id) =>
+export const deleteStaffCategory = async (id) =>
   axiosInstance.delete(`/visitor_staff_categories/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-export const getVisitorCategoryDetails = async (id) =>
+export const getStaffCategoryDetails = async (id) =>
   axiosInstance.get(`/visitor_staff_categories/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-export const editVisitorCategory = async (id, data) =>
+export const editStaffCategory = async (id, data) =>
   axiosInstance.patch(`/visitor_staff_categories/${id}.json`, data, {
     params: {
       token: token,
