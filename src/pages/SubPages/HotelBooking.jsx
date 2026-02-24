@@ -698,7 +698,7 @@ const handleInputChange = (field, value) => {
               style={{ background: "rgb(17, 24, 39)" }}
               className="text-xl p-2 rounded-md font-semibold text-center mb-4 text-white "
             >
-              Hotel Booking
+              Guest Room Booking
             </h2>
             <div className="grid grid-cols-4 gap-2">
               <div className="relative mt-3 p-2 flex flex-col gap-1">

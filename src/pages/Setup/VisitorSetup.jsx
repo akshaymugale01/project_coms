@@ -7,7 +7,7 @@ import Navbar from "../../components/Navbar";
 import { useSelector } from "react-redux";
 import AddVisitorSetupModal from "../../containers/modals/AddVisitorSetupModal";
 import EditVisitorSetupModal from "../../containers/modals/EditVisitorSetupModal";
-import { getVisitorCategory, deleteVisitorCategory } from "../../api";
+import { getStaffCategory, deleteStaffCategory } from "../../api";
 import toast from "react-hot-toast";
 import VehicleParkingSetup from "./VehicleParkingSetupModal/VehicleParkingSetup";
 import { Link } from "react-router-dom";
@@ -20,6 +20,7 @@ function VisitorSetup() {
   const [categories, setCategories] = useState([]);
   const [catId, setCatId] = useState("");
   const [added, setAdded] = useState(false);
+  
   const column = [
     {
       name: "Sr. no.",
@@ -27,11 +28,15 @@ function VisitorSetup() {
       sortable: true,
     },
     {
-      name: "category",
+      name: "Category",
       selector: (row) => row.name,
       sortable: true,
     },
-
+    {
+      name: "Staff Count",
+      selector: (row) => row.staffs_count,
+      sortable: true,
+    },
     {
       name: "Action",
       selector: (row) => (
@@ -62,19 +67,23 @@ function VisitorSetup() {
 
   const getVisitor = async () => {
     try {
-      const visitorRes = await getVisitorCategory();
-      setCategories(visitorRes.data.categories);
-      setFilteredData(visitorRes.data.categories);
-      console.log(visitorRes);
+      const visitorRes = await getStaffCategory();
+
+      // ✅ FIXED HERE
+      const staffCategories = visitorRes?.data?.staff_categories || [];
+
+      setCategories(staffCategories);
+      setFilteredData(staffCategories);
     } catch (error) {
       console.log(error);
+      toast.error("Failed to fetch staff categories");
     }
   };
 
   const handleCategoryDelete = async (id) => {
     try {
-      const deleteRes = await deleteVisitorCategory(id);
-      toast.success("Visitor Category Delete Successfully");
+      const deleteRes = await deleteStaffCategory(id);
+      toast.success("Staff Category Delete Successfully");
       setAdded(true);
     } catch (error) {
       console.log(error);
@@ -115,6 +124,24 @@ function VisitorSetup() {
             onClick={() => setPage("vehicleParking")}
           >
             Parking Slot
+          </h2>
+           <h2
+            className={`p-1 ${
+              page === "visitorsCategories" &&
+              "bg-white font-medium text-blue-500 shadow-custom-all-sides"
+            } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
+            onClick={() => setPage("visitorsCategories")}
+          >
+            Visitors Categories
+          </h2>
+           <h2
+            className={`p-1 ${
+              page === "visitorsSubCategories" &&
+              "bg-white font-medium text-blue-500 shadow-custom-all-sides"
+            } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
+            onClick={() => setPage("visitorsSubCategories")}
+          >
+            Visitors sub Categories
           </h2>
         </div>
         <div className="flex gap-2 my-2">

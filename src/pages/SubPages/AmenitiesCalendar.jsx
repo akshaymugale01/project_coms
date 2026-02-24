@@ -10,6 +10,7 @@ import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { enIN } from "date-fns/locale";
 import { domainPrefix, getCalendarBooking } from "../../api";
+import { useNavigate } from "react-router-dom";
 
 const locales = { "en-IN": enIN };
 
@@ -22,11 +23,12 @@ const localizer = dateFnsLocalizer({
 });
 
 const AmenitiesCalendar = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingType, setBookingType] = useState("");
-    const [currentView, setCurrentView] = useState("month");
+  const [currentView, setCurrentView] = useState("month");
   const [dateRange, setDateRange] = useState({
     start: startOfMonth(new Date()),
     end: endOfMonth(new Date()),
@@ -69,10 +71,16 @@ const AmenitiesCalendar = () => {
     fetchBooking();
   }, [fetchBooking]);
 
-  const handleEventClick = (event) => {
-    setSelectedBooking(event.resource.originalData);
-  };
+  // const handleEventClick = (event) => {
+  //   setSelectedBooking(event.resource.originalData);
+  // };
 
+     const handleEventClick = (event) => {
+    const bookingId = event.resource.originalData.id;
+
+    // 🔥 Redirect to details page
+    navigate(`/bookings/hotelbooking-details/${bookingId}`);
+  };
   const handleRangeChange = (range, view) => {
     let start;
     let end;
@@ -91,7 +99,6 @@ const AmenitiesCalendar = () => {
     setDateRange({ start, end });
   };
 
-  
   const eventStyleGetter = (event) => {
     const baseStyle = {
       backgroundColor: event.resource?.color,
@@ -115,8 +122,6 @@ const AmenitiesCalendar = () => {
 
     return { style: baseStyle };
   };
-
-    
 
   const booking = selectedBooking?.details;
   const amenity = booking?.amenity;
@@ -175,8 +180,8 @@ const AmenitiesCalendar = () => {
             style={{ height: "70vh" }}
             eventPropGetter={eventStyleGetter}
             onSelectEvent={handleEventClick}
-              view={currentView}               
-                        onView={(view) => setCurrentView(view)}   
+            view={currentView}
+            onView={(view) => setCurrentView(view)}
             onRangeChange={handleRangeChange}
           />
         </div>
@@ -209,8 +214,10 @@ const AmenitiesCalendar = () => {
                   <Info label="Booking Date" value={booking?.booking_date} />
                   <Info
                     label="Selected Slot"
-                    value={booking?.slot?.twelve_hr_slot}
+                    value={`${booking?.slot?.created_at} ${booking?.slot?.twelve_hr_slot}` || "-"}
                   />
+                  <Info label="Check-in Date" value={booking?.checkin_at} />
+                  <Info label="Check-out Date" value={booking?.checkout_at} />
                 </Section>
               </div>
 
@@ -221,8 +228,6 @@ const AmenitiesCalendar = () => {
                 </div>
               )}
             </div>
-
-            {/* ===== BELOW SECTION (Same as Before) ===== */}
 
             {/* People Details */}
             <Section title="People Details">
@@ -251,17 +256,6 @@ const AmenitiesCalendar = () => {
               />
               <Info label="Description" value={amenity?.description} />
             </Section>
-
-            {/* Slots */}
-            {amenity?.amenity_slots?.length > 0 && (
-              <Section title="Available Slots">
-                {amenity.amenity_slots.map((slot) => (
-                  <div key={slot.id} style={slotBox}>
-                    {slot.twelve_hr_slot}
-                  </div>
-                ))}
-              </Section>
-            )}
           </div>
         </div>
       )}

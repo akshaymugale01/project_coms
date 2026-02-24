@@ -82,9 +82,10 @@ const [page, setPage] = useState(getInitialTab());
     fetchData();
   }, [page_no, per_page]); // add dependencies if these are dynamic
 
-  const applyFilters = () => {
-  // ---- FILTER AMENITIES BOOKINGS ----
+const applyFilters = () => {
+
   const filteredAmenity = bookings.filter((booking) => {
+
     const facility = bookingFacility.find(
       (fac) => fac.id === booking.amenity_id
     );
@@ -92,20 +93,27 @@ const [page, setPage] = useState(getInitialTab());
     const facName = facility?.fac_name?.toLowerCase() || "";
     const facType = facility?.fac_type?.toLowerCase() || "";
     const bookedBy = booking?.book_by_user?.toLowerCase() || "";
-    const paymentStatus = booking?.status?.toLowerCase() || "";
+
     const bookingStatus = booking?.status?.toLowerCase() || "";
+    const paymentMode = booking?.payment_mode?.toLowerCase() || "";
 
     return (
       (!filters.fac_name ||
         facName.includes(filters.fac_name.toLowerCase())) &&
+
       (!filters.fac_type ||
         facType.includes(filters.fac_type.toLowerCase())) &&
+
       (!filters.booked_by ||
         bookedBy.includes(filters.booked_by.toLowerCase())) &&
-      (!filters.payment_status ||
-        paymentStatus === filters.payment_status.toLowerCase()) &&
+
+      // 🔥 Booking Status Filter
       (!filters.booking_status ||
-        bookingStatus === filters.booking_status.toLowerCase())
+        bookingStatus === filters.booking_status.toLowerCase()) &&
+
+      // 🔥 Payment Mode Filter
+      (!filters.payment_status ||
+        paymentMode === filters.payment_status.toLowerCase())
     );
   });
 
@@ -645,12 +653,12 @@ const resetFilters = () => {
       {/* 🔴 Cross Icon */}
       <button
         onClick={() => setShowFilterModal(false)}
-        className="absolute top-3 right-3 text-gray-600 hover:text-black text-xl"
+        className="absolute top-3 right-3 text-gray-600 hover:text-black text-[25px]"
       >
         <IoClose />
       </button>
 
-      <h2 className="text-lg font-semibold mb-4">Filter Bookings</h2>
+      <h2 className="text-[25px] font-semibold mb-4 text-blue-800">Filter Bookings</h2>
 
       <div className="flex flex-col gap-3">
 
@@ -685,17 +693,18 @@ const resetFilters = () => {
         />
 
         <select
-          value={filters.payment_status}
-          onChange={(e) =>
-            setFilters({ ...filters, payment_status: e.target.value })
-          }
-          className="border p-2 rounded-md"
-        >
-          <option value="">Select Payment Status</option>
-          <option value="booked">Booked</option>
-          <option value="pending">Pending</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+  value={filters.payment_status}
+  onChange={(e) =>
+    setFilters({ ...filters, payment_status: e.target.value })
+  }
+  className="border p-2 rounded-md"
+>
+  <option value="">Select Payment Status</option>
+  <option value="paid">Paid</option>
+  <option value="pending">Pending</option>
+  <option value="booked">Booked</option>
+  <option value="cancelled">Cancelled</option>
+</select>
 
         <select
           value={filters.booking_status}
@@ -705,8 +714,9 @@ const resetFilters = () => {
           className="border p-2 rounded-md"
         >
           <option value="">Select Booking Status</option>
-          <option value="booked">Booked</option>
+          <option value="paid">Paid</option>
           <option value="pending">Pending</option>
+                    <option value="booked">Booked</option>
           <option value="cancelled">Cancelled</option>
         </select>
       </div>

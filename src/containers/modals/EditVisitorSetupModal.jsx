@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ModalWrapper from "./ModalWrapper";
 import toast from "react-hot-toast";
-import { getVisitorCategoryDetails, editVisitorCategory } from "../../api";
+import { getStaffCategoryDetails, editStaffCategory } from "../../api";
 import { useSelector } from "react-redux";
 const EditVisitorSetupModal = ({ onclose, catId, setAdded }) => {
   const [editCategory, setEditCategory] = useState("");
@@ -10,7 +10,7 @@ const EditVisitorSetupModal = ({ onclose, catId, setAdded }) => {
   useEffect(() => {
     const fetchCategoryDetails = async () => {
       try {
-        const categoryRes = await getVisitorCategoryDetails(catId);
+        const categoryRes = await getStaffCategoryDetails(catId);
         console.log(catId);
         console.log(categoryRes);
         setEditCategory(categoryRes.data.category.name);
@@ -27,7 +27,7 @@ const EditVisitorSetupModal = ({ onclose, catId, setAdded }) => {
     const formData = new FormData();
     formData.append("name", editCategory);
     try {
-      const editCat = await editVisitorCategory(catId, formData);
+      const editCat = await editStaffCategory(catId, formData);
       toast.success("Visitor Category  updated Successfully");
       setAdded(true);
       onclose();
