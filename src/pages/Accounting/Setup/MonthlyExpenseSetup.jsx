@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { createMonthlyExpense, deleteMonthlyExpense, getMonthlyExpenses, updateMonthlyExpense, calculateMonthlyExpenseTotal, getJournalEntries } from "../../../api/accountingApi";
+import { getSites } from "../../../api";
 
 const defaultRow = () => ({ id: undefined, category: "", amount: 0, isCustom: false });
 
@@ -27,6 +28,8 @@ const PREDEFINED_CATEGORIES = [
 
 const MonthlyExpenseSetup = () => {
   const [loading, setLoading] = useState(true);
+  const [sites, setSites] = useState([]);
+  const [siteId, setSiteId] = useState("");
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1); // 1..12
   const [rows, setRows] = useState([defaultRow()]);
@@ -38,10 +41,12 @@ const MonthlyExpenseSetup = () => {
 
   const allCategories = useMemo(() => [...PREDEFINED_CATEGORIES, ...customCategories], [customCategories]);
 
-  // Fetch total from backend
+  // Fetch total from backend (same project_id as load so totals match Accounting Bills)
   const fetchTotal = async (yr, mo) => {
     try {
-      const res = await calculateMonthlyExpenseTotal({ year: yr, month: mo });
+      const params = { year: yr, month: mo };
+      if (siteId) params.project_id = siteId;
+      const res = await calculateMonthlyExpenseTotal(params);
       setBackendTotal(res?.data?.total || 0);
     } catch (e) {
       console.error('Failed to fetch total:', e);
@@ -52,8 +57,10 @@ const MonthlyExpenseSetup = () => {
   const load = async () => {
       setLoading(true);
       try {
+        const params = { year, month };
+        if (siteId) params.project_id = siteId;
         const [expenseRes, journalRes] = await Promise.all([
-          getMonthlyExpenses({ year, month }),
+          getMonthlyExpenses(params),
           getJournalEntries()
         ]);
         
@@ -99,8 +106,25 @@ const MonthlyExpenseSetup = () => {
   };
 
   useEffect(() => {
+    const loadSites = async () => {
+      try {
+        const res = await getSites();
+        const list = res?.data?.data || res?.data || [];
+        setSites(Array.isArray(list) ? list : []);
+        if (!siteId && list?.length > 0) {
+          const firstId = list[0]?.id ?? list[0]?.site_id ?? list[0]?.value;
+          if (firstId) setSiteId(String(firstId));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadSites();
+  }, []);
+
+  useEffect(() => {
     load();
-  }, [year, month]);
+  }, [year, month, siteId]);
 
   const handleChange = (idx, field, value) => {
     setRows((prev) => prev.map((r, i) => {
@@ -130,7 +154,15 @@ const MonthlyExpenseSetup = () => {
   const saveAll = async () => {
     try {
       const ops = rows.map((r) => {
-        const payload = { monthly_expense: { year, month, category: r.category, amount: Number(r.amount || 0) } };
+        const payload = {
+          monthly_expense: {
+            year,
+            month,
+            category: r.category,
+            amount: Number(r.amount || 0),
+            ...(siteId ? { project_id: siteId, site_id: siteId } : {}),
+          },
+        };
         if (r.id) return updateMonthlyExpense(r.id, payload);
         return createMonthlyExpense(payload);
       });
@@ -183,6 +215,21 @@ const MonthlyExpenseSetup = () => {
       <h1 className="text-2xl font-bold mb-6">Monthly CAM Expenses</h1>
 
       <div className="bg-white rounded-lg shadow p-5 mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Site</label>
+          <select
+            value={siteId}
+            onChange={(e) => setSiteId(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+          >
+            <option value="">All sites</option>
+            {Array.isArray(sites) && sites.map((s) => {
+              const id = s?.id ?? s?.site_id ?? s?.value;
+              const name = s?.name ?? s?.site_name ?? s?.label ?? `Site ${id}`;
+              return <option key={id} value={id}>{name}</option>;
+            })}
+          </select>
+        </div>
         <div>
           <label className="block text-sm text-gray-600 mb-1">Year</label>
           <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value || new Date().getFullYear()))} className="w-full px-3 py-2 border rounded" />
