@@ -764,7 +764,7 @@ import MyBookings from "./pages/OSR/ResidentialBookings.jsx";
 import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
 import EditPPMChecklist from "./pages/SubPages/EditPPMChecklist.jsx";
 import CreateInvoiceReceipt from "./pages/SubPages/details/CreateInvoiceReciept.jsx";
-import EditSelfRegistration from "./pages/SubPages/EditSelfRegistration.jsx";
+// import EditSelfRegistration from "./pages/SubPages/EditSelfRegistration.jsx";
 import AddSelfRegistration from "./pages/SubPages/AddSelfRegistration.jsx";
 import SelfRegistrationDetails from "./pages/SubPages/ServiceChecklist.jsx";
 //import ParkingConfiguration from "./pages/Setup/ParkingSetupPages/ParkingConfiguration.jsx";
@@ -3192,7 +3192,7 @@ function App() {
             path="/admin/passes/edit-self-registration/:id"
             element={
               <ProtectedAdminRoutes>
-                <EditSelfRegistration />
+                {/* <EditSelfRegistration /> */}
               </ProtectedAdminRoutes>
             }
           />
