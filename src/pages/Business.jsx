@@ -19,17 +19,22 @@ const Business = () => {
   const [searchText, setSearchText] = useState([]);
   const [statusChanged, setStatusChanges] = useState(false);
   const [logo, setLogo] = useState("");
-  const fetchContactBook = async () => {
+
+   const fetchContactBook = async () => {
     try {
       const contactRes = await getContactBook();
-      const sortedData = contactRes.data.sort((a, b) => {
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
+
+      // ✅ FIX: Correct API response path
+      const contactData = contactRes?.data?.contact_books || [];
+
+      const sortedData = contactData.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
       setContacts(sortedData);
       setFilteredData(sortedData);
-      console.log(sortedData.map((contact) => contact.logo));
     } catch (error) {
-      console.log(error);
+      console.log("Error fetching contact book:", error);
     }
   };
   useEffect(() => {

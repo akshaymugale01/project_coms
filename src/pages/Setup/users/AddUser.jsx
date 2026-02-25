@@ -38,7 +38,15 @@ const AddUser = () => {
       relation: "",
     },
   ]);
-
+const [locations, setLocations] = useState([
+  {
+    building_id: "",
+    floor_id: "",
+    unit_id: "",
+    floors: [],
+    units: [],
+  },
+]);
   const [vendorList, setVendorList] = useState([
     { service_type: "", name: "", contact: "" },
   ]);
@@ -71,20 +79,77 @@ const AddUser = () => {
     blood_group: "",
     no_of_pets: "",
     birth_date: "",
-    user_sites: [
-      {
-        unit_id: selectedUnit,
-        site_id: siteId,
-        ownership: occupancy_type, // Will be filled later from formData.occupancy_type
-        ownership_type: "primary",
-        is_approved: true,
-        lives_here: "",
-      },
-    ],
+    user_sites: locations.map((loc, index) => ({
+      site_id: siteId,
+      unit_id: loc.unit_id,
+      build_id: loc.building_id,
+      floor_id: loc.floor_id,
+      ownership: occupancy_type,
+      ownership_type: index === 0 ? "primary" : "secondary",
+      is_approved: true,
+    })),
 
     user_members: [], // Now an array
     user_vendors: [],
   });
+  const handleAddLocation = () => {
+  setLocations((prev) => [
+    ...prev,
+    {
+      building_id: "",
+      floor_id: "",
+      unit_id: "",
+      floors: [],
+      units: [],
+    },
+  ]);
+};
+
+const handleDeleteLocation = (index) => {
+  const updated = locations.filter((_, i) => i !== index);
+  setLocations(updated);
+};
+
+const handleLocationChange = async (index, field, value) => {
+  const updated = [...locations];
+  updated[index][field] = value;
+
+  // If Building Changed → Load Floors
+  if (field === "building_id") {
+    updated[index].floor_id = "";
+    updated[index].unit_id = "";
+    updated[index].units = [];
+
+    if (value) {
+      try {
+        const response = await getFloors(value);
+        updated[index].floors = response.data;
+      } catch {
+        updated[index].floors = [];
+      }
+    } else {
+      updated[index].floors = [];
+    }
+  }
+
+  // If Floor Changed → Load Units
+  if (field === "floor_id") {
+    updated[index].unit_id = "";
+
+    if (value) {
+      try {
+        const response = await getUnits(value);
+        updated[index].units = response.data;
+      } catch {
+        updated[index].units = [];
+      }
+    } else {
+      updated[index].units = [];
+    }
+  }
+
+  setLocations(updated);
+};
 
   const handleUnitChange = (e) => {
     setSelectedUnit(e.target.value);
@@ -313,9 +378,9 @@ const AddUser = () => {
       !password ||
       !moving_date ||
       !occupancy_type ||
-      !selectedBuilding ||
-      !selectedFloorId ||
-      !selectedUnit
+     locations.some(
+          (loc) => !loc.building_id || !loc.floor_id || !loc.unit_id
+        )
     ) {
       return toast.error("Please fill all mandatory fields marked with *");
     }
@@ -357,16 +422,16 @@ const AddUser = () => {
         blood_group,
         no_of_pets:pets.length,
         birth_date,
-        user_sites: [
-          {
-            unit_id: selectedUnit,
-            site_id: siteId,
-            ownership: occupancy_type,
-            ownership_type: "primary",
-            is_approved: true,
-            lives_here,
-          },
-        ],
+        user_sites: locations.map((loc, index) => ({
+      site_id: siteId,
+      unit_id: loc.unit_id,
+      build_id: loc.building_id,
+      floor_id: loc.floor_id,
+      ownership: occupancy_type,
+      ownership_type: index === 0 ? "primary" : "secondary",
+      is_approved: true,
+      lives_here,
+    })),
 
         user_members: members.map((member) => ({
           member_type: member.type,
@@ -451,92 +516,32 @@ const AddUser = () => {
                 />
               </div>
             ))}
+            <div className="flex flex-col gap-2">
+  <label htmlFor="lives_here" className="font-semibold">
+    Lives Here: <span style={{ color: "red" }}>*</span>
+  </label>
+  <select
+    id="lives_here"
+    name="lives_here"
+    className="border p-2 rounded border-gray-300"
+    value={
+      formData.lives_here === true
+        ? "true"
+        : formData.lives_here === false
+        ? "false"
+        : ""
+    }
+    onChange={(e) =>
+      handleInputChange("lives_here", e.target.value === "true")
+    }
+  >
+    <option value="">-- Select --</option>
+    <option value="true">Yes</option>
+    <option value="false">No</option>
+  </select>
+</div>
           </div>
 
-          <div className="mt-10 space-y-4">
-            <div className="grid mt-10 md:grid-cols-3">
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Tower: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
-                  value={selectedBuilding}
-                  onChange={async (e) => {
-                    const buildingId = e.target.value;
-                    setSelectedBuilding(buildingId);
-                    if (buildingId) {
-                      try {
-                        const response = await getFloors(buildingId);
-                        setFloors(response.data);
-                      } catch (error) {
-                        console.error("Error fetching floors:", error);
-                        setFloors([]);
-                      }
-                    } else {
-                      setFloors([]);
-                    }
-                  }}
-                >
-                  <option value="">-- Choose Building --</option>
-                  {filteredBuildings.map((building) => (
-                    <option key={building.id} value={building.id}>
-                      {building.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Floor: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
-                  value={selectedFloorId}
-                  onChange={async (e) => {
-                    const floorId = e.target.value;
-                    setSelectedFloorId(floorId);
-
-                    if (floorId) {
-                      try {
-                        const response = await getUnits(floorId);
-                        setUnits(response.data);
-                      } catch (error) {
-                        console.error("Error fetching units:", error);
-                        setUnits([]);
-                      }
-                    } else {
-                      setUnits([]);
-                    }
-                  }}
-                >
-                  <option value="">-- Choose Floor --</option>
-                  {floors.map((floor) => (
-                    <option key={floor.id} value={floor.id}>
-                      {floor.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Units: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
-                  value={selectedUnit}
-                  onChange={handleUnitChange}
-                >
-                  <option value="">-- Choose Unit --</option>
-                  {units.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
 
           <div className="mt-10 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -684,6 +689,101 @@ const AddUser = () => {
               </div>
             </div>
           </div>
+
+         {/* ================= LOCATION SECTION ================= */}
+<div className="mt-10 space-y-4">
+  <h2 className="text-xl font-semibold">Location Details</h2>
+
+  <button
+    type="button"
+    onClick={handleAddLocation}
+    className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700"
+  >
+    + Add Location
+  </button>
+
+  {locations.map((location, index) => (
+    <div
+      key={index}
+      className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-50 p-5 rounded-lg border"
+    >
+      {/* Tower */}
+      <div className="flex flex-col gap-2">
+        <label className="font-semibold">
+          Tower <span className="text-red-500">*</span>
+        </label>
+        <select
+          className="border p-2 rounded"
+          value={location.building_id}
+          onChange={(e) =>
+            handleLocationChange(index, "building_id", e.target.value)
+          }
+        >
+          <option value="">-- Select Tower --</option>
+          {filteredBuildings.map((building) => (
+            <option key={building.id} value={building.id}>
+              {building.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Floor */}
+      <div className="flex flex-col gap-2">
+        <label className="font-semibold">
+          Floor <span className="text-red-500">*</span>
+        </label>
+        <select
+          className="border p-2 rounded"
+          value={location.floor_id}
+          onChange={(e) =>
+            handleLocationChange(index, "floor_id", e.target.value)
+          }
+        >
+          <option value="">-- Select Floor --</option>
+          {location.floors?.map((floor) => (
+            <option key={floor.id} value={floor.id}>
+              {floor.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Unit */}
+      <div className="flex flex-col gap-2">
+        <label className="font-semibold">
+          Unit <span className="text-red-500">*</span>
+        </label>
+        <select
+          className="border p-2 rounded"
+          value={location.unit_id}
+          onChange={(e) =>
+            handleLocationChange(index, "unit_id", e.target.value)
+          }
+        >
+          <option value="">-- Select Unit --</option>
+          {location.units?.map((unit) => (
+            <option key={unit.id} value={unit.id}>
+              {unit.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Delete Button */}
+      {index > 0 && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => handleDeleteLocation(index)}
+          >
+            <RiDeleteBinLine className="text-red-600 w-6 h-6" />
+          </button>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
 
           {/* ✅ ADDED PETS SECTION HERE */}
           <div className="mt-10 space-y-4">
@@ -1320,7 +1420,13 @@ const AddUser = () => {
           </button> */}
 
           {/* Submit Button */}
-          <div className="flex justify-center mt-10">
+          <div className="flex justify-end mt-10 gap-4">
+             <button
+              onClick={() => navigate("/setup/users-setup")}
+              className="px-5 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500"
+            >
+              Cancel
+            </button>
             <button
               onClick={handleAddUser}
               disabled={isCreating}
@@ -1354,7 +1460,7 @@ const AddUser = () => {
                   Creating...
                 </span>
               ) : (
-                "Create User"
+                "Submit"
               )}
             </button>
           </div>

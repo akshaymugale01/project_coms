@@ -90,63 +90,59 @@ const RVehicles = () => {
     fetchData();
   }, [page, currentPageNum]);
 
-  /* -------------------- LOCAL SEARCH (SAFE) -------------------- */
-  useEffect(() => {
-    if (!debouncedSearch) {
-      setFilteredVehicles(vehicles);
-      return;
-    }
+ useEffect(() => {
+  if (!debouncedSearch) {
+    setFilteredVehicles(vehicles);
+    return;
+  }
 
-    const filtered = vehicles.filter((item) => {
-  const vehicleNumber = String(
-    item?.vehicle_number ||
-    item?.registered_vehicle?.vehicle_number ||
-    ""
-  ).toLowerCase();
+  const filtered = vehicles.filter((item) => {
+    const vehicleData = item?.registered_vehicle || item;
 
-  const vehicleCategory = String(
-    item?.vehicle_category ||
-    item?.registered_vehicle?.vehicle_category ||
-    ""
-  ).toLowerCase();
+    const vehicleNumber = String(
+      vehicleData?.vehicle_number || ""
+    ).toLowerCase();
 
-  const vehicleType = String(
-    item?.vehicle_type ||
-    item?.registered_vehicle?.vehicle_type ||
-    ""
-  ).toLowerCase();
+    const category = String(
+      vehicleData?.category?.name ||
+      vehicleData?.category ||
+      ""
+    ).toLowerCase();
 
-  const slotNumber = String(
-    item?.slot_number ||
-    item?.registered_vehicle?.slot_number ||
-    ""
-  ).toLowerCase();
+    const vehicleType = String(
+      vehicleData?.vehicle_type?.name ||
+      vehicleData?.vehicle_type ||
+      ""
+    ).toLowerCase();
 
-  const unitName = String(
-    item?.unit_name ||
-    item?.registered_vehicle?.unit_name ||
-    ""
-  ).toLowerCase();
+    const slot_name = String(
+      vehicleData?.slot_name || ""
+    ).toLowerCase();
 
-  const registeredUser = String(
-    item?.registered_user ||
-    item?.created_by ||
-    ""
-  ).toLowerCase();
+    const unitName = String(
+      vehicleData?.unit?.name ||
+      vehicleData?.unit_name ||
+      ""
+    ).toLowerCase();
 
-  return (
-    vehicleNumber.includes(debouncedSearch) ||
-    vehicleCategory.includes(debouncedSearch) ||
-    vehicleType.includes(debouncedSearch) ||
-    slotNumber.includes(debouncedSearch) ||
-    unitName.includes(debouncedSearch) ||
-    registeredUser.includes(debouncedSearch)
-  );
-});
+    const registeredUser = String(
+      vehicleData?.registered_user?.name ||
+      item?.created_by ||
+      ""
+    ).toLowerCase();
 
-    setFilteredVehicles(filtered);
-  }, [debouncedSearch, vehicles]);
+    return (
+      vehicleNumber.includes(debouncedSearch) ||
+      category.includes(debouncedSearch) ||
+      vehicleType.includes(debouncedSearch) ||
+      slot_name.includes(debouncedSearch) ||
+      unitName.includes(debouncedSearch) ||
+      registeredUser.includes(debouncedSearch)
+    );
+  });
 
+  setFilteredVehicles(filtered);
+}, [debouncedSearch, vehicles]);
   /* -------------------- HANDLERS -------------------- */
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -191,7 +187,7 @@ const RVehicles = () => {
           <div className="relative mb-1 mr-2 flex items-center">
             <input
               type="text"
-              placeholder="Search by Vehicle Number, Category, Type, Slot, Unit, User"
+              placeholder="Search by Vehicle Number, Category, Slot"
               value={searchTerm}
               onChange={handleSearchChange}
               className="pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm w-[1000px]"

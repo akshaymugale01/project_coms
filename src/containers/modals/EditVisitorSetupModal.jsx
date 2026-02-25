@@ -28,7 +28,7 @@ const EditVisitorSetupModal = ({ onclose, catId, setAdded }) => {
     formData.append("name", editCategory);
     try {
       const editCat = await editStaffCategory(catId, formData);
-      toast.success("Visitor Category  updated Successfully");
+      toast.success("satff Category  updated Successfully");
       setAdded(true);
       onclose();
       setEditCategory("");
