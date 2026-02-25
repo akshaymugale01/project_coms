@@ -1873,10 +1873,12 @@ export const getAssetReadingDetails = async (assetId) =>
     }
   );
 
-export const getSetupUsers = async () =>
+export const getSetupUsers = async (page = 1, perPage = 10) =>
   axiosInstance.get("/users.json", {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -1965,6 +1967,14 @@ export const getFilterUsers = async (id) =>
       token: token,
     },
   });
+
+
+export const getSelfRegistration = async () => 
+  axiosInstance.get(`/visitors/self_registartions.json`, {
+    params: {
+      token: token,
+    }
+  })
 
 export const getUsersByID = async (id) =>
   axiosInstance.get(`/users.json`, {
@@ -3464,6 +3474,117 @@ export const editStaffCategory = async (id, data) =>
     },
   });
 
+
+export const getVisitorCategoryById = async (id) =>
+  axiosInstance.get(`/visitor_categories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+// export const postVisitorCategory = async (formData) =>
+//   axiosInstance.post(`/visitor_categories.json?token=${token}`, formData, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+
+export const updateVisitorCategory = async (id, formData) =>
+  axiosInstance.put(`/visitor_categories/${id}.json?token=${token}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const deleteVisitorCategory = async (id) =>
+  axiosInstance.delete(`/visitor_categories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+// Visitor Categories API
+export const getVisitorCategories = async (page = 1, perpage = 100) =>
+  axiosInstance.get("/visitor_categories.json", {
+    params: {
+      token: token,  // token imported or retrieved from localStorage
+      Page: page,
+      Per_Page: perpage,
+       t: Date.now(),
+      
+    },
+  });
+
+  export const postVisitorCategory = async (formData, token) =>
+  axiosInstance.post(
+    "/visitor_categories.json",
+    formData,
+    {
+      params: { token },
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  // Edit Visitor Category
+export const editVisitorCategory = async (id, formData) =>
+  axiosInstance.put(
+    `/visitor_categories/${id}.json?token=${token}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+
+  // export const deleteVisitorCategory = async (id) =>
+  // axiosInstance.delete(`/visitor_categories/${id}.json`, {
+  //   params: { token: token },
+  // });
+
+  // Visitor Sub Categories API
+
+export const getVisitorSubCategories = async (page = 1, perpage = 10) =>
+  axiosInstance.get("/visitor_sub_categories.json", {
+    params: {
+      token: token,
+      Page: page,
+      Per_Page: perpage,
+    },
+  });
+
+export const getVisitorSubCategoryById = async (id) =>
+  axiosInstance.get(`/visitor_sub_categories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const postVisitorSubCategory = async (formData) =>
+  axiosInstance.post(`/visitor_sub_categories.json?token=${token}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const updateVisitorSubCategory = async (id, formData) =>
+  axiosInstance.put(
+    `/visitor_sub_categories/${id}.json?token=${token}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+
+  export const deleteVisitorSubCategory = async (id) =>
+  axiosInstance.delete(`/visitor_sub_categories/${id}.json?token=${token}`);
+
 export const postLOI = async (data) =>
   axiosInstance.post(`/loi_details.json`, data, {
     params: {
@@ -3485,6 +3606,8 @@ export const postApprovalLogs = async (id, data) =>
       token: token,
     },
   });
+
+  
 
 export const getLOI = async () =>
   axiosInstance.get(`/loi_details.json`, {

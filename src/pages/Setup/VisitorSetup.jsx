@@ -7,7 +7,7 @@ import Navbar from "../../components/Navbar";
 import { useSelector } from "react-redux";
 import AddVisitorSetupModal from "../../containers/modals/AddVisitorSetupModal";
 import EditVisitorSetupModal from "../../containers/modals/EditVisitorSetupModal";
-import { getStaffCategory, deleteStaffCategory } from "../../api";
+import { getStaffCategory, deleteStaffCategory, deleteVisitorCategory, deleteVisitorSubCategory } from "../../api";
 import toast from "react-hot-toast";
 import VehicleParkingSetup from "./VehicleParkingSetupModal/VehicleParkingSetup";
 import { Link } from "react-router-dom";
@@ -20,6 +20,8 @@ function VisitorSetup() {
   const [categories, setCategories] = useState([]);
   const [catId, setCatId] = useState("");
   const [added, setAdded] = useState(false);
+    const [filteredData, setFilteredData] = useState([]);
+
   
   const column = [
     {
@@ -28,7 +30,7 @@ function VisitorSetup() {
       sortable: true,
     },
     {
-      name: "Category",
+      name: "Staff Category",
       selector: (row) => row.name,
       sortable: true,
     },
@@ -51,19 +53,71 @@ function VisitorSetup() {
       ),
     },
   ];
-  const [filteredData, setFilteredData] = useState([]);
-  const handleSearch = (event) => {
-    const searchValue = event.target.value;
-    setSearchText(searchValue);
-    if (searchValue.trim() === "") {
-      setFilteredData(categories);
-    } else {
-      const filteredResults = categories.filter((items) =>
-        items.name.toLowerCase().includes(searchValue.toLowerCase())
-      );
-      setFilteredData(filteredResults);
+
+ const categoryColumn = [
+    {
+      name: "Sr. no.",
+      selector: (row, index) => index + 1,
+      sortable: true,
+    },
+    {
+      name: "Name",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Action",
+      selector: (row) => (
+        <div className="flex items-center gap-4">
+          <button onClick={() => handleEdit(row.id)}>
+            <BiEdit size={15} />
+          </button>
+          <button onClick={() => handleDelete(row.id)}>
+            <RiDeleteBin5Line size={15} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+  
+  const handleDelete = async (id) => {
+    try {
+      if (page === "visitorCategories") {
+        await deleteVisitorCategory(id);
+        toast.success("Visitor Category Deleted Successfully");
+      }
+
+      if (page === "visitorSubCategories") {
+        await deleteVisitorSubCategory(id);
+        toast.success("Visitor Sub Category Deleted Successfully");
+      }
+
+      setAdded(!added);
+    } catch (error) {
+      console.log(error);
+      toast.error("Delete Failed");
     }
   };
+
+  const handleEdit = (id) => {
+    setSelectedId(id);
+    setEditVisitorSetupModal(true);
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+
+    if (!value.trim()) {
+      setFilteredData(categories);
+    } else {
+      const filtered = categories.filter((item) =>
+        item.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  };
+
 
   const getVisitor = async () => {
     try {
@@ -102,6 +156,7 @@ function VisitorSetup() {
     setCatId(id);
     setEditVisitorSetupModal(true);
   };
+
   return (
     <section className="flex">
       <Navbar />
@@ -125,12 +180,12 @@ function VisitorSetup() {
           >
             Parking Slot
           </h2>
-           <h2
+           {/* <h2
             className={`p-1 ${
-              page === "visitorsCategories" &&
+              page === "visitorCategories" &&
               "bg-white font-medium text-blue-500 shadow-custom-all-sides"
             } rounded-t-md px-4 cursor-pointer transition-all duration-300 ease-linear`}
-            onClick={() => setPage("visitorsCategories")}
+            onClick={() => setPage("visitorCategories")}
           >
             Visitors Categories
           </h2>
@@ -142,7 +197,7 @@ function VisitorSetup() {
             onClick={() => setPage("visitorsSubCategories")}
           >
             Visitors sub Categories
-          </h2>
+          </h2> */}
         </div>
         <div className="flex gap-2 my-2">
           <Link className="font-medium text-gray-600" to={"/setup"}>
@@ -179,6 +234,31 @@ function VisitorSetup() {
             <div className="my-3">
               <Table columns={column} data={filteredData} isPagination={true} />
             </div>
+
+  {(page === "visitorCategories" ||
+          page === "visitorSubCategories") && (
+          <>
+            <div className="flex justify-between my-3">
+              <input
+                type="text"
+                placeholder="Search"
+                className="border p-2 w-96 rounded-lg"
+                value={searchText}
+                onChange={handleSearch}
+              />
+
+              <button
+                className="text-white font-semibold px-4 p-1 flex gap-2 items-center rounded-md"
+                style={{ background: themeColor }}
+                onClick={() => setVisitorSetupModal(true)}
+              >
+                <IoAddCircleOutline size={22} /> Add
+              </button>
+            </div>
+
+            <Table columns={column} data={filteredData} isPagination />
+
+            
             {visitorSetupModal && (
               <AddVisitorSetupModal
                 setAdded={setAdded}
@@ -192,6 +272,7 @@ function VisitorSetup() {
                 onclose={() => setEditVisitorSetupModal(false)}
               />
             )}
+            </>)}
           </div>
         ) : (
           <div>
