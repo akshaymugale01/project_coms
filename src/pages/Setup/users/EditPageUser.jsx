@@ -91,12 +91,14 @@ const [unitsByFloor, setUnitsByFloor] = useState({});
       console.log("vehicle_details from API:", userResp?.data?.vehicle_details);
 
       const userData = userResp?.data || {};
+       const firstSite = userData.user_sites?.[0];
       // Convert date formats for HTML5 date inputs
       const formattedData = {
         ...userData,
         moving_date: convertToISODate(userData.moving_date),
         lease_expiry: convertToISODate(userData.lease_expiry),
         birth_date: convertToISODate(userData.birth_date),
+          occupancy_type: firstSite?.ownership || "",
       };
 
       setFormData(formattedData);
@@ -156,6 +158,7 @@ useEffect(() => {
   if (Array.isArray(formData.user_sites) && formData.user_sites.length > 0) {
     const hydratedSites = formData.user_sites.map((site) => ({
       id: site.id ?? null,
+      site_id: site.site_id ?? Number(siteId), 
       build_id: site.build_id ?? "",
       floor_id: site.floor_id ?? "",
       unit_id: site.unit_id ?? "",
@@ -207,6 +210,7 @@ useEffect(() => {
       ...prev.user_sites,
       {
         id: null,
+                site_id: Number(siteId), 
         build_id: "",
         floor_id: "",
         unit_id: "",
@@ -615,6 +619,7 @@ formData.user_sites.some(
 
      user_sites_attributes: formData.user_sites.map((site) => ({
   id: site.id ?? undefined,
+    site_id: Number(site.site_id || siteId), 
   build_id: Number(site.build_id),
   floor_id: Number(site.floor_id),
   unit_id: Number(site.unit_id),

@@ -765,7 +765,7 @@ import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
 import EditPPMChecklist from "./pages/SubPages/EditPPMChecklist.jsx";
 import CreateInvoiceReceipt from "./pages/SubPages/details/CreateInvoiceReciept.jsx";
 // import EditSelfRegistration from "./pages/SubPages/EditSelfRegistration.jsx";
-// import AddSelfRegistration from "./pages/SubPages/AddSelfRegistration.jsx";
+import AddSelfRegistration from "./pages/SubPages/AddSelfRegistration.jsx";
 // import SelfRegistrationDetails from "./pages/SubPages/ServiceChecklist.jsx";
 //import ParkingConfiguration from "./pages/Setup/ParkingSetupPages/ParkingConfiguration.jsx";
 import ModernParkingConfig from "./pages/Setup/ParkingSetupPages/ModernParkingConfig.jsx";
@@ -3170,7 +3170,7 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-  {/* <Route
+  <Route
             path="/admin/passes/add-self-registration"
             element={
               <ProtectedAdminRoutes>
@@ -3179,8 +3179,8 @@ function App() {
             }
           />
 
-            <Route
-            path="/admin/passes/self-registration-details/:id"
+            {/* <Route
+            path="/admin/passes/visitors/visitor-details/:id"
             element={
               <ProtectedAdminRoutes>
                 <SelfRegistrationDetails />
@@ -3189,7 +3189,7 @@ function App() {
           />
 
             <Route
-            path="/admin/passes/edit-self-registration/:id"
+            path="/admin/passes/visitors/edit-visitor/:id"
             element={
               <ProtectedAdminRoutes>
                 <EditSelfRegistration />
