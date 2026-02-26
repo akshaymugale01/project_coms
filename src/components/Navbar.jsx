@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { HiMenuAlt3, HiOutlineIdentification } from "react-icons/hi";
-import { useNavigate, NavLink, Link } from "react-router-dom";
+import { useNavigate, NavLink, Link, useLocation } from "react-router-dom";
 import { menus } from "../utils/menus";
 import { PiFiles, PiSignOutBold } from "react-icons/pi";
 import { getItemInLocalStorage } from "../utils/localStorage";
@@ -61,6 +61,7 @@ import {
   FaCalendarAlt,
   FaCalendarCheck,
   FaCar,
+  FaChevronDown,
   FaDollarSign,
   FaFileInvoice,
   FaFileWord,
@@ -88,7 +89,20 @@ import {
 import { toast } from "react-toastify";
 
 const Navbar = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
+  const location = useLocation();
+  const [fitoutOpen, setFitoutOpen] = useState(false);
+  const [osrOpen, setOsrOpen] = useState(false);
+  const [incidentOpen, setIncidentOpen] = useState(false);
+  const [accountingOpen, setAccountingOpen] = useState(false);
+
+  useEffect(() => {
+    const path = location.pathname;
+    setFitoutOpen(path.startsWith("/fitout"));
+    setOsrOpen(path.startsWith("/ors") || path.startsWith("/admin/bookings"));
+    setIncidentOpen(path.startsWith("/admin/incidents") || path.startsWith("/admin/setup-incidents"));
+    setAccountingOpen(path.startsWith("/accounting") || path.startsWith("/setup/accounting"));
+  }, [location.pathname]);
   const [user, setUser] = useState("");
   const [feat, setFeat] = useState("");
   const navigate = useNavigate();
@@ -101,7 +115,7 @@ const Navbar = () => {
   const [newNotificationCount, setNewNotificationCount] = useState(0);
   const [lastFetchedCount, setLastFetchedCount] = useState(0);
   const countNotification = getItemInLocalStorage("shownNotificationIds");
-  const [bgImage ,setBgImage] = useState("")
+  const [bgImage, setBgImage] = useState("")
 
   // console.log("asfd", countNotification);
 
@@ -135,15 +149,15 @@ const Navbar = () => {
     }
   };
 
-      useEffect(() => {
-        const BgImage = async () => {
-          const resp = await getVibeBackground();
-          console.log("resp", resp);
-          const image = resp?.data[2]?.image;
-          setBgImage(image);
-        };
-        BgImage();
-      }, []);
+  useEffect(() => {
+    const BgImage = async () => {
+      const resp = await getVibeBackground();
+      console.log("resp", resp);
+      const image = resp?.data[2]?.image;
+      setBgImage(image);
+    };
+    BgImage();
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -222,13 +236,7 @@ const Navbar = () => {
   // const unreadCount = countNotification?.length;
   const unreadCount = notifications.filter((n) => n.read === "0").length;
 
-  const handleMouseEnter = () => {
-    setOpen(true);
-  };
 
-  const handleMouseLeave = () => {
-    setOpen(false);
-  };
   const presentStatus = true;
   const currentTime = new Date().getHours();
 
@@ -273,11 +281,8 @@ const Navbar = () => {
           background: "rgb(3 19 37)",
           // background: `url(${bgImage})`
         }}
-        className={`p-[8px] max-h-screen ${
-          open ? "w-full md:w-60" : "w-20"
-        } duration-500 text-gray-100 px-4 shadow-2xl overflow-y-auto h-screen custom-scrollbar left-0`}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        className={`p-[8px] max-h-screen ${open ? "w-full md:w-60" : "w-20"
+          } duration-500 text-gray-100 px-4 shadow-2xl overflow-y-auto h-screen custom-scrollbar left-0`}
       >
         <div className="py-3 gap-3 flex justify-between items-center">
           {/* Bell Icon */}
@@ -291,10 +296,9 @@ const Navbar = () => {
           {/* Sidebar Menu Toggle */}
           <HiMenuAlt3
             size={26}
-            className={`cursor-pointer transition-transform duration-200 ${
-              open ? "rotate-90" : ""
-            }`}
-            onClick={() => setSidebarOpen(!open)} // sidebar state, NOT affecting popupOpen
+            className={`cursor-pointer transition-transform duration-200 ${open ? "rotate-90" : ""
+              }`}
+            onClick={() => setOpen(!open)}
           />
         </div>
 
@@ -312,11 +316,10 @@ const Navbar = () => {
                 <div
                   key={notif.id}
                   onClick={() => handleNotificationClick(notif.id)}
-                  className={`p-3 border-b last:border-0 rounded-md text-gray-500 cursor-pointer hover:bg-green-200 ${
-                    notif.read === "0"
-                      ? "hover:bg-blue-300 text-white font-semibold"
-                      : ""
-                  }`}
+                  className={`p-3 border-b last:border-0 rounded-md text-gray-500 cursor-pointer hover:bg-green-200 ${notif.read === "0"
+                    ? "hover:bg-blue-300 text-white font-semibold"
+                    : ""
+                    }`}
                 >
                   {notif.message}
                 </div>
@@ -331,18 +334,16 @@ const Navbar = () => {
             <>
               <NavLink
                 className={({ isActive }) =>
-                  `${
-                    isActive
-                      ? `flex p-2 gap-3.5 rounded-md group items-center font-medium text-sm`
-                      : `group flex items-center gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
+                  `${isActive
+                    ? `flex p-2 gap-3.5 rounded-md group items-center font-medium text-sm`
+                    : `group flex items-center gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
                   }`
                 }
               >
                 <div>{React.createElement(BsPersonCircle, { size: "25" })}</div>
                 <h2
-                  className={`whitespace-pre duration-300 ${
-                    !open && "opacity-0 translate-x-28 overflow-hidden"
-                  }`}
+                  className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                    }`}
                 >
                   {firstName} {lastName}
                 </h2>
@@ -366,9 +367,8 @@ const Navbar = () => {
                 </div> */}
 
                 <h2
-                  className={`${
-                    open && "hidden"
-                  } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit`}
+                  className={`${open && "hidden"
+                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit`}
                 >
                   {firstName} {lastName}
                 </h2>
@@ -377,10 +377,9 @@ const Navbar = () => {
               <NavLink
                 to={"/dashboard"}
                 className={({ isActive }) =>
-                  ` ${
-                    isActive
-                      ? `text-black bg-white flex p-2  gap-3.5 rounded-md group items-center  font-medium text-sm`
-                      : ` group flex items-center  gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
+                  ` ${isActive
+                    ? `text-black bg-white flex p-2  gap-3.5 rounded-md group items-center  font-medium text-sm`
+                    : ` group flex items-center  gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
                   }`
                 }
               >
@@ -388,16 +387,14 @@ const Navbar = () => {
                   {React.createElement(MdOutlineDashboard, { size: "20" })}
                 </div>
                 <h2
-                  className={`whitespace-pre duration-300 ${
-                    !open && "opacity-0 translate-x-28 overflow-hidden"
-                  }`}
+                  className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                    }`}
                 >
                   Dashboard
                 </h2>
                 <h2
-                  className={`${
-                    open && "hidden"
-                  } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                  className={`${open && "hidden"
+                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                 >
                   Dashboard
                 </h2>
@@ -528,10 +525,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/tickets"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -539,32 +535,29 @@ const Navbar = () => {
                       {React.createElement(BsTicketPerforated, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Service Desk
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Service Desk
                     </h2>
                   </NavLink>
                 )}
 
-                  {/* Accounting */}
-                
+                {/* Accounting */}
+
                 {feat.includes("accounting") && (
                   <NavLink
                     to={"/accounting"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -572,21 +565,19 @@ const Navbar = () => {
                       {React.createElement(MdAccountTree, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Accounting
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Accounting
                     </h2>
                   </NavLink>
-                )}                
+                )}
                 {/* {feat.includes("additional-services") && (
                   <NavLink
                     to={"/additional-services"}
@@ -621,10 +612,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/additional-services"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -633,16 +623,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Additional Services
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Additional Services
                     </h2>
@@ -653,10 +641,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/skill-grow"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -664,16 +651,14 @@ const Navbar = () => {
                       {React.createElement(GrCertificate, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Skill Grow
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Skill Grow
                     </h2>
@@ -683,10 +668,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/attendance"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -695,16 +679,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Attendance
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Attendance
                     </h2>
@@ -715,10 +697,9 @@ const Navbar = () => {
                     <NavLink
                       to={"/communication/events"}
                       className={({ isActive }) =>
-                        ` ${
-                          isActive
-                            ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                            : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                        ` ${isActive
+                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                         }`
                       }
                     >
@@ -726,16 +707,14 @@ const Navbar = () => {
                         {React.createElement(BsBroadcast, { size: "20" })}
                       </div>
                       <h2
-                        className={`whitespace-pre duration-300 ${
-                          !open && "opacity-0 translate-x-28 overflow-hidden"
-                        }`}
+                        className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                          }`}
                       >
                         Communication
                       </h2>
                       <h2
-                        className={`${
-                          open && "hidden"
-                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                        className={`${open && "hidden"
+                          } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                       >
                         Communication
                       </h2>
@@ -745,10 +724,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/meetings"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -757,16 +735,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Meeting
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Meeting
                     </h2>
@@ -777,10 +753,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/bookings"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -789,16 +764,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Amenities
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Amenities
                     </h2>
@@ -837,10 +810,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/business-card"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -848,61 +820,70 @@ const Navbar = () => {
                       {React.createElement(TiBusinessCard, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Business Card
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Business Card
                     </h2>
                   </NavLink>
                 )}
                 {feat.includes("incidents") && (
-                  <NavLink
-                    to={"/admin/incidents"}
-                    className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
-                      }`
-                    }
-                  >
-                    <div>
-                      {React.createElement(FaFileInvoice, { size: "20" })}
+                  <div>
+                    {/* Incidents accordion header */}
+                    <div
+                      className="group flex items-center gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm cursor-pointer"
+                      onClick={() => setIncidentOpen(!incidentOpen)}
+                    >
+                      <div>{React.createElement(FaFileInvoice, { size: "20" })}</div>
+                      <h2 className={`whitespace-pre duration-300 flex-1 ${!open && "opacity-0 translate-x-28 overflow-hidden"}`}>
+                        Incidents
+                      </h2>
+                      {open && (
+                        <FaChevronDown
+                          size={12}
+                          className={`transition-transform duration-200 ${incidentOpen ? "rotate-180" : ""}`}
+                        />
+                      )}
                     </div>
-
-                    <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
-                    >
-                      Incidents
-                    </h2>
-                    <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
-                    >
-                      Incidents
-                    </h2>
-                  </NavLink>
+                    {/* Sub-items */}
+                    {open && incidentOpen && (
+                      <div className="ml-6 flex flex-col gap-1 mt-1">
+                        <NavLink
+                          to="/admin/incidents"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Incidents
+                        </NavLink>
+                        <NavLink
+                          to="/admin/setup-incidents"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Setup
+                        </NavLink>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {feat.includes("bookings_request") && (
                   <NavLink
                     to={"/admin/booking-request"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -910,16 +891,14 @@ const Navbar = () => {
                       {React.createElement(FaCalendarAlt, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Booking & Request
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Booking & Request
                     </h2>
@@ -929,10 +908,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/doctor-appointments"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -941,16 +919,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Doctor Appointment
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Doctor Appointment
                     </h2>
@@ -960,10 +936,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/insurance"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -971,91 +946,130 @@ const Navbar = () => {
                       {React.createElement(MdOutlinePolicy, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Insurance
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Insurance
                     </h2>
                   </NavLink>
                 )}
                 {feat.includes("additional-service-OSR") && (
-                  <NavLink
-                    to={"/ors-dashboard"}
-                    className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
-                      }`
-                    }
-                  >
-                    <div>
-                      {React.createElement(RiReservedLine, { size: "20" })}
+                  <div>
+                    {/* OSR accordion header */}
+                    <div
+                      className="group flex items-center gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm cursor-pointer"
+                      onClick={() => setOsrOpen(!osrOpen)}
+                    >
+                      <div>{React.createElement(RiReservedLine, { size: "20" })}</div>
+                      <h2 className={`whitespace-pre duration-300 flex-1 ${!open && "opacity-0 translate-x-28 overflow-hidden"}`}>
+                        Additional Services(OSR)
+                      </h2>
+                      {open && (
+                        <FaChevronDown
+                          size={12}
+                          className={`transition-transform duration-200 ${osrOpen ? "rotate-180" : ""}`}
+                        />
+                      )}
                     </div>
-                    <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
-                    >
-                      Additional Services(OSR)
-                    </h2>
-                    <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
-                    >
-                      Additional Services(OSR)
-                    </h2>
-                  </NavLink>
+                    {/* Sub-items */}
+                    {open && osrOpen && (
+                      <div className="ml-6 flex flex-col gap-1 mt-1">
+                        <NavLink
+                          to="/ors-dashboard"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Dashboard
+                        </NavLink>
+                        <NavLink
+                          to="/ors-setups"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Setup
+                        </NavLink>
+                        <NavLink
+                          to="/admin/bookings"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Bookings
+                        </NavLink>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {feat.includes("fitout") && (
-                  <NavLink
-                    to={"/fitout/setup/page"}
-                    className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
-                      }`
-                    }
-                  >
-                    <div>
-                      {React.createElement(FaWrench, {
-                        size: "20",
-                      })}
+                  <div>
+                    {/* FitOut accordion header */}
+                    <div
+                      className="group flex items-center gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm cursor-pointer"
+                      onClick={() => setFitoutOpen(!fitoutOpen)}
+                    >
+                      <div>{React.createElement(FaWrench, { size: "20" })}</div>
+                      <h2 className={`whitespace-pre duration-300 flex-1 ${!open && "opacity-0 translate-x-28 overflow-hidden"}`}>
+                        Fit Out
+                      </h2>
+                      {open && (
+                        <FaChevronDown
+                          size={12}
+                          className={`transition-transform duration-200 ${fitoutOpen ? "rotate-180" : ""}`}
+                        />
+                      )}
                     </div>
-                    <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
-                    >
-                      Fit Out
-                    </h2>
-                    <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
-                    >
-                      Fit Out
-                    </h2>
-                  </NavLink>
+                    {/* Sub-items */}
+                    {open && fitoutOpen && (
+                      <div className="ml-6 flex flex-col gap-1 mt-1">
+                        <NavLink
+                          to="/fitout/setup/page"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Fitout Setup
+                        </NavLink>
+                        <NavLink
+                          to="/fitout/request/list"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Fitout Request
+                        </NavLink>
+                        <NavLink
+                          to="/fitout/checklist/list"
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm ${isActive ? "bg-white text-black font-medium" : "hover:bg-gray-700"
+                            }`
+                          }
+                        >
+                          Fitout Checklist
+                        </NavLink>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {feat.includes("document_pro") && (
                   <NavLink
                     to={"/documents"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1065,16 +1079,14 @@ const Navbar = () => {
                       })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Document Pro
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Document Pro
                     </h2>
@@ -1086,10 +1098,9 @@ const Navbar = () => {
                     to={"/admin/hrms/dashboard"}
                     // to={"/admin/hrms/employee-onboarding"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1097,16 +1108,14 @@ const Navbar = () => {
                       {React.createElement(FaUserFriends, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       HRMS
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       HRMS
                     </h2>
@@ -1116,26 +1125,23 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/passes"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(BsPass, { size: "20" })}</div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Passes
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Passes
                     </h2>
@@ -1145,10 +1151,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/business"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1156,16 +1161,14 @@ const Navbar = () => {
                       {React.createElement(IoBusinessOutline, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Contact Book
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Contact Book
                     </h2>
@@ -1175,10 +1178,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/birthday"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1187,16 +1189,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Birthday
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Birthday
                     </h2>
@@ -1206,10 +1206,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/permit"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1218,16 +1217,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Permit
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Permit
                     </h2>
@@ -1237,10 +1234,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/audit"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1249,16 +1245,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Audit
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Audit
                     </h2>
@@ -1269,25 +1263,22 @@ const Navbar = () => {
                   <NavLink
                     to={"/assets"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(BsBuilding, { size: "20" })}</div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Asset
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Asset
                     </h2>
@@ -1298,10 +1289,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/services"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1309,16 +1299,14 @@ const Navbar = () => {
                       {React.createElement(LuSettings2, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Soft Services
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Soft Services
                     </h2>
@@ -1328,10 +1316,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/fb"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1340,16 +1327,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       F&B
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       F&B
                     </h2>
@@ -1359,10 +1344,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/mail-room"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1370,16 +1354,14 @@ const Navbar = () => {
                       {React.createElement(BsMailboxFlag, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Mail Room
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Mail Room
                     </h2>
@@ -1389,10 +1371,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/field-sense-meeting"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1400,16 +1381,14 @@ const Navbar = () => {
                       {React.createElement(RiUserLocationFill, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Field Sense
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Field Sense
                     </h2>
@@ -1419,26 +1398,23 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/transportation"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(FaCar, { size: "20" })}</div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Transportation
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Transportation
                     </h2>
@@ -1448,10 +1424,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/integration"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1462,16 +1437,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Integration
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Integration
                     </h2>
@@ -1482,26 +1455,23 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/purchase"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(PiFiles, { size: "20" })}</div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Purchase
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Purchase
                     </h2>
@@ -1512,26 +1482,23 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/service-pr"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(PiFiles, { size: "20" })}</div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Service PR/WO
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Service PR/WO
                     </h2>
@@ -1542,10 +1509,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/suppliers"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1554,16 +1520,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Suppliers
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Suppliers
                     </h2>
@@ -1574,25 +1538,22 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/bill-pay"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(RiBillLine, { size: "20" })}</div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Bill Pay
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Bill Pay
                     </h2>
@@ -1603,10 +1564,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/advance-salary-request"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1614,16 +1574,14 @@ const Navbar = () => {
                       {React.createElement(FcMoneyTransfer, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Advance Salary
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Advance Salary
                     </h2>
@@ -1634,10 +1592,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/other-bills"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1646,16 +1603,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Other Bills
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Other Bills
                     </h2>
@@ -1698,25 +1653,22 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/fitness"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(IoFitness, { size: "20" })}</div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Fitness
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Fitness
                     </h2>
@@ -1728,10 +1680,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/cam-billing"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1740,22 +1691,20 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       CAM Billing
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       CAM Billing
                     </h2>
                   </NavLink>
                 )}
-{/* 
+                {/* 
                 {feat.includes("accounting") && (
                   <NavLink
                     to={"/admin/accounting/bills"}
@@ -1853,10 +1802,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/admin/parking"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -1865,16 +1813,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Parking
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Parking
                     </h2>
@@ -1887,10 +1833,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/setup/users-setup"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -1899,16 +1844,14 @@ const Navbar = () => {
                   </div>
 
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Users
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Users
                   </h2>
@@ -1924,26 +1867,23 @@ const Navbar = () => {
               <NavLink
                 // to={`/profile`}
                 className={({ isActive }) =>
-                  ` ${
-                    isActive
-                      ? `flex p-2  gap-3.5 rounded-md group items-center  font-medium`
-                      : // ? `text-black bg-white flex p-2  gap-3.5 rounded-md group items-center  font-medium ${fontSize}`
-                        ` group flex items-center  gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
+                  ` ${isActive
+                    ? `flex p-2  gap-3.5 rounded-md group items-center  font-medium`
+                    : // ? `text-black bg-white flex p-2  gap-3.5 rounded-md group items-center  font-medium ${fontSize}`
+                    ` group flex items-center  gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
                   }`
                 }
               >
                 <div>{React.createElement(BsPersonCircle, { size: "25" })}</div>
                 <h2
-                  className={`whitespace-pre duration-300 ${
-                    !open && "opacity-0 translate-x-28 overflow-hidden"
-                  }`}
+                  className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                    }`}
                 >
                   {firstName} {lastName}
                 </h2>
                 <h2
-                  className={`${
-                    open && "hidden"
-                  } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                  className={`${open && "hidden"
+                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                 >
                   {firstName} {lastName}
                 </h2>
@@ -1952,10 +1892,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/employee/dashboard"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -1963,16 +1902,14 @@ const Navbar = () => {
                     {React.createElement(MdOutlineDashboard, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Dashboard
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Dashboard
                   </h2>
@@ -1982,10 +1919,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/project-management"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? `text-black bg-white flex p-2  gap-3.5 rounded-md group items-center  font-medium text-sm`
-                        : ` group flex items-center  gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
+                    ` ${isActive
+                      ? `text-black bg-white flex p-2  gap-3.5 rounded-md group items-center  font-medium text-sm`
+                      : ` group flex items-center  gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md text-sm`
                     }`
                   }
                 >
@@ -1993,16 +1929,14 @@ const Navbar = () => {
                     {React.createElement(MdManageAccounts, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Project Management
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Project management
                   </h2>
@@ -2012,25 +1946,22 @@ const Navbar = () => {
                 <NavLink
                   to={"/Task-management"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
                   <div>{React.createElement(FaTasks, { size: "20" })}</div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Task Management
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Task management
                   </h2>
@@ -2041,10 +1972,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/calendar"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2052,16 +1982,14 @@ const Navbar = () => {
                     {React.createElement(FaCalendarCheck, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Calendar
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Calendar
                   </h2>
@@ -2071,25 +1999,22 @@ const Navbar = () => {
                 <NavLink
                   to={"/mytickets"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
                   <div>{React.createElement(HiMiniTicket, { size: "20" })}</div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     My Ticket
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     My Ticket
                   </h2>
@@ -2099,10 +2024,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/employee/certificate"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2110,16 +2034,14 @@ const Navbar = () => {
                     {React.createElement(GrCertificate, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Skill Grow
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Skill Grow
                   </h2>
@@ -2129,10 +2051,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/employee-portal"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2140,16 +2061,14 @@ const Navbar = () => {
                     {React.createElement(BsPersonWorkspace, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     MyWorkplace
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Calendar
                   </h2>
@@ -2159,25 +2078,22 @@ const Navbar = () => {
                 <NavLink
                   to={"/employee-attendance"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
                   <div>{React.createElement(BsFileRuled, { size: "20" })}</div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Attendance
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Attendance
                   </h2>
@@ -2188,10 +2104,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/employee/communication/events"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -2199,16 +2114,14 @@ const Navbar = () => {
                       {React.createElement(BsBroadcast, { size: "20" })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Communication
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Communication
                     </h2>
@@ -2218,26 +2131,23 @@ const Navbar = () => {
                 <NavLink
                   to={"/meetings"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
                   <div>{React.createElement(IoIosPeople, { size: "20" })}</div>
 
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Meeting
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Meeting
                   </h2>
@@ -2249,10 +2159,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/employees/booking"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -2261,16 +2170,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Workspace Bookings
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Bookings
                     </h2>
@@ -2281,10 +2188,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/employees/businesscard"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -2293,16 +2199,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Business Card
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Business Card
                     </h2>
@@ -2342,10 +2246,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/doctor-appointments"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2353,16 +2256,14 @@ const Navbar = () => {
                     {React.createElement(FaBriefcaseMedical, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Doctor Appointment
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Doctor Appointment
                   </h2>
@@ -2372,10 +2273,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/insurance"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2383,16 +2283,14 @@ const Navbar = () => {
                     {React.createElement(MdOutlinePolicy, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Insurance
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Insurance
                   </h2>
@@ -2403,10 +2301,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/documents"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -2416,16 +2313,14 @@ const Navbar = () => {
                       })}
                     </div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Document Pro
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Document Pro
                     </h2>
@@ -2436,26 +2331,23 @@ const Navbar = () => {
                 <NavLink
                   to={"/employee/passes"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
                   <div>{React.createElement(BsPass, { size: "20" })}</div>
 
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Passes
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Passes
                   </h2>
@@ -2465,10 +2357,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/birthday"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2477,16 +2368,14 @@ const Navbar = () => {
                   </div>
 
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Birthday
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Birthday
                   </h2>
@@ -2496,25 +2385,22 @@ const Navbar = () => {
                 <NavLink
                   to={"/employees/pantry"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
                   <div>{React.createElement(MdFastfood, { size: "20" })}</div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Pantry
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Pantry
                   </h2>
@@ -2524,10 +2410,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/employee/field-sense-meeting"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2535,16 +2420,14 @@ const Navbar = () => {
                     {React.createElement(RiUserLocationFill, { size: "20" })}
                   </div>
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Field Sense
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Field Sense
                   </h2>
@@ -2554,26 +2437,23 @@ const Navbar = () => {
                 <NavLink
                   to={"/employees/transportation"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
                   <div>{React.createElement(FaCar, { size: "20" })}</div>
 
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Transportation
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Transportation
                   </h2>
@@ -2584,10 +2464,9 @@ const Navbar = () => {
                 <NavLink
                   to={"/employees/parking"}
                   className={({ isActive }) =>
-                    ` ${
-                      isActive
-                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                    ` ${isActive
+                      ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                      : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                     }`
                   }
                 >
@@ -2596,16 +2475,14 @@ const Navbar = () => {
                   </div>
 
                   <h2
-                    className={`whitespace-pre duration-300 ${
-                      !open && "opacity-0 translate-x-28 overflow-hidden"
-                    }`}
+                    className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                      }`}
                   >
                     Parking
                   </h2>
                   <h2
-                    className={`${
-                      open && "hidden"
-                    } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                    className={`${open && "hidden"
+                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                   >
                     Parking
                   </h2>
@@ -2647,25 +2524,22 @@ const Navbar = () => {
                   <NavLink
                     to={"/employee/bill-pay"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(RiBillLine, { size: "20" })}</div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Bill Pay
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Bill Pay
                     </h2>
@@ -2675,10 +2549,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/personal-finance"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -2687,16 +2560,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Personal Financial
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Personal Financial
                     </h2>
@@ -2707,10 +2578,9 @@ const Navbar = () => {
                     <NavLink
                       to={"/employee/advance-salary"}
                       className={({ isActive }) =>
-                        ` ${
-                          isActive
-                            ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                            : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                        ` ${isActive
+                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                         }`
                       }
                     >
@@ -2718,16 +2588,14 @@ const Navbar = () => {
                         {React.createElement(FcMoneyTransfer, { size: "20" })}
                       </div>
                       <h2
-                        className={`whitespace-pre duration-300 ${
-                          !open && "opacity-0 translate-x-28 overflow-hidden"
-                        }`}
+                        className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                          }`}
                       >
                         Advance Salary
                       </h2>
                       <h2
-                        className={`${
-                          open && "hidden"
-                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                        className={`${open && "hidden"
+                          } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                       >
                         Advance Salary
                       </h2>
@@ -2737,10 +2605,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/integration"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -2751,16 +2618,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Integration
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Integration
                     </h2>
@@ -2771,25 +2636,22 @@ const Navbar = () => {
                   <NavLink
                     to={"/employee/fitness"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
                     <div>{React.createElement(IoFitness, { size: "20" })}</div>
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Fitness
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Fitness
                     </h2>
@@ -2799,10 +2661,9 @@ const Navbar = () => {
                   <NavLink
                     to={"/employee-salary"}
                     className={({ isActive }) =>
-                      ` ${
-                        isActive
-                          ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                          : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                      ` ${isActive
+                        ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                        : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                       }`
                     }
                   >
@@ -2811,16 +2672,14 @@ const Navbar = () => {
                     </div>
 
                     <h2
-                      className={`whitespace-pre duration-300 ${
-                        !open && "opacity-0 translate-x-28 overflow-hidden"
-                      }`}
+                      className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                        }`}
                     >
                       Salary
                     </h2>
                     <h2
-                      className={`${
-                        open && "hidden"
-                      } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                      className={`${open && "hidden"
+                        } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >
                       Salary
                     </h2>
@@ -2834,25 +2693,22 @@ const Navbar = () => {
             <NavLink
               to={"/setup"}
               className={({ isActive }) =>
-                ` ${
-                  isActive
-                    ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                    : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                ` ${isActive
+                  ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                  : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                 }`
               }
             >
               <div>{React.createElement(RiSettings4Line, { size: "20" })}</div>
               <h2
-                className={`whitespace-pre duration-300 ${
-                  !open && "opacity-0 translate-x-28 overflow-hidden"
-                }`}
+                className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                  }`}
               >
                 Setup
               </h2>
               <h2
-                className={`${
-                  open && "hidden"
-                } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                className={`${open && "hidden"
+                  } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
               >
                 Setup
               </h2>
@@ -2863,25 +2719,22 @@ const Navbar = () => {
             <NavLink
               to={"/settings"}
               className={({ isActive }) =>
-                ` ${
-                  isActive
-                    ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
-                    : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
+                ` ${isActive
+                  ? "text-black bg-white flex p-2  gap-3.5 rounded-md group items-center text-sm font-medium"
+                  : " group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md "
                 }`
               }
             >
               <div>{React.createElement(IoMdSettings, { size: "20" })}</div>
               <h2
-                className={`whitespace-pre duration-300 ${
-                  !open && "opacity-0 translate-x-28 overflow-hidden"
-                }`}
+                className={`whitespace-pre duration-300 ${!open && "opacity-0 translate-x-28 overflow-hidden"
+                  }`}
               >
                 Settings
               </h2>
               <h2
-                className={`${
-                  open && "hidden"
-                } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
+                className={`${open && "hidden"
+                  } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
               >
                 Settings
               </h2>

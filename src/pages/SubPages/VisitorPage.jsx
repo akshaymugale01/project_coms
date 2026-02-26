@@ -25,7 +25,7 @@ import { IoClose } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa6";
 import toast from "react-hot-toast";
 import { data } from "autoprefixer";
-// import SelfRegistration from "./SelfRegistration";
+import SelfRegistration from "./SelfRegistration";
 
 const VisitorPage = () => {
   const [page, setPage] = useState("all");
@@ -1925,11 +1925,11 @@ const VisitorPage = () => {
                     No Visitors  found
                   </div>
                 )}
-                {/* {page === "self-registration" && (
+                {page === "self-registration" && (
             <div>
               <SelfRegistration />
             </div>
-          )} */}
+          )}
             </>
           )}
         </div>

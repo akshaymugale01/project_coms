@@ -1969,10 +1969,11 @@ export const getFilterUsers = async (id) =>
   });
 
 
-export const getSelfRegistration = async () => 
+export const getSelfRegistration = async (token, search = "") => 
   axiosInstance.get(`/visitors/self_registartions.json`, {
     params: {
       token: token,
+      search: search,
     }
   })
 
@@ -3211,11 +3212,12 @@ export const getCommunicationDashboard = async () =>
     },
   });
 
-   export const getVehicleHistory = async (params) => {
+   export const getVehicleHistory = async (params,siteId) => {
   return axiosInstance.get(`/registered_vehicle_visits.json`, {
     params: {
       ...params,
       token, 
+      site_id: siteId
     },
   });
 };
@@ -3386,6 +3388,13 @@ export const getVisitorDetails = async (id) =>
       Expires: "0",
     },
   });
+export const getVisitorById = (id, siteId) => {
+  return axiosInstance.get(`/visitors/${id}?site_id=${siteId}.json`, {
+    params: {
+      token: token,
+    },
+  });
+};
 
 export const getExportVisitors = async (
   startDate = null,
