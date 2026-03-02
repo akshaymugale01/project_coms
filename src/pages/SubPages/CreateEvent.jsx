@@ -35,7 +35,7 @@ const CreateEvent = () => {
   const [ownership, setOwnership] = useState([]);
   const [selectedOwnership, setSelectedOwnership] = useState("");
   const [selectedFloor, setselectedFloor] = useState("");
-  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [selectedUnits, setSelectedUnits] = useState([]);
   const [users, setUsers] = useState([]);
   // const [selectedUnits, setSelectedUnits] = useState([]);
   const [members, setMembers] = useState([]);
@@ -86,6 +86,7 @@ const CreateEvent = () => {
         }));
 
         setMembers(employeesList);
+        setFilteredMembers(employeesList);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -94,28 +95,15 @@ const CreateEvent = () => {
   }, []);
 
   const handleFilter = () => {
-    console.log(
-      "Selected Building ID:",
-      selectedUnit,
-      "Selected Ownership:",
-      selectedOwnership,
-    );
-    console.log("Members Before Filtering:", members);
-
     const filtered = members.filter((member) => {
-      // Check if the user belongs to the selected building
       const buildingMatch =
-        !selectedUnit ||
-        Number(member.building_id ?? member.building?.id) ===
-          Number(selectedUnit);
+        selectedUnits.length === 0 ||
+        selectedUnits.some(
+          (unit) =>
+            Number(member.building_id ?? member.building?.id) ===
+            Number(unit.value),
+        );
 
-      console.log(
-        "building_id type:",
-        typeof member.building_id,
-        member.building_id,
-      );
-
-      // Check if any of the user's sites match the selected ownership
       const ownershipMatch =
         !selectedOwnership ||
         member.userSites.some(
@@ -123,19 +111,9 @@ const CreateEvent = () => {
             site.ownership?.toLowerCase() === selectedOwnership.toLowerCase(),
         );
 
-      console.log(
-        "User:",
-        member.name,
-        "Building Match:",
-        buildingMatch,
-        "Ownership Match:",
-        ownershipMatch,
-      );
-
       return buildingMatch && ownershipMatch;
     });
 
-    console.log("Filtered Members:", filtered);
     setFilteredMembers(filtered);
     toast.success("Filter applied");
   };
@@ -227,17 +205,17 @@ const CreateEvent = () => {
     fetchUsers();
   }, [share]);
 
-  useEffect(() => {
-    const filtered = members.filter((user) =>
-      user.userSites.some(
-        (site) =>
-          (!selectedUnit || site.unit_id === selectedUnit) &&
-          (!ownership || site.ownership === ownership),
-      ),
-    );
+  // useEffect(() => {
+  //   const filtered = members.filter((user) =>
+  //     user.userSites.some(
+  //       (site) =>
+  //         (!selectedUnit || site.unit_id === selectedUnit) &&
+  //         (!ownership || site.ownership === ownership),
+  //     ),
+  //   );
 
-    setFilteredMembers(filtered);
-  }, [selectedUnit, ownership, members]);
+  //   setFilteredMembers(filtered);
+  // }, [selectedUnit, ownership, members]);
 
   const fetchGroups = async () => {
     try {
@@ -320,11 +298,11 @@ const CreateEvent = () => {
       //   formDataSend.append("event[user_ids]", user_id);
       // });
 
- if (formData.event_images && formData.event_images.length > 0) {
-  formData.event_images.forEach((file) => {
-    formDataSend.append("attachfiles[]", file);  // ✅ Backend mapped parameter
-  });
-}
+      if (formData.event_images && formData.event_images.length > 0) {
+        formData.event_images.forEach((file) => {
+          formDataSend.append("attachfiles[]", file); // ✅ Backend mapped parameter
+        });
+      }
 
       const response = await postEvents(formDataSend);
       toast.success("Event Created Successfully");
@@ -560,21 +538,19 @@ const CreateEvent = () => {
                     {/* First Row: Unit Select, Ownership Select, and Filter Button */}
                     <div className="flex gap-2 items-end">
                       {/* Unit Select Dropdown */}
-                      <select
-                        className="border p-3 border-gray-300 rounded-md flex-1"
-                        value={selectedUnit || ""}
-                        onChange={(e) =>
-                          setSelectedUnit(Number(e.target.value))
+                      <Select
+                        options={units.map((unit) => ({
+                          value: unit.id,
+                          label: unit.name,
+                        }))}
+                        isMulti
+                        placeholder="Select Towers"
+                        className="flex-1"
+                        value={selectedUnits}
+                        onChange={(selectedOptions) =>
+                          setSelectedUnits(selectedOptions || [])
                         }
-                      >
-                        <option value="">Select Tower</option>
-                        {units.map((unit) => (
-                          <option key={unit.id} value={unit.id}>
-                            {unit.name}
-                          </option>
-                        ))}
-                      </select>
-
+                      />
                       {/* Ownership Select Dropdown */}
                       <select
                         className="border p-3 border-gray-300 rounded-md flex-1"

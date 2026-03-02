@@ -2673,7 +2673,7 @@ export const getReceiptInvoiceCamDownload = async (ids) =>
   axiosInstance.get(`/invoice_receipts/export.xlsx?`, {
     responseType: "blob",
     params: {
-      ids: `[${ids}]`, // Adding square brackets around ids
+      ids: `[${ids}]`, 
     },
   });
 
