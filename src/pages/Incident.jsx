@@ -33,10 +33,20 @@ const Incidents = () => {
     { name: "ID", selector: (row) => row.id, sortable: true },
     { name: "Building", selector: (row) => row.building_name, sortable: true },
     {
-      name: "Incident Time",
-      selector: (row) => dateFormatSTD(row.time_and_date),
-      sortable: true,
-    },
+  name: "Incident Time",
+  selector: (row) =>
+    row.time_and_date
+      ? new Date(row.time_and_date).toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : "-",
+  sortable: true,
+},
     { name: "Level", selector: (row) => row.incident_level, sortable: true },
     {
       name: "Category",

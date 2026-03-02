@@ -4,6 +4,7 @@ import Navbar from "../../components/Navbar";
 import { useSelector } from "react-redux";
 import DatePicker from "react-datepicker";
 import {
+  domainPrefix,
   getIncidentCatDetails,
   getIncidentDetails,
   getIncidentSubTags,
@@ -24,7 +25,9 @@ const EditIncident = () => {
   const [secondaryCat, setSecondaryCat] = useState([]);
   const [incidentLevel, setIncidentLevel] = useState([]);
   const [incidentDamage, setIncidentDamage] = useState([]);
+  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState([]);
   const [rca, setRCA] = useState([]);
+  const [existingAttachments, setExistingAttachments] = useState([]);
   const [investigation, setInvestigation] = useState([
     { name1: "", mobile1: "", designation: "" },
   ]);
@@ -237,7 +240,7 @@ const EditIncident = () => {
       try {
         const res = await getIncidentSubTags(
           "IncidentSubSubCategory",
-          CategoryId
+          CategoryId,
         );
         setSubSubPrimaryCat(res.data);
       } catch (error) {
@@ -264,7 +267,7 @@ const EditIncident = () => {
       try {
         const res = await getIncidentSubTags(
           "IncidentSecondarySubCategory",
-          CategoryId
+          CategoryId,
         );
         setSecondarySubCat(res.data);
         return res.data;
@@ -281,12 +284,12 @@ const EditIncident = () => {
         console.log(error);
       }
     };
-    
+
     const fetchSecondarySubSubCategory = async (CategoryId) => {
       try {
         const res = await getIncidentSubTags(
           "IncidentSecondarySubSubCategory",
-          CategoryId
+          CategoryId,
         );
         setSecondarySubSubCat(res.data);
       } catch (error) {
@@ -303,87 +306,137 @@ const EditIncident = () => {
       }
     };
 
-    const fetchIncidentDetails = async () => {
-      try {
-        const primaryCategoryResp = await fetchIncidentsCategory();
-        const secondaryCategoryResp = await fetchIncidentsSecondaryCategory();
-        await fetchIncidentsLevel();
-        await fetchIncidentDamage();
-        await fetchIncidentRCA();
-        fetchIncidentStatuses();
-        await selectIncidentStatuses()
-       
-        const res = await getIncidentDetails(id);
-        const data = res.data;
+  const fetchIncidentDetails = async () => {
+  try {
+    const primaryCategoryResp = await fetchIncidentsCategory();
+    const secondaryCategoryResp = await fetchIncidentsSecondaryCategory();
+    await fetchIncidentsLevel();
+    await fetchIncidentDamage();
+    await fetchIncidentRCA();
+    await fetchIncidentStatuses();
 
-        setFormData({
-          ...formData,
-          date_time: data.time_and_date ? new Date(data.time_and_date) : null,
-          buildingId: data.building_id,
-          primaryCategory: data.primary_incident_category,
-          primarySubCategory: data.primary_incident_sub_category,
-          primarySubSubCategory: data.primary_incident_sub_sub_category,
-          secondaryCategory: data.secondary_incident_category,
-          secondarySubCategory: data.secondary_incident_sub_category,
-          secondarySubSubCategory: data.secondary_incident_sub_sub_category,
-          severity: data.severity,
-          level: data.incident_level,
-          probability: data.probability,
-          description: data.description,
-          supportRequired: data.support_required,
-          factsStated: data.read_facts_states,
-          attachment: data.attachment,
-          read_fact_state: data.read_fact_state,
-          insuranceCovered: data.insurance_covered,
-          IncidentRCACategory: data.IncidentRCACategory,
-          buildingStatus: data.status
-        });
+    const res = await getIncidentDetails(id);
+    const data = res.data;
 
-        console.log("Response Data: ", data);
-        console.log("primaryCategoryResp", primaryCategoryResp);
-        const primaryCategoryId = primaryCategoryResp.filter(
-          (cat) => cat.name === data.primary_incident_category
-        )[0].id;
-        console.log("primaryCategoryId", primaryCategoryId);
+    console.log("EDIT DATA:", data);
 
-        await fetchCategoryName(primaryCategoryId);
-        const primarySubCategoryResp = await fetchSubCategory(
-          primaryCategoryId
-        );
+    /* ---------------- ATTACHMENTS ---------------- */
+    setExistingAttachments(data.attachments || []);
 
-        console.log("primarySubCategoryResp", primarySubCategoryResp);
-        const primarySubCategoryId = primarySubCategoryResp.filter(
-          (cat) => cat.name === data.primary_incident_sub_category
-        )[0].id;
+    /* ---------------- WITNESSES ---------------- */
+    if (data.witnesses?.length > 0) {
+      setIncident(
+        data.witnesses.map((w) => ({
+          name: w.name || "",
+          mobile: w.mobile || "",
+        }))
+      );
+    }
 
-        fetchSubCategoryName(primarySubCategoryId);
-        fetchSubSubCategory(primarySubCategoryId);
+    /* ---------------- INVESTIGATION TEAM ---------------- */
+    if (data.investigation_teams?.length > 0) {
+      setInvestigation(
+        data.investigation_teams.map((team) => ({
+          name1: team.name || "",
+          mobile1: team.mobile || "",
+          designation: team.designation || "",
+        }))
+      );
+    }
 
-        console.log("secondaryCategoryResp", secondaryCategoryResp);
-        const secondaryCategoryId = secondaryCategoryResp.filter(
-          (cat) => cat.name === data.secondary_incident_category
-        )[0].id;
-        console.log("secondaryCategoryId", secondaryCategoryId);
+    /* ---------------- COST ---------------- */
+    if (data.cost_of_incident) {
+      setCosts({
+        equipmentCost:
+          data.cost_of_incident.equipment_property_cost || "",
+        productionLoss:
+          data.cost_of_incident.production_loss || "",
+        treatmentCost:
+          data.cost_of_incident.treatment_cost || "",
+        absenteeismCost:
+          data.cost_of_incident.absenteeism_cost || "",
+        otherCost:
+          data.cost_of_incident.other_cost || "",
+        totalCost:
+          data.cost_of_incident.total_cost?.toFixed(2) || "0.00",
+      });
+    }
 
-        await fetchSecCategoryName(secondaryCategoryId);
-        const secondarySubCategoryResp = await fetchSecondarySubCategory(
-          secondaryCategoryId
-        );
-        console.log("secondarySubCategoryResp", secondarySubCategoryResp);
-        const secondarySubCategoryId = secondarySubCategoryResp.filter(
-          (subCat) => subCat.name === data.secondary_incident_sub_category
-        )[0].id;
-        console.log("secondarySubCategoryId", secondarySubCategoryId);
-        fetchSecSubCategoryName(secondarySubCategoryId);
-        fetchSecondarySubSubCategory(secondarySubCategoryId);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        console.log("FORM DATA", formData);
-      }
-    };
+    /* ---------------- MAIN FORM DATA ---------------- */
+    setFormData((prev) => ({
+      ...prev,
+      date_time: data.time_and_date
+        ? new Date(data.time_and_date)
+        : null,
 
-    
+      buildingId: data.building_id || "",
+
+      primaryCategory: data.primary_incident_category || "",
+      primarySubCategory: data.primary_incident_sub_category || "",
+
+      secondaryCategory: data.secondary_incident_category || "",
+      secondarySubCategory: data.secondary_incident_sub_category || "",
+
+      severity:
+        data.incident_severity === "undefined"
+          ? ""
+          : data.incident_severity || "",
+
+      level: data.incident_level || "",
+      probability: data.probability || "",
+      description: data.description || "",
+
+      supportRequired: !!data.support_required,
+      read_fact_state: !!data.read_fact_state,
+
+      propertyDamage: !!data.property_damage,
+      damage_category: data.property_damage_category || "",
+
+      insuranceCovered:
+        !!data.damage_coverd_under_insurance,
+
+      insured_by: data.insured_by || "",
+
+      first_aid_provided_employee:
+        !!data.first_aid_provided_employee,
+
+      sent_medical_treatment:
+        !!data.sent_medical_treatment,
+
+      first_aid_attendant:
+        data.first_aid_attendant || "",
+
+      treatment_facility:
+        data.treatment_facility || "",
+
+      attending_physician:
+        data.attending_physician || "",
+
+      preventiveAction:
+        data.preventive_action || "",
+
+      correctiveAction:
+        data.corrective_action || "",
+
+      primaryRootCauseCategory:
+        data.primary_root_cause_category || "",
+
+      Rca: data.rca || "",
+
+      buildingStatus:
+        data.status === "null"
+          ? ""
+          : data.status || "",
+    }));
+
+    /* Sync checkbox states */
+    setCheckbutton(data.first_aid_provided_employee);
+    setMedical(data.sent_medical_treatment);
+
+  } catch (error) {
+    console.log("FETCH ERROR:", error);
+  }
+};
 
     fetchIncidentDetails();
   }, []);
@@ -419,7 +472,7 @@ const EditIncident = () => {
       try {
         const res = await getIncidentSubTags(
           "IncidentSubSubCategory",
-          CategoryId
+          CategoryId,
         );
         setSubSubPrimaryCat(res.data);
       } catch (error) {
@@ -429,9 +482,12 @@ const EditIncident = () => {
     if (e.target.name === "buildingStatus") {
       setFormData({ ...formData, buildingStatus: e.target.value });
     }
-    if (e.target.name === "propertyDamage") {
-      setFormData({ ...formData, propertyDamage: e.target.value });
-    }
+   if (e.target.name === "propertyDamage") {
+  setFormData({
+    ...formData,
+    propertyDamage: e.target.value === "true",
+  });
+}
     if (e.target.type === "select-one" && e.target.name === "primaryCategory") {
       const selectedOptionId = e.target.selectedOptions[0].id;
       const catValue = e.target.selectedOptions[0].text;
@@ -481,7 +537,7 @@ const EditIncident = () => {
       try {
         const res = await getIncidentSubTags(
           "IncidentSecondarySubCategory",
-          CategoryId
+          CategoryId,
         );
         setSecondarySubCat(res.data);
       } catch (error) {
@@ -492,7 +548,7 @@ const EditIncident = () => {
       try {
         const res = await getIncidentSubTags(
           "IncidentSecondarySubSubCategory",
-          CategoryId
+          CategoryId,
         );
         setSecondarySubSubCat(res.data);
       } catch (error) {
@@ -551,11 +607,11 @@ const EditIncident = () => {
     sendData.append("incident[insured_by_id]", userId);
     sendData.append(
       "incident[primary_incident_category]",
-      formData.primaryCategory
+      formData.primaryCategory,
     );
     sendData.append(
       "incident[primary_incident_sub_category]",
-      formData.primarySubCategory
+      formData.primarySubCategory,
     );
     // sendData.append(
     //   "incident[primary_incident_sub_sub_category]",
@@ -564,12 +620,12 @@ const EditIncident = () => {
 
     sendData.append(
       "incident[secondary_incident_category]",
-      formData.secondaryCategory
+      formData.secondaryCategory,
     );
 
     sendData.append(
       "incident[secondary_incident_sub_category]",
-      formData.secondarySubCategory
+      formData.secondarySubCategory,
     );
     // sendData.append(
     //   "incident[secondary_incident_sub_sub_category]",
@@ -578,97 +634,103 @@ const EditIncident = () => {
     sendData.append("incident[support_required]", formData.supportRequired);
     sendData.append(
       "incident[first_aid_provided_employee]",
-      formData.first_aid_provided_employee
+      formData.first_aid_provided_employee,
     );
     sendData.append("incident[read_fact_state]", formData.read_fact_state);
 
     sendData.append("incident[insured_by]", formData.insured_by);
     sendData.append(
       "incident[property_damage_category]",
-      formData.damage_category
+      formData.damage_category,
     );
 
     sendData.append(
       "incident[damage_coverd_under_insurance]",
-      formData.insuranceCovered
+      formData.insuranceCovered,
     );
 
     sendData.append(
       "incident[first_aid_attendant]",
-      formData.first_aid_attendant
+      formData.first_aid_attendant,
     );
     console.log(formData);
     console.log(costs);
     sendData.append(
       "incident[cost_of_incident_attributes][equipment_property_cost]",
-      costs.equipmentCost
+      costs.equipmentCost,
     );
     sendData.append(
       "incident[cost_of_incident_attributes][production_loss]",
-      costs.productionLoss
+      costs.productionLoss,
     );
     sendData.append(
       "incident[cost_of_incident_attributes][treatment_cost]",
-      costs.treatmentCost
+      costs.treatmentCost,
     );
     sendData.append(
       "incident[cost_of_incident_attributes][absenteeism_cost]",
-      costs.absenteeismCost
+      costs.absenteeismCost,
     );
     sendData.append(
       "incident[cost_of_incident_attributes][other_cost]",
-      costs.otherCost
+      costs.otherCost,
     );
     sendData.append(
       "incident[cost_of_incident_attributes][total_cost]",
-      costs.totalCost
+      costs.totalCost,
     );
     sendData.append("incident[status]", formData.buildingStatus);
 
     incident.forEach((incident1, index) => {
       sendData.append(
         `incident[witnesses_attributes][${index}][name]`,
-        incident1.name
+        incident1.name,
       );
       sendData.append(
         `incident[witnesses_attributes][${index}][mobile]`,
-        incident1.mobile
+        incident1.mobile,
       );
     });
 
     investigation.forEach((team, index) => {
       sendData.append(
         `incident[investigation_teams_attributes][${index}][name]`,
-        team.name1
+        team.name1,
       );
       sendData.append(
         `incident[investigation_teams_attributes][${index}][mobile]`,
-        team.mobile1
+        team.mobile1,
       );
       sendData.append(
         `incident[investigation_teams_attributes][${index}][designation]`,
-        team.designation
+        team.designation,
       );
     });
 
     sendData.append(
       "incident[attending_physician]",
-      formData.attending_physician
+      formData.attending_physician,
     );
     sendData.append("incident[preventive_action]", formData.preventiveAction);
     sendData.append("incident[corrective_action]", formData.correctiveAction);
     sendData.append(
       "incident[primary_root_cause_category]",
-      formData.primaryRootCauseCategory
+      formData.primaryRootCauseCategory,
     );
 
     sendData.append(
       "incident[treatment_facility]",
-      formData.treatment_facility
+      formData.treatment_facility,
     );
     sendData.append("incident[incident_severity]", formData.severity);
-    sendData.append("incident[sent_medical_treatment]", formData.sent_medical_treatment);
-    sendData.append("incident[first_aid_attendant]", formData.first_aid_attendant);
+    sendData.append(
+      "incident[sent_medical_treatment]",
+      formData.sent_medical_treatment,
+    );
+    sendData.append(
+      "incident[first_aid_attendant]",
+      formData.first_aid_attendant,
+    );
 
     sendData.append("incident[rca]", formData.Rca);
     sendData.append("incident[property_damage]", formData.propertyDamage);
@@ -678,8 +740,17 @@ const EditIncident = () => {
     sendData.append("incident[description]", formData.description);
     sendData.append("incident[created_by_id]", userId);
 
-    if (formData.attachment && Array.isArray(formData.attachment)) {
-      formData.attachment.forEach((file, index) => {
+    deletedAttachmentIds.forEach((id, index) => {
+      sendData.append(`incident[attachments_attributes][${index}][id]`, id);
+      sendData.append(
+        `incident[attachments_attributes][${index}][_destroy]`,
+        true,
+      );
+    });
+
+    // ADD new attachments
+    if (formData.attachments && Array.isArray(formData.attachments)) {
+      formData.attachments.forEach((file, index) => {
         sendData.append(`incident[attachments_attributes][][file]`, file);
       });
     }
@@ -690,7 +761,7 @@ const EditIncident = () => {
         )
       ) {
         toast.error(
-          "Please check the support required and read fact state checkboxes before saving."
+          "Please check the support required and read fact state checkboxes before saving.",
         );
         return;
       } else {
@@ -712,9 +783,7 @@ const EditIncident = () => {
       </div>
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <div className="border pb-2 flex flex-col my-2 md:mx-20 px-4  gap-4 rounded-md border-gray-400">
-          <h2
-            className="text-center text-lg my-2 font-semibold p-2 rounded-md text-white bg-gray-950"
-          >
+          <h2 className="text-center text-lg my-2 font-semibold p-2 rounded-md text-white bg-gray-950">
             Edit Incidents
           </h2>
           <h2 className="text-lg border-black border-b font-semibold">
@@ -967,8 +1036,8 @@ const EditIncident = () => {
                   onChange={handleChangeIncident}
                 >
                   <option value="">Select</option>
-                  <option value={true}>Yes</option>
-                  <option value={false}>No</option>
+                <option value="true">Yes</option>
+<option value="false">No</option>
                 </select>
               </div>
               {formData.propertyDamage && (
@@ -1169,7 +1238,16 @@ const EditIncident = () => {
                       placeholder="Enter Mobile"
                       className="border p-1 px-4 border-gray-500 rounded-md"
                       value={incident1.mobile}
-                      onChange={(event) => handleWitness(index, event)}
+                      inputMode="numeric"
+                      maxLength={10}
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/\D/g, ""); // allow only digits
+                        if (value.length <= 10) {
+                          handleWitness(index, {
+                            target: { name: "mobile", value },
+                          });
+                        }
+                      }}
                     />
                   </div>
                   <div className="flex items-end">
@@ -1299,17 +1377,16 @@ const EditIncident = () => {
                 Was First Aid provided by Employees ?{" "}
               </label>
               <input
-                type="checkbox"
-                name=""
-                id="meterApplicable"
-                onClick={() => {
-                  setCheckbutton(!checkbutton);
-                  setFormData({
-                    ...formData,
-                    first_aid_provided_employee: true,
-                  });
-                }}
-              />
+  type="checkbox"
+  checked={formData.first_aid_provided_employee}
+  onChange={(e) => {
+    setCheckbutton(e.target.checked);
+    setFormData({
+      ...formData,
+      first_aid_provided_employee: e.target.checked,
+    });
+  }}
+/>
             </div>
             {checkbutton && (
               <div className="flex flex-col">
@@ -1425,13 +1502,20 @@ const EditIncident = () => {
                     </label>
                     <input
                       type="text"
+                      name="mobile1"
                       placeholder="Enter Mobile"
                       className="border p-1 px-4 border-gray-500 rounded-md"
                       value={team.mobile1}
-                      onChange={(event) =>
-                        handleInvestigationTeamChange(index, event)
-                      }
-                      name="mobile1"
+                      inputMode="numeric"
+                      maxLength={10}
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/\D/g, "");
+                        if (value.length <= 10) {
+                          handleInvestigationTeamChange(index, {
+                            target: { name: "mobile1", value },
+                          });
+                        }
+                      }}
                     />
                   </div>
                   <div className="flex flex-col">
@@ -1510,15 +1594,47 @@ const EditIncident = () => {
           <h2 className=" text-lg border-black border-b font-semibold ">
             ATTACHMENTS
           </h2>
+
+          {/* Existing Images */}
+          {existingAttachments.length > 0 && (
+            <div className="grid md:grid-cols-3 gap-4">
+              {existingAttachments.map((file) => (
+                <div key={file.id} className="relative border p-2 rounded-md">
+                  <img
+                    src={`${domainPrefix}${file.file_url}`}
+                    alt="attachment"
+                    onError={(e) => (e.target.style.display = "none")}
+                    className="w-full h-40 object-cover rounded-md"
+                  />
+
+                  {/* Optional Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeletedAttachmentIds((prev) => [...prev, file.id]);
+
+                      setExistingAttachments(
+                        existingAttachments.filter((f) => f.id !== file.id),
+                      );
+                    }}
+                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
+                  >
+                    <FaTrash size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Upload New Files */}
           <input
-            required
             type="file"
             multiple
             name="attachment"
             onChange={(e) =>
               setFormData({
                 ...formData,
-                attachment: Array.from(e.target.files),
+                attachments: Array.from(e.target.files),
               })
             }
           />
