@@ -65,9 +65,9 @@ const Incidents = () => {
   }, [search]);
 
   /* -------------------- Fetch API -------------------- */
-  const fetchIncidents = async (pageNo = 1, searchValue = "") => {
+const fetchIncidents = async () => {
     try {
-      const res = await getIncidents(pageNo, searchValue);
+      const res = await getIncidents(page, debouncedSearch);
 
       setIncidents(res.data?.incidents || []);
       setTotalRecords(res.data?.total_count || 0);
@@ -77,14 +77,14 @@ const Incidents = () => {
   };
 
   useEffect(() => {
-    fetchIncidents(page, debouncedSearch);
+    fetchIncidents();
   }, [page, debouncedSearch]);
 
+  /* -------------------- Search Handler -------------------- */
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
-    setPage(1); 
+    setPage(1); // Reset page when searching
   };
-
   return (
     <section className="flex">
       <Navbar />
@@ -92,7 +92,7 @@ const Incidents = () => {
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <h2 className="text-lg font-semibold my-5">INCIDENTS LIST</h2>
 
-        <div className="flex flex-col sm:flex-row md:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row md:justify-between gap-3 px-3">
             <input
             type="text"
             placeholder="Search incidents by using  Building, Category, etc."
@@ -100,7 +100,7 @@ const Incidents = () => {
             onChange={handleSearchChange}
             className="border p-2 border-gray-300 rounded-lg 
                        focus:outline-none focus:ring-2 focus:ring-gray-300 
-                       w-full md:w-[400px]"
+                       w-full md:w-[900px] px-5"
           />
           <Link
             to="/admin/add-incidents"
