@@ -22,16 +22,22 @@ function SelfRegistration() {
 
   console.log("records", records);
 
-const fetchSelfRegistrations = async (searchValue = "") => {
+ const fetchSelfRegistrations = async (searchValue = "") => {
     try {
       const response = await getSelfRegistration(token, searchValue);
+
       const selfRegistration = response?.data?.data || [];
-      const selfRegistration1 = response?.data?.visitors || [];
-      setRecords([...selfRegistration, ...selfRegistration1]);
+      const visitors = response?.data?.visitors || [];
+
+      // Merge both safely
+      const mergedData = [...selfRegistration, ...visitors];
+
+      setRecords(mergedData);
     } catch (error) {
       console.log("Failed To fetch records:", error);
     }
   };
+
 
   // ✅ Initial Load
   useEffect(() => {
@@ -97,16 +103,23 @@ const fetchSelfRegistrations = async (searchValue = "") => {
       selector: (row) => row.coming_from || "-",
       sortable: true,
     },
-    {
+   {
       name: "Expected Date",
-      selector: (row) => row.expected_date || "-",
+      selector: (row) =>
+        row.expected_date
+          ? new Date(row.expected_date).toLocaleDateString()
+          : "-",  
       sortable: true,
     },
     {
       name: "Expected Time",
-      selector: (row) => row.expected_time || "-",
+      selector: (row) =>
+        row.expected_time
+          ? row.expected_time.slice(0, 5)  
+          : "-", 
       sortable: true,
     },
+
   ];
 
 
