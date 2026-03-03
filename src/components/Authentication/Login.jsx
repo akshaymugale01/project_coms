@@ -253,8 +253,8 @@ const Login = () => {
             />
           </h1>
         </div>
-        <div className=" flex justify-center  h-[90vh] items-center">
-          <div className="bg-white border-2 border-white w-[30rem] rounded-xl max-h-full p-5 shadow-2xl">
+        <div className=" flex justify-center  h-[85vh] items-center">
+          <div className="bg-white border-2 border-white w-[28rem] rounded-xl max-h-full p-5 shadow-2xl mb-10">
             <h1 className="text-2xl font-semibold text-center">Login</h1>
             <form onSubmit={onSubmit} className="m-2 flex flex-col gap-4 w-full ">
               <div className="flex flex-col gap-2 mx-5">
