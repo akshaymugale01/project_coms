@@ -18,6 +18,7 @@ import {
 import toast from "react-hot-toast";
 import VehicleParkingSetup from "./VehicleParkingSetupModal/VehicleParkingSetup";
 import { domainPrefix } from "../../api";
+import { getItemInLocalStorage } from "../../utils/localStorage";
 
 function VisitorSetup() {
   const themeColor = useSelector((state) => state.theme.color);
@@ -30,6 +31,9 @@ function VisitorSetup() {
   const [editVisitorSetupModal, setEditVisitorSetupModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [added, setAdded] = useState(false);
+  const token = getItemInLocalStorage("TOKEN");
+const siteId = getItemInLocalStorage("SITEID");
+
 
   /* ================= FETCH DATA ================= */
 
@@ -48,11 +52,11 @@ function VisitorSetup() {
       }
 
       if (page === "visitorCategories") {
-        res = await getVisitorCategories(1, 1000);
+        res = await getVisitorCategories(1, 1000,siteId,token);
         data = res?.data?.visitor_categories || res?.data || [];
       }
       if (page === "visitorSubCategories") {
-        res = await getVisitorSubCategories(1, 1000);
+        res = await getVisitorSubCategories(1, 1000,siteId,token);
 
         data =
           res?.data?.visitor_sub_categories ||
@@ -60,7 +64,7 @@ function VisitorSetup() {
           res?.data ||
           [];
 
-        const catRes = await getVisitorCategories(1, 1000);
+        const catRes = await getVisitorCategories(1, 1000,siteId,token);
         const categoryList =
           catRes?.data?.visitor_categories || catRes?.data || [];
 
@@ -80,7 +84,6 @@ function VisitorSetup() {
     }
   }, [page, added]);
 
-  /* ================= DELETE ================= */
 
   const handleDelete = async (id) => {
     try {

@@ -1840,9 +1840,9 @@ function App() {
           <Route
             path="/assets/add-asset"
             element={
-              // <ProtectedAdminRoutes>
+              <ProtectedAdminRoutes>
               <AddAsset />
-              // </ProtectedAdminRoutes>
+              </ProtectedAdminRoutes>
             }
           />
           <Route

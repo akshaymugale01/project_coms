@@ -2010,7 +2010,13 @@ const AddAsset = () => {
               />
             </div>
           </div>
-          <div className="sm:flex justify-center grid gap-2 my-5 ">
+          <div className="sm:flex justify-end grid gap-3 my-5 ">
+            <button
+            className="bg-gray-300 text-gray-900 px-4 rounded-md p-2 font-medium"
+            onClick={()=>navigate("/assets/meter")}
+            >
+               Cancel
+            </button>
             <button
               className="bg-black text-white p-2 px-4 rounded-md font-medium"
               onClick={handleSubmit}
