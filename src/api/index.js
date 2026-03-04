@@ -1088,10 +1088,12 @@ export const getMasterChecklist = async () =>
       token: token,
     },
   });
-export const exportChecklist = async () =>
+export const exportChecklist = async (start_date, end_date) =>
   axiosInstance.get("/export_checklist.xlsx", {
     params: {
       token: token,
+      start_date: start_date,
+      end_date: end_date,
     },
     responseType: "blob",
   });
@@ -3507,7 +3509,7 @@ export const deleteVisitorCategory = async (id) =>
   });
 
 // Visitor Categories API
-export const getVisitorCategories = async (page = 1, perpage = 10, siteId) =>
+export const getVisitorCategories = async (page = 1, perpage = 10, siteId, token) =>
   axiosInstance.get("/visitor_categories.json", {
     params: {
       token: token,
@@ -3517,14 +3519,14 @@ export const getVisitorCategories = async (page = 1, perpage = 10, siteId) =>
     },
   });
 
-export const postVisitorCategory = async (formData, token) =>
+export const postVisitorCategory = async (formData, token, siteId) =>
   axiosInstance.post(
     "/visitor_categories.json",
     formData,
     {
-      params: { token },
+      // params: { token, siteId },
       headers: {
-        "Content-Type": "multipart/form-data",
+Authorization: `Bearer ${token}`,
       },
     }
   );

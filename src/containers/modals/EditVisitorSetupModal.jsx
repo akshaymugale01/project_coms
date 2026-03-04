@@ -9,6 +9,7 @@ import {
 } from "../../api";
 import { useSelector } from "react-redux";
 import { domainPrefix } from "../../api";
+import { getItemInLocalStorage } from "../../utils/localStorage";
 
 const EditVisitorSetupModal = ({ onclose, item, setAdded, page }) => {
   const [name, setName] = useState("");
@@ -18,6 +19,7 @@ const EditVisitorSetupModal = ({ onclose, item, setAdded, page }) => {
   const [parentCategoryId, setParentCategoryId] = useState("");
   const [visitorCategories, setVisitorCategories] = useState([]);
   const themeColor = useSelector((state) => state.theme.color);
+  const token = getItemInLocalStorage("TOKEN");
 
   /* ================= PREFILL ================= */
 
@@ -43,11 +45,15 @@ const EditVisitorSetupModal = ({ onclose, item, setAdded, page }) => {
 
     // Prefill icon preview
     if (page === "visitorCategories" && item.icon) {
-      setIconPreview(`${domainPrefix}${item.icon}`);
+      setIconPreview(
+        `${domainPrefix}${item.icon}?t=${new Date().getTime()}`
+      );
     }
 
     if (page === "visitorSubCategories" && item.iconv2) {
-      setIconPreview(`${domainPrefix}${item.iconv2}`);
+      setIconPreview(
+        `${domainPrefix}${item.iconv2}?t=${new Date().getTime()}`
+      );
     }
   }, [item, page]);
 
@@ -105,7 +111,7 @@ const EditVisitorSetupModal = ({ onclose, item, setAdded, page }) => {
         formData.append("visitor_category[code]", code);
 
         if (iconFile) {
-          formData.append("visitor_category[icon]", iconFile);
+          formData.append("visitor_category[icon_attributes][image]", iconFile);
         }
 
         await editVisitorCategory(item.id, formData);
@@ -130,12 +136,17 @@ const EditVisitorSetupModal = ({ onclose, item, setAdded, page }) => {
         // ✅ FIXED KEY HERE
         if (iconFile) {
           formData.append(
-            "visitor_sub_category[icon]",
+            "visitor_sub_category[iconv2_attributes][image]",
             iconFile
           );
         }
 
-        await updateVisitorSubCategory(item.id, formData);
+       await updateVisitorSubCategory(
+          item.id,
+          formData,
+          token   
+        );
+
         toast.success(
           "Visitor Sub Category updated successfully"
         );
@@ -245,32 +256,30 @@ const EditVisitorSetupModal = ({ onclose, item, setAdded, page }) => {
         {(page === "visitorCategories" ||
           page ===
             "visitorSubCategories") && (
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-gray-600 font-medium">
-              Icon
-            </label>
+          <div>
+          <label className="text-sm font-medium">Icon</label>
 
-            <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
-              {iconPreview ? (
-                <img
-                  src={iconPreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-xs text-gray-400">
-                  No Preview
-                </span>
-              )}
-            </div>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleIconChange}
-              className="text-sm"
-            />
+          <div className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
+            {iconPreview ? (
+              <img
+                src={iconPreview}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-xs text-gray-400">
+                No Preview
+              </span>
+            )}
           </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleIconChange}
+            className="text-sm mt-2"
+          />
+        </div>
         )}
 
         {/* Submit */}

@@ -26,7 +26,7 @@ const AddVisitorSetupModal = ({ onclose, setAdded, page }) => {
     const loadCategories = async () => {
       if (page === "visitorSubCategories") {
         try {
-          const res = await getVisitorCategories(1, 10, siteId);
+          const res = await getVisitorCategories(1, 10, siteId,token);
 
           const data =
             res?.data?.visitor_categories ||
@@ -53,51 +53,62 @@ const AddVisitorSetupModal = ({ onclose, setAdded, page }) => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!name.trim()) return toast.error("Please enter a name");
+ const handleSubmit = async () => {
+  if (!name.trim()) return toast.error("Please enter a name");
 
-    try {
-      if (page === "visitor") {
-        const formData = new FormData();
-        formData.append("name", name);
-        await postStaffCategory(formData);
-        toast.success("Staff Category created successfully");
-      }
-
-      if (page === "visitorCategories") {
-        if (!code) return toast.error("Please select a code type");
-        const formData = new FormData();
-        formData.append("visitor_category[name]", name);
-        formData.append("visitor_category[code]", code);
-        if (icon) formData.append("visitor_category[icon]", icon);
-        await postVisitorCategory(formData, token);
-        toast.success("Visitor Category created successfully");
-      }
-
-      if (page === "visitorSubCategories") {
-        if (!parentCategoryId)
-          return toast.error("Please select a parent category");
-
-        const formData = new FormData();
-        formData.append("visitor_sub_category[name]", name);
-        formData.append(
-          "visitor_sub_category[visitor_category_id]",
-          parentCategoryId
-        );
-        if (icon) {
-          formData.append("visitor_sub_category[iconv2]", icon);
-        }
-
-        await postVisitorSubCategory(formData);
-        toast.success("Visitor Sub Category created successfully");
-      }
-      setAdded((prev) => !prev);
-      onclose();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to create. Please try again.");
+  try {
+    if (page === "visitor") {
+      const formData = new FormData();
+      formData.append("name", name);
+      await postStaffCategory(formData);
+      toast.success("Staff Category created successfully");
     }
-  };
+
+    if (page === "visitorCategories") {
+      if (!code) return toast.error("Please select a code type");
+
+      const formData = new FormData();
+      formData.append("visitor_category[name]", name);
+      formData.append("visitor_category[code]", code);
+      formData.append("visitor_category[site_id]", siteId); // ✅ IMPORTANT FIX
+
+      if (icon) {
+        formData.append("visitor_category[icon_attributes][image]", icon);
+      }
+
+      await postVisitorCategory(formData, token, siteId); // ✅ PASS siteId
+
+      toast.success("Visitor Category created successfully");
+    }
+
+    if (page === "visitorSubCategories") {
+      if (!parentCategoryId)
+        return toast.error("Please select a parent category");
+
+      const formData = new FormData();
+      formData.append("visitor_sub_category[name]", name);
+      formData.append(
+        "visitor_sub_category[visitor_category_id]",
+        parentCategoryId
+      );
+      formData.append("visitor_sub_category[site_id]", siteId); // ✅ IMPORTANT FIX
+
+      if (icon) {
+        formData.append("visitor_sub_category[iconv2_attributes][image]", icon);
+      }
+
+      await postVisitorSubCategory(formData);
+
+      toast.success("Visitor Sub Category created successfully");
+    }
+
+    setAdded((prev) => !prev);
+    onclose();
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to create. Please try again.");
+  }
+};
 
   const getTitle = () => {
     if (page === "visitor") return "Add Staff Category";
