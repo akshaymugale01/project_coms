@@ -44,7 +44,9 @@ const CAMBills = () => {
   const [loading, setLoading] = useState(false);
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [period, setPeriod] = useState("monthly"); // monthly, quarterly, half-yearly, yearly
+  const [period, setPeriod] = useState("monthly"); // monthly, quarterly, half-yearly, yearly, custom
+  const [customFromDate, setCustomFromDate] = useState("");
+  const [customToDate, setCustomToDate] = useState("");
   const [settings, setSettings] = useState(null);
   const [unitConfigs, setUnitConfigs] = useState([]);
   const [previewRows, setPreviewRows] = useState([]);
@@ -157,22 +159,36 @@ const CAMBills = () => {
 
   // Calculate period range based on selection
   const getPeriodParams = () => {
+    if (period === "custom" && customFromDate && customToDate) {
+      const from = new Date(customFromDate);
+      const to = new Date(customToDate);
+      return {
+        startMonth: from.getMonth() + 1,
+        endMonth: to.getMonth() + 1,
+        customYear: from.getFullYear(),
+        customEndYear: to.getFullYear(),
+        isCustom: true,
+      };
+    }
+
     let startMonth = month;
     let endMonth = month;
     
     switch (period) {
-      case "quarterly":
+      case "quarterly": {
         // Q1: Jan-Mar, Q2: Apr-Jun, Q3: Jul-Sep, Q4: Oct-Dec
         const quarter = Math.ceil(month / 3);
         startMonth = (quarter - 1) * 3 + 1;
         endMonth = quarter * 3;
         break;
-      case "half-yearly":
+      }
+      case "half-yearly": {
         // H1: Jan-Jun, H2: Jul-Dec
         const half = month <= 6 ? 1 : 2;
         startMonth = half === 1 ? 1 : 7;
         endMonth = half === 1 ? 6 : 12;
         break;
+      }
       case "yearly":
         startMonth = 1;
         endMonth = 12;
@@ -182,10 +198,13 @@ const CAMBills = () => {
         endMonth = month;
     }
     
-    return { startMonth, endMonth };
+    return { startMonth, endMonth, isCustom: false };
   };
 
   const getPeriodDateRange = () => {
+    if (period === "custom" && customFromDate && customToDate) {
+      return { from_date: customFromDate, to_date: customToDate };
+    }
     const { startMonth, endMonth } = getPeriodParams();
     const from = new Date(year, startMonth - 1, 1);
     const to = new Date(year, endMonth, 0);
@@ -198,6 +217,14 @@ const CAMBills = () => {
   };
 
   const periodLabel = useMemo(() => {
+    if (period === "custom" && customFromDate && customToDate) {
+      const fmtDate = (d) => {
+        const dt = new Date(d);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${dt.getDate()} ${monthNames[dt.getMonth()]} ${dt.getFullYear()}`;
+      };
+      return `${fmtDate(customFromDate)} - ${fmtDate(customToDate)}`;
+    }
     const { startMonth, endMonth } = getPeriodParams();
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
@@ -205,7 +232,7 @@ const CAMBills = () => {
       return `${monthNames[startMonth - 1]} ${year}`;
     }
     return `${monthNames[startMonth - 1]} - ${monthNames[endMonth - 1]} ${year}`;
-  }, [period, month, year]);
+  }, [period, month, year, customFromDate, customToDate]);
 
   const loadSettingsAndUnits = async () => {
     try {
@@ -231,7 +258,9 @@ const CAMBills = () => {
 
   const loadPersistedBills = async () => {
     try {
-      const params = { year, month };
+      const { startMonth, endMonth, isCustom, customYear } = getPeriodParams();
+      const effectiveYear = isCustom ? customYear : year;
+      const params = { year: effectiveYear, month: startMonth };
       if (siteId) params.site_id = siteId;
       const res = await getCamBills(params);
       const rows = res?.data?.data || res?.data || [];
@@ -241,9 +270,8 @@ const CAMBills = () => {
       let unitNameMap = {};
       if (siteId) {
         try {
-          const { startMonth, endMonth } = getPeriodParams();
           const allocRes = await calculateExpenseAllocation({
-            year,
+            year: effectiveYear,
             month: startMonth,
             end_month: endMonth,
             site_id: siteId,
@@ -273,13 +301,14 @@ const CAMBills = () => {
 
   useEffect(() => {
     loadPersistedBills();
-  }, [year, month, siteId]);
+  }, [year, month, siteId, period, customFromDate, customToDate]);
 
   useEffect(() => {
     // Single source: backend total endpoint for categories + total, then allocation with same categories
     const run = async () => {
       try {
-        const { startMonth, endMonth } = getPeriodParams();
+        const { startMonth, endMonth, isCustom, customYear } = getPeriodParams();
+        const effectiveYear = isCustom ? customYear : year;
 
         // Income summary from backend (for income total display only)
         let totalIncomeReceived = 0;
@@ -287,7 +316,7 @@ const CAMBills = () => {
         if (siteId) {
           for (let m = startMonth; m <= endMonth; m++) {
             try {
-              const incomeRes = await getCamIncomeExpenseSummary({ year, month: m, project_id: siteId });
+              const incomeRes = await getCamIncomeExpenseSummary({ year: effectiveYear, month: m, project_id: siteId });
               totalIncomeReceived += Number(incomeRes?.data?.data?.receipts_total ?? incomeRes?.data?.data?.receiptsTotal ?? 0);
               totalIncomeInvoiced += Number(incomeRes?.data?.data?.bills_total ?? incomeRes?.data?.data?.billsTotal ?? 0);
             } catch (e) {
@@ -304,9 +333,10 @@ const CAMBills = () => {
           return;
         }
 
-        // 1) Categories + total from backend only (GET monthly_expenses/total)
+        // 1) Categories + total from backend (GET monthly_expenses/total)
+        // Now supports year/month/end_month params and includes journal entry categories
         const totalRes = await calculateMonthlyExpenseTotal({
-          year,
+          year: effectiveYear,
           month: startMonth,
           end_month: endMonth,
           project_id: siteId,
@@ -316,10 +346,26 @@ const CAMBills = () => {
         const categoriesHash = totalData.categories || {};
         let categoriesFromBackend = Object.keys(categoriesHash).filter(Boolean).sort();
 
-        // Fallback: if no categories for this site, get category names from index (e.g. when expenses saved without project_id)
+        // Fallback: if no categories for this site, try expense_by_category endpoint
         if (categoriesFromBackend.length === 0) {
           try {
-            const indexRes = await getMonthlyExpenses({ year, month: startMonth });
+            const catRes = await getExpenseByCategory({ 
+              year: effectiveYear, 
+              month: startMonth, 
+              end_month: endMonth, 
+              site_id: siteId 
+            });
+            const catData = catRes?.data?.data || {};
+            categoriesFromBackend = Object.keys(catData).filter(Boolean).sort();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        // Secondary fallback: get category names from index
+        if (categoriesFromBackend.length === 0) {
+          try {
+            const indexRes = await getMonthlyExpenses({ year: effectiveYear, month: startMonth });
             const indexRows = indexRes?.data?.data || indexRes?.data || [];
             const set = new Set();
             (Array.isArray(indexRows) ? indexRows : []).forEach((row) => {
@@ -349,7 +395,7 @@ const CAMBills = () => {
             : categoriesFromBackend;
 
         const allocRes = await calculateExpenseAllocation({
-          year,
+          year: effectiveYear,
           month: startMonth,
           end_month: endMonth,
           site_id: siteId,
@@ -368,7 +414,7 @@ const CAMBills = () => {
       }
     };
     run();
-  }, [year, month, period, selectedExpenseCategories, siteId]);
+  }, [year, month, period, selectedExpenseCategories, siteId, customFromDate, customToDate]);
 
   useEffect(() => {
     const run = async () => {
@@ -393,21 +439,31 @@ const CAMBills = () => {
       }
     };
     run();
-  }, [year, month, period, siteId]);
+  }, [year, month, period, siteId, customFromDate, customToDate]);
 
   // Fetch detailed income data from multiple sources
   useEffect(() => {
     const fetchIncomeData = async () => {
       try {
         const { from_date, to_date } = getPeriodDateRange();
+        const { startMonth, endMonth, isCustom, customYear } = getPeriodParams();
+        const effectiveYear = isCustom ? customYear : year;
         const params = { from_date, to_date };
         if (siteId) params.site_id = siteId;
 
-        // Fetch income from multiple sources
-        const [incomeEntriesRes, invoicesRes, paymentsRes] = await Promise.allSettled([
+        // Fetch income from multiple sources + backend categories
+        const [incomeEntriesRes, invoicesRes, paymentsRes, incomeCatRes] = await Promise.allSettled([
           getIncomeEntries(params),
           getAccountingInvoices(),
           getAccountingPayments(),
+          getIncomeByCategory({ 
+            year: effectiveYear, 
+            month: startMonth, 
+            end_month: endMonth, 
+            from_date, 
+            to_date, 
+            site_id: siteId 
+          }),
         ]);
 
         const incomeEntries = incomeEntriesRes.status === 'fulfilled' 
@@ -419,6 +475,9 @@ const CAMBills = () => {
         const payments = paymentsRes.status === 'fulfilled' 
           ? (paymentsRes.value?.data?.data || paymentsRes.value?.data || []) 
           : [];
+        const backendIncomeCategories = incomeCatRes.status === 'fulfilled'
+          ? (incomeCatRes.value?.data?.data || {})
+          : {};
 
         // Calculate income from different sources
         const incomeEntriesTotal = Array.isArray(incomeEntries)
@@ -445,56 +504,58 @@ const CAMBills = () => {
           : [];
         const paymentsTotal = filteredPayments.reduce((sum, pay) => sum + Number(pay.amount || 0), 0);
 
-        // Build categories from income entries and invoices
-        const categoriesSet = new Set();
+        // Build categories - use backend categories as primary source, merge with frontend data
         const byCategory = {};
 
-        // Add predefined income categories
-        const predefinedIncomeCategories = [
-          'Maintenance Charges',
-          'CAM Bills',
-          'Rental Income',
-          'Parking Fees',
-          'Club House Fees',
-          'Swimming Pool Fees',
-          'Gym Fees',
-          'Interest Income',
-          'Late Fees',
-          'Other Income'
-        ];
-        predefinedIncomeCategories.forEach(cat => categoriesSet.add(cat));
-
-        // Process income entries for categories
-        if (Array.isArray(incomeEntries)) {
-          incomeEntries.forEach(entry => {
-            const cat = entry.source_type || entry.category || 'Other Income';
-            categoriesSet.add(cat);
-            byCategory[cat] = (byCategory[cat] || 0) + Number(entry.amount || 0);
+        // Add backend income categories first (includes journal entry credit lines by ledger name)
+        if (typeof backendIncomeCategories === 'object' && backendIncomeCategories !== null) {
+          Object.entries(backendIncomeCategories).forEach(([cat, amount]) => {
+            if (cat) {
+              byCategory[cat] = Number(amount || 0);
+            }
           });
         }
 
-        // Process invoices for categories
+        // Process income entries for categories (frontend supplement)
+        if (Array.isArray(incomeEntries)) {
+          incomeEntries.forEach(entry => {
+            const cat = entry.source_type || entry.category || 'Other Income';
+            if (!byCategory[cat]) {
+              byCategory[cat] = (byCategory[cat] || 0) + Number(entry.amount || 0);
+            }
+          });
+        }
+
+        // Process invoices for categories (frontend supplement)
         if (Array.isArray(filteredInvoices)) {
           filteredInvoices.forEach(inv => {
             const cat = inv.invoice_type || inv.category || 'Invoices';
-            categoriesSet.add(cat);
-            byCategory[cat] = (byCategory[cat] || 0) + Number(inv.total_amount || inv.amount || 0);
+            if (!byCategory[cat]) {
+              byCategory[cat] = (byCategory[cat] || 0) + Number(inv.total_amount || inv.amount || 0);
+            }
           });
         }
 
         // Add payments as a category
-        if (paymentsTotal > 0) {
-          categoriesSet.add('Payments Received');
+        if (paymentsTotal > 0 && !byCategory['Payments Received']) {
           byCategory['Payments Received'] = paymentsTotal;
         }
 
-        const newIncomeCategories = Array.from(categoriesSet);
+        const newIncomeCategories = Object.keys(byCategory).filter(Boolean).sort();
         const safeIncomeCategories = Array.isArray(newIncomeCategories) ? newIncomeCategories : [];
         setIncomeCategories(safeIncomeCategories);
         
-        // Initialize selected categories if empty
+        // Initialize selected categories if empty or update with new categories
         if (selectedIncomeCategories.length === 0 && safeIncomeCategories.length > 0) {
           setSelectedIncomeCategories(safeIncomeCategories);
+        } else {
+          // Keep only valid selections
+          const validSelected = selectedIncomeCategories.filter(c => safeIncomeCategories.includes(c));
+          if (validSelected.length === 0 && safeIncomeCategories.length > 0) {
+            setSelectedIncomeCategories(safeIncomeCategories);
+          } else if (validSelected.length !== selectedIncomeCategories.length) {
+            setSelectedIncomeCategories(validSelected.length > 0 ? validSelected : safeIncomeCategories);
+          }
         }
 
         setIncomeBreakdown({
@@ -513,7 +574,7 @@ const CAMBills = () => {
     };
 
     fetchIncomeData();
-  }, [year, month, period, siteId]);
+  }, [year, month, period, siteId, customFromDate, customToDate]);
 
   // Fetch backend calculations for Income & Expense Reports
   useEffect(() => {
@@ -521,11 +582,12 @@ const CAMBills = () => {
       setCalculationsLoading(true);
       try {
         const { from_date, to_date } = getPeriodDateRange();
-        const { startMonth, endMonth } = getPeriodParams();
+        const { startMonth, endMonth, isCustom, customYear } = getPeriodParams();
+        const effectiveYear = isCustom ? customYear : year;
         const safeExpenseCatsForParams = Array.isArray(selectedExpenseCategories) ? selectedExpenseCategories : [];
         const safeIncomeCatsForParams = Array.isArray(selectedIncomeCategories) ? selectedIncomeCategories : [];
         const baseParams = { 
-          year, 
+          year: effectiveYear, 
           month: startMonth, 
           end_month: endMonth,
           from_date, 
@@ -544,14 +606,14 @@ const CAMBills = () => {
         const safeIncomeCats = Array.isArray(selectedIncomeCategories) ? selectedIncomeCategories : [];
         const [expenseTotalRes, incomeTotalRes] = await Promise.allSettled([
           calculateMonthlyExpenseTotal({ 
-            year, 
+            year: effectiveYear, 
             month: startMonth, 
             end_month: endMonth, 
             project_id: siteId,
             categories: safeExpenseCats.join(',')
           }),
           getMonthlyIncomeTotal({ 
-            year, 
+            year: effectiveYear, 
             month: startMonth, 
             end_month: endMonth, 
             site_id: siteId,
@@ -640,9 +702,8 @@ const CAMBills = () => {
         setCalculationsLoading(false);
       }
     };
-
     fetchBackendCalculations();
-  }, [year, month, period, siteId, overviewMode, selectedExpenseCategories, selectedIncomeCategories]);
+  }, [year, month, period, siteId, overviewMode, selectedExpenseCategories, selectedIncomeCategories, customFromDate, customToDate]);
 
   const toggleExpenseCategory = (category) => {
     setSelectedExpenseCategories((prev) => {
@@ -721,8 +782,13 @@ const CAMBills = () => {
         toast.error("Please select a Site");
         return;
       }
-      const { startMonth, endMonth } = getPeriodParams();
-      const res = await previewCamBills({ year, month: startMonth, end_month: endMonth, site_id: siteId });
+      if (period === "custom" && (!customFromDate || !customToDate)) {
+        toast.error("Please select both From and To dates");
+        return;
+      }
+      const { startMonth, endMonth, isCustom, customYear } = getPeriodParams();
+      const effectiveYear = isCustom ? customYear : year;
+      const res = await previewCamBills({ year: effectiveYear, month: startMonth, end_month: endMonth, site_id: siteId });
       const rows = res?.data?.data || res?.data || [];
       const rowsArray = Array.isArray(rows) ? rows : [];
 
@@ -730,7 +796,7 @@ const CAMBills = () => {
       let unitNameMap = {};
       try {
         const allocRes = await calculateExpenseAllocation({
-          year,
+          year: effectiveYear,
           month: startMonth,
           end_month: endMonth,
           site_id: siteId,
@@ -763,8 +829,13 @@ const CAMBills = () => {
         toast.error("Please select a Site");
         return;
       }
-      const { startMonth, endMonth } = getPeriodParams();
-      const res = await generateCamBills({ year, month: startMonth, end_month: endMonth, site_id: siteId });
+      if (period === "custom" && (!customFromDate || !customToDate)) {
+        toast.error("Please select both From and To dates");
+        return;
+      }
+      const { startMonth, endMonth, isCustom, customYear } = getPeriodParams();
+      const effectiveYear = isCustom ? customYear : year;
+      const res = await generateCamBills({ year: effectiveYear, month: startMonth, end_month: endMonth, site_id: siteId });
       const rows = res?.data?.data || res?.data || [];
       const rowsArray = Array.isArray(rows) ? rows : [];
 
@@ -772,7 +843,7 @@ const CAMBills = () => {
       let unitNameMap = {};
       try {
         const allocRes = await calculateExpenseAllocation({
-          year,
+          year: effectiveYear,
           month: startMonth,
           end_month: endMonth,
           site_id: siteId,
@@ -845,30 +916,57 @@ const CAMBills = () => {
               <option value="quarterly">Quarterly</option>
               <option value="half-yearly">Half-Yearly (6 Months)</option>
               <option value="yearly">Yearly (12 Months)</option>
+              <option value="custom">Custom Date Range</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
-            <input 
-              type="number" 
-              value={year} 
-              onChange={(e) => setYear(Number(e.target.value || new Date().getFullYear()))} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {period === "monthly" ? "Month" : "Starting Month"}
-            </label>
-            <input 
-              type="number" 
-              min={1} 
-              max={12} 
-              value={month} 
-              onChange={(e) => setMonth(Number(e.target.value || 1))} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-            />
-          </div>
+          {period !== "custom" ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <input 
+                  type="number" 
+                  value={year} 
+                  onChange={(e) => setYear(Number(e.target.value || new Date().getFullYear()))} 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {period === "monthly" ? "Month" : "Starting Month"}
+                </label>
+                <input 
+                  type="number" 
+                  min={1} 
+                  max={12} 
+                  value={month} 
+                  onChange={(e) => setMonth(Number(e.target.value || 1))} 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                <input 
+                  type="date" 
+                  value={customFromDate}
+                  onChange={(e) => setCustomFromDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+                <input 
+                  type="date" 
+                  value={customToDate}
+                  onChange={(e) => setCustomToDate(e.target.value)}
+                  min={customFromDate}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Category Filters Row */}
@@ -894,7 +992,7 @@ const CAMBills = () => {
                 {showExpenseDropdown && (
                   <div className="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg text-sm">
                     {(!Array.isArray(expenseCategories) || expenseCategories.length === 0) && (
-                      <div className="px-3 py-2 text-gray-400 text-xs">No monthly expenses for this period</div>
+                      <div className="px-3 py-2 text-gray-400 text-xs">No expenses for this period</div>
                     )}
                     {Array.isArray(expenseCategories) && expenseCategories.map((cat) => (
                       <label

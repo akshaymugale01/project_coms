@@ -1008,7 +1008,7 @@ const Navbar = () => {
                       Additional Services(OSR)
                     </h2>
                     <h2
-                      className={`${
+                      className={`${ 
                         open && "hidden"
                       } absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit  `}
                     >

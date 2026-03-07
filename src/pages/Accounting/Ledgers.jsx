@@ -247,6 +247,9 @@ const Ledgers = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Opening Balance
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Advance Amount
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -276,6 +279,13 @@ const Ledgers = () => {
                     </td> */}
                     <td className="px-6 py-4 whitespace-nowrap">
                      ₹{parseFloat(ledger.opening_balance || 0).toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {parseFloat(ledger.advance_amount || 0) > 0 ? (
+                        <span className="text-green-700 font-medium">₹{parseFloat(ledger.advance_amount || 0).toFixed(2)}</span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button

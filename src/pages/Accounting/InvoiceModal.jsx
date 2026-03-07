@@ -2183,9 +2183,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                   </svg>
                   Preview Invoice
                 </button>
-
                 {/* Quick Print Preview Button */}
-                <button
+                {/* <button
                   type="button"
                   onClick={handlePreview}
                   className="flex items-center gap-2 px-4 py-3 text-purple-600 border-2 border-purple-400 rounded-lg hover:bg-purple-50 hover:border-purple-500 transition-all duration-200 text-sm font-semibold"
@@ -2194,7 +2193,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
                   Quick Print Preview
-                </button>
+                </button> */}
               </div>
 
               <div className="flex gap-4">
@@ -2232,7 +2231,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                 <h2 className="text-2xl font-bold text-gray-800">Invoice Preview</h2>
                 <p className="text-sm text-gray-600 mt-1">Review your invoice before saving</p>
               </div>
-              <div className="flex items-center gap-3">
+              
+              {/* <div className="flex items-center gap-3">
                 <button
                   onClick={() => window.print()}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 text-sm font-semibold"
@@ -2250,7 +2250,7 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              </div>
+              </div> */}
             </div>
 
             {/* Enhanced Preview Content - EXACTLY MATCHING THE SCREENSHOT */}
@@ -2485,12 +2485,12 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
               >
                 Close Preview
               </button>
-              <button
+              {/* <button
                 onClick={() => window.print()}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium"
               >
                 Print Invoice
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

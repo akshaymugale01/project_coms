@@ -7,6 +7,7 @@ import {
   getLedgerStatement,
   getUnitStatement,
   getUnitStatementDetailed,
+  getUnitCamStatement,
   getReceivablesSummary,
   downloadExpensesMIS,
   downloadIncomeMIS,
@@ -15,6 +16,7 @@ import {
   importIncomeMIS,
   getLedgers,
   importIndividualMIS,
+  exportCamStatementPdf,
 } from "../../api/accountingApi";
 import { getAllUnits } from "../../api/index";
 import Navbar from "../../components/Navbar";
@@ -174,7 +176,7 @@ const AccountingReports = () => {
           response = await getLedgerStatement(params);
           break;
         case "unit_statement":
-          response = await getUnitStatementDetailed(params);
+          response = await getUnitCamStatement(params);
           break;
         case "receivables_summary":
           response = await getReceivablesSummary(params);
@@ -556,275 +558,77 @@ const AccountingReports = () => {
     toast.success("Profit & Loss exported as XLSX");
   };
 
-  const exportUnitStatementPdf = () => {
+  const exportUnitStatementPdf = async () => {
     if (activeReport !== "unit_statement" || !reportData) {
       toast.error("Generate unit statement first");
       return;
     }
 
-    const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const marginX = 14;
-    const tableWidth = pageWidth - marginX * 2;
-    let y = 12;
-
-    const num = (...values) => {
-      for (const value of values) {
-        const parsed = parseFloat(value);
-        if (!Number.isNaN(parsed)) return parsed;
-      }
-      return 0;
-    };
-    const money = (value) => (num(value)).toFixed(2);
-    const text = (value, fallback = "-") => {
-      if (value === null || value === undefined) return fallback;
-      const str = String(value).trim();
-      return str || fallback;
-    };
-    const dateText = (value) => (value ? new Date(value).toLocaleDateString() : "-");
-    const addPageIfNeeded = (h) => {
-      if (y + h > pageHeight - 14) {
-        doc.addPage();
-        y = 12;
-      }
-    };
-
-    const company = reportData.company_details || reportData.company || reportData.organization || {};
-    const unit = reportData.unit || {};
-    const summary = reportData.summary || {};
-    const details = reportData.details || reportData.statement_details || {};
-    const period = reportData.period || reportData.statement_details || {};
-    const invoices = reportData.invoices || reportData.invoice_details || {};
-    const payments = reportData.payments || reportData.payment_details || {};
-    const income_breakdown = reportData.income_breakdown || reportData.transaction_details || {};
-    const income_by_category = reportData.income_by_category || reportData.income_details || {};
-    const cam_bills = reportData.cam_bills || reportData.cam_bill_details || {};
-    const expense_breakdown = reportData.expense_breakdown || reportData.expense_details || {};
-    const expense_by_category = reportData.expenses_by_category || reportData.receipt_details || {};
-    const expenses = reportData.expenses || reportData.expense_details || {};
-  
-    const statements = reportData.statements || reportData.statement_details || {};
-
-    const companyName = text(
-      company.company_name || company.name || reportData.company_name || "ORGANIZATION NAME"
-    );
-    const address1 = text(
-      company.address || company.address1 || reportData.company_address || "",
-      ""
-    );
-    const address2 = [
-      company.address_line2,
-      company.city,
-      company.state,
-      company.pincode,
-      company.country,
-    ]
-      .filter((part) => part !== null && part !== undefined && String(part).trim() !== "")
-      .join(", ");
-    const siteName = text(
-      company.site_name || reportData.site?.name || unit.site || "SITE"
-    );
-
-    const periodFrom = reportData.from_date || filters.start_date;
-    const periodTo = reportData.to_date || filters.end_date;
-    const periodLabel = `${dateText(periodFrom)} to ${dateText(periodTo)}`;
-    const statementNo = text(
-      reportData.statement_number || reportData.statement_no || reportData.reference_no || reportData.number,
-      `US/${new Date().getFullYear()}`
-    );
-    const statementDate = dateText(
-      reportData.statement_date || reportData.generated_at || new Date().toISOString()
-    );
-    const residentName = text(
-      reportData.customer_name || unit.owner_name || unit.resident_name || unit.name
-    );
-    const flatNo = text(unit.flat_no || unit.name || unit.unit_no || "Organization-wide");
-
-    const advanceReceived = num(
-      details.advance_maintenance_received,
-      details.advance_received,
-      reportData.advance_maintenance_received,
-      reportData.advance_received,
-      summary.advance_maintenance_received,
-      summary.total_paid
-    );
-    const transferToApex = num(
-      details.transfer_to_apex,
-      details.apex_transfer,
-      reportData.transfer_to_apex,
-      summary.transfer_to_apex
-    );
-    const balanceForBuilding = num(
-      details.balance_for_building_maintenance,
-      reportData.balance_for_building_maintenance,
-      advanceReceived - transferToApex
-    );
-    const maintenanceCharges = num(
-      details.maintenance_charges_period,
-      details.maintenance_charges,
-      reportData.maintenance_charges,
-      summary.total_invoiced
-    );
-    const totalIncome = num(
-      details.total_income,
-      reportData.total_income,
-      summary.other_income
-    );
-    const balanceFund = num(
-      details.balance_fund_available,
-      reportData.balance_fund_available,
-      balanceForBuilding - maintenanceCharges + totalIncome
-    );
-
-    const rawExpenseRows =
-      reportData.expense_breakdown ||
-      reportData.expense_details ||
-      reportData.maintenance_breakdown ||
-      reportData.expenses ||
-      [];
-    let expenseRows = Array.isArray(rawExpenseRows)
-      ? rawExpenseRows.map((row, idx) => ({
-        srNo: idx + 1,
-        label: text(
-          row.particular || row.description || row.name || row.head || `Expense ${idx + 1}`
-        ),
-        amount: num(row.amount, row.value, row.expense_amount, row.debit),
-      }))
-      : [];
-
-    if (expenseRows.length === 0 && Array.isArray(reportData.transactions)) {
-      expenseRows = reportData.transactions
-        .filter((txn) => num(txn.debit, txn.amount) > 0)
-        .map((txn, idx) => ({
-          srNo: idx + 1,
-          label: text(txn.description || txn.particular || `Expense ${idx + 1}`),
-          amount: num(txn.debit, txn.amount),
-        }));
+    if (!filters.unit_id) {
+      toast.error("Please select a unit");
+      return;
     }
 
-    // Company box (dynamic height + wrapped text)
-    const addressLines = [
-      ...(address1 ? doc.splitTextToSize(address1, tableWidth - 12) : []),
-      ...(address2 ? doc.splitTextToSize(address2, tableWidth - 12) : []),
-    ];
-    const headerTopPad = 7;
-    const headerLineH = 5.2;
-    const siteGap = 3.5;
-    const siteH = 5;
-    const headerBottomPad = 5;
-    const headerHeight =
-      headerTopPad +
-      headerLineH + // company name
-      addressLines.length * headerLineH +
-      siteGap +
-      siteH +
-      headerBottomPad;
+    try {
+      setMisBusy(true);
+      
+      // Call backend API to generate PDF
+      const params = {
+        unit_id: filters.unit_id,
+        start_date: filters.start_date,
+        end_date: filters.end_date
+      };
 
-    addPageIfNeeded(headerHeight);
-    doc.setDrawColor(60, 60, 60);
-    doc.roundedRect(marginX, y, tableWidth, headerHeight, 5, 5);
-
-    let headerY = y + headerTopPad;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(companyName.toUpperCase(), pageWidth / 2, headerY, { align: "center" });
-
-    headerY += headerLineH;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.8);
-    addressLines.forEach((line) => {
-      doc.text(String(line), pageWidth / 2, headerY, { align: "center" });
-      headerY += headerLineH;
-    });
-    
-    doc.setTextColor(200, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.text(`SITE: ${siteName}`, pageWidth / 2, headerY + siteGap, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-    y += headerHeight + 6;
-
-    // Title + details grid
-    addPageIfNeeded(30);
-    doc.rect(marginX, y, tableWidth, 10);
-    doc.setFont("times", "normal");
-    doc.setFontSize(10.5);
-    doc.text("STATEMENT OF COMMON AREA MAINTENANCE EXPENSES", pageWidth / 2, y + 6.5, {
-      align: "center",
-    });
-    y += 10;
-    doc.rect(marginX, y, tableWidth, 24);
-    doc.line(marginX + tableWidth / 2, y, marginX + tableWidth / 2, y + 16);
-    doc.line(marginX, y + 8, marginX + tableWidth, y + 8);
-    doc.line(marginX, y + 16, marginX + tableWidth, y + 16);
-    doc.setFontSize(9.6);
-    doc.text(`Period: ${periodLabel}`, marginX + 2, y + 5.5);
-    doc.text(`No.: ${statementNo}`, marginX + tableWidth / 2 + 2, y + 5.5);
-    doc.text(`Flat No: ${flatNo}`, marginX + 2, y + 13.5);
-    doc.text(`Date: ${statementDate}`, marginX + tableWidth - 2, y + 13.5, { align: "right" });
-    doc.text(`Name: ${residentName}`, marginX + 2, y + 21.5);
-    y += 30;
-
-    // Main particulars table (sample structure)
-    const col1 = 22;
-    const col2 = 108;
-    const col3 = tableWidth - col1 - col2;
-    const drawRow = (c1, c2, c3, options = {}) => {
-      const rowH = options.h || 7;
-      addPageIfNeeded(rowH + 1);
-      doc.rect(marginX, y, tableWidth, rowH);
-      doc.line(marginX + col1, y, marginX + col1, y + rowH);
-      doc.line(marginX + col1 + col2, y, marginX + col1 + col2, y + rowH);
-      doc.setFont("times", options.bold ? "bold" : "normal");
-      doc.setFontSize(options.size || 8.8);
-      doc.text(String(c1 ?? ""), marginX + col1 / 2, y + rowH - 2.2, { align: "center" });
-      doc.text(String(c2 ?? ""), marginX + col1 + 1.5, y + rowH - 2.2);
-      doc.text(String(c3 ?? ""), marginX + tableWidth - 1.5, y + rowH - 2.2, { align: "right" });
-      y += rowH;
-    };
-
-    drawRow("Sr. No.", "Particulars", "Amount (in Rs.)", { bold: true });
-    drawRow("A", "Advance Maintenance charges received", money(advanceReceived));
-    drawRow("B", "Less: Transfer to Apex Body @ 30%", money(transferToApex));
-    drawRow("C", "Balance for Building Maintenance Charges", money(balanceForBuilding));
-    drawRow("D", "Less: Maintenance Charges for the above period", money(maintenanceCharges));
-    drawRow("Sr. No.", "Particular", "Amt. (Rs.)", { bold: true });
-
-    expenseRows.forEach((item) => {
-      drawRow(item.srNo, item.label, money(item.amount));
-    });
-
-    drawRow("E", "Add: Total Income", money(totalIncome));
-    drawRow("F", "Balance Fund Available (F=C-D+E)", money(balanceFund), { bold: true });
-
-    // Footer notes
-    const notes =
-      (Array.isArray(reportData.notes) && reportData.notes.length > 0
-        ? reportData.notes
-        : [
-          "Any Debit / Credit of expenses will be adjusted in next statement of expenses.",
-          "This is computer generated statement, signature is not required.",
-          "For queries write to support@example.com",
-          "These are consolidated expenses for the selected period.",
-        ]);
-    y += 8;
-    doc.setFont("times", "normal");
-    doc.setFontSize(8.2);
-    notes.forEach((note, idx) => {
-      const lines = doc.splitTextToSize(`${idx + 1}) ${note}`, tableWidth);
-      addPageIfNeeded(lines.length * 4.2 + 1);
-      doc.text(lines, marginX, y);
-      y += lines.length * 4.2 + 1;
-    });
-
-    const safeUnit = (unit.name || "organization_wide")
-      .toString()
-      .trim()
-      .replace(/\s+/g, "_")
-      .replace(/[^\w-]/g, "");
-    const filename = `unit_statement_${safeUnit}_${filters.start_date || "from"}_${filters.end_date || "to"}.pdf`;
-    doc.save(filename);
-    toast.success("Unit statement PDF exported");
+      const response = await exportCamStatementPdf(params);
+      
+      // Check if response is actually an error JSON (blob with JSON content)
+      if (response.data.type === 'application/json') {
+        const text = await response.data.text();
+        const errorData = JSON.parse(text);
+        throw new Error(errorData.error || 'PDF generation failed');
+      }
+      
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const safeUnit = (reportData.unit?.name || "statement")
+        .toString()
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^\w-]/g, "");
+      
+      link.setAttribute('download', `cam_statement_${safeUnit}_${filters.start_date || "from"}_${filters.end_date || "to"}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("CAM statement PDF downloaded successfully");
+    } catch (error) {
+      console.error('PDF export error:', error);
+      
+      // Handle axios error responses
+      if (error.response?.data) {
+        // If error.response.data is a Blob, try to parse it as JSON
+        if (error.response.data instanceof Blob) {
+          try {
+            const text = await error.response.data.text();
+            const errorData = JSON.parse(text);
+            toast.error(`PDF export failed: ${errorData.error}`);
+            return;
+          } catch (parseError) {
+            // If parsing fails, just show generic error
+          }
+        }
+      }
+      
+      toast.error(`PDF export failed: ${error.message || 'Unknown error'}`);
+    } finally {
+      setMisBusy(false);
+    }
   };
 
   const handleMisDownload = async (kind) => {
@@ -1344,10 +1148,16 @@ const AccountingReports = () => {
                     <span className="text-purple-700">Closing Balance</span>
                   </td>
                   <td className="px-4 py-3 text-right text-red-600">
-                    ₹{(reportData.transactions || []).reduce((sum, t) => sum + parseFloat(t.debit || 0), 0).toFixed(2)}
+                    ₹{parseFloat(
+                      reportData.debit_total ??
+                      (reportData.transactions || []).reduce((sum, t) => sum + parseFloat(t.debit || 0), 0)
+                    ).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-right text-green-600">
-                    ₹{(reportData.transactions || []).reduce((sum, t) => sum + parseFloat(t.credit || 0), 0).toFixed(2)}
+                    ₹{parseFloat(
+                      reportData.credit_total ??
+                      (reportData.transactions || []).reduce((sum, t) => sum + parseFloat(t.credit || 0), 0)
+                    ).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-right text-purple-700">
                     ₹{parseFloat(reportData.closing_balance || 0).toFixed(2)}
@@ -1360,11 +1170,11 @@ const AccountingReports = () => {
       );
     }
 
-    // Unit Statement Report
+    // Unit Statement Report - CAM Statement
     if (activeReport === "unit_statement") {
       return (
         <div>
-          <h3 className="text-lg font-semibold mb-4">Unit Statement</h3>
+          <h3 className="text-lg font-semibold mb-4">Unit CAM Statement</h3>
 
           {/* Unit Info Card */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -1381,155 +1191,138 @@ const AccountingReports = () => {
               <p className="font-semibold">{reportData.unit?.floor || "-"}</p>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <p className="text-xs text-gray-500 mb-1">Outstanding Balance</p>
-              <p className="font-semibold text-purple-700">₹{parseFloat(reportData.summary?.outstanding_balance || 0).toFixed(2)}</p>
+              <p className="text-xs text-gray-500 mb-1">Period</p>
+              <p className="font-semibold text-purple-700">{reportData.unit?.period || "-"}</p>
             </div>
           </div>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <p className="text-xs text-gray-500 mb-1">Total Invoiced</p>
-              <p className="font-semibold text-orange-700">₹{parseFloat(reportData.summary?.total_invoiced || 0).toFixed(2)}</p>
+          {/* SECTION 1: INCOME */}
+          <div className="mb-8">
+            <h4 className="font-semibold mb-4 text-lg text-blue-700">1. Maintenance Income</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p className="text-xs text-gray-500 mb-1">Advance Maintenance Received</p>
+                <p className="font-semibold text-blue-700 text-xl">₹{parseFloat(reportData.income?.total_income ?? reportData.income?.advance_maintenance_received ?? 0).toFixed(2)}</p>
+              </div>
+              <div className="bg-teal-50 p-4 rounded-lg border border-teal-200">
+                <p className="text-xs text-gray-500 mb-1">Receipts Collected</p>
+                <p className="font-semibold text-teal-700 text-xl">₹{parseFloat(reportData.income?.receipts_total || 0).toFixed(2)}</p>
+              </div>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <p className="text-xs text-gray-500 mb-1">Total Paid</p>
-              <p className="font-semibold text-green-700">₹{parseFloat(reportData.summary?.total_paid || 0).toFixed(2)}</p>
+          </div>
+
+          {/* SECTION 2: APEX CALCULATION */}
+          <div className="mb-8">
+            <h4 className="font-semibold mb-4 text-lg text-orange-700">2. Apex Body Transfer (30%)</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <p className="text-xs text-gray-500 mb-1">Amount Received</p>
+                <p className="font-semibold text-orange-700">₹{parseFloat(reportData.apex?.total_income ?? reportData.apex?.advance_maintenance_received ?? 0).toFixed(2)}</p>
+              </div>
+              <div className="bg-orange-100 p-4 rounded-lg border border-orange-300">
+                <p className="text-xs text-gray-500 mb-1">Contribution %</p>
+                <p className="font-semibold text-orange-800">{reportData.apex?.contribution_percentage || 30}%</p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <p className="text-xs text-gray-500 mb-1">Apex Payment</p>
+                <p className="font-semibold text-red-700">₹{parseFloat(reportData.apex?.contribution_amount || 0).toFixed(2)}</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <p className="text-xs text-gray-500 mb-1">Building Fund Available</p>
+                <p className="font-semibold text-green-700">₹{parseFloat(reportData.apex?.building_fund_available || 0).toFixed(2)}</p>
+              </div>
             </div>
+          </div>
+
+          {/* SECTION 3: EXPENSES BREAKDOWN */}
+          <div className="mb-8">
+            <h4 className="font-semibold mb-4 text-lg text-purple-700">3. Maintenance Expenses</h4>
+            
+            {/* CAM Expenses by Category */}
+            {reportData.expenses?.cam_breakdown && Object.keys(reportData.expenses.cam_breakdown).length > 0 && (
+              <div className="mb-6">
+                <h5 className="font-semibold mb-3 text-purple-600">CAM Expenses (by Category)</h5>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-purple-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Category</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {Object.entries(reportData.expenses.cam_breakdown).map(([category, amount], idx) => (
+                        <tr key={idx} className="hover:bg-purple-50">
+                          <td className="px-4 py-3">{category || "Unclassified"}</td>
+                          <td className="px-4 py-3 text-right font-medium">₹{parseFloat(amount || 0).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-purple-100 font-semibold">
+                        <td className="px-4 py-3">CAM Subtotal</td>
+                        <td className="px-4 py-3 text-right text-purple-700">₹{parseFloat(reportData.expenses?.cam_expenses || 0).toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Ledger Expenses by Account Group */}
+            {reportData.expenses?.ledger_breakdown && Object.keys(reportData.expenses.ledger_breakdown).length > 0 && (
+              <div className="mb-6">
+                <h5 className="font-semibold mb-3 text-purple-600">Ledger Expenses (by Account Group)</h5>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-purple-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Account Group</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {Object.entries(reportData.expenses.ledger_breakdown).map(([group, amount], idx) => (
+                        <tr key={idx} className="hover:bg-purple-50">
+                          <td className="px-4 py-3">{group || "Unclassified"}</td>
+                          <td className="px-4 py-3 text-right font-medium">₹{parseFloat(amount || 0).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-purple-100 font-semibold">
+                        <td className="px-4 py-3">Ledger Subtotal</td>
+                        <td className="px-4 py-3 text-right text-purple-700">₹{parseFloat(reportData.expenses?.ledger_expenses || 0).toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Total Expenses Summary */}
             <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-              <p className="text-xs text-gray-500 mb-1">Outstanding</p>
-              <p className="font-semibold text-red-700">₹{parseFloat(reportData.summary?.total_outstanding || 0).toFixed(2)}</p>
+              <p className="text-xs text-gray-500 mb-1">Total Expenses Incurred</p>
+              <p className="font-semibold text-red-700 text-xl">₹{parseFloat(reportData.expenses?.total || 0).toFixed(2)}</p>
             </div>
           </div>
 
-          {/* Date Range */}
-          <div className="flex gap-4 mb-4 text-sm text-gray-600">
-            <span><strong>From:</strong> {reportData.from_date ? new Date(reportData.from_date).toLocaleDateString() : "-"}</span>
-            <span><strong>To:</strong> {reportData.to_date ? new Date(reportData.to_date).toLocaleDateString() : "-"}</span>
-          </div>
-
-          {/* Invoices Section */}
-          <div className="mb-6">
-            <h4 className="font-semibold mb-3 text-orange-700">Invoices</h4>
-            <div className="border rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice Number</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Paid</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {reportData.invoices?.length > 0 ? (
-                    reportData.invoices.map((inv, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap font-mono text-sm text-blue-600">
-                          {inv.invoice_number || "-"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : "-"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "-"}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          ₹{parseFloat(inv.amount || inv.total_amount || 0).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-green-600">
-                          ₹{parseFloat(inv.paid_amount || 0).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-red-600">
-                          ₹{parseFloat(inv.balance || inv.outstanding || 0).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`px-2 py-1 rounded text-xs ${inv.status === "paid" ? "bg-green-100 text-green-800" :
-                            inv.status === "partial" ? "bg-yellow-100 text-yellow-800" :
-                              "bg-red-100 text-red-800"
-                            }`}>
-                            {inv.status || "unpaid"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
-                        No invoices found for this period
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Payments Section */}
-          <div>
-            <h4 className="font-semibold mb-3 text-green-700">Payments</h4>
-            <div className="border rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Number</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mode</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {reportData.payments?.length > 0 ? (
-                    reportData.payments.map((pmt, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap font-mono text-sm text-blue-600">
-                          {pmt.payment_number || "-"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {pmt.payment_date ? new Date(pmt.payment_date).toLocaleDateString() : "-"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-600">
-                          {pmt.invoice_number || "-"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded text-xs ${pmt.payment_mode === "online" ? "bg-blue-100 text-blue-800" :
-                            pmt.payment_mode === "cash" ? "bg-green-100 text-green-800" :
-                              pmt.payment_mode === "cheque" ? "bg-orange-100 text-orange-800" :
-                                pmt.payment_mode === "bank_transfer" ? "bg-purple-100 text-purple-800" :
-                                  "bg-gray-100 text-gray-800"
-                            }`}>
-                            {pmt.payment_mode || "-"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right font-medium text-green-600">
-                          ₹{parseFloat(pmt.amount || 0).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                        No payments found for this period
-                      </td>
-                    </tr>
-                  )}
-                  {/* Total Payments Row */}
-                  {reportData.payments?.length > 0 && (
-                    <tr className="bg-green-50 font-semibold">
-                      <td className="px-4 py-3" colSpan="4">
-                        <span className="text-green-700">Total Payments</span>
-                      </td>
-                      <td className="px-4 py-3 text-right text-green-700">
-                        ₹{(reportData.payments || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toFixed(2)}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+          {/* SECTION 4: BALANCE SUMMARY */}
+          <div className="mb-8">
+            <h4 className="font-semibold mb-4 text-lg text-green-700">4. Financial Balance</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <p className="text-xs text-gray-500 mb-1">Building Fund Available</p>
+                <p className="font-semibold text-green-700 text-lg">₹{parseFloat(reportData.balance?.building_fund || 0).toFixed(2)}</p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <p className="text-xs text-gray-500 mb-1">Less: Total Expenses</p>
+                <p className="font-semibold text-red-700 text-lg">₹{parseFloat(reportData.balance?.less_total_expenses || 0).toFixed(2)}</p>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p className="text-xs text-gray-500 mb-1">Balance Available</p>
+                <p className="font-semibold text-blue-700 text-lg">₹{parseFloat(reportData.balance?.balance_fund_available || 0).toFixed(2)}</p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 md:col-span-3">
+                <p className="text-xs text-gray-500 mb-1">Net Income (Receipts - Expenses)</p>
+                <p className="font-semibold text-purple-700 text-lg">₹{parseFloat(reportData.balance?.net_income || 0).toFixed(2)}</p>
+              </div>
             </div>
           </div>
         </div>
