@@ -1,199 +1,244 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../../../components/Navbar";
-import { FaRegSmile, FaSmile, FaSmileBeam, FaGrinHearts, FaGrin } from "react-icons/fa";
+import axiosInstance from "../../../api/axiosInstance";
 import toast from "react-hot-toast";
+import {
+  FaRegSmile,
+  FaSmile,
+  FaSmileBeam,
+  FaGrinHearts,
+  FaGrin,
+} from "react-icons/fa";
+
 const WorkplaceSurvey = () => {
-  const [questions] = useState([
-    "How satisfied are you with the overall work environment?",
-    "How would you rate the support you receive from your direct manager?",
-    
-    "How would you rate the clarity of communication from upper management?",
-    "How well do you feel your contributions are recognized and valued by the company?",
-    "How satisfied are you with the professional development opportunities provided by the company?",
-    
-    "How satisfied are you with the company's approach to employee health and wellness?",
-    "How likely are you to recommend this company as a place to work to a friend or colleague?",
-    "How well do you think the company's policies support diversity and inclusion in the workplace?",
-  ]);
-
+  const [surveyList, setSurveyList] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [responses, setResponses] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [responses, setResponses] = useState(
-    questions.reduce((acc, question) => {
-      acc[question] = { rating: "", comment: "" };
-      return acc;
-    }, {})
-  );
+  const [selectedSurveyId, setSelectedSurveyId] = useState(null);
+  const [doSurvey, setDoSurvey] = useState(false);
 
-  const handleRatingChange = (rating) => {
-    const currentQuestion = questions[currentQuestionIndex];
-    setResponses((prevResponses) => ({
-      ...prevResponses,
-      [currentQuestion]: { ...prevResponses[currentQuestion], rating },
-    }));
-  };
-
-  const handleCommentChange = (e) => {
-    const { value } = e.target;
-    const currentQuestion = questions[currentQuestionIndex];
-    setResponses((prevResponses) => ({
-      ...prevResponses,
-      [currentQuestion]: { ...prevResponses[currentQuestion], comment: value },
-    }));
-  };
-
-  const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+  /* ================= LOAD SURVEY LIST ================= */
+  const loadSurveyList = async () => {
+    try {
+      const res = await axiosInstance.get("/survey/list/");
+      setSurveyList(res.data); // assumes array of surveys
+    } catch (error) {
+      toast.error("Failed to load survey list");
     }
   };
 
-  const handleBack = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
+  useEffect(() => {
+    loadSurveyList();
+  }, []);
+
+  /* ================= START SURVEY ================= */
+  const startSurvey = async (surveyId) => {
+    try {
+      const res = await axiosInstance.get(`/survey/questions/${surveyId}/`);
+      const questionsData = res.data.survey_questions || res.data; // adjust if API returns survey_questions array
+      setQuestions(questionsData);
+      setSelectedSurveyId(surveyId);
+
+      const initialResponses = {};
+      questionsData.forEach((q) => {
+        initialResponses[q.id] = { value: "" }; // store answer in 'value'
+      });
+      setResponses(initialResponses);
+      setDoSurvey(true);
+      setCurrentQuestionIndex(0);
+    } catch (err) {
+      toast.error("Failed to load questions");
     }
   };
 
-  const handleCancel = () => {
-   setDoSurvey(false)
+  /* ================= HANDLE RESPONSE ================= */
+  const handleAnswerChange = (value) => {
+    const qId = questions[currentQuestionIndex].id;
+    setResponses((prev) => ({
+      ...prev,
+      [qId]: { value },
+    }));
   };
 
-  const handleSubmit = () => {
-    toast.success("Survey completed Successfully")
-    setDoSurvey(false)
-    console.log(responses);
+  /* ================= SUBMIT ================= */
+  const handleSubmit = async () => {
+    const unanswered = Object.values(responses).some((res) => !res.value);
+    if (unanswered) {
+      toast.error("Please answer all questions");
+      return;
+    }
+
+    try {
+      await axiosInstance.post("/survey/submit/", {
+        survey_id: selectedSurveyId,
+        responses,
+      });
+      toast.success("Survey submitted successfully");
+
+      setDoSurvey(false);
+      setCurrentQuestionIndex(0);
+      setQuestions([]);
+      setResponses({});
+      setSelectedSurveyId(null);
+    } catch {
+      toast.error("Submission failed");
+    }
   };
 
   const currentQuestion = questions[currentQuestionIndex];
-  const smileyRatings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const [doSurvey, setDoSurvey] = useState(false);
-  const getSmileyColor = (rating) => {
-    if (rating <= 2) return "text-red-500";   // Red for low ratings
-    if (rating <= 4) return "text-orange-500"; // Orange for slightly low ratings
-    if (rating <= 6) return "text-yellow-500"; // Yellow for neutral ratings
-    if (rating <= 8) return "text-blue-500"; // Green for good ratings
-   
-    return "text-green-500"; 
-  };
 
-  return (
-    <section className="flex">
-      <Navbar />
-      <div className="p-2 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
-        {!doSurvey && (
-            <>
-         <h2 className="font-medium border-b border-gray-400 text-xl mb-2">Survey List</h2>
-            <div className=" flex justify-between items-center border rounded-xl p-2">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-xl font-semibold ">
-                Employee Satisfaction Survey
-              </h2>
-              <span className="text-gray-400 text-sm">
-                Start Date: 28/08/2024{" "}
-              </span>
-              <span className="text-gray-400 text-sm">
-                End Date: 05/09/2024{" "}
-              </span>
-            </div>
-            <p className="bg-red-400 text-white rounded-full p-1 px-2">Mandatory</p>
-            <button
-              onClick={() => setDoSurvey(true)}
-              className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
-            >
-              Start Survey
-            </button>
+  const renderQuestion = (question) => {
+    switch (question.question_type) {
+      case "single_choice":
+        return (
+          <div className="flex flex-col gap-2 mb-4">
+            {question.options.map((opt) => (
+              <label key={opt.id} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name={`q-${question.id}`}
+                  value={opt.label}
+                  checked={responses[question.id]?.value === opt.label}
+                  onChange={(e) => handleAnswerChange(e.target.value)}
+                />
+                {opt.label}
+              </label>
+            ))}
           </div>
-           </>
-          
-        )}
-        {doSurvey && (
-          <div className="flex">
-            {/* List of Questions */}
-            <div className="w-96  border-r">
-              <h2 className="text-xl font-bold">Questions</h2>
-              <ul>
-                {questions.map((question, index) => (
-                  <li
-                    key={index}
-                    className={`p-2 cursor-pointer border-b ${
-                      index === currentQuestionIndex ? "bg-gray-200" : ""
-                    }`}
-                    onClick={() => setCurrentQuestionIndex(index)}
-                  >
-                    {question}
-                  </li>
-                ))}
-              </ul>
-            </div>
+        );
 
-            {/* Question Detail */}
-            <div className="w-3/4 p-4">
-              <h2 className="text-xl font-bold">Survey</h2>
-              <div className="mb-4">
-                <h3 className="text-lg">{currentQuestion}</h3>
-              </div>
-              <div className="flex gap-2 mb-4">
-            {[...Array(10)].map((_, index) => {
-              const rating = index + 1;
+      case "rating":
+        return (
+          <div className="flex gap-2 mb-4">
+            {[...Array(10)].map((_, i) => {
+              const rating = i + 1;
+              const selected = responses[question.id]?.value === rating;
+              const getSmileyColor = (rating) => {
+                if (rating <= 2) return "text-red-500";
+                if (rating <= 4) return "text-orange-500";
+                if (rating <= 6) return "text-yellow-500";
+                if (rating <= 8) return "text-blue-500";
+                return "text-green-500";
+              };
+
               return (
                 <div
                   key={rating}
-                  onClick={() => handleRatingChange(rating)}
-                  className={`cursor-pointer text-2xl ${getSmileyColor(rating)} ${
-                    responses[currentQuestion]?.rating === rating ? 'scale-125' : ''
-                  } transition-transform`}
+                  onClick={() => handleAnswerChange(rating)}
+                  className={`cursor-pointer transition-all ${
+                    selected ? "scale-125" : "opacity-60"
+                  } ${getSmileyColor(rating)}`}
                 >
                   {rating <= 2 ? (
-                    <FaRegSmile size={40} />
+                    <FaRegSmile size={35} />
                   ) : rating <= 4 ? (
-                    <FaSmile size={40} />
+                    <FaSmile size={35} />
                   ) : rating <= 6 ? (
-                    <FaSmileBeam size={40} />
+                    <FaSmileBeam size={35} />
                   ) : rating <= 8 ? (
-                    <FaGrinHearts size={40} />
+                    <FaGrinHearts size={35} />
                   ) : (
-                    <FaGrin size={40} />
+                    <FaGrin size={35} />
                   )}
                 </div>
               );
             })}
           </div>
-              <div className="mb-4">
-                <label className="block mb-2">Comment</label>
-                <textarea
-                  value={responses[currentQuestion]?.comment || ""}
-                  onChange={handleCommentChange}
-                  rows="2"
-                  className="p-2 border rounded-md border-gray-300 w-full"
-                />
+        );
+
+      case "scale":
+        return (
+          <div className="flex gap-2 mb-4">
+            {Array.from(
+              { length: question.max_value - question.min_value + 1 },
+              (_, i) => question.min_value + i
+            ).map((val) => (
+              <button
+                key={val}
+                onClick={() => handleAnswerChange(val)}
+                className={`px-3 py-1 border rounded ${
+                  responses[question.id]?.value === val
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100"
+                }`}
+              >
+                {val}
+              </button>
+            ))}
+          </div>
+        );
+
+      default:
+        return <p>Unknown question type</p>;
+    }
+  };
+
+  return (
+    <section className="flex">
+      <Navbar />
+      <div className="p-4 w-full flex flex-col">
+        {!doSurvey && (
+          <>
+            {surveyList.map((survey) => (
+              <div
+                key={survey.id}
+                className="border p-3 mb-3 flex justify-between rounded"
+              >
+                <div>
+                  <h3 className="font-bold">{survey.survey_title}</h3>
+                  <p className="text-sm text-gray-500">
+                    {survey.start_date.split("T")[0]} -{" "}
+                    {survey.end_date.split("T")[0]}
+                  </p>
+                  <p>{survey.description}</p>
+                </div>
+
+                <button
+                  onClick={() => startSurvey(survey.id)}
+                  className="bg-blue-500 text-white px-3 py-1 rounded"
+                >
+                  Start
+                </button>
               </div>
-              <div className="flex gap-4 justify-end">
+            ))}
+          </>
+        )}
+
+        {doSurvey && currentQuestion && (
+          <div>
+            <h2 className="text-xl font-bold mb-3">
+              Question {currentQuestionIndex + 1} of {questions.length}
+            </h2>
+
+            <p className="mb-4">{currentQuestion.q_title}</p>
+
+            {renderQuestion(currentQuestion)}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentQuestionIndex((p) => p - 1)}
+                disabled={currentQuestionIndex === 0}
+                className="bg-gray-500 text-white px-3 py-1 rounded disabled:opacity-50"
+              >
+                Back
+              </button>
+
+              {currentQuestionIndex === questions.length - 1 ? (
                 <button
-                  onClick={handleCancel}
-                  className="bg-red-300 p-2 rounded"
+                  onClick={handleSubmit}
+                  className="bg-green-500 text-white px-3 py-1 rounded"
                 >
-                  Cancel
+                  Submit
                 </button>
+              ) : (
                 <button
-                  onClick={handleBack}
-                  className="bg-blue-500 text-white p-2 rounded"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleNext}
-                  className="bg-gray-500 text-white p-2 px-4 rounded"
+                  onClick={() => setCurrentQuestionIndex((p) => p + 1)}
+                  className="bg-blue-500 text-white px-3 py-1 rounded"
                 >
                   Next
                 </button>
-                {currentQuestionIndex === questions.length - 1 && (
-                  <button
-                    onClick={handleSubmit}
-                    className="bg-green-500 text-white p-2 px-4 rounded"
-                  >
-                    Submit Response
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
         )}

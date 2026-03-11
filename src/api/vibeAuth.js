@@ -3,8 +3,8 @@ import { getItemInLocalStorage } from "../utils/localStorage";
 
 const vibeAuth= axios.create({
   // baseURL: "https://vibecopilot.ai",
-     baseURL: "https://app.myciti.life",
-
+     // baseURL: "https://app.myciti.life",
+  baseURL: "http://localhost:3000"
 });
 
 vibeAuth.interceptors.request.use(

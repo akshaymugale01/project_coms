@@ -99,7 +99,7 @@ const InwardsTable = () => {
 
     {
       name: "Person Name",
-      selector: (row) => row.person_name?.name,
+      selector: (row) => row.person_name,
       sortable: true,
     },
 
