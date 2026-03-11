@@ -48,7 +48,6 @@ const EmployeeAddStaff = () => {
     status: true,
     documents: [],
     workingSchedule: initialSchedule,
- 
   });
   const daysOfWeek = [
     "Monday",
@@ -87,7 +86,7 @@ const EmployeeAddStaff = () => {
           validTill: SendDateFormat(editData.valid_till),
           vendorId: editData.vendor_id,
           workType: editData.work_type,
-          
+
           workingSchedule: initializeWorkingSchedule(editData.working_schedule),
         });
         setCapturedImage(domainPrefix + editData.profile_picture.url);
@@ -147,7 +146,22 @@ const EmployeeAddStaff = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "mobile") {
+      const numericValue = value.replace(/\D/g, "");
+      if (numericValue.length <= 10) {
+        setFormData({ ...formData, mobile: numericValue });
+      }
+      return;
+    }
+
+    if (name === "email") {
+      setFormData({ ...formData, email: value.trim() });
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   useEffect(() => {
@@ -190,6 +204,16 @@ const EmployeeAddStaff = () => {
     ) {
       return toast.error("All fields are required!");
     }
+    // ✅ Mobile must be exactly 10 digits
+    if (formData.mobile.length !== 10) {
+      return toast.error("Mobile number must be exactly 10 digits!");
+    }
+
+    // ✅ Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      return toast.error("Please enter a valid email address!");
+    }
     const sendData = new FormData();
     sendData.append("staff[firstname]", formData.firstName);
     sendData.append("staff[lastname]", formData.lastName);
@@ -206,15 +230,15 @@ const EmployeeAddStaff = () => {
     Object.keys(formData.workingSchedule).forEach((day) => {
       sendData.append(
         `staff[working_schedule][${day}][selected]`,
-        formData.workingSchedule[day].selected ? "1" : "0"
+        formData.workingSchedule[day].selected ? "1" : "0",
       );
       sendData.append(
         `staff[working_schedule][${day}][start_time]`,
-        formData.workingSchedule[day].start_time
+        formData.workingSchedule[day].start_time,
       );
       sendData.append(
         `staff[working_schedule][${day}][end_time]`,
-        formData.workingSchedule[day].end_time
+        formData.workingSchedule[day].end_time,
       );
     });
     // if (capturedImage) {
@@ -367,6 +391,7 @@ const EmployeeAddStaff = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Enter Email"
+                  required
                   className="border p-2 rounded-md border-gray-300"
                 />
               </div>
@@ -393,7 +418,9 @@ const EmployeeAddStaff = () => {
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleChange}
-                  placeholder="Enter Mobile Number"
+                  placeholder="Enter 10 Digit Mobile Number"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
                   className="border p-2 rounded-md border-gray-300"
                 />
               </div>
@@ -503,11 +530,16 @@ const EmployeeAddStaff = () => {
                 <label htmlFor="status" className="font-semibold">
                   Active/Inactive
                 </label>
-               <div className="flex items-center gap-4">
-                <p>Inactive</p>
-                <Switch checked={formData.status} onChange={()=>setFormData({...formData, status: !formData.status})} />
-                <p>Active</p>
-               </div>
+                <div className="flex items-center gap-4">
+                  <p>Inactive</p>
+                  <Switch
+                    checked={formData.status}
+                    onChange={() =>
+                      setFormData({ ...formData, status: !formData.status })
+                    }
+                  />
+                  <p>Active</p>
+                </div>
               </div>
             </div>
             <div className="grid gap-2 items-center w-full mt-2">
@@ -571,13 +603,20 @@ const EmployeeAddStaff = () => {
                 </tbody>
               </table>
             </div>
-            <div className="flex gap-5 justify-center items-center my-4">
+            <div className="flex gap-5 justify-end items-center my-4">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/passes/staff")}
+                className="text-black bg-white hover:bg-gray-200 border-2 border-black font-semibold py-2 px-4 rounded transition-all duration-300"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
                 onClick={handleEditStaff}
                 className="text-white bg-black hover:bg-white hover:text-black border-2 border-black font-semibold py-2 px-4 rounded transition-all duration-300"
               >
-                Save
+                Update
               </button>
             </div>
           </div>

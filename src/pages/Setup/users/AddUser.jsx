@@ -38,7 +38,15 @@ const AddUser = () => {
       relation: "",
     },
   ]);
-
+  const [locations, setLocations] = useState([
+    {
+      building_id: "",
+      floor_id: "",
+      unit_id: "",
+      floors: [],
+      units: [],
+    },
+  ]);
   const [vendorList, setVendorList] = useState([
     { service_type: "", name: "", contact: "" },
   ]);
@@ -71,20 +79,77 @@ const AddUser = () => {
     blood_group: "",
     no_of_pets: "",
     birth_date: "",
-    user_sites: [
-      {
-        unit_id: selectedUnit,
-        site_id: siteId,
-        ownership: occupancy_type, // Will be filled later from formData.occupancy_type
-        ownership_type: "primary",
-        is_approved: true,
-        lives_here: "",
-      },
-    ],
+    user_sites: locations.map((loc, index) => ({
+      site_id: siteId,
+      unit_id: loc.unit_id,
+      build_id: loc.building_id,
+      floor_id: loc.floor_id,
+      ownership: occupancy_type,
+      ownership_type: index === 0 ? "primary" : "secondary",
+      is_approved: true,
+    })),
 
     user_members: [], // Now an array
     user_vendors: [],
   });
+  const handleAddLocation = () => {
+    setLocations((prev) => [
+      ...prev,
+      {
+        building_id: "",
+        floor_id: "",
+        unit_id: "",
+        floors: [],
+        units: [],
+      },
+    ]);
+  };
+
+  const handleDeleteLocation = (index) => {
+    const updated = locations.filter((_, i) => i !== index);
+    setLocations(updated);
+  };
+
+  const handleLocationChange = async (index, field, value) => {
+    const updated = [...locations];
+    updated[index][field] = value;
+
+    // If Building Changed → Load Floors
+    if (field === "building_id") {
+      updated[index].floor_id = "";
+      updated[index].unit_id = "";
+      updated[index].units = [];
+
+      if (value) {
+        try {
+          const response = await getFloors(value);
+          updated[index].floors = response.data;
+        } catch {
+          updated[index].floors = [];
+        }
+      } else {
+        updated[index].floors = [];
+      }
+    }
+
+    // If Floor Changed → Load Units
+    if (field === "floor_id") {
+      updated[index].unit_id = "";
+
+      if (value) {
+        try {
+          const response = await getUnits(value);
+          updated[index].units = response.data;
+        } catch {
+          updated[index].units = [];
+        }
+      } else {
+        updated[index].units = [];
+      }
+    }
+
+    setLocations(updated);
+  };
 
   const handleUnitChange = (e) => {
     setSelectedUnit(e.target.value);
@@ -109,7 +174,10 @@ const AddUser = () => {
   };
 
   const handleAddVehicle = () => {
-    setVehicleList([...vehicleList, { vehicle_type: "", vehicle_no: "", parking_slot_no: "" }]);
+    setVehicleList([
+      ...vehicleList,
+      { vehicle_type: "", vehicle_no: "", parking_slot_no: "" },
+    ]);
   };
 
   const handleDeleteVehicle = (index) => {
@@ -120,7 +188,8 @@ const AddUser = () => {
 
   const handleVehicleChange = (index, field, value) => {
     const updated = [...vehicleList];
-    updated[index][field] = field === "vehicle_type" ? value : value.toUpperCase();
+    updated[index][field] =
+      field === "vehicle_type" ? value : value.toUpperCase();
     setVehicleList(updated);
   };
 
@@ -201,7 +270,7 @@ const AddUser = () => {
           sitesResp.data.map((site) => ({
             value: site.id,
             label: site.name,
-          }))
+          })),
         );
         setFilteredBuildings(buildingResp.data);
         // setUnits(unitsResp.data);
@@ -241,7 +310,7 @@ const AddUser = () => {
     setMembers(updated);
   };
 
- // ✅ ADDED PETS HANDLERS WITH FILE SUPPORT
+  // ✅ ADDED PETS HANDLERS WITH FILE SUPPORT
   const handleAddPets = () => {
     setPets((prev) => [
       ...prev,
@@ -253,20 +322,19 @@ const AddUser = () => {
         colour: "",
         age: "",
         pet_images: [], // Added
-        pet_profile: null // Added
+        pet_profile: null, // Added
       },
     ]);
   };
 
-
   const handlePetChange = (index, field, value) => {
     setPets((prev) => {
       const updated = [...prev];
-      
+
       // ✅ Handle File Inputs separately
       if (field === "pet_images" || field === "pet_profile") {
-         // value is likely e.target.files (FileList) for 'pet_images' or a File object for 'pet_profile'
-         updated[index][field] = value; 
+        // value is likely e.target.files (FileList) for 'pet_images' or a File object for 'pet_profile'
+        updated[index][field] = value;
       } else {
         updated[index] = {
           ...updated[index],
@@ -313,9 +381,7 @@ const AddUser = () => {
       !password ||
       !moving_date ||
       !occupancy_type ||
-      !selectedBuilding ||
-      !selectedFloorId ||
-      !selectedUnit
+      locations.some((loc) => !loc.building_id || !loc.floor_id || !loc.unit_id)
     ) {
       return toast.error("Please fill all mandatory fields marked with *");
     }
@@ -355,18 +421,18 @@ const AddUser = () => {
         net_provider_name,
         net_provider_id,
         blood_group,
-        no_of_pets:pets.length,
+        no_of_pets: pets.length,
         birth_date,
-        user_sites: [
-          {
-            unit_id: selectedUnit,
-            site_id: siteId,
-            ownership: occupancy_type,
-            ownership_type: "primary",
-            is_approved: true,
-            lives_here,
-          },
-        ],
+        user_sites: locations.map((loc, index) => ({
+          site_id: siteId,
+          unit_id: loc.unit_id,
+          build_id: loc.building_id,
+          floor_id: loc.floor_id,
+          ownership: occupancy_type,
+          ownership_type: index === 0 ? "primary" : "secondary",
+          is_approved: true,
+          lives_here,
+        })),
 
         user_members: members.map((member) => ({
           member_type: member.type,
@@ -395,9 +461,8 @@ const AddUser = () => {
           colour: p.colour,
           age: p.age,
           pet_images: p.pet_images || [], // Array of file objects
-          pet_profile: p.pet_profile || null // Single file object
-        }))
-
+          pet_profile: p.pet_profile || null, // Single file object
+        })),
       },
       site_ids,
     };
@@ -410,7 +475,10 @@ const AddUser = () => {
       navigate("/setup/users-setup");
     } catch (error) {
       console.error("Error adding user:", error);
-      const errorMessage = error?.response?.data?.error || error?.response?.data?.message || "Failed to add user. Please try again.";
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Failed to add user. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsCreating(false);
@@ -427,296 +495,387 @@ const AddUser = () => {
         >
           Add New User
         </h2>
-        <div className="md:mx-20 my-5 md:mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg">
-          {/* User Details */}
-          <div className="grid mt-5 md:grid-cols-2 gap-4">
-            {[
-              { label: "First Name", type: "text" },
-              { label: "Last Name", type: "text" },
-              { label: "Email", type: "email" },
-              { label: "Mobile", type: "tel" },
-              { label: "Password", type: "password" },
-            ].map((field, idx) => (
-              <div key={idx} className="flex flex-col gap-1">
-                <label className="font-semibold">
-                  {field.label}: <span style={{ color: "red" }}>*</span>
-                </label>
-                <input
-                  type={field.type}
-                  name={field.label.toLowerCase().replace(" ", "")}
-                  value={formData[field.label.toLowerCase().replace(" ", "")]}
-                  onChange={handleChange}
-                  placeholder={`Enter ${field.label}`}
-                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
-                />
-              </div>
-            ))}
-          </div>
+        <form autoComplete="off">
+          <div className="md:mx-20 my-5 md:mb-10 sm:border border-gray-400 p-5 px-10 rounded-lg">
+            {/* Hidden fake fields to prevent Chrome autofill */}
+            <input
+              type="text"
+              name="fake_username"
+              autoComplete="username"
+              style={{ display: "none" }}
+            />
+            <input
+              type="password"
+              name="fake_password"
+              autoComplete="new-password"
+              style={{ display: "none" }}
+            />{" "}
+            {/* User Details */}
+            <div className="grid mt-5 md:grid-cols-2 gap-4">
+              {[
+                { label: "First Name", type: "text", name: "firstname" },
+                { label: "Last Name", type: "text", name: "lastname" },
+                { label: "Email", type: "email", name: "user_email" }, // changed
+                { label: "Mobile", type: "tel", name: "mobile" },
+                {
+                  label: "Password",
+                  type: "password",
+                  name: "new_user_password",
+                }, // changed
+              ].map((field, idx) => (
+                <div key={idx} className="flex flex-col gap-1">
+                  <label className="font-semibold">
+                    {field.label}: <span style={{ color: "red" }}>*</span>
+                  </label>
 
-          <div className="mt-10 space-y-4">
-            <div className="grid mt-10 md:grid-cols-3">
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Tower: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
-                  value={selectedBuilding}
-                  onChange={async (e) => {
-                    const buildingId = e.target.value;
-                    setSelectedBuilding(buildingId);
-                    if (buildingId) {
-                      try {
-                        const response = await getFloors(buildingId);
-                        setFloors(response.data);
-                      } catch (error) {
-                        console.error("Error fetching floors:", error);
-                        setFloors([]);
-                      }
-                    } else {
-                      setFloors([]);
+                  <input
+                    type={field.type}
+                    name={field.name}
+                    value={
+                      field.name === "user_email"
+                        ? formData.email
+                        : field.name === "new_user_password"
+                          ? formData.password
+                          : formData[field.name] || ""
                     }
-                  }}
-                >
-                  <option value="">-- Choose Building --</option>
-                  {filteredBuildings.map((building) => (
-                    <option key={building.id} value={building.id}>
-                      {building.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Floor: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
-                  value={selectedFloorId}
-                  onChange={async (e) => {
-                    const floorId = e.target.value;
-                    setSelectedFloorId(floorId);
+                    autoComplete={
+                      field.type === "password" ? "new-password" : "off"
+                    }
+                    onChange={(e) => {
+                      const { name, value } = e.target;
 
-                    if (floorId) {
-                      try {
-                        const response = await getUnits(floorId);
-                        setUnits(response.data);
-                      } catch (error) {
-                        console.error("Error fetching units:", error);
-                        setUnits([]);
+                      if (name === "firstname" || name === "lastname") {
+                        const validated = value.replace(/[^a-zA-Z]/g, "");
+                        setFormData((prev) => ({ ...prev, [name]: validated }));
+                        return;
                       }
-                    } else {
-                      setUnits([]);
-                    }
-                  }}
-                >
-                  <option value="">-- Choose Floor --</option>
-                  {floors.map((floor) => (
-                    <option key={floor.id} value={floor.id}>
-                      {floor.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
+                      if (name === "mobile") {
+                        const digitsOnly = value
+                          .replace(/\D/g, "")
+                          .slice(0, 10);
+                        setFormData((prev) => ({
+                          ...prev,
+                          mobile: digitsOnly,
+                        }));
+                        return;
+                      }
+
+                      if (name === "user_email") {
+                        const noSpaces = value.replace(/\s/g, "");
+                        setFormData((prev) => ({ ...prev, email: noSpaces }));
+                        return;
+                      }
+
+                      if (name === "new_user_password") {
+                        setFormData((prev) => ({ ...prev, password: value }));
+                        return;
+                      }
+
+                      setFormData((prev) => ({ ...prev, [name]: value }));
+                    }}
+                    placeholder={`Enter ${field.label}`}
+                    className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
+                  />
+                </div>
+              ))}
               <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Units: <span style={{ color: "red" }}>*</span>
+                <label htmlFor="lives_here" className="font-semibold">
+                  Lives Here: <span style={{ color: "red" }}>*</span>
                 </label>
                 <select
-                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
-                  value={selectedUnit}
-                  onChange={handleUnitChange}
+                  id="lives_here"
+                  name="lives_here"
+                  className="border p-2 rounded border-gray-300"
+                  value={
+                    formData.lives_here === true
+                      ? "true"
+                      : formData.lives_here === false
+                        ? "false"
+                        : ""
+                  }
+                  onChange={(e) =>
+                    handleInputChange("lives_here", e.target.value === "true")
+                  }
                 >
-                  <option value="">-- Choose Unit --</option>
-                  {units.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.name}
-                    </option>
-                  ))}
+                  <option value="">-- Select --</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
                 </select>
               </div>
             </div>
-          </div>
-
-          <div className="mt-10 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 🗓️ Moving Date */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="moving_date" className="font-semibold">
-                  Moving Date: <span style={{ color: "red" }}>*</span>
-                </label>
-                <input
-                  type="date"
-                  id="moving_date"
-                  name="moving_date"
-                  className="border p-2 rounded border-gray-300"
-                  value={formData.moving_date || ""}
-                  onChange={(e) =>
-                    handleInputChange("moving_date", e.target.value)
-                  }
-                />
-              </div>
-
-              {/* 🏠 Owner/Tenant Dropdown */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="occupancy_type" className="font-semibold">
-                  Occupancy Type: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  id="occupancy_type"
-                  name="occupancy_type"
-                  className="border p-2 rounded border-gray-300"
-                  value={formData.occupancy_type}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    handleInputChange("occupancy_type", value);
-
-                    //Clear lease_expiry if switching to owner
-                    if (value !== "tenant") {
-                      handleInputChange("lease_expiry", "");
-                    }
-                  }}
-                >
-                  <option value="">-- Select --</option>
-                  <option value="owner">Owner</option>
-                  <option value="tenant">Tenant</option>
-                </select>
-              </div>
-              {/* 📅 Lease Expiry Date (only if Tenant) */}
-              {formData.occupancy_type === "tenant" && (
+            <div className="mt-10 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* 🗓️ Moving Date */}
                 <div className="flex flex-col gap-2">
-                  <label htmlFor="lease_expiry" className="font-semibold">
-                    Lease Expiry Date: <span style={{ color: "red" }}>*</span>
+                  <label htmlFor="moving_date" className="font-semibold">
+                    Moving Date: <span style={{ color: "red" }}>*</span>
                   </label>
                   <input
                     type="date"
-                    id="lease_expiry"
-                    name="lease_expiry"
-                    className="border p-2 rounded border-gray-300 w-40"
-                    value={formData.lease_expiry}
+                    id="moving_date"
+                    name="moving_date"
+                    className="border p-2 rounded border-gray-300"
+                    value={formData.moving_date || ""}
                     onChange={(e) =>
-                      handleInputChange("lease_expiry", e.target.value)
+                      handleInputChange("moving_date", e.target.value)
                     }
                   />
                 </div>
-              )}
 
-              {/* 💼 Profession */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="profession" className="font-semibold">
-                  Profession:
-                </label>
-                <input
-                  type="text"
-                  id="profession"
-                  name="profession"
-                  className="border p-2 rounded border-gray-300"
-                  placeholder="Enter profession"
-                  value={formData.profession || ""}
-                  onChange={(e) =>
-                    handleInputChange("profession", e.target.value)
-                  }
-                />
-              </div>
+                {/* 🏠 Owner/Tenant Dropdown */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="occupancy_type" className="font-semibold">
+                    Occupancy Type: <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <select
+                    id="occupancy_type"
+                    name="occupancy_type"
+                    className="border p-2 rounded border-gray-300"
+                    value={formData.occupancy_type}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      handleInputChange("occupancy_type", value);
 
+                      //Clear lease_expiry if switching to owner
+                      if (value !== "tenant") {
+                        handleInputChange("lease_expiry", "");
+                      }
+                    }}
+                  >
+                    <option value="">-- Select --</option>
+                    <option value="owner">Owner</option>
+                    <option value="tenant">Tenant</option>
+                  </select>
+                </div>
+                {/* 📅 Lease Expiry Date (only if Tenant) */}
+                {formData.occupancy_type === "tenant" && (
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="lease_expiry" className="font-semibold">
+                      Lease Expiry Date: <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="lease_expiry"
+                      name="lease_expiry"
+                      className="border p-2 rounded border-gray-300 w-40"
+                      value={formData.lease_expiry}
+                      onChange={(e) =>
+                        handleInputChange("lease_expiry", e.target.value)
+                      }
+                    />
+                  </div>
+                )}
 
-            </div>
-          </div>
-
-          <div className="mt-10 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              {/* 🩸 Blood Group (2 characters max) */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="blood_group" className="font-semibold">
-                  Blood Group:
-                </label>
-                <input
-                  type="text"
-                  id="blood_group"
-                  name="blood_group"
-                  maxLength={3}
-                  className="border p-2 rounded border-gray-300"
-                  placeholder="e.g. A+, B-"
-                  value={formData.blood_group || ""}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "blood_group",
-                      e.target.value.toUpperCase()
-                    )
-                  }
-                />
-              </div>
-
-              {/* 🎂 Date of Birth */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="dob" className="font-semibold">
-                  Date of Birth:
-                </label>
-                <input
-                  type="date"
-                  id="birth_date"
-                  name="birth_date"
-                  className="border p-2 rounded border-gray-300"
-                  value={formData.birth_date || ""}
-                  onChange={(e) =>
-                    handleInputChange("birth_date", e.target.value)
-                  }
-                />
-              </div>
-
-              {/* 💼 Pets */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="profession" className="font-semibold">
-                  Pets(if any):
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  id="no_of_pets"
-                  name="no_of_pets"
-                  className="border p-2 rounded border-gray-300"
-                  placeholder="Number of pets"
-                  value={formData.no_of_pets || ""}
-                  onChange={(e) =>
-                    handleInputChange("no_of_pets", e.target.value)
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* ✅ ADDED PETS SECTION HERE */}
-          <div className="mt-10 space-y-4">
-            <button
-              type="button"
-              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
-              onClick={handleAddPets}
-            >
-              Add Pets
-            </button>
-
-            {pets.map((pet, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end mt-4"
-              >
-                {/* Pet Name */}
-                <div className="flex flex-col">
-                  <label className="font-semibold">Pet Name</label>
+                {/* 💼 Profession */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="profession" className="font-semibold">
+                    Profession:
+                  </label>
                   <input
                     type="text"
-                    className="border p-2 rounded"
-                    value={pet.pet_name}
-                    placeholder=" Enter Pet Name"
+                    id="profession"
+                    name="profession"
+                    className="border p-2 rounded border-gray-300"
+                    placeholder="Enter profession"
+                    value={formData.profession || ""}
                     onChange={(e) =>
-                      handlePetChange(index, "pet_name", e.target.value)
-
+                      handleInputChange("profession", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mt-10 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                {/* 🩸 Blood Group (2 characters max) */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="blood_group" className="font-semibold">
+                    Blood Group:
+                  </label>
+                  <input
+                    type="text"
+                    id="blood_group"
+                    name="blood_group"
+                    maxLength={3}
+                    className="border p-2 rounded border-gray-300"
+                    placeholder="e.g. A+, B-"
+                    value={formData.blood_group || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "blood_group",
+                        e.target.value.toUpperCase(),
+                      )
                     }
                   />
                 </div>
 
-                {/* Owner Mobile */}
-                {/* <div className="flex flex-col">
+                {/* 🎂 Date of Birth */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="dob" className="font-semibold">
+                    Date of Birth:
+                  </label>
+                  <input
+                    type="date"
+                    id="birth_date"
+                    name="birth_date"
+                    className="border p-2 rounded border-gray-300"
+                    value={formData.birth_date || ""}
+                    onChange={(e) =>
+                      handleInputChange("birth_date", e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* 💼 Pets */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="profession" className="font-semibold">
+                    Pets(if any):
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    id="no_of_pets"
+                    name="no_of_pets"
+                    className="border p-2 rounded border-gray-300"
+                    placeholder="Number of pets"
+                    value={formData.no_of_pets || ""}
+                    onChange={(e) =>
+                      handleInputChange("no_of_pets", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+            {/* ================= LOCATION SECTION ================= */}
+            <div className="mt-10 space-y-4">
+              <h2 className="text-xl font-semibold">Location Details</h2>
+
+              <button
+                type="button"
+                onClick={handleAddLocation}
+                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700"
+              >
+                + Add Location
+              </button>
+
+              {locations.map((location, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-50 p-5 rounded-lg border"
+                >
+                  {/* Tower */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">
+                      Tower <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="border p-2 rounded"
+                      value={location.building_id}
+                      onChange={(e) =>
+                        handleLocationChange(
+                          index,
+                          "building_id",
+                          e.target.value,
+                        )
+                      }
+                    >
+                      <option value="">-- Select Tower --</option>
+                      {filteredBuildings.map((building) => (
+                        <option key={building.id} value={building.id}>
+                          {building.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Floor */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">
+                      Floor <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="border p-2 rounded"
+                      value={location.floor_id}
+                      onChange={(e) =>
+                        handleLocationChange(index, "floor_id", e.target.value)
+                      }
+                    >
+                      <option value="">-- Select Floor --</option>
+                      {location.floors?.map((floor) => (
+                        <option key={floor.id} value={floor.id}>
+                          {floor.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Unit */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">
+                      Unit <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="border p-2 rounded"
+                      value={location.unit_id}
+                      onChange={(e) =>
+                        handleLocationChange(index, "unit_id", e.target.value)
+                      }
+                    >
+                      <option value="">-- Select Unit --</option>
+                      {location.units?.map((unit) => (
+                        <option key={unit.id} value={unit.id}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Delete Button */}
+                  {index > 0 && (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLocation(index)}
+                      >
+                        <RiDeleteBinLine className="text-red-600 w-6 h-6" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* ✅ ADDED PETS SECTION HERE */}
+            <div className="mt-10 space-y-4">
+              <button
+                type="button"
+                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={handleAddPets}
+              >
+                Add Pets
+              </button>
+
+              {pets.map((pet, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end mt-4"
+                >
+                  {/* Pet Name */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Pet Name</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded"
+                      value={pet.pet_name}
+                      placeholder=" Enter Pet Name"
+                      onChange={(e) =>
+                        handlePetChange(index, "pet_name", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Owner Mobile */}
+                  {/* <div className="flex flex-col">
                   <label className="font-semibold">Mobile No</label>
                   <input
                     type="tel"
@@ -733,368 +892,187 @@ const AddUser = () => {
                   />
                 </div> */}
 
-                {/* Breed */}
-                <div className="flex flex-col">
-                  <label className="font-semibold">Breed</label>
-                  <input
-                    type="text"
-                    className="border p-2 rounded"
-                    value={pet.pet_breed}
-                    placeholder=" Enter Pet Breed"
-                    onChange={(e) =>
-                      handlePetChange(index, "pet_breed", e.target.value)
-                    }
-                  />
-                </div>
-
-                {/* Gender */}
-                <div className="flex flex-col">
-                  <label className="font-semibold">Gender</label>
-                  <select
-                    className="border p-2 rounded"
-                    value={pet.gender}
-                    onChange={(e) =>
-                      handlePetChange(index, "gender", e.target.value)
-                    }
-                  >
-                    <option value="">-- Select --</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
-
-                {/* Colour */}
-                <div className="flex flex-col">
-                  <label className="font-semibold">Colour</label>
-                  <input
-                    type="text"
-                    className="border p-2 rounded"
-                    value={pet.colour}
-                    placeholder=" Enter Pet Colour"
-                    onChange={(e) =>
-                      handlePetChange(index, "colour", e.target.value)
-                    }
-                  />
-                </div>
-
-                {/* Age */}
-                <div className="flex flex-col">
-                  <label className="font-semibold">Age</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="border p-2 rounded"
-                    value={pet.age}
-                    placeholder=" Enter Pet Age"
-                    onChange={(e) =>
-                      handlePetChange(index, "age", e.target.value)
-                    }
-                  />
-                </div>
-                 <div className="col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                   {/* Pet Images Input */}
+                  {/* Breed */}
                   <div className="flex flex-col">
-                    <label className="font-semibold">Pet Images</label>
+                    <label className="font-semibold">Breed</label>
                     <input
-                      type="file"
+                      type="text"
                       className="border p-2 rounded"
-                      multiple
-                      accept="image/*"
-                      onChange={(e) => handlePetChange(index, "pet_images", e.target.files)}
-                    />
-                  </div>
-
-                  {/* Pet Profile Input */}
-                  <div className="flex flex-col">
-                    <label className="font-semibold">Pet Profile</label>
-                    <input
-                      type="file"
-                      className="border p-2 rounded"
-                      accept="image/*"
-                      onChange={(e) => handlePetChange(index, "pet_profile", e.target.files[0])}
-                    />
-                  </div>
-                  </div>
-
-                {/* Delete */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeletePet(index)}
-                  >
-                    <RiDeleteBinLine className="text-red-600 w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 space-y-4">
-            {/* ➕ Add Button */}
-            <button
-              type="button"
-              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
-              onClick={handleAddMember}
-            >
-              Add Family Member
-            </button>
-
-            {/* 👨‍👩‍👧 Member Rows */}
-            {members.map((member, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
-              >
-                {/* Member Type Dropdown */}
-                <div className="flex flex-col mt-2 gap-2">
-                  <label className="font-semibold">Member Type:</label>
-                  <select
-                    className="border p-2 rounded border-gray-300"
-                    value={member.type}
-                    onChange={(e) =>
-                      handleMemberChange(index, "type", e.target.value)
-                    }
-                  >
-                    <option value="">-- Select --</option>
-                    <option value="Primary">Primary</option>
-                    <option value="Secondary">Secondary</option>
-                  </select>
-                </div>
-
-                {/* Name */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Member's Name:</label>
-                  <input
-                    type="text"
-                    className="border p-2 rounded border-gray-300"
-                    value={member.name}
-                    onChange={(e) => {
-                      const validated = e.target.value.replace(
-                        /[^a-zA-Z ]/g,
-                        ""
-                      );
-                      handleMemberChange(index, "name", validated);
-                    }}
-                  />
-                </div>
-
-                {/* Contact */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Contact Details:</label>
-                  <input
-                    type="tel"
-                    className="border p-2 rounded border-gray-300"
-                    value={member.contact}
-                    onChange={(e) => {
-                      const input = e.target.value;
-                      const digitsOnly = input.replace(/\D/g, "");
-                      if (digitsOnly.length <= 10) {
-                        handleMemberChange(index, "contact", digitsOnly);
-                      }
-                    }}
-                    placeholder="Enter 10-digit mobile number"
-                    maxLength={10}
-                  />
-                </div>
-
-                {/* Relation */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-semibold">Relation:</label>
-                  <input
-                    type="text"
-                    className="border p-2 rounded border-gray-300"
-                    value={member.relation}
-                    onChange={(e) =>
-                      handleMemberChange(index, "relation", e.target.value)
-                    }
-                  />
-                </div>
-
-                {/* ❌ Delete Button */}
-                <div className="inline-block">
-                  <button
-                    type="button"
-                    className="px-2 py-1 rounded hover:bg-red-100"
-                    onClick={() => handleDeleteMember(index)}
-                  >
-                    <RiDeleteBinLine className="text-red-600 w-7 h-7" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Section Header */}
-
-          <div className="mt-10 space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-5">
-              Utility & Services Information
-            </h2>
-            <hr className="border-t border-gray-300 mb-6" />
-
-            {/* 📦 Input Container */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 🔌 MGL Customer Number */}
-              <div className="flex flex-col mt-5">
-                <label
-                  htmlFor="mgl_number"
-                  className="text-sm font-semibold text-gray-700 mb-1"
-                >
-                  MGL Customer Number
-                </label>
-                <input
-                  type="text"
-                  id="mgl_customer_number"
-                  name="mgl_customer_number"
-                  className="border border-gray-300 rounded-md p-2"
-                  value={formData.mgl_customer_number || ""}
-                  onChange={(e) =>
-                    handleInputChange("mgl_customer_number", e.target.value)
-                  }
-                />
-              </div>
-
-              {/* ⚡ Adani Electricity Account Number */}
-              <div className="flex flex-col mt-5">
-                <label
-                  htmlFor="adani_electricity_account_no"
-                  className="text-sm font-medium text-gray-700 mb-1"
-                >
-                  Adani Electricity Account Number
-                </label>
-                <input
-                  type="text"
-                  id="adani_electricity_account_no"
-                  name="adani_electricity_account_no"
-                  className="border border-gray-300 rounded-md p-2"
-                  value={formData.adani_electricity_account_no || ""}
-                  onChange={(e) =>
-                    handleInputChange("adani_electricity_account_no", e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
-                {/* 🌐 Internet Provider Name */}
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="net_provider_name"
-                    className="text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Internet Provider Name
-                  </label>
-                  <input
-                    type="text"
-                    id="net_provider_name"
-                    name="net_provider_name"
-                    className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    value={formData.net_provider_name || ""}
-                    onChange={(e) =>
-                      handleInputChange("net_provider_name", e.target.value)
-                    }
-                  />
-                </div>
-
-                {/* 🆔 Internet ID */}
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="net_provider_id"
-                    className="text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Internet ID
-                  </label>
-                  <input
-                    type="text"
-                    id="net_provider_id"
-                    name="net_provider_id"
-                    className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    value={formData.net_provider_id || ""}
-                    onChange={(e) =>
-                      handleInputChange("net_provider_id", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Header */}
-          <div className="mt-10 space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
-              Resident Services / Vendor Details
-            </h2>
-            <hr className="border-t border-gray-300 mb-6" />
-
-            <div className="mt-5 space-y-4" style={{ marginTop: "30px" }}>
-              {/* ➕ Add Button */}
-              <button
-                type="button"
-                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-blue-700"
-                onClick={handleAddVendor}
-              >
-                Add Vendor Service
-              </button>
-
-              {/* 🧹 Vendor Entries */}
-              {vendorList.map((vendor, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4"
-                >
-                  {/* Dropdown */}
-                  <div className="flex flex-col mt-3">
-                    <label className="text-sm font-medium text-gray-700 mb-1">
-                      Service Type
-                    </label>
-                    <select
-                      className="border p-2 rounded border-gray-300"
-                      value={vendor.service}
+                      value={pet.pet_breed}
+                      placeholder=" Enter Pet Breed"
                       onChange={(e) =>
-                        handleVendorChange(index, "service", e.target.value)
+                        handlePetChange(index, "pet_breed", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Gender</label>
+                    <select
+                      className="border p-2 rounded"
+                      value={pet.gender}
+                      onChange={(e) =>
+                        handlePetChange(index, "gender", e.target.value)
                       }
                     >
                       <option value="">-- Select --</option>
-                      <option value="Maid">Cook / Maid</option>
-                      <option value="Driver">Driver (if any)</option>
-                      <option value="Laundry">Laundry / Ironing</option>
-                      <option value="Newspaper">Newspaper</option>
-                      <option value="Milk">Milk Vendor</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+
+                  {/* Colour */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Colour</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded"
+                      value={pet.colour}
+                      placeholder=" Enter Pet Colour"
+                      onChange={(e) =>
+                        handlePetChange(index, "colour", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Age */}
+                  <div className="flex flex-col">
+                    <label className="font-semibold">Age</label>
+                    <input
+                      type="number"
+                      min={0}
+                      className="border p-2 rounded"
+                      value={pet.age}
+                      placeholder=" Enter Pet Age"
+                      onChange={(e) =>
+                        handlePetChange(index, "age", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="col-span-6 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    {/* Pet Images Input */}
+                    <div className="flex flex-col">
+                      <label className="font-semibold">Pet Images</label>
+                      <input
+                        type="file"
+                        className="border p-2 rounded"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) =>
+                          handlePetChange(index, "pet_images", e.target.files)
+                        }
+                      />
+                    </div>
+
+                    {/* Pet Profile Input */}
+                    <div className="flex flex-col">
+                      <label className="font-semibold">Pet Profile</label>
+                      <input
+                        type="file"
+                        className="border p-2 rounded"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handlePetChange(
+                            index,
+                            "pet_profile",
+                            e.target.files[0],
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* Delete */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePet(index)}
+                    >
+                      <RiDeleteBinLine className="text-red-600 w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-10 space-y-4">
+              {/* ➕ Add Button */}
+              <button
+                type="button"
+                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={handleAddMember}
+              >
+                Add Family Member
+              </button>
+
+              {/* 👨‍👩‍👧 Member Rows */}
+              {members.map((member, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
+                >
+                  {/* Member Type Dropdown */}
+                  <div className="flex flex-col mt-2 gap-2">
+                    <label className="font-semibold">Member Type:</label>
+                    <select
+                      className="border p-2 rounded border-gray-300"
+                      value={member.type}
+                      onChange={(e) =>
+                        handleMemberChange(index, "type", e.target.value)
+                      }
+                    >
+                      <option value="">-- Select --</option>
+                      <option value="Primary">Primary</option>
+                      <option value="Secondary">Secondary</option>
                     </select>
                   </div>
 
                   {/* Name */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-1">
-                      Name
-                    </label>
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">Member's Name:</label>
                     <input
                       type="text"
                       className="border p-2 rounded border-gray-300"
-                      value={vendor.name}
-                      onChange={(e) =>
-                        handleVendorChange(index, "name", e.target.value)
-                      }
+                      value={member.name}
+                      onChange={(e) => {
+                        const validated = e.target.value.replace(
+                          /[^a-zA-Z ]/g,
+                          "",
+                        );
+                        handleMemberChange(index, "name", validated);
+                      }}
                     />
                   </div>
 
                   {/* Contact */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-1">
-                      Contact Details
-                    </label>
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">Contact Details:</label>
                     <input
                       type="tel"
                       className="border p-2 rounded border-gray-300"
-                      value={vendor.contact}
-                      onChange={(e) =>
-                        handleVendorChange(
-                          index,
-                          "contact",
-                          validateMobileInput(e.target.value)
-                        )
-                      }
+                      value={member.contact}
+                      onChange={(e) => {
+                        const input = e.target.value;
+                        const digitsOnly = input.replace(/\D/g, "");
+                        if (digitsOnly.length <= 10) {
+                          handleMemberChange(index, "contact", digitsOnly);
+                        }
+                      }}
                       placeholder="Enter 10-digit mobile number"
                       maxLength={10}
+                    />
+                  </div>
+
+                  {/* Relation */}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">Relation:</label>
+                    <input
+                      type="text"
+                      className="border p-2 rounded border-gray-300"
+                      value={member.relation}
+                      onChange={(e) =>
+                        handleMemberChange(index, "relation", e.target.value)
+                      }
                     />
                   </div>
 
@@ -1103,8 +1081,7 @@ const AddUser = () => {
                     <button
                       type="button"
                       className="px-2 py-1 rounded hover:bg-red-100"
-                      onClick={() => handleDeleteVendor(index)}
-                      aria-label="Delete vendor"
+                      onClick={() => handleDeleteMember(index)}
                     >
                       <RiDeleteBinLine className="text-red-600 w-7 h-7" />
                     </button>
@@ -1112,101 +1089,300 @@ const AddUser = () => {
                 </div>
               ))}
             </div>
-          </div>
+            {/* Section Header */}
+            <div className="mt-10 space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-5">
+                Utility & Services Information
+              </h2>
+              <hr className="border-t border-gray-300 mb-6" />
 
+              {/* 📦 Input Container */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* 🔌 MGL Customer Number */}
+                <div className="flex flex-col mt-5">
+                  <label
+                    htmlFor="mgl_number"
+                    className="text-sm font-semibold text-gray-700 mb-1"
+                  >
+                    MGL Customer Number
+                  </label>
+                  <input
+                    type="text"
+                    id="mgl_customer_number"
+                    name="mgl_customer_number"
+                    className="border border-gray-300 rounded-md p-2"
+                    value={formData.mgl_customer_number || ""}
+                    onChange={(e) =>
+                      handleInputChange("mgl_customer_number", e.target.value)
+                    }
+                  />
+                </div>
 
-          <div className="mt-10 space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
-              Vehicle Details
-            </h2>
-            <hr className="border-t border-gray-300 mb-6" />
+                {/* ⚡ Adani Electricity Account Number */}
+                <div className="flex flex-col mt-5">
+                  <label
+                    htmlFor="adani_electricity_account_no"
+                    className="text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Adani Electricity Account Number
+                  </label>
+                  <input
+                    type="text"
+                    id="adani_electricity_account_no"
+                    name="adani_electricity_account_no"
+                    className="border border-gray-300 rounded-md p-2"
+                    value={formData.adani_electricity_account_no || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "adani_electricity_account_no",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </div>
 
-            <div className="mt-5 space-y-4">
-              {/* ➕ Add Button */}
-              <button
-                type="button"
-                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
-                onClick={handleAddVehicle}
-              >
-                🚗 Add Vehicle
-              </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
+                  {/* 🌐 Internet Provider Name */}
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="net_provider_name"
+                      className="text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Internet Provider Name
+                    </label>
+                    <input
+                      type="text"
+                      id="net_provider_name"
+                      name="net_provider_name"
+                      className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                      value={formData.net_provider_name || ""}
+                      onChange={(e) =>
+                        handleInputChange("net_provider_name", e.target.value)
+                      }
+                    />
+                  </div>
 
-              {/* Vehicle Entries */}
-              {vehicleList.map((vehicle, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  {/* 🆔 Internet ID */}
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="net_provider_id"
+                      className="text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Internet ID
+                    </label>
+                    <input
+                      type="text"
+                      id="net_provider_id"
+                      name="net_provider_id"
+                      className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                      value={formData.net_provider_id || ""}
+                      onChange={(e) =>
+                        handleInputChange("net_provider_id", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Section Header */}
+            <div className="mt-10 space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
+                Resident Services / Vendor Details
+              </h2>
+              <hr className="border-t border-gray-300 mb-6" />
+
+              <div className="mt-5 space-y-4" style={{ marginTop: "30px" }}>
+                {/* ➕ Add Button */}
+                <button
+                  type="button"
+                  className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  onClick={handleAddVendor}
                 >
-                  {/* Vehicle Type Dropdown */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-1">
-                      Vehicle Type
-                    </label>
-                    <select
-                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
-                      value={vehicle.vehicle_type}
-                      onChange={(e) =>
-                        handleVehicleChange(index, "vehicle_type", e.target.value)
-                      }
-                    >
-                      <option value="">-- Select --</option>
-                      <option value="Car">Car</option>
-                      <option value="Bike">Bike</option>
-                      <option value="Scooter">Scooter</option>
-                      <option value="SUV">SUV</option>
-                      <option value="Truck">Truck</option>
-                    </select>
-                  </div>
+                  Add Vendor Service
+                </button>
 
-                  {/* Vehicle Number */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-1">
-                      Vehicle Number
-                    </label>
-                    <input
-                      type="text"
-                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
-                      value={vehicle.vehicle_no}
-                      onChange={(e) =>
-                        handleVehicleChange(index, "vehicle_no", e.target.value)
-                      }
-                      placeholder="e.g. MH01AB1234"
-                      maxLength={15}
-                    />
-                  </div>
+                {/* 🧹 Vendor Entries */}
+                {vendorList.map((vendor, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4"
+                  >
+                    {/* Dropdown */}
+                    <div className="flex flex-col mt-3">
+                      <label className="text-sm font-medium text-gray-700 mb-1">
+                        Service Type
+                      </label>
+                      <select
+                        className="border p-2 rounded border-gray-300"
+                        value={vendor.service}
+                        onChange={(e) =>
+                          handleVendorChange(index, "service", e.target.value)
+                        }
+                      >
+                        <option value="">-- Select --</option>
+                        <option value="Maid">Cook / Maid</option>
+                        <option value="Driver">Driver (if any)</option>
+                        <option value="Laundry">Laundry / Ironing</option>
+                        <option value="Newspaper">Newspaper</option>
+                        <option value="Milk">Milk Vendor</option>
+                      </select>
+                    </div>
 
-                  {/* Parking Slot */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-1">
-                      Parking Slot No.
-                    </label>
-                    <input
-                      type="text"
-                      className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
-                      value={vehicle.parking_slot_no}
-                      onChange={(e) =>
-                        handleVehicleChange(index, "parking_slot_no", e.target.value)
-                      }
-                      placeholder="e.g. P-101"
-                    />
-                  </div>
+                    {/* Name */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700 mb-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        className="border p-2 rounded border-gray-300"
+                        value={vendor.name}
+                        onChange={(e) =>
+                          handleVendorChange(index, "name", e.target.value)
+                        }
+                      />
+                    </div>
 
-                  {/* ❌ Delete Button */}
-                  <div className="inline-block">
-                    <button
-                      type="button"
-                      className="px-2 py-1 rounded hover:bg-red-100 transition-colors"
-                      onClick={() => handleDeleteVehicle(index)}
-                      aria-label="Delete vehicle"
-                    >
-                      <RiDeleteBinLine className="text-red-600 w-7 h-7" />
-                    </button>
+                    {/* Contact */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700 mb-1">
+                        Contact Details
+                      </label>
+                      <input
+                        type="tel"
+                        className="border p-2 rounded border-gray-300"
+                        value={vendor.contact}
+                        onChange={(e) =>
+                          handleVendorChange(
+                            index,
+                            "contact",
+                            validateMobileInput(e.target.value),
+                          )
+                        }
+                        placeholder="Enter 10-digit mobile number"
+                        maxLength={10}
+                      />
+                    </div>
+
+                    {/* ❌ Delete Button */}
+                    <div className="inline-block">
+                      <button
+                        type="button"
+                        className="px-2 py-1 rounded hover:bg-red-100"
+                        onClick={() => handleDeleteVendor(index)}
+                        aria-label="Delete vendor"
+                      >
+                        <RiDeleteBinLine className="text-red-600 w-7 h-7" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-          {/* <div className="grid mt-3 md:grid-cols-2">
+            <div className="mt-10 space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-8">
+                Vehicle Details
+              </h2>
+              <hr className="border-t border-gray-300 mb-6" />
+
+              <div className="mt-5 space-y-4">
+                {/* ➕ Add Button */}
+                <button
+                  type="button"
+                  className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+                  onClick={handleAddVehicle}
+                >
+                  🚗 Add Vehicle
+                </button>
+
+                {/* Vehicle Entries */}
+                {vehicleList.map((vehicle, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    {/* Vehicle Type Dropdown */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700 mb-1">
+                        Vehicle Type
+                      </label>
+                      <select
+                        className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+                        value={vehicle.vehicle_type}
+                        onChange={(e) =>
+                          handleVehicleChange(
+                            index,
+                            "vehicle_type",
+                            e.target.value,
+                          )
+                        }
+                      >
+                        <option value="">-- Select --</option>
+                        <option value="Car">Car</option>
+                        <option value="Bike">Bike</option>
+                        <option value="Scooter">Scooter</option>
+                        <option value="SUV">SUV</option>
+                        <option value="Truck">Truck</option>
+                      </select>
+                    </div>
+
+                    {/* Vehicle Number */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700 mb-1">
+                        Vehicle Number
+                      </label>
+                      <input
+                        type="text"
+                        className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
+                        value={vehicle.vehicle_no}
+                        onChange={(e) =>
+                          handleVehicleChange(
+                            index,
+                            "vehicle_no",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="e.g. MH01AB1234"
+                        maxLength={15}
+                      />
+                    </div>
+
+                    {/* Parking Slot */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700 mb-1">
+                        Parking Slot No.
+                      </label>
+                      <input
+                        type="text"
+                        className="border p-2 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 uppercase"
+                        value={vehicle.parking_slot_no}
+                        onChange={(e) =>
+                          handleVehicleChange(
+                            index,
+                            "parking_slot_no",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="e.g. P-101"
+                      />
+                    </div>
+
+                    {/* ❌ Delete Button */}
+                    <div className="inline-block">
+                      <button
+                        type="button"
+                        className="px-2 py-1 rounded hover:bg-red-100 transition-colors"
+                        onClick={() => handleDeleteVehicle(index)}
+                        aria-label="Delete vehicle"
+                      >
+                        <RiDeleteBinLine className="text-red-600 w-7 h-7" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* <div className="grid mt-3 md:grid-cols-2">
             <div className="flex flex-col px-4 gap-1">
               <label className="font-semibold">Phase:</label>
               <select className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm">
@@ -1240,9 +1416,8 @@ const AddUser = () => {
               </select>
             </div>
           </div> */}
-
-          {/* Associated Units */}
-          {/* {formData.user_sites.map((site, index) => (
+            {/* Associated Units */}
+            {/* {formData.user_sites.map((site, index) => (
             <div
               key={index}
               className="grid grid-cols-2 gap-4 my-3 border p-5 w-full rounded-md"
@@ -1310,55 +1485,61 @@ const AddUser = () => {
               </div>
             </div>
           ))} */}
-
-          {/* <button
+            {/* <button
             type="button"
             onClick={handleAddSite}
             className="px-3 py-2 bg-blue-500 text-white rounded-md"
           >
             Add Another Unit
           </button> */}
-
-          {/* Submit Button */}
-          <div className="flex justify-center mt-10">
-            <button
-              onClick={handleAddUser}
-              disabled={isCreating}
-              className={`text-white p-2 px-4 rounded-md font-medium ${isCreating
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-black hover:bg-gray-800"
+            {/* Submit Button */}
+            <div className="flex justify-end mt-10 gap-4">
+              <button
+                onClick={() => navigate("/setup/users-setup")}
+                className="px-5 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddUser}
+                disabled={isCreating}
+                className={`text-white p-2 px-4 rounded-md font-medium ${
+                  isCreating
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-black hover:bg-gray-800"
                 }`}
-            >
-              {isCreating ? (
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Creating...
-                </span>
-              ) : (
-                "Create User"
-              )}
-            </button>
+              >
+                {isCreating ? (
+                  <span className="flex items-center gap-2">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating...
+                  </span>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
     </section>
   );

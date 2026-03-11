@@ -19,6 +19,7 @@ import { RiDeleteBinLine } from "react-icons/ri";
 const EditPageUser = () => {
   const { id } = useParams();
   const [units, setUnits] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState("");
   const siteId = getItemInLocalStorage("SITEID");
   const [sites, setSites] = useState([]);
   const [usersites, setUserSites] = useState([]);
@@ -55,8 +56,8 @@ const EditPageUser = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedFloorId, setSelectedFloorId] = useState("");
-  const [floors, setFloors] = useState([]);
-  const [selectedUnit, setSelectedUnit] = useState("");
+  const [floorsByBuilding, setFloorsByBuilding] = useState({});
+const [unitsByFloor, setUnitsByFloor] = useState({});
   const [filteredBuildings, setFilteredBuildings] = useState([]);
   const [vendorList, setVendorList] = useState([]);
   const [vehicleList, setVehicleList] = useState([]);
@@ -90,12 +91,14 @@ const EditPageUser = () => {
       console.log("vehicle_details from API:", userResp?.data?.vehicle_details);
 
       const userData = userResp?.data || {};
+       const firstSite = userData.user_sites?.[0];
       // Convert date formats for HTML5 date inputs
       const formattedData = {
         ...userData,
         moving_date: convertToISODate(userData.moving_date),
         lease_expiry: convertToISODate(userData.lease_expiry),
         birth_date: convertToISODate(userData.birth_date),
+          occupancy_type: firstSite?.ownership || "",
       };
 
       setFormData(formattedData);
@@ -125,17 +128,52 @@ const EditPageUser = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+const fetchFloors = async (buildingId) => {
+  if (!buildingId) return;
+  try {
+    const resp = await getFloors(buildingId);
+    setFloorsByBuilding((prev) => ({
+      ...prev,
+      [buildingId]: resp.data,
+    }));
+  } catch (err) {
+    console.error("Error fetching floors:", err);
+  }
+};
 
-  useEffect(() => {
-    if (!hydratedSite && Array.isArray(formData.user_sites) && formData.user_sites.length > 0) {
-      const site = formData.user_sites[0];
-      console.log("Hydrating site:", site);
-      setSelectedUnit(String(site.unit_id ?? ""));
-      setSelectedBuilding(String(site.build_id ?? ""));
-      setSelectedFloorId(String(site.floor_id ?? ""));
-      setHydratedSite(true); // prevent rehydration
-    }
-  }, [formData.user_sites, hydratedSite]);
+const fetchUnits = async (floorId) => {
+  if (!floorId) return;
+  try {
+    const resp = await getUnits(floorId);
+    setUnitsByFloor((prev) => ({
+      ...prev,
+      [floorId]: resp.data,
+    }));
+  } catch (err) {
+    console.error("Error fetching units:", err);
+  }
+};
+
+useEffect(() => {
+  if (Array.isArray(formData.user_sites) && formData.user_sites.length > 0) {
+    const hydratedSites = formData.user_sites.map((site) => ({
+      id: site.id ?? null,
+      site_id: site.site_id ?? Number(siteId), 
+      build_id: site.build_id ?? "",
+      floor_id: site.floor_id ?? "",
+      unit_id: site.unit_id ?? "",
+      ownership: site.ownership ?? "",
+      ownership_type: site.ownership_type ?? "primary",
+      lives_here: site.lives_here ?? true,
+      is_approved: true,
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      user_sites: hydratedSites,
+    }));
+  }
+}, [originalData]);
 
   useEffect(() => {
     const currentSite = formData.user_sites?.[0] || {};
@@ -165,6 +203,50 @@ const EditPageUser = () => {
   }, [selectedBuilding, selectedFloorId, selectedUnit]);
 
   const navigate = useNavigate();
+  const handleAddLocation = () => {
+  setFormData((prev) => ({
+    ...prev,
+    user_sites: [
+      ...prev.user_sites,
+      {
+        id: null,
+                site_id: Number(siteId), 
+        build_id: "",
+        floor_id: "",
+        unit_id: "",
+        ownership: "",
+        ownership_type: "primary",
+        lives_here: true,
+        is_approved: true,
+      },
+    ],
+  }));
+};
+const handleRemoveLocation = (index) => {
+  setFormData((prev) => ({
+    ...prev,
+    user_sites: prev.user_sites.filter((_, i) => i !== index),
+  }));
+};
+
+const handleLocationChange = async (index, field, value) => {
+  setFormData((prev) => {
+    const updatedSites = [...prev.user_sites];
+    updatedSites[index] = {
+      ...updatedSites[index],
+      [field]: value,
+    };
+    return { ...prev, user_sites: updatedSites };
+  });
+
+  if (field === "build_id") {
+    await fetchFloors(value);
+  }
+
+  if (field === "floor_id") {
+    await fetchUnits(value);
+  }
+};
 
   // const handleAddSite = () => {
   //   setFormData((prev) => ({
@@ -226,6 +308,7 @@ const EditPageUser = () => {
     fetchData();
   }, []);
 
+  
   const [hasHydratedUserData, setHasHydratedUserData] = useState(false);
 
   useEffect(() => {
@@ -338,6 +421,15 @@ const EditPageUser = () => {
     // Optional: log or trigger side effects
     console.log("Selected unit ID:", e.target.value);
   };
+
+  useEffect(() => {
+  if (formData.user_sites?.length > 0) {
+    formData.user_sites.forEach((site) => {
+      if (site.build_id) fetchFloors(site.build_id);
+      if (site.floor_id) fetchUnits(site.floor_id);
+    });
+  }
+}, [formData.user_sites]);
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -485,9 +577,10 @@ const EditPageUser = () => {
       !formData.mobile ||
       !formData.moving_date ||
       !formData.occupancy_type ||
-      !selectedBuilding ||
-      !selectedFloorId ||
-      !selectedUnit
+     !formData.user_sites.length ||
+formData.user_sites.some(
+  (s) => !s.build_id || !s.floor_id || !s.unit_id
+)
     ) {
       return toast.error("Please fill all mandatory fields marked with *");
     }
@@ -524,18 +617,17 @@ const EditPageUser = () => {
         birth_date: formData.birth_date,
         pet_details: formData.pet_details || [],
 
-        user_sites_attributes: [
-          {
-            id: formData.user_sites?.[0]?.id,
-            unit_id: parseInt(selectedUnit, 10),
-            build_id: parseInt(selectedBuilding, 10),
-            floor_id: parseInt(selectedFloorId, 10),
-            ownership: formData.occupancy_type,
-            ownership_type: "primary",
-            is_approved: true,
-            lives_here: formData.lives_here,
-          },
-        ],
+     user_sites_attributes: formData.user_sites.map((site) => ({
+  id: site.id ?? undefined,
+    site_id: Number(site.site_id || siteId), 
+  build_id: Number(site.build_id),
+  floor_id: Number(site.floor_id),
+  unit_id: Number(site.unit_id),
+  ownership: formData.occupancy_type,
+  ownership_type: site.ownership_type || "primary",
+  is_approved: true,
+  lives_here: formData.lives_here,
+})),
         user_members_attributes: formData.user_members.map((m) => ({
           id: m.id ?? undefined,
           member_type: m.member_type,
@@ -630,6 +722,31 @@ const EditPageUser = () => {
                 );
               }
             )}
+            {/* 🏠 Lives Here */}
+<div className="flex flex-col gap-2">
+  <label htmlFor="lives_here" className="font-semibold">
+    Lives Here: <span style={{ color: "red" }}>*</span>
+  </label>
+  <select
+    id="lives_here"
+    name="lives_here"
+    className="border p-2 rounded border-gray-300"
+    value={
+      formData.lives_here === true
+        ? "true"
+        : formData.lives_here === false
+        ? "false"
+        : ""
+    }
+    onChange={(e) =>
+      handleInputChange("lives_here", e.target.value === "true")
+    }
+  >
+    <option value="">-- Select --</option>
+    <option value="true">Yes</option>
+    <option value="false">No</option>
+  </select>
+</div>
           </div>
 
           {/* <div className="grid mt-3 md:grid-cols-2">
@@ -743,90 +860,7 @@ const EditPageUser = () => {
                 Add Another Unit
               </button> */}
 
-          <div className="mt-10 space-y-4">
-            <div className="grid mt-10 md:grid-cols-3">
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Tower: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
-                  value={selectedBuilding}
-                  onChange={async (e) => {
-                    const buildingId = e.target.value;
-                    setSelectedBuilding(buildingId);
-                    if (buildingId) {
-                      try {
-                        const response = await getFloors(buildingId);
-                        setFloors(response.data);
-                      } catch (error) {
-                        console.error("Error fetching floors:", error);
-                        setFloors([]);
-                      }
-                    } else {
-                      setFloors([]);
-                    }
-                  }}
-                >
-                  <option value="">-- Choose Building --</option>
-                  {filteredBuildings.map((building) => (
-                    <option key={building.id} value={building.id}>
-                      {building.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Floor: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded rounded-md placeholder:text-sm"
-                  value={selectedFloorId}
-                  onChange={async (e) => {
-                    const floorId = e.target.value;
-                    setSelectedFloorId(floorId);
-
-                    if (floorId) {
-                      try {
-                        const response = await getUnits(floorId);
-                        setUnits(response.data);
-                      } catch (error) {
-                        console.error("Error fetching units:", error);
-                        setUnits([]);
-                      }
-                    } else {
-                      setUnits([]);
-                    }
-                  }}
-                >
-                  <option value="">-- Choose Floor --</option>
-                  {floors.map((floor) => (
-                    <option key={floor.id} value={floor.id}>
-                      {floor.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">
-                  Units: <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  className="border p-2 px-4 border-gray-300 rounded-md placeholder:text-sm"
-                  value={selectedUnit}
-                  onChange={handleUnitChange}
-                >
-                  <option value="">-- Choose Unit --</option>
-                  {units.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+         
 
           <div className="mt-10 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -973,7 +1007,100 @@ const EditPageUser = () => {
             </div>
           </div>
 
+<div className="mt-10 space-y-6">
 
+  {formData.user_sites.map((site, index) => (
+    <div
+      key={index}
+      className="grid md:grid-cols-4 gap-4 border p-4 rounded-lg bg-gray-50"
+    >
+      {/* Tower */}
+      <div className="flex flex-col gap-1">
+        <label className="font-semibold">
+          Tower <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={site.build_id}
+          onChange={(e) =>
+            handleLocationChange(index, "build_id", e.target.value)
+          }
+          className="border p-2 rounded"
+        >
+          <option value="">-- Select Tower --</option>
+          {filteredBuildings.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Floor */}
+      <div className="flex flex-col gap-1">
+        <label className="font-semibold">
+          Floor <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={site.floor_id}
+          onChange={(e) =>
+            handleLocationChange(index, "floor_id", e.target.value)
+          }
+          className="border p-2 rounded"
+        >
+          <option value="">-- Select Floor --</option>
+{floorsByBuilding[site.build_id]?.map((f) => (
+              <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Unit */}
+      <div className="flex flex-col gap-1">
+        <label className="font-semibold">
+          Unit <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={site.unit_id}
+          onChange={(e) =>
+            handleLocationChange(index, "unit_id", e.target.value)
+          }
+          className="border p-2 rounded"
+        >
+          <option value="">-- Select Unit --</option>
+{unitsByFloor[site.floor_id]?.map((u) => (
+              <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Remove Button */}
+      <div className="flex items-end">
+        {index > 0 && (
+          <button
+            type="button"
+            onClick={() => handleRemoveLocation(index)}
+            className="bg-red-500 text-white px-3 py-2 rounded"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    </div>
+  ))}
+
+  {/* Add Button */}
+  <button
+    type="button"
+    onClick={handleAddLocation}
+    className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
+  >
+    + Add Location
+  </button>
+</div>
           <div className="mt-10 space-y-4">
             {/* ➕ Add Button */}
             <button
@@ -1481,11 +1608,17 @@ const EditPageUser = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center my-5">
+          <div className="flex justify-end my-5 gap-3">
+            <button
+              onClick={() => navigate("/setup/users-setup")}
+              className="px-5 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500"
+            >
+              Cancel
+            </button>
             <button
               onClick={handleAddUser}
               disabled={isUpdating}
-              className={`text-white p-2 px-4 rounded-md font-medium ${isUpdating
+              className={`text-white p-2 px-5 rounded-md font-medium ${isUpdating
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-black hover:bg-gray-800"
                 }`}
@@ -1515,7 +1648,7 @@ const EditPageUser = () => {
                   Updating...
                 </span>
               ) : (
-                "Submit"
+                "Update User"
               )}
             </button>
           </div>

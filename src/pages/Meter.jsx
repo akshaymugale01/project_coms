@@ -7,7 +7,14 @@ import Navbar from "../components/Navbar";
 import * as XLSX from "xlsx";
 import { columnsData } from "../utils/assetColumns";
 import { BiEdit, BiFilter, BiFilterAlt } from "react-icons/bi";
-import { API_URL, getFloors, getMeteredSiteAsset, getSiteAsset, getUnits, getVibeBackground } from "../api";
+import {
+  API_URL,
+  getFloors,
+  getMeteredSiteAsset,
+  getSiteAsset,
+  getUnits,
+  getVibeBackground,
+} from "../api";
 import { getItemInLocalStorage } from "../utils/localStorage";
 import AMC from "./SubPages/AMC";
 import Table from "../components/table/Table";
@@ -31,7 +38,7 @@ const Meter = () => {
   const [selectedUnit, setSelectedUnit] = useState("");
   const [page, setPage] = useState("assets");
   const [assets, setAssets] = useState([]);
-const themeColor = "rgb(3 19 37)";
+  const themeColor = "rgb(3 19 37)";
   const dateFormat = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString(); // Adjust the format as needed
@@ -166,26 +173,38 @@ const themeColor = "rgb(3 19 37)";
     //   sortable: true,
     // },
   ];
+  const handleResetFilter = () => {
+    setSelectedBuilding("");
+    setSelectedFloor("");
+    setSelectedUnit("");
+    setFloors([]);
+    setUnitName([]);
+    setFilteredData(assets);
+  };
 
   const [filteredData, setFilteredData] = useState([]);
 
   const handleSearch = (e) => {
-    const searchValue = e.target.value;
+    const searchValue = e.target.value.toLowerCase();
     setSearchText(searchValue);
 
     if (searchValue.trim() === "") {
       setFilteredData(assets);
-    } else {
-      const filteredResults = assets.filter(
-        (item) =>
-         (item.building_name && item.building_name
-            .toLowerCase()
-            .includes(searchValue.toLowerCase())) ||
-          (item.name && item.name.toLowerCase().includes(searchValue.toLowerCase())) ||
-          (item.unit && item.unit_name.toLowerCase().includes(searchValue.toLowerCase()))
-      );
-      setFilteredData(filteredResults);
+      return;
     }
+
+    const filteredResults = assets.filter((item) => {
+      return (
+        (item.building_name &&
+          item.building_name.toLowerCase().includes(searchValue)) ||
+        (item.name && item.name.toLowerCase().includes(searchValue)) ||
+        (item.unit_name &&
+          item.unit_name.toLowerCase().includes(searchValue)) ||
+        (item.floor_name && item.floor_name.toLowerCase().includes(searchValue))
+      );
+    });
+
+    setFilteredData(filteredResults);
   };
 
   const customStyle = {
@@ -213,11 +232,13 @@ const themeColor = "rgb(3 19 37)";
     const fetchData = async () => {
       try {
         const response = await getMeteredSiteAsset();
-        const filteredAssets = response.data.site_assets.filter(asset => asset.is_meter);
+        const filteredAssets = response.data.site_assets.filter(
+          (asset) => asset.is_meter,
+        );
         const sortedData = filteredAssets.sort((a, b) => {
           return new Date(b.created_at) - new Date(a.created_at);
         });
-        setFilteredData(sortedData)
+        setFilteredData(sortedData);
         // setFilteredData(response.data.site_assets);
         setAssets(sortedData);
         console.log(response);
@@ -234,24 +255,24 @@ const themeColor = "rgb(3 19 37)";
       "Asset Type": asset.asset_type,
       "Serial No.": asset.serial_number,
       "Model No.": asset.model_number,
-      "Description": asset.description,
-      "Building": asset.building_name,
-      "Floor": asset.floor_name,
-      "Unit": asset.unit_name,
-      "Vendor": asset.vendor_name,
-      "Asset Group": asset.group_name, 
-      "Asset Sub Group": asset.sub_group_name, 
+      Description: asset.description,
+      Building: asset.building_name,
+      Floor: asset.floor_name,
+      Unit: asset.unit_name,
+      Vendor: asset.vendor_name,
+      "Asset Group": asset.group_name,
+      "Asset Sub Group": asset.sub_group_name,
       "Purchased On": asset.purchased_on,
       "Purchased Cost": asset.purchase_cost,
-      "Critical": asset.critical? "Yes": "No",
-      "Breakdown": asset.breakdown? "Yes": "No",
-      "Meter Configured": asset.is_meter?"Yes":"No",
+      Critical: asset.critical ? "Yes" : "No",
+      Breakdown: asset.breakdown ? "Yes" : "No",
+      "Meter Configured": asset.is_meter ? "Yes" : "No",
       "Created On": dateFormat(asset.created_at),
       "Updated On": dateFormat(asset.updated_at),
-      "Comment": asset.remarks,
-      "Installation": asset.installation,
+      Comment: asset.remarks,
+      Installation: asset.installation,
       "Warranty Start": asset.warranty_start,
-      "Warranty Expiry" : asset.warranty_expiry
+      "Warranty Expiry": asset.warranty_expiry,
     }));
     const fileType =
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
@@ -321,44 +342,60 @@ const themeColor = "rgb(3 19 37)";
   // };
 
   const handleFilterApply = () => {
-    let filteredResults = [...filteredData];
+    let filteredResults = [...assets];
 
     if (selectedBuilding) {
       filteredResults = filteredResults.filter(
-        (item) => item.building_name === selectedBuilding
+        (item) => String(item.building_id) === String(selectedBuilding),
       );
     }
 
     if (selectedFloor) {
       filteredResults = filteredResults.filter(
-        (item) => item.floor_name === selectedFloor
+        (item) => String(item.floor_id) === String(selectedFloor),
       );
     }
 
     if (selectedUnit) {
       filteredResults = filteredResults.filter(
-        (item) => item.unit_name === selectedUnit
+        (item) => String(item.unit_id) === String(selectedUnit),
       );
     }
 
     setFilteredData(filteredResults);
-    console.log(filteredResults);
   };
-
   const handleBuildingChange = async (e) => {
     const buildingId = e.target.value;
+
     setSelectedBuilding(buildingId);
+    setSelectedFloor("");
+    setSelectedUnit("");
+    setUnitName([]);
+
+    if (!buildingId) {
+      setFloors([]);
+      return;
+    }
+
     const response = await getFloors(buildingId);
     setFloors(response.data.map((item) => ({ name: item.name, id: item.id })));
   };
 
   const handleFloorChange = async (e) => {
     const floorId = e.target.value;
+
     setSelectedFloor(floorId);
+    setSelectedUnit("");
+
+    if (!floorId) {
+      setUnitName([]);
+      return;
+    }
+
     const response = await getUnits(floorId);
-    console.log(response);
+
     setUnitName(
-      response.data.map((item) => ({ name: item.name, id: item.id }))
+      response.data.map((item) => ({ name: item.name, id: item.id })),
     );
   };
 
@@ -370,47 +407,46 @@ const themeColor = "rgb(3 19 37)";
   const defaultImage = { index: 0, src: "" };
   let selectedImageSrc = defaultImage.src;
   let selectedImageIndex = defaultImage.index;
-const [selectedImage, setSelectedImage] = useState(defaultImage);
-const [selectedIndex, setSelectedIndex] = useState(null);
-const Get_Background = async () => {
-  try {
-    // const params = {
-    //   user_id: user_id,
-    // };
-    const user_id = getItemInLocalStorage("VIBEUSERID");
-    console.log(user_id);
-    const data = await getVibeBackground(user_id);
+  const [selectedImage, setSelectedImage] = useState(defaultImage);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const Get_Background = async () => {
+    try {
+      // const params = {
+      //   user_id: user_id,
+      // };
+      const user_id = getItemInLocalStorage("VIBEUSERID");
+      console.log(user_id);
+      const data = await getVibeBackground(user_id);
 
-    if (data.success) {
-      console.log("sucess");
+      if (data.success) {
+        console.log("sucess");
 
-      console.log(data.data);
-      selectedImageSrc = API_URL + data.data.image;
+        console.log(data.data);
+        selectedImageSrc = API_URL + data.data.image;
 
-      
-      selectedImageIndex = data.data.index;
+        selectedImageIndex = data.data.index;
 
-      // Now, you can use selectedImageSrc and selectedImageIndex as needed
-      console.log("Received response:", data);
+        // Now, you can use selectedImageSrc and selectedImageIndex as needed
+        console.log("Received response:", data);
 
-      // For example, update state or perform any other actions
-      setSelectedImage(selectedImageSrc);
-      setSelectedIndex(selectedImageIndex);
-      console.log("Received selectedImageSrc:", selectedImageSrc);
-      console.log("Received selectedImageIndex:", selectedImageIndex);
-      console.log(selectedImage);
-      // dispatch(setBackground(selectedImageSrc));
-    } else {
-      console.log("Something went wrong");
+        // For example, update state or perform any other actions
+        setSelectedImage(selectedImageSrc);
+        setSelectedIndex(selectedImageIndex);
+        console.log("Received selectedImageSrc:", selectedImageSrc);
+        console.log("Received selectedImageIndex:", selectedImageIndex);
+        console.log(selectedImage);
+        // dispatch(setBackground(selectedImageSrc));
+      } else {
+        console.log("Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
-useEffect(() => {
-  // Call the function to get the background image when the component mounts
-  Get_Background();
-}, []);
+  };
+  useEffect(() => {
+    // Call the function to get the background image when the component mounts
+    Get_Background();
+  }, []);
 
   return (
     <section
@@ -421,13 +457,14 @@ useEffect(() => {
     >
       <Navbar />
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
-        <AssetNav/>
-       
+        <AssetNav />
+
         {filter && (
           <div className="flex flex-col md:flex-row mt-1 items-center justify-center gap-2">
             <select
               name="building_name"
               id="building_name"
+              value={selectedBuilding}
               onChange={handleBuildingChange}
               className="border p-1 px-4 max-w-44 w-44 border-gray-500 rounded-md"
             >
@@ -440,6 +477,7 @@ useEffect(() => {
             </select>
 
             <select
+              value={selectedFloor}
               onChange={handleFloorChange}
               name="floor_name"
               className="border p-1 px-4 max-w-44 w-44 border-gray-500 rounded-md"
@@ -452,6 +490,7 @@ useEffect(() => {
               ))}
             </select>
             <select
+              value={selectedUnit}
               onChange={handleUnitChange}
               name="unit_name"
               className="border p-1 px-4 max-w-44 w-44 border-gray-500 rounded-md"
@@ -463,12 +502,21 @@ useEffect(() => {
                 </option>
               ))}
             </select>
-            <button
-              className="bg-black p-1 px-4 text-white rounded-md"
-              onClick={handleFilterApply}
-            >
-              Apply
-            </button>
+            <div className="flex gap-2">
+              <button
+                className="bg-black p-1 px-4 text-white rounded-md"
+                onClick={handleFilterApply}
+              >
+                Apply
+              </button>
+
+              <button
+                className="bg-gray-500 p-1 px-4 text-white rounded-md"
+                onClick={handleResetFilter}
+              >
+                Reset
+              </button>
+            </div>
           </div>
         )}
         {page === "assets" && (
@@ -492,7 +540,7 @@ useEffect(() => {
                 </button>
 
                 <Link
-                style={{ background: themeColor }}
+                  style={{ background: themeColor }}
                   to={"/assets/add-asset"}
                   className="  text-sm rounded-lg flex justify-center font-semibold items-center gap-2 text-white py-2 px-4  transition-all duration-300 "
                 >
@@ -521,22 +569,24 @@ useEffect(() => {
               </div>
             </div>
 
-           {assets.length !==0 ? <Table
-              // selectableRows
-              // columns={column.filter((col) => visibleColumns.includes(col.name))}
-              columns={column}
-              data={filteredData}
-              isPagination={true}
-              // customStyles={customStyle}
-              // responsive
-              // onSelectedRowsChange={handleRowSelected}
-              // fixedHeader
-              // // fixedHeaderScrollHeight="450px"
-              // pagination
-              // selectableRowsHighlight
-              // highlightOnHover
-              // omitColumn={column}
-            />: (
+            {assets.length !== 0 ? (
+              <Table
+                // selectableRows
+                // columns={column.filter((col) => visibleColumns.includes(col.name))}
+                columns={column}
+                data={filteredData}
+                isPagination={true}
+                // customStyles={customStyle}
+                // responsive
+                // onSelectedRowsChange={handleRowSelected}
+                // fixedHeader
+                // // fixedHeaderScrollHeight="450px"
+                // pagination
+                // selectableRowsHighlight
+                // highlightOnHover
+                // omitColumn={column}
+              />
+            ) : (
               <div className="flex justify-center items-center h-full">
                 <DNA
                   visible={true}
@@ -547,13 +597,9 @@ useEffect(() => {
                   wrapperClass="dna-wrapper"
                 />
               </div>
-            )
-          
-          }
+            )}
           </>
         )}
-
-       
       </div>
     </section>
   );

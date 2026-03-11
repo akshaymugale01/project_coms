@@ -497,7 +497,7 @@ export const getFitoutDocs = async () =>
     },
   });
 
-  export const postBusinesscard = async (data) =>
+export const postBusinesscard = async (data) =>
   axiosInstance.post("/business_cards.json", data, {
     params: {
       token: token,
@@ -1088,10 +1088,12 @@ export const getMasterChecklist = async () =>
       token: token,
     },
   });
-export const exportChecklist = async () =>
+export const exportChecklist = async (start_date, end_date) =>
   axiosInstance.get("/export_checklist.xlsx", {
     params: {
       token: token,
+      start_date: start_date,
+      end_date: end_date,
     },
     responseType: "blob",
   });
@@ -1206,7 +1208,7 @@ export const postGRN = async (data) =>
       token: token,
     },
   });
-  
+
 export const postHsn = async (data) =>
   axiosInstance.post(`/hsns.json`, data, {
     params: {
@@ -1309,7 +1311,7 @@ export const getAmenityExport = async (start_date, end_date) => {
   if (!start_date || !end_date) {
     throw new Error("Start date and end date are required");
   }
-  
+
   return axiosInstance.get("/amenity_bookings/export_amenity.xlsx", {
     params: {
       token: token,
@@ -1317,7 +1319,7 @@ export const getAmenityExport = async (start_date, end_date) => {
       end_date,
     },
     responseType: "blob",
-    timeout: 30000, 
+    timeout: 30000,
   });
 };
 
@@ -1423,7 +1425,7 @@ export const getAmenitiesBooking = async (page_no, per_page) => {
   return axiosInstance.get(`/amenity_bookings.json`, {
     params: {
       token: token,
-      Page:page_no,
+      Page: page_no,
       Per_page: per_page,
     },
     // headers: {
@@ -1601,8 +1603,8 @@ export const getFacitilitySetup = async (page, per_page) => {
     const response = await axiosInstance.get(`/amenities.json?q[amenity_is_hotel_not_null]=true`, {
       params: {
         token: token,
-        Page:page,
-        Per_Page:per_page,
+        Page: page,
+        Per_Page: per_page,
       },
       headers: {
         "Cache-Control": "no-cache",
@@ -1617,12 +1619,12 @@ export const getFacitilitySetup = async (page, per_page) => {
   }
 };
 
-export const getAmenityBooking = async (page_no,per_page) =>
+export const getAmenityBooking = async (page_no, per_page) =>
   axiosInstance.get(`/amenity_bookings/all_records_of_amenity.json?`, {
     params: {
       token: token,
-      Page:page_no,
-      Per_Page:per_page
+      Page: page_no,
+      Per_Page: per_page
     },
   });
 
@@ -1873,10 +1875,12 @@ export const getAssetReadingDetails = async (assetId) =>
     }
   );
 
-export const getSetupUsers = async () =>
+export const getSetupUsers = async (page = 1, perPage = 10) =>
   axiosInstance.get("/users.json", {
     params: {
       token: token,
+      page: page,
+      per_page: perPage,
     },
     headers: {
       "Cache-Control": "no-cache",
@@ -1933,10 +1937,10 @@ export const getSetupUsersByMemberType = async (type, locationId, ownership, par
     type,
     ownership,
   };
-  
+
   // Add the location parameter with the correct name
   params[paramType] = locationId;
-  
+
   return axiosInstance.get("users/user_dropdown.json", {
     params,
     headers: {
@@ -1966,10 +1970,19 @@ export const getFilterUsers = async (id) =>
     },
   });
 
+
+export const getSelfRegistration = async (token, search = "") =>
+  axiosInstance.get(`/visitors/self_registartions.json`, {
+    params: {
+      token: token,
+      search: search,
+    }
+  })
+
 export const getUsersByID = async (id) =>
   axiosInstance.get(`/users.json`, {
     params: {
-      token: token, 
+      token: token,
       "q[id_eq]": id,
     },
   });
@@ -2338,7 +2351,7 @@ export const exportStaffWithDate = async (start_date, end_date) =>
       start_date: start_date,
       end_date: end_date,
     },
-    responseType: "blob", 
+    responseType: "blob",
   });
 
 
@@ -2437,12 +2450,12 @@ export const postEvents = async (data) =>
     },
   });
 
-  // export const postEvent = async (data, id) =>
-  // axiosInstance.patch(`/events/${id}.json`, data, {
-  //   params: {
-  //     token: token,
-  //   },
-  // });
+// export const postEvent = async (data, id) =>
+// axiosInstance.patch(`/events/${id}.json`, data, {
+//   params: {
+//     token: token,
+//   },
+// });
 
 //user tree event
 export const getEventsCreatedByUserId = async (id) =>
@@ -2662,7 +2675,7 @@ export const getReceiptInvoiceCamDownload = async (ids) =>
   axiosInstance.get(`/invoice_receipts/export.xlsx?`, {
     responseType: "blob",
     params: {
-      ids: `[${ids}]`, // Adding square brackets around ids
+      ids: `[${ids}]`, 
     },
   });
 
@@ -3201,11 +3214,12 @@ export const getCommunicationDashboard = async () =>
     },
   });
 
-   export const getVehicleHistory = async (params) => {
+export const getVehicleHistory = async (params, siteId) => {
   return axiosInstance.get(`/registered_vehicle_visits.json`, {
     params: {
       ...params,
-      token, 
+      token,
+      site_id: siteId
     },
   });
 };
@@ -3376,6 +3390,13 @@ export const getVisitorDetails = async (id) =>
       Expires: "0",
     },
   });
+export const getVisitorById = (id, siteId) => {
+  return axiosInstance.get(`/visitors/${id}?site_id=${siteId}.json`, {
+    params: {
+      token: token,
+    },
+  });
+};
 
 export const getExportVisitors = async (
   startDate = null,
@@ -3464,6 +3485,110 @@ export const editStaffCategory = async (id, data) =>
     },
   });
 
+
+export const getVisitorCategoryById = async (id) =>
+  axiosInstance.get(`/visitor_categories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+
+export const updateVisitorCategory = async (id, formData) =>
+  axiosInstance.put(`/visitor_categories/${id}.json?token=${token}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const deleteVisitorCategory = async (id) =>
+  axiosInstance.delete(`/visitor_categories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+// Visitor Categories API
+export const getVisitorCategories = async (page = 1, perpage = 10, siteId, token) =>
+  axiosInstance.get("/visitor_categories.json", {
+    params: {
+      token: token,
+      Page: page,
+      Per_Page: perpage,
+      siteId: siteId,
+    },
+  });
+
+export const postVisitorCategory = async (formData, token, siteId) =>
+  axiosInstance.post(
+    "/visitor_categories.json",
+    formData,
+    {
+      // params: { token, siteId },
+      headers: {
+Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+// Edit Visitor Category
+export const editVisitorCategory = async (id, formData) =>
+  axiosInstance.put(
+    `/visitor_categories/${id}.json?token=${token}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+
+// export const deleteVisitorCategory = async (id) =>
+// axiosInstance.delete(`/visitor_categories/${id}.json`, {
+//   params: { token: token },
+// });
+
+// Visitor Sub Categories API
+
+export const getVisitorSubCategories = async (page = 1, perpage = 10) =>
+  axiosInstance.get("/visitor_sub_categories.json", {
+    params: {
+      token: token,
+      Page: page,
+      Per_Page: perpage,
+    },
+  });
+
+export const getVisitorSubCategoryById = async (id) =>
+  axiosInstance.get(`/visitor_sub_categories/${id}.json`, {
+    params: {
+      token: token,
+    },
+  });
+
+export const postVisitorSubCategory = async (formData) =>
+  axiosInstance.post(`/visitor_sub_categories.json?token=${token}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const updateVisitorSubCategory = async (id, formData) =>
+  axiosInstance.put(
+    `/visitor_sub_categories/${id}.json?token=${token}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+
+export const deleteVisitorSubCategory = async (id) =>
+  axiosInstance.delete(`/visitor_sub_categories/${id}.json?token=${token}`);
+
 export const postLOI = async (data) =>
   axiosInstance.post(`/loi_details.json`, data, {
     params: {
@@ -3479,12 +3604,14 @@ export const postApprovalLogs = async (id, data) =>
     },
   });
 
-  export const postVisitorLogToBackend = async (data) =>
+export const postVisitorLogToBackend = async (data) =>
   axiosInstance.post(`/visitor_device_logs.json`, data, {
     params: {
       token: token,
     },
   });
+
+
 
 export const getLOI = async () =>
   axiosInstance.get(`/loi_details.json`, {
@@ -7482,45 +7609,48 @@ export const deleteFlexiBenefitCategory = async (flexiId) => {
   }
 };
 
-export const getIncidentById= async (id) =>
+export const getIncidentById = async (id) =>
   axiosInstance.get(`/incidents/${id}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const getIncidents = async (page=1,search="") =>
+export const getIncidents = async (page = 1, search = "") =>
   axiosInstance.get(`/incidents.json`, {
     params: {
       token: token,
-      page:page,
-      per_page:10,
-      search:search,
+      page: page,
+      per_page: 10,
+      ...(search && {
+        "q[building_name_or_primary_incident_category_or_primary_incident_sub_category_cont]":
+          search,
+      }),
     },
   });
 
-  export const getIncidentDetails = async (incidentId) =>
+export const getIncidentDetails = async (incidentId) =>
   axiosInstance.get(`/incidents/${incidentId}.json`, {
     params: {
       token: token,
     },
   });
 
-  export const postIncidents = async (id) =>
+export const postIncidents = async (id) =>
   axiosInstance.post(`/incidents.json`, id, {
     params: {
       token: token,
     },
   });
 
-  export const updateIncidents = async (id, data) =>
+export const updateIncidents = async (id, data) =>
   axiosInstance.put(`/incidents/${id}.json`, data, {
     params: {
       token: token,
     },
   });
 
-  
+
 export const getIncidentSubTags = async (tagType, parentId) =>
   axiosInstance.get(
     `/incidence_tags.json?q[tag_type_cont]=${tagType}&q[parent_id_eq]=${parentId}`,
@@ -7561,7 +7691,7 @@ export const editIncidentCatDetails = async (id, data) =>
     },
   });
 
- export const getIncidentTags = async (tagType, companyId) =>
+export const getIncidentTags = async (tagType, companyId) =>
   axiosInstance.get("/incidence_tags.json", {
     params: {
       "q[tag_type_eq]": tagType,
@@ -7571,8 +7701,8 @@ export const editIncidentCatDetails = async (id, data) =>
   });
 
 
-  
-  export const postIncidentTags = async (data) =>
+
+export const postIncidentTags = async (data) =>
   axiosInstance.post(`/incidence_tags.json`, data, {
     params: {
       token: token,
@@ -7580,7 +7710,7 @@ export const editIncidentCatDetails = async (id, data) =>
   });
 
 
-  export const getInjured = async (InjuredType) =>
+export const getInjured = async (InjuredType) =>
   axiosInstance.get(`/incidence_tags.json?q[tag_type_cont]=${InjuredType}`, {
     params: {
       token: token,
@@ -7594,7 +7724,7 @@ export const postInjured = async (data) =>
     },
   });
 
- export const postInjurydata = async (data) =>
+export const postInjurydata = async (data) =>
   axiosInstance.post(`/incident_injuries.json`, data, {
     params: {
       token: token,
@@ -9232,12 +9362,12 @@ export const getUnitsByUserId = async (userId) =>
   });
 
 // Pets API
-export const getPets = async (page=1,perpage=10) =>
+export const getPets = async (page = 1, perpage = 10) =>
   axiosInstance.get("/pets.json", {
     params: {
       token: token,
-      Page:page,
-      Per_Page:perpage,
+      Page: page,
+      Per_Page: perpage,
     },
   });
 

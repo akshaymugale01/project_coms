@@ -40,49 +40,49 @@ const Staff = () => {
   const [approvalTotalCount, setApprovalTotalCount] = useState(0);
 
   const [showFilter, setShowFilter] = useState(false);
-const [filters, setFilters] = useState({
-  mobile_no: "",
-  firstname: "",
-  lastname: "",
-  building_name: "",
-});
-
-const applyFilters = () => {
-  const filtered = staffs.filter((item) => {
-    return (
-      (filters.mobile_no === "" ||
-        item.mobile_no?.toLowerCase().includes(filters.mobile_no.toLowerCase())) &&
-      (filters.firstname === "" ||
-        item.firstname?.toLowerCase().includes(filters.firstname.toLowerCase())) &&
-      (filters.lastname === "" ||
-        item.lastname?.toLowerCase().includes(filters.lastname.toLowerCase())) &&
-      (filters.building_name === "" ||
-        item.building_name?.toLowerCase().includes(filters.building_name.toLowerCase()))
-    );
+  const [filters, setFilters] = useState({
+    mobile_no: "",
+    firstname: "",
+    lastname: "",
+    building_name: "",
   });
 
-  setFilteredStaff(filtered);
-  setShowFilter(false);
-};
+  const applyFilters = () => {
+    const filtered = staffs.filter((item) => {
+      return (
+        (filters.mobile_no === "" ||
+          item.mobile_no?.toLowerCase().includes(filters.mobile_no.toLowerCase())) &&
+        (filters.firstname === "" ||
+          item.firstname?.toLowerCase().includes(filters.firstname.toLowerCase())) &&
+        (filters.lastname === "" ||
+          item.lastname?.toLowerCase().includes(filters.lastname.toLowerCase())) &&
+        (filters.building_name === "" ||
+          item.building_name?.toLowerCase().includes(filters.building_name.toLowerCase()))
+      );
+    });
+
+    setFilteredStaff(filtered);
+    setShowFilter(false);
+  };
 
   const customTableStyles = {
-  headCells: {
-    style: {
-      paddingLeft: "20px",
-      paddingRight: "20px",
-      backgroundColor: "#000207",
-      color:"white",
-      fontSize:"12px",
-      textTransform:"uppercase",      
+    headCells: {
+      style: {
+        paddingLeft: "20px",
+        paddingRight: "20px",
+        backgroundColor: "#000207",
+        color: "white",
+        fontSize: "12px",
+        textTransform: "uppercase",
+      },
     },
-  },
-  cells: {
-    style: {
-      paddingLeft: "20px",
-      paddingRight: "20px",
+    cells: {
+      style: {
+        paddingLeft: "20px",
+        paddingRight: "20px",
+      },
     },
-  },
-};
+  };
 
   // ✅ CSV helpers
   const csvEscape = (v) => {
@@ -240,16 +240,16 @@ const applyFilters = () => {
         const filteredResult = !searchText.trim()
           ? staffArray
           : staffArray.filter((item) => {
-              const fullName =
-                `${item.firstname} ${item.lastname}`.toLowerCase();
-              return (
-                fullName.includes(searchText.toLowerCase()) ||
-                item.unit_name
-                  ?.toLowerCase()
-                  .includes(searchText.toLowerCase()) ||
-                item.mobile_no?.toLowerCase().includes(searchText.toLowerCase())
-              );
-            });
+            const fullName =
+              `${item.firstname} ${item.lastname}`.toLowerCase();
+            return (
+              fullName.includes(searchText.toLowerCase()) ||
+              item.unit_name
+                ?.toLowerCase()
+                .includes(searchText.toLowerCase()) ||
+              item.mobile_no?.toLowerCase().includes(searchText.toLowerCase())
+            );
+          });
 
         setFilteredStaff(filteredResult);
       } catch (error) {
@@ -490,25 +490,50 @@ const applyFilters = () => {
           <div className="flex w-full m-2">
             <div className="flex w-full md:flex-row flex-col space-x-4 border-b border-gray-400">
               <h2
-                className={`p-2 px-4 ${
-                  page === "all"
-                    ? "text-blue-500 font-medium shadow-custom-all-sides"
-                    : "text-black"
-                } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                className={`p-2 px-4 ${page === "all"
+                  ? "text-blue-500 font-medium shadow-custom-all-sides"
+                  : "text-black"
+                  } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("all")}
               >
                 All
               </h2>
+              {/* <h2
+                className={`p-2 ${page === "staffin"
+                  ? "text-blue-500 font-medium shadow-custom-all-sides"
+                  : "text-black"
+                  } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                onClick={() => setPage("staffin")}
+              >
+                Staff In
+              </h2>
               <h2
-                className={`p-2 ${
-                  page === "approval"
-                    ? "text-blue-500 font-medium shadow-custom-all-sides"
-                    : "text-black"
-                } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                className={`p-2 ${page === "staffout"
+                  ? "text-blue-500 font-medium shadow-custom-all-sides"
+                  : "text-black"
+                  } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                onClick={() => setPage("staffout")}
+              >
+                Staff Out
+              </h2> */}
+              <h2
+                className={`p-2 ${page === "approval"
+                  ? "text-blue-500 font-medium shadow-custom-all-sides"
+                  : "text-black"
+                  } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
                 onClick={() => setPage("approval")}
               >
-                Approvals
+                Staff Approvals
               </h2>
+              {/* <h2
+                className={`p-2 ${page === "history"
+                  ? "text-blue-500 font-medium shadow-custom-all-sides"
+                  : "text-black"
+                  } rounded-t-md cursor-pointer text-center text-sm flex items-center justify-center transition-all duration-300`}
+                onClick={() => setPage("history")}
+              >
+                History
+              </h2> */}
             </div>
           </div>
 
@@ -523,11 +548,11 @@ const applyFilters = () => {
               />
               <span className="flex gap-4">
                 <button
-    onClick={() => setShowFilter(true)}
-    className="border-2 border-gray-700 text-gray-700 font-semibold px-4 rounded-md hover:bg-gray-800 hover:text-white transition-all"
-  >
-    Filter
-  </button>
+                  onClick={() => setShowFilter(true)}
+                  className="border-2 border-gray-700 text-gray-700 font-semibold px-4 rounded-md hover:bg-gray-800 hover:text-white transition-all"
+                >
+                  Filter
+                </button>
                 <button
                   onClick={() => setShowExportModal(true)}
                   className="border-2 border-blue-600 text-blue-600 font-semibold px-4 rounded-md hover:bg-blue-700 hover:text-white transition-all"
@@ -548,11 +573,11 @@ const applyFilters = () => {
           )}
 
           {page === "all" && (
-            
+
             <Table
               columns={columns}
               data={filteredStaff}
-                customStyles={customTableStyles}
+              customStyles={customTableStyles}
               pagination
               paginationServer
               paginationPerPage={rowsPerPage}
@@ -570,7 +595,7 @@ const applyFilters = () => {
             <Table
               columns={approvalColumn}
               data={FilteredApproval}
-                customStyles={customTableStyles}
+              customStyles={customTableStyles}
               pagination
               paginationPerPage={approvalRowsPerPage}
               paginationTotalRows={approvalTotalCount}
@@ -584,85 +609,85 @@ const applyFilters = () => {
           )}
         </div>
         {showFilter && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-xl w-[420px] shadow-xl">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Filter Staff</h2>
-        <button onClick={() => setShowFilter(false)}>
-          <IoClose size={22} />
-        </button>
-      </div>
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl w-[420px] shadow-xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Filter Staff</h2>
+                <button onClick={() => setShowFilter(false)}>
+                  <IoClose size={22} />
+                </button>
+              </div>
 
-      <div className="space-y-3">
+              <div className="space-y-3">
 
-        <input
-          type="text"
-          placeholder="Mobile Number"
-          value={filters.mobile_no}
-          onChange={(e) =>
-            setFilters({ ...filters, mobile_no: e.target.value })
-          }
-          className="w-full border px-3 py-2 rounded-md"
-        />
+                <input
+                  type="text"
+                  placeholder="Mobile Number"
+                  value={filters.mobile_no}
+                  onChange={(e) =>
+                    setFilters({ ...filters, mobile_no: e.target.value })
+                  }
+                  className="w-full border px-3 py-2 rounded-md"
+                />
 
-        <input
-          type="text"
-          placeholder="First Name"
-          value={filters.firstname}
-          onChange={(e) =>
-            setFilters({ ...filters, firstname: e.target.value })
-          }
-          className="w-full border px-3 py-2 rounded-md"
-        />
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  value={filters.firstname}
+                  onChange={(e) =>
+                    setFilters({ ...filters, firstname: e.target.value })
+                  }
+                  className="w-full border px-3 py-2 rounded-md"
+                />
 
-        <input
-          type="text"
-          placeholder="Last Name"
-          value={filters.lastname}
-          onChange={(e) =>
-            setFilters({ ...filters, lastname: e.target.value })
-          }
-          className="w-full border px-3 py-2 rounded-md"
-        />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  value={filters.lastname}
+                  onChange={(e) =>
+                    setFilters({ ...filters, lastname: e.target.value })
+                  }
+                  className="w-full border px-3 py-2 rounded-md"
+                />
 
-        <input
-          type="text"
-          placeholder="Building Name"
-          value={filters.building_name}
-          onChange={(e) =>
-            setFilters({ ...filters, building_name: e.target.value })
-          }
-          className="w-full border px-3 py-2 rounded-md"
-        />
-      </div>
+                <input
+                  type="text"
+                  placeholder="Building Name"
+                  value={filters.building_name}
+                  onChange={(e) =>
+                    setFilters({ ...filters, building_name: e.target.value })
+                  }
+                  className="w-full border px-3 py-2 rounded-md"
+                />
+              </div>
 
-      <div className="flex gap-3 mt-5">
-        <button
-          onClick={applyFilters}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md w-full"
-        >
-          Apply Filter
-        </button>
+              <div className="flex gap-3 mt-5">
+                <button
+                  onClick={applyFilters}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md w-full"
+                >
+                  Apply Filter
+                </button>
 
-        <button
-          onClick={() => {
-            setFilters({
-              mobile_no: "",
-              firstname: "",
-              lastname: "",
-              building_name: "",
-            });
-            setFilteredStaff(staffs);
-            setShowFilter(false);
-          }}
-          className="bg-gray-400 text-white px-4 py-2 rounded-md w-full"
-        >
-          Reset
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                <button
+                  onClick={() => {
+                    setFilters({
+                      mobile_no: "",
+                      firstname: "",
+                      lastname: "",
+                      building_name: "",
+                    });
+                    setFilteredStaff(staffs);
+                    setShowFilter(false);
+                  }}
+                  className="bg-gray-400 text-white px-4 py-2 rounded-md w-full"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ✅ Export Modal */}
