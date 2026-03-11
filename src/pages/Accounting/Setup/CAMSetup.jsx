@@ -26,7 +26,7 @@ const CAMSetup = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [drafts, setDrafts] = useState({}); // { [unitId]: { carpet_area_sqft, cam_start_date } }
+  const [drafts, setDrafts] = useState({}); // { [unitId]: { carpet_area_sqft, cam_start_date, advance_amount } }
 
   const filteredUnits = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -71,6 +71,7 @@ const CAMSetup = () => {
             nextDrafts[c.unit_id] = {
               carpet_area_sqft: Number(c.carpet_area_sqft ?? c.carpet_area ?? 0),
               cam_start_date: c.cam_start_date || "",
+              advance_amount: Number(c.advance_amount ?? 0),
             };
           }
         });
@@ -114,6 +115,9 @@ const CAMSetup = () => {
         ),
         cam_start_date:
           field === "cam_start_date" ? value : prev[unitId]?.cam_start_date || "",
+        advance_amount: Number(
+          field === "advance_amount" ? value : prev[unitId]?.advance_amount || 0
+        ),
       },
     }));
   };
@@ -121,7 +125,7 @@ const CAMSetup = () => {
   const handleSaveUnit = async (unit) => {
     try {
       const existing = getConfigForUnit(unit.id);
-      const row = drafts[unit.id] || { carpet_area_sqft: 0, cam_start_date: "" };
+      const row = drafts[unit.id] || { carpet_area_sqft: 0, cam_start_date: "", advance_amount: 0 };
       const nextCarpetArea = Number(row.carpet_area_sqft || 0);
       const nextStartDate = row.cam_start_date || null;
 
@@ -130,10 +134,13 @@ const CAMSetup = () => {
         return;
       }
 
+      const nextAdvanceAmount = Number(row.advance_amount || 0);
+
       const payload = {
         unit_id: unit.id,
         carpet_area_sqft: nextCarpetArea,
         cam_start_date: nextStartDate,
+        advance_amount: nextAdvanceAmount,
       };
 
       if (existing?.id) {
@@ -152,6 +159,7 @@ const CAMSetup = () => {
         [unit.id]: {
           carpet_area_sqft: nextCarpetArea,
           cam_start_date: nextStartDate || "",
+          advance_amount: nextAdvanceAmount,
         },
       }));
     } catch (e) {
@@ -171,7 +179,7 @@ const CAMSetup = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-2">Accounting Unit Config</h1>
-      <div className="mb-6 border border-amber-300 bg-amber-50 text-amber-900 rounded p-3 text-sm">
+      {/* <div className="mb-6 border border-amber-300 bg-amber-50 text-amber-900 rounded p-3 text-sm">
         <div className="font-semibold">Possession Guard</div>
         <div>
           Possession cannot be issued until the resident pays advance maintenance of {settings.advance_months_required || 24} months from possession date.
@@ -179,9 +187,9 @@ const CAMSetup = () => {
         <div className="mt-1">
           Tenant move-in/out fees apply: set amounts and GST in Global Settings; invoices will use these values.
         </div>
-      </div>
+      </div> */}
 
-      <div className="bg-white rounded-lg shadow p-5 mb-6">
+      {/* <div className="bg-white rounded-lg shadow p-5 mb-6">
         <h2 className="text-lg font-semibold mb-4">Global Settings</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
@@ -244,11 +252,11 @@ const CAMSetup = () => {
             Save Settings
           </button>
         </div>
-      </div>
+      </div> */}
 
       <div className="bg-white rounded-lg shadow p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Unit Master (Carpet Area & CAM Start Date)</h2>
+          <h2 className="text-lg font-semibold">Unit Master (Carpet Area, CAM Start Date & Advance Amount)</h2>
           <input
             placeholder="Search flat..."
             value={search}
@@ -263,6 +271,7 @@ const CAMSetup = () => {
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Flat</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Carpet Area (sqft)</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">CAM Start Date (Possession)</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Advance Amount (₹)</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500"></th>
               </tr>
             </thead>
@@ -286,6 +295,15 @@ const CAMSetup = () => {
                         value={drafts[u.id]?.cam_start_date ?? cfg.cam_start_date ?? ""}
                         className="w-52 px-3 py-2 border rounded"
                         onChange={(e) => handleDraftChange(u.id, "cam_start_date", e.target.value)}
+                      />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input
+                        type="number"
+                        value={drafts[u.id]?.advance_amount ?? cfg.advance_amount ?? 0}
+                        className="w-40 px-3 py-2 border rounded"
+                        placeholder="0.00"
+                        onChange={(e) => handleDraftChange(u.id, "advance_amount", e.target.value)}
                       />
                     </td>
                     <td className="px-4 py-2">

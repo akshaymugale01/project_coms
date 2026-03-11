@@ -29,6 +29,12 @@ const AccountingReports = () => {
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
   const [misBusy, setMisBusy] = useState(false);
+  const [pdfRemarks, setPdfRemarks] = useState([
+    "Any Debit / Credit of expenses will be adjusted in next statement of expenses.",
+    "This is a computer generated statement, signature is not required.",
+    "For queries write to the management office.",
+    "These are consolidated expenses for the selected period.",
+  ]);
   const [expensesMisFile, setExpensesMisFile] = useState(null);
   const [incomeMisFile, setIncomeMisFile] = useState(null);
   const [individualMisFile, setIndividualMisFile] = useState(null);
@@ -576,7 +582,11 @@ const AccountingReports = () => {
       const params = {
         unit_id: filters.unit_id,
         start_date: filters.start_date,
-        end_date: filters.end_date
+        end_date: filters.end_date,
+        remark_1: pdfRemarks[0] || "",
+        remark_2: pdfRemarks[1] || "",
+        remark_3: pdfRemarks[2] || "",
+        remark_4: pdfRemarks[3] || "",
       };
 
       const response = await exportCamStatementPdf(params);
@@ -1003,7 +1013,7 @@ const AccountingReports = () => {
                   Revenue
                 </td>
               </tr>
-              {reportData.income?.map((item, index) => (
+              {(Array.isArray(reportData.income) ? reportData.income : []).map((item, index) => (
                 <tr key={index}>
                   <td className="px-6 py-2 pl-10">{item.group_name} : {item.group_code}</td>
                   <td className="px-6 py-2 text-right">
@@ -1022,7 +1032,7 @@ const AccountingReports = () => {
                   Expenses
                 </td>
               </tr>
-              {reportData.expenses?.map((item, index) => (
+              {(Array.isArray(reportData.expenses) ? reportData.expenses : []).map((item, index) => (
                 <tr key={index}>
                   <td className="px-6 py-2 pl-10">{item.group_name} : {item.group_code}</td>
                   <td className="px-6 py-2 text-right">
@@ -1199,7 +1209,7 @@ const AccountingReports = () => {
           {/* SECTION 1: INCOME */}
           <div className="mb-8">
             <h4 className="font-semibold mb-4 text-lg text-blue-700">1. Maintenance Income</h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <p className="text-xs text-gray-500 mb-1">Advance Maintenance Received</p>
                 <p className="font-semibold text-blue-700 text-xl">₹{parseFloat(reportData.income?.total_income ?? reportData.income?.advance_maintenance_received ?? 0).toFixed(2)}</p>
@@ -1267,7 +1277,7 @@ const AccountingReports = () => {
               </div>
             )}
 
-            {/* Ledger Expenses by Account Group */}
+            {/* Ledger Expenses by Account Group with Ledger Detail */}
             {reportData.expenses?.ledger_breakdown && Object.keys(reportData.expenses.ledger_breakdown).length > 0 && (
               <div className="mb-6">
                 <h5 className="font-semibold mb-3 text-purple-600">Ledger Expenses (by Account Group)</h5>
@@ -1275,20 +1285,58 @@ const AccountingReports = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-purple-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Account Group</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Particulars</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
-                      {Object.entries(reportData.expenses.ledger_breakdown).map(([group, amount], idx) => (
-                        <tr key={idx} className="hover:bg-purple-50">
-                          <td className="px-4 py-3">{group || "Unclassified"}</td>
-                          <td className="px-4 py-3 text-right font-medium">₹{parseFloat(amount || 0).toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      {Object.entries(reportData.expenses.ledger_breakdown).map(([group, amount], idx) => {
+                        const ledgers = reportData.expenses.ledger_detail?.[group];
+                        return (
+                          <React.Fragment key={idx}>
+                            <tr className="bg-purple-50/50">
+                              <td className="px-4 py-3 font-semibold text-purple-800">{group || "Unclassified"}</td>
+                              {/* <td className="px-4 py-3 text-right font-semibold text-purple-800">₹{parseFloat(amount || 0).toFixed(2)}</td> */}
+                            </tr>
+                            {ledgers && Object.entries(ledgers).map(([ledgerName, ledgerAmt], lidx) => (
+                              <tr key={`${idx}-${lidx}`} className="hover:bg-gray-50">
+                                <td className="px-4 py-2 pl-8 text-sm text-gray-600">↳ {ledgerName}</td>
+                                <td className="px-4 py-2 text-right text-sm text-gray-600">₹{parseFloat(ledgerAmt || 0).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        );
+                      })}
                       <tr className="bg-purple-100 font-semibold">
                         <td className="px-4 py-3">Ledger Subtotal</td>
                         <td className="px-4 py-3 text-right text-purple-700">₹{parseFloat(reportData.expenses?.ledger_expenses || 0).toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Society Maintenance Charges */}
+            {parseFloat(reportData.expenses?.society_maintenance_percent || 0) > 0 && (
+              <div className="mb-6">
+                <h5 className="font-semibold mb-3 text-blue-600">Society Maintenance Charges</h5>
+                <div className="border rounded-lg overflow-hidden border-blue-200">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-blue-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Description</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      <tr className="hover:bg-blue-50/30">
+                        <td className="px-4 py-3 text-sm text-gray-700">Total Expenses (CAM + Ledger)</td>
+                        <td className="px-4 py-3 text-right text-sm font-medium">₹{parseFloat(reportData.expenses?.subtotal || ((parseFloat(reportData.expenses?.cam_expenses || 0)) + (parseFloat(reportData.expenses?.ledger_expenses || 0)))).toFixed(2)}</td>
+                      </tr>
+                      <tr className="bg-blue-50/50">
+                        <td className="px-4 py-3 text-sm font-medium text-blue-800">Society Maintenance Charges @ {parseFloat(reportData.expenses?.society_maintenance_percent || 0)}%</td>
+                        <td className="px-4 py-3 text-right font-bold text-blue-700">₹{parseFloat(reportData.expenses?.society_maintenance_amount || 0).toFixed(2)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1319,10 +1367,35 @@ const AccountingReports = () => {
                 <p className="text-xs text-gray-500 mb-1">Balance Available</p>
                 <p className="font-semibold text-blue-700 text-lg">₹{parseFloat(reportData.balance?.balance_fund_available || 0).toFixed(2)}</p>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 md:col-span-3">
+              {/* <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 md:col-span-3">
                 <p className="text-xs text-gray-500 mb-1">Net Income (Receipts - Expenses)</p>
                 <p className="font-semibold text-purple-700 text-lg">₹{parseFloat(reportData.balance?.net_income || 0).toFixed(2)}</p>
-              </div>
+              </div> */}
+            </div>
+          </div>
+
+          {/* SECTION 5: PDF REMARKS (Editable) */}
+          <div className="mb-4 mt-6">
+            <h4 className="font-semibold mb-3 text-lg text-gray-700 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              PDF Remarks
+              <span className="text-xs font-normal text-gray-400">(edit before exporting PDF)</span>
+            </h4>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
+              {pdfRemarks.map((remark, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <span className="mt-2 text-sm font-bold text-gray-500 min-w-[24px]">{idx + 1}.</span>
+                  <input
+                    type="text"
+                    value={remark}
+                    onChange={(e) => {
+                      setPdfRemarks(prev => prev.map((r, i) => i === idx ? e.target.value : r));
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none"
+                    placeholder={`Remark ${idx + 1}`}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1633,7 +1706,7 @@ const AccountingReports = () => {
                 <button
                   onClick={exportUnitStatementPdf}
                   disabled={loading || !reportData}
-                  className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-800 disabled:bg-gray-400"
+                  className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 disabled:bg-gray-400"
                   title={!reportData ? "Generate report first" : "Export unit statement PDF"}
                 >
                   Export PDF

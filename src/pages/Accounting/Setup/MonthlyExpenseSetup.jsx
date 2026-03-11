@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
-import { createMonthlyExpense, deleteMonthlyExpense, getMonthlyExpenses, updateMonthlyExpense, calculateMonthlyExpenseTotal } from "../../../api/accountingApi";
+import * as XLSX from "xlsx";
+import { createMonthlyExpense, deleteMonthlyExpense, getMonthlyExpenses, updateMonthlyExpense, calculateMonthlyExpenseTotal, getBillingConfigurations } from "../../../api/accountingApi";
 import { getSites } from "../../../api";
 
 const defaultRow = () => ({ id: undefined, category: "", amount: 0, isCustom: false });
@@ -42,6 +43,9 @@ const MonthlyExpenseSetup = () => {
   const [journalEntryDetails, setJournalEntryDetails] = useState({});
   const [selectedJeList, setSelectedJeList] = useState(null); // ledger name or null
   const [showJeDetailModal, setShowJeDetailModal] = useState(false);
+
+  // Society maintenance charges
+  const [societyMaintenancePercent, setSocietyMaintenancePercent] = useState(0);
 
   // Custom date range
   const [useCustomDate, setUseCustomDate] = useState(false);
@@ -92,17 +96,26 @@ const MonthlyExpenseSetup = () => {
       const ledgerData = resData.ledger_expenses || [];
       const jeDetails = resData.journal_entry_details || {};
 
-      setLedgerExpenses(Array.isArray(ledgerData) ? ledgerData : []);
-      setJournalEntryDetails(jeDetails);
+      // Filter out any GST-related ledger expenses and journal entry details
+      const isGstName = (name) => /cgst|sgst|igst|gst/i.test(name || '');
+      const filteredLedgerData = (Array.isArray(ledgerData) ? ledgerData : []).filter(r => !isGstName(r.category) && !isGstName(r.ledger_name));
+      const filteredJeDetails = {};
+      Object.entries(jeDetails).forEach(([key, val]) => {
+        if (!isGstName(key)) filteredJeDetails[key] = val;
+      });
 
-      // Extract custom categories from loaded CAM data
-      if (Array.isArray(camData) && camData.length > 0) {
-        const customCats = camData
+      setLedgerExpenses(filteredLedgerData);
+      setJournalEntryDetails(filteredJeDetails);
+
+      // Extract custom categories from loaded CAM data (exclude GST)
+      const filteredCamData = (Array.isArray(camData) ? camData : []).filter(r => !isGstName(r.category));
+      if (filteredCamData.length > 0) {
+        const customCats = filteredCamData
           .map(r => r.category)
           .filter(cat => cat && !PREDEFINED_CATEGORIES.includes(cat))
           .filter((cat, idx, arr) => arr.indexOf(cat) === idx);
         setCustomCategories(customCats);
-        setRows(camData.map(r => ({
+        setRows(filteredCamData.map(r => ({
           ...r,
           isCustom: !PREDEFINED_CATEGORIES.includes(r.category)
         })));
@@ -124,12 +137,22 @@ const MonthlyExpenseSetup = () => {
   useEffect(() => {
     const loadSites = async () => {
       try {
-        const res = await getSites();
-        const list = res?.data?.data || res?.data || [];
+        const [sitesRes, bcRes] = await Promise.all([
+          getSites(),
+          getBillingConfigurations(),
+        ]);
+        const list = sitesRes?.data?.data || sitesRes?.data || [];
         setSites(Array.isArray(list) ? list : []);
         if (!siteId && list?.length > 0) {
           const firstId = list[0]?.id ?? list[0]?.site_id ?? list[0]?.value;
           if (firstId) setSiteId(String(firstId));
+        }
+        // Load society maintenance percent from billing config
+        const bcData = bcRes?.data;
+        if (Array.isArray(bcData) && bcData.length > 0) {
+          setSocietyMaintenancePercent(Number(bcData[0]?.society_maintenance_percent || 0));
+        } else if (bcData && typeof bcData === 'object' && !Array.isArray(bcData)) {
+          setSocietyMaintenancePercent(Number(bcData.society_maintenance_percent || 0));
         }
       } catch (e) {
         console.error(e);
@@ -210,6 +233,198 @@ const MonthlyExpenseSetup = () => {
   const camTotal = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
   const ledgerTotal = ledgerExpenses.reduce((s, r) => s + Number(r.amount || 0), 0);
   const grandTotal = camTotal + ledgerTotal;
+
+  // ── Excel Export ──
+  const exportToExcel = () => {
+    if (rows.length === 0 && ledgerExpenses.length === 0) {
+      toast.error("No expense data to export");
+      return;
+    }
+
+    const wb = XLSX.utils.book_new();
+    const sheetData = [];
+    const merges = [];
+    let r = 0; // current row index
+
+    // ─── Title ───
+    sheetData.push(["Monthly Expense Report"]);
+    merges.push({ s: { r, c: 0 }, e: { r, c: 3 } });
+    r++;
+    sheetData.push([`Period: ${periodLabel}`]);
+    merges.push({ s: { r, c: 0 }, e: { r, c: 3 } });
+    r++;
+    const siteName = siteId
+      ? (sites.find(s => String(s?.id ?? s?.site_id ?? s?.value) === String(siteId))?.name
+        ?? sites.find(s => String(s?.id ?? s?.site_id ?? s?.value) === String(siteId))?.site_name
+        ?? `Site ${siteId}`)
+      : "All Sites";
+    sheetData.push([`Site: ${siteName}`]);
+    merges.push({ s: { r, c: 0 }, e: { r, c: 3 } });
+    r++;
+    sheetData.push([]); r++;
+
+    // ─── Section 1: CAM Expenses ───
+    const camHeaderRow = r;
+    sheetData.push(["CAM Expenses", "", "", ""]);
+    merges.push({ s: { r, c: 0 }, e: { r, c: 3 } });
+    r++;
+    sheetData.push(["#", "Category", "Amount (₹)", "Source"]);
+    r++;
+
+    const camRows = rows.filter(row => row.category);
+    camRows.forEach((row, idx) => {
+      sheetData.push([idx + 1, row.category, Number(row.amount || 0), "Manual"]);
+      r++;
+    });
+
+    sheetData.push(["", "CAM Subtotal", camTotal, ""]);
+    r++;
+    sheetData.push([]); r++;
+
+    // ─── Section 2: Ledger Expenses ───
+    if (ledgerExpenses.length > 0) {
+      const ledgerHeaderRow = r;
+      sheetData.push(["Ledger Expenses (Journal Entries)", "", "", ""]);
+      merges.push({ s: { r, c: 0 }, e: { r, c: 3 } });
+      r++;
+      sheetData.push(["#", "Ledger / Category", "Amount (₹)", "# of Entries"]);
+      r++;
+
+      ledgerExpenses.forEach((le, idx) => {
+        const details = journalEntryDetails[le.ledger_name || le.category] || [];
+        sheetData.push([
+          idx + 1,
+          le.ledger_name || le.category,
+          Number(le.amount || 0),
+          details.length || "",
+        ]);
+        r++;
+      });
+
+      sheetData.push(["", "Ledger Subtotal", ledgerTotal, ""]);
+      r++;
+      sheetData.push([]); r++;
+    }
+
+    // ─── Section 3: Society Maintenance Charges ───
+    if (societyMaintenancePercent > 0 && grandTotal > 0) {
+      sheetData.push(["Society Maintenance Charges", "", "", ""]);
+      merges.push({ s: { r, c: 0 }, e: { r, c: 3 } });
+      r++;
+      sheetData.push(["Description", "", "Amount (₹)", ""]);
+      merges.push({ s: { r, c: 0 }, e: { r, c: 1 } });
+      r++;
+
+      sheetData.push(["Total Expenses (CAM + Ledger)", "", grandTotal, ""]);
+      merges.push({ s: { r, c: 0 }, e: { r, c: 1 } });
+      r++;
+
+      const societyAmount = grandTotal * societyMaintenancePercent / 100;
+      sheetData.push([`Society Maintenance @ ${societyMaintenancePercent}%`, "", societyAmount, ""]);
+      merges.push({ s: { r, c: 0 }, e: { r, c: 1 } });
+      r++;
+
+      sheetData.push(["Grand Total with Society Charges", "", grandTotal + societyAmount, ""]);
+      merges.push({ s: { r, c: 0 }, e: { r, c: 1 } });
+      r++;
+      sheetData.push([]); r++;
+    } else {
+      // Grand total row without society charges
+      sheetData.push(["Grand Total", "", grandTotal, ""]);
+      merges.push({ s: { r, c: 0 }, e: { r, c: 1 } });
+      r++;
+      sheetData.push([]); r++;
+    }
+
+    // ─── Build worksheet ───
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws["!merges"] = merges;
+
+    // Column widths
+    ws["!cols"] = [
+      { wch: 8 },   // #
+      { wch: 42 },  // Category / Description
+      { wch: 20 },  // Amount
+      { wch: 16 },  // Source / Entries
+    ];
+
+    // ─── Style helpers (xlsx community edition supports limited styles via cell.s) ───
+    // For number formatting on amount columns
+    const fmtINR = '#,##0.00';
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: R, c: 2 })];
+      if (cell && typeof cell.v === 'number') {
+        cell.z = fmtINR;
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, "Monthly Expenses");
+
+    // ─── Journal Entry Details Sheet ───
+    const jeKeys = Object.keys(journalEntryDetails).filter(k => (journalEntryDetails[k] || []).length > 0);
+    if (jeKeys.length > 0) {
+      const jeData = [];
+      let jr = 0;
+      const jeMerges = [];
+
+      jeData.push(["Journal Entry Details"]); 
+      jeMerges.push({ s: { r: jr, c: 0 }, e: { r: jr, c: 4 } });
+      jr++;
+      jeData.push([]); jr++;
+
+      jeKeys.forEach(ledgerName => {
+        const entries = journalEntryDetails[ledgerName] || [];
+        jeData.push([ledgerName, "", "", "", ""]);
+        jeMerges.push({ s: { r: jr, c: 0 }, e: { r: jr, c: 4 } });
+        jr++;
+
+        jeData.push(["Entry #", "Date", "Status", "Amount (₹)", "Narration"]);
+        jr++;
+
+        let ledgerSum = 0;
+        entries.forEach(je => {
+          const amt = Number(je.amount || 0);
+          ledgerSum += amt;
+          jeData.push([
+            je.entry_number || je.id || "",
+            je.entry_date || "",
+            je.status || "",
+            amt,
+            je.narration || "",
+          ]);
+          jr++;
+        });
+
+        jeData.push(["", "", "Total", ledgerSum, ""]);
+        jr++;
+        jeData.push([]); jr++;
+      });
+
+      const jeWs = XLSX.utils.aoa_to_sheet(jeData);
+      jeWs["!merges"] = jeMerges;
+      jeWs["!cols"] = [
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 18 },
+        { wch: 40 },
+      ];
+      // Format amounts
+      const jeRange = XLSX.utils.decode_range(jeWs['!ref'] || 'A1');
+      for (let R = jeRange.s.r; R <= jeRange.e.r; R++) {
+        const cell = jeWs[XLSX.utils.encode_cell({ r: R, c: 3 })];
+        if (cell && typeof cell.v === 'number') {
+          cell.z = fmtINR;
+        }
+      }
+      XLSX.utils.book_append_sheet(wb, jeWs, "Journal Entry Details");
+    }
+
+    const filename = `monthly_expenses_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast.success("Expense report exported as Excel");
+  };
 
   // Period label for display
   const periodLabel = useMemo(() => {
@@ -296,7 +511,11 @@ const MonthlyExpenseSetup = () => {
             </label>
           </div>
 
-          <div className="flex items-end justify-end">
+          <div className="flex items-end justify-end gap-2">
+            <button onClick={exportToExcel} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Export Excel
+            </button>
             <button onClick={saveAll} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save All</button>
           </div>
         </div>
@@ -440,6 +659,50 @@ const MonthlyExpenseSetup = () => {
                     </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Society Charges Summary */}
+      {societyMaintenancePercent > 0 && grandTotal > 0 && (
+        <div className="bg-white rounded-lg shadow p-5 mb-4 border-l-4 border-blue-500">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">
+              Society Maintenance Charges
+              <span className="ml-2 text-sm font-normal text-gray-500">({societyMaintenancePercent}%)</span>
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-blue-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Description</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-600">Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-3 text-sm text-gray-700">Total Expenses (CAM + Ledger)</td>
+                  <td className="px-4 py-3 text-sm text-right font-medium text-gray-800">
+                    ₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+                <tr className="bg-blue-50/50">
+                  <td className="px-4 py-3 text-sm text-blue-800 font-medium">
+                    Society Maintenance Charges @ {societyMaintenancePercent}%
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right font-bold text-blue-700">
+                    ₹{(grandTotal * societyMaintenancePercent / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+                <tr className="bg-gray-50 font-semibold">
+                  <td className="px-4 py-3 text-sm text-gray-900">Grand Total with Society Charges</td>
+                  <td className="px-4 py-3 text-sm text-right font-bold text-gray-900">
+                    ₹{(grandTotal + (grandTotal * societyMaintenancePercent / 100)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
