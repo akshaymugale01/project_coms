@@ -66,105 +66,6 @@ const Ticket = () => {
     return date.toLocaleString();
   };
 
-    const fetchTickets = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const queryParams = new URLSearchParams();
-
-      queryParams.append("page", currentPage);
-      queryParams.append("per_page", perPage);
-
-      // Server side search
-      if (searchText.trim() !== "") {
-        queryParams.append("q[search_cont]", searchText);
-      }
-
-      // Status filter
-      if (selectedStatus !== "all") {
-        queryParams.append(
-          "q[complaint_status_name_eq]",
-          selectedStatus
-        );
-      }
-
-      // Type filter
-      if (selectedType !== "all") {
-        queryParams.append("q[complaint_type_eq]", selectedType);
-      }
-
-      const response = await getAdminComplaints(
-        `?${queryParams.toString()}`
-      );
-
-      if (response?.data?.complaints) {
-        const { complaints, count, total_pages, current_page } =
-          response.data;
-
-        setComplaints(complaints);
-        setFilteredData(complaints);
-        setTotalRows(count || 0);
-        setTotalPages(total_pages || 1);
-        setCurrentPage(current_page || 1);
-      } else {
-        setComplaints([]);
-        setFilteredData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching tickets:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, perPage, searchText, selectedStatus, selectedType]);
-
-   useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
-
-  const handleSearch = (e) => {
-    setSearchText(e.target.value);
-    setCurrentPage(1);
-  };
-
-  // =============================
-  // STATUS FILTER
-  // =============================
-  const handleStatusChange = (status) => {
-    setSelectedStatus(status);
-    setCurrentPage(1);
-  };
-
-  // =============================
-  // TYPE FILTER
-  // =============================
-  const handleTypeChange = (type) => {
-    setSelectedType(type);
-    setCurrentPage(1);
-  };
-
-  // =============================
-  // PER PAGE CHANGE
-  // =============================
-  const handlePerPageChange = (value) => {
-    setPerPage(value);
-    setCurrentPage(1);
-  };
-
-  // =============================
-  // PAGINATION
-  // =============================
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
   const columns = [
     {
       name: "Action",
@@ -436,80 +337,80 @@ const Ticket = () => {
   }, []);
 
   // Function to apply current filters to the data
-  // const applyFilters = useCallback((data) => {
-  //   console.log("applyFilters called with:", {
-  //     dataLength: data?.length,
-  //     complaintsLength: complaints.length,
-  //     selectedStatus,
-  //     selectedType,
-  //     searchText: searchText.length > 0 ? searchText : "empty"
-  //   });
+  const applyFilters = useCallback((data) => {
+    console.log("applyFilters called with:", {
+      dataLength: data?.length,
+      complaintsLength: complaints.length,
+      selectedStatus,
+      selectedType,
+      searchText: searchText.length > 0 ? searchText : "empty"
+    });
     
-  //   // Determine the data source
-  //   let sourceData = data;
-  //   if (!sourceData) {
-  //     // If we have a specific status or type selected, use all complaints data
-  //     if (selectedStatus !== "all" || selectedType !== "all") {
-  //       sourceData = allComplaints;
-  //       console.log("Using allComplaints for filtering:", sourceData.length);
-  //     } else {
-  //       // Otherwise use current page data
-  //       sourceData = complaints;
-  //       console.log("Using complaints for normal view:", sourceData.length);
-  //     }
-  //   }
+    // Determine the data source
+    let sourceData = data;
+    if (!sourceData) {
+      // If we have a specific status or type selected, use all complaints data
+      if (selectedStatus !== "all" || selectedType !== "all") {
+        sourceData = allComplaints;
+        console.log("Using allComplaints for filtering:", sourceData.length);
+      } else {
+        // Otherwise use current page data
+        sourceData = complaints;
+        console.log("Using complaints for normal view:", sourceData.length);
+      }
+    }
     
-  //   let filtered = [...sourceData];
-  //   console.log("Initial filtered length:", filtered.length);
+    let filtered = [...sourceData];
+    console.log("Initial filtered length:", filtered.length);
 
-  //   // Apply status filter
-  //   if (selectedStatus !== "all") {
-  //     filtered = filtered.filter(item => 
-  //       item.issue_status?.toLowerCase() === selectedStatus.toLowerCase()
-  //     );
-  //     console.log("After status filter:", filtered.length);
-  //   }
+    // Apply status filter
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter(item => 
+        item.issue_status?.toLowerCase() === selectedStatus.toLowerCase()
+      );
+      console.log("After status filter:", filtered.length);
+    }
 
-  //   // Apply type filter
-  //   if (selectedType !== "all") {
-  //     filtered = filtered.filter(item => 
-  //       item.issue_type?.toLowerCase() === selectedType.toLowerCase()
-  //     );
-  //     console.log("After type filter:", filtered.length);
-  //   }
+    // Apply type filter
+    if (selectedType !== "all") {
+      filtered = filtered.filter(item => 
+        item.issue_type?.toLowerCase() === selectedType.toLowerCase()
+      );
+      console.log("After type filter:", filtered.length);
+    }
 
-  //   // Apply search filter
-  //   if (searchText.trim() !== "") {
-  //     const searchWords = searchText
-  //       .toLowerCase()
-  //       .split(" ")
-  //       .filter((w) => w.trim() !== "");
+    // Apply search filter
+    if (searchText.trim() !== "") {
+      const searchWords = searchText
+        .toLowerCase()
+        .split(" ")
+        .filter((w) => w.trim() !== "");
 
-  //     filtered = filtered.filter((item) => {
-  //       const searchable = [
-  //         item.ticket_number,
-  //         item.category_type,
-  //         item.building_name,
-  //         item.floor_name,
-  //         item.unit,
-  //         item.issue_type,
-  //         item.heading,
-  //         item.priority,
-  //         item.created_by,
-  //         item.issue_status,
-  //         item.sub_category,
-  //       ]
-  //         .map((v) => (v || "").toLowerCase())
-  //         .join(" ");
+      filtered = filtered.filter((item) => {
+        const searchable = [
+          item.ticket_number,
+          item.category_type,
+          item.building_name,
+          item.floor_name,
+          item.unit,
+          item.issue_type,
+          item.heading,
+          item.priority,
+          item.created_by,
+          item.issue_status,
+          item.sub_category,
+        ]
+          .map((v) => (v || "").toLowerCase())
+          .join(" ");
 
-  //       return searchWords.every((word) => searchable.includes(word));
-  //     });
-  //     console.log("After search filter:", filtered.length);
-  //   }
+        return searchWords.every((word) => searchable.includes(word));
+      });
+      console.log("After search filter:", filtered.length);
+    }
 
-  //   console.log("Final filtered length:", filtered.length);
-  //   setFilteredData(filtered);
-  // }, [complaints, selectedStatus, selectedType, searchText, allComplaints]);
+    console.log("Final filtered length:", filtered.length);
+    setFilteredData(filtered);
+  }, [complaints, selectedStatus, selectedType, searchText, allComplaints]);
 
   // useEffect(() => {
   //   fetchData(currentPage, perPage);
@@ -533,123 +434,123 @@ const Ticket = () => {
     initializeData();
   }, [currentPage, perPage, fetchData, fetchTicketInfo, isFiltered]);
 
-  // const handleNext = async () => {
-  //   if (currentPage < totalPages) {
-  //     const nextPage = currentPage + 1;
+  const handleNext = async () => {
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
       
-  //     if (isFiltered && Object.keys(currentFilterParams).length > 0) {
-  //       // If we're in filtered mode, fetch next page from server
-  //       await fetchFilteredData(currentFilterParams, nextPage);
-  //     } else {
-  //       // Normal server-side pagination
-  //       setCurrentPage(nextPage);
-  //     }
-  //   }
-  // };
+      if (isFiltered && Object.keys(currentFilterParams).length > 0) {
+        // If we're in filtered mode, fetch next page from server
+        await fetchFilteredData(currentFilterParams, nextPage);
+      } else {
+        // Normal server-side pagination
+        setCurrentPage(nextPage);
+      }
+    }
+  };
 
-  // const handlePrevious = async () => {
-  //   if (currentPage > 1) {
-  //     const prevPage = currentPage - 1;
+  const handlePrevious = async () => {
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
       
-  //     if (isFiltered && Object.keys(currentFilterParams).length > 0) {
-  //       // If we're in filtered mode, fetch previous page from server
-  //       await fetchFilteredData(currentFilterParams, prevPage);
-  //     } else {
-  //       // Normal server-side pagination
-  //       setCurrentPage(prevPage);
-  //     }
-  //   }
-  // };
+      if (isFiltered && Object.keys(currentFilterParams).length > 0) {
+        // If we're in filtered mode, fetch previous page from server
+        await fetchFilteredData(currentFilterParams, prevPage);
+      } else {
+        // Normal server-side pagination
+        setCurrentPage(prevPage);
+      }
+    }
+  };
 
-  // const handleSearch = async (e) => {
-  //   const searchValue = e.target.value;
-  //   setSearchText(searchValue);
-  // };
+  const handleSearch = async (e) => {
+    const searchValue = e.target.value;
+    setSearchText(searchValue);
+  };
 
-  // // Apply filters whenever search text, status, or type changes
-  // useEffect(() => {
-  //   applyFilters();
-  // }, [searchText, selectedStatus, selectedType, applyFilters]);
+  // Apply filters whenever search text, status, or type changes
+  useEffect(() => {
+    applyFilters();
+  }, [searchText, selectedStatus, selectedType, applyFilters]);
 
-  // const handleStatusChange = async (status) => {
-  //   setSelectedStatus(status);
-  //   setCurrentPage(1); // Reset to first page when filter changes
-  //   console.log("Filtering by status:", status);
+  const handleStatusChange = async (status) => {
+    setSelectedStatus(status);
+    setCurrentPage(1); // Reset to first page when filter changes
+    console.log("Filtering by status:", status);
     
-  //   if (status === "all") {
-  //     // Show current page data when "all" is selected - reset to normal pagination
-  //     setIsFiltered(false);
-  //     setCurrentFilterParams({});
-  //     await fetchData(1, perPage); // Fetch first page of unfiltered data
-  //     console.log("Reset to normal pagination");
-  //   } else {
-  //     // Use API filtering with query parameters and server pagination
-  //     const filterParams = {
-  //       'q[complaint_status_name_eq]': status // Use the exact value from the dashboard
-  //     };
+    if (status === "all") {
+      // Show current page data when "all" is selected - reset to normal pagination
+      setIsFiltered(false);
+      setCurrentFilterParams({});
+      await fetchData(1, perPage); // Fetch first page of unfiltered data
+      console.log("Reset to normal pagination");
+    } else {
+      // Use API filtering with query parameters and server pagination
+      const filterParams = {
+        'q[complaint_status_name_eq]': status // Use the exact value from the dashboard
+      };
       
-  //     setIsFiltered(true);
-  //     setCurrentFilterParams(filterParams);
+      setIsFiltered(true);
+      setCurrentFilterParams(filterParams);
       
-  //     console.log("Sending filter params:", filterParams);
-  //     const filteredResults = await fetchFilteredData(filterParams, 1);
-  //     console.log(`API filtered results for ${status}:`, filteredResults.length);
-  //   }
-  // };
+      console.log("Sending filter params:", filterParams);
+      const filteredResults = await fetchFilteredData(filterParams, 1);
+      console.log(`API filtered results for ${status}:`, filteredResults.length);
+    }
+  };
 
-  // const handleTypeChange = async (type) => {
-  //   setSelectedType(type);
-  //   setCurrentPage(1); // Reset to first page when filter changes
-  //   console.log("Filtering by type:", type);
+  const handleTypeChange = async (type) => {
+    setSelectedType(type);
+    setCurrentPage(1); // Reset to first page when filter changes
+    console.log("Filtering by type:", type);
     
-  //   if (type === "all") {
-  //     // Reset to normal pagination
-  //     setIsFiltered(false);
-  //     setCurrentFilterParams({});
-  //     await fetchData(1, perPage);
-  //     console.log("Reset to normal pagination");
-  //   } else {
-  //     // Use API filtering with query parameters and server pagination
-  //     const filterParams = {
-  //       'q[complaint_type_eq]': type // Use the exact value from the dashboard
-  //     };
+    if (type === "all") {
+      // Reset to normal pagination
+      setIsFiltered(false);
+      setCurrentFilterParams({});
+      await fetchData(1, perPage);
+      console.log("Reset to normal pagination");
+    } else {
+      // Use API filtering with query parameters and server pagination
+      const filterParams = {
+        'q[complaint_type_eq]': type // Use the exact value from the dashboard
+      };
       
-  //     setIsFiltered(true);
-  //     setCurrentFilterParams(filterParams);
+      setIsFiltered(true);
+      setCurrentFilterParams(filterParams);
       
-  //     console.log("Sending filter params:", filterParams);
-  //     const filteredResults = await fetchFilteredData(filterParams, 1);
-  //     console.log(`API filtered results for type ${type}:`, filteredResults.length);
-  //   }
-  // };
+      console.log("Sending filter params:", filterParams);
+      const filteredResults = await fetchFilteredData(filterParams, 1);
+      console.log(`API filtered results for type ${type}:`, filteredResults.length);
+    }
+  };
 
-  // const handlePerPageChange = async (newPerPage) => {
-  //   setPerPage(newPerPage);
-  //   setCurrentPage(1); // Reset to first page when changing per page
+  const handlePerPageChange = async (newPerPage) => {
+    setPerPage(newPerPage);
+    setCurrentPage(1); // Reset to first page when changing per page
     
-  //   if (isFiltered && Object.keys(currentFilterParams).length > 0) {
-  //     // If we're in filtered mode, re-apply the filter with new page size
-  //     await fetchFilteredData(currentFilterParams, 1);
-  //   } else {
-  //     // Normal pagination
-  //     await fetchData(1, newPerPage);
-  //   }
-  // };
+    if (isFiltered && Object.keys(currentFilterParams).length > 0) {
+      // If we're in filtered mode, re-apply the filter with new page size
+      await fetchFilteredData(currentFilterParams, 1);
+    } else {
+      // Normal pagination
+      await fetchData(1, newPerPage);
+    }
+  };
 
   const handleShowAllRecords = async () => {
     console.log("Resetting all filters for Total Tickets");
     // Reset ALL filter states
-   setSelectedStatus("all");
-  setSelectedType("all");
-  setSearchText("");
-  setCurrentPage(1);
+    setSelectedStatus("all");
+    setSelectedType("all");
+    setSearchText(""); // Also clear search text
+    setCurrentPage(1);
     
     // Reset to normal pagination mode for showing all records
     setIsFiltered(false); 
     setCurrentFilterParams({}); // Clear any filters
     
     // Use normal pagination with current perPage setting
-    // await fetchData(1, perPage);
+    await fetchData(1, perPage);
   };
 
   const getTodayDate = () => {
@@ -969,30 +870,49 @@ const Ticket = () => {
         )}
         {/* </div> */}
 
-        <div className="flex justify-between items-center m-2">
+        <div className="flex lg:flex-row flex-col justify-between items-center m-2 gap-2">
           <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages} | Showing{" "}
-            {filteredData.length} of {totalRows} records
+            {isFiltered ? (
+              `Filtered results: Page ${currentPage} of ${totalPages} | Showing ${filteredData.length} of ${totalRows} records`
+            ) : (
+              `Page ${currentPage} of ${totalPages} | Showing ${filteredData.length} of ${totalRows} records`
+            )}
           </div>
+          <div className="flex gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600 whitespace-nowrap">Per page:</label>
+              <select
+                value={perPage}
+                onChange={(e) => handlePerPageChange(Number(e.target.value))}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={30}>30</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+            <div className="flex gap-2 items-center">
+              <button
+                onClick={handlePrevious}
+                className="px-2 disabled:opacity-50 disabled:shadow-none shadow-custom-all-sides rounded-full"
+                disabled={currentPage <= 1}
+              >
+                <MdKeyboardArrowLeft size={30} />
+              </button>
 
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={handlePrevious}
-              disabled={currentPage <= 1}
-            >
-              <MdKeyboardArrowLeft size={25} />
-            </button>
+              <span className="text-sm px-2">
+                {currentPage} / {totalPages}
+              </span>
 
-            <span>
-              {currentPage} / {totalPages}
-            </span>
-
-            <button
-              onClick={handleNext}
-              disabled={currentPage >= totalPages}
-            >
-              <MdKeyboardArrowRight size={25} />
-            </button>
+              <button
+                onClick={handleNext}
+                className="px-2 rounded-full shadow-custom-all-sides disabled:opacity-50 disabled:shadow-none"
+                disabled={currentPage >= totalPages}
+              >
+                <MdKeyboardArrowRight size={30} />
+              </button>
+            </div>
           </div>
         </div>
       </div>

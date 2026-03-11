@@ -11,7 +11,7 @@ const Osr = () => {
       <Navbar />
 
       {/* Sidebar */}
-      {/* <aside className="w-64 bg-gray-800 text-white shadow h-full px-4 py-6">
+      <aside className="w-64 bg-gray-800 text-white shadow h-full px-4 py-6">
         <h2 className="text-xl font-bold mb-4">OSR-Menu</h2>
         <ul className="space-y-2">
           <li>
@@ -51,7 +51,7 @@ const Osr = () => {
             </Link>
           </li>
         </ul>
-      </aside> */}
+      </aside>
 
       {/* Main Content */}
       {/* <div className="flex-1 bg-gray-100 p-6">

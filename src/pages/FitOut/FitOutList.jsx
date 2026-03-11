@@ -18,10 +18,10 @@ const FitOutList = () => {
     <div className="flex">
       {/* Sidebar */}
       <Navbar />
-      {/* <div
-        className= "w-56  text-white h-screen transition-all duration-300 flex flex-col"
+      <div
+        className= "w-56 bg-gray-900 text-white h-screen transition-all duration-300 flex flex-col"
         
-      > */}
+      >
         {/* Sidebar Toggle Button */}
         {/* <button
           className="p-4 text-white focus:outline-none"
@@ -31,7 +31,7 @@ const FitOutList = () => {
         </button> */}
 
         {/* Sidebar Menu */}
-        {/* <nav className="flex flex-col gap-4 p-4">
+        <nav className="flex flex-col gap-4 p-4">
           <NavLink
             to="/fitout/setup/page"
             className={({ isActive }) =>
@@ -68,8 +68,8 @@ const FitOutList = () => {
           >
             {isOpen ? "Fitout Checklist" : "✅"}
           </NavLink>
-        </nav> */}
-      {/* </div> */}
+        </nav>
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 p-2">

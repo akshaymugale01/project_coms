@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import Navbar from "../../../components/Navbar";
 import IncidentUpdateModal from "../../../containers/modals/IncidentUpdateModal";
 import IncidentInjuryModal from "../../../containers/modals/IncidentInjuryModal";
-import { domainPrefix, getIncidentById } from "../../../api"; // ✅ make sure this exists
+import { getIncidentById } from "../../../api"; // ✅ make sure this exists
 import { dateFormatSTD } from "../../../utils/dateUtils";
 
 const IncidentsDetails = () => {
@@ -86,21 +86,10 @@ const IncidentsDetails = () => {
 
           <div className="my-2 md:px-10 text-sm items-center font-medium grid gap-4 md:grid-cols-2">
             <Detail label="Status" value={incident.status} />
-           <Detail
-  label="Incident Date and Time"
-  value={
-    incident.time_and_date
-      ? new Date(incident.time_and_date).toLocaleString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      : "-"
-  }
-/>
+            <Detail
+              label="Incident Date and Time"
+              value={dateFormatSTD(incident.time_and_date)}
+            />
             <Detail label="Building" value={incident.building_name} />
             <Detail label="Reported By" value={incident.created_by_name} />
             <Detail label="Level" value={incident.incident_level} />
@@ -172,21 +161,6 @@ const IncidentsDetails = () => {
           <h2 className="text-lg font-semibold">
             Attachments - {incident.attachments?.length || 0}
           </h2>
-          {incident.attachments?.map((file) => (
-              <div key={file.id} className="border p-2 rounded-md">
-                <a
-                  href={`${domainPrefix}${file.file_url}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={`${domainPrefix}${file.file_url}`}
-                    alt="attachment"
-                    className="w-[500px] h-48 object-cover rounded-md cursor-pointer hover:opacity-80 transition"
-                  />
-                </a>
-              </div>
-            ))}
         </div>
 
         {/* UPDATE STATUS */}

@@ -7,6 +7,7 @@ const LedgerModal = ({ ledger, accountGroups, units, onClose, onSave }) => {
     unit_id: "",
     code: "",
     opening_balance: 0,
+    advance_amount: 0,
     description: "",
   });
 
@@ -18,6 +19,7 @@ const LedgerModal = ({ ledger, accountGroups, units, onClose, onSave }) => {
         unit_id: ledger.unit_id || "",
         code: ledger.code || "",
         opening_balance: ledger.opening_balance || 0,
+        advance_amount: ledger.advance_amount || 0,
         description: ledger.description || "",
       });
     }
@@ -34,8 +36,8 @@ const LedgerModal = ({ ledger, accountGroups, units, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
             {ledger ? "Edit Ledger" : "Create Ledger"}
@@ -146,6 +148,26 @@ const LedgerModal = ({ ledger, accountGroups, units, onClose, onSave }) => {
                 step="0.01"
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                The balance this ledger had before using the system (carry-forward balance).
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Advance Amount
+              </label>
+              <input
+                type="number"
+                name="advance_amount"
+                value={formData.advance_amount}
+                onChange={handleChange}
+                step="0.01"
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Advance paid by the customer/member against this unit. Can be adjusted against future bills.
+              </p>
             </div>
 
             {/* <div>

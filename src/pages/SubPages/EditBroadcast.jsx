@@ -17,7 +17,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import { FaCheck } from "react-icons/fa";
 import ReactQuill from "react-quill";
-import { MdClose } from "react-icons/md";
 
 const EditBroadcast = () => {
   const { id } = useParams();
@@ -36,7 +35,7 @@ const EditBroadcast = () => {
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
-const [selectedUnits, setSelectedUnits] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState(null);
   const [selectedOwnership, setSelectedOwnership] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -93,7 +92,6 @@ const [selectedUnits, setSelectedUnits] = useState([]);
     }));
 
     setMembers(employeesList);
-    setFilteredMembers(employeesList);
   };
 
   const fetchGroups = async () => {
@@ -129,7 +127,6 @@ const [selectedUnits, setSelectedUnits] = useState([]);
 }))
 
         setSelectedMembers(selected);
-          setFilteredMembers(members);
       }
 
       // ✅ GROUP FIX
@@ -149,27 +146,23 @@ const [selectedUnits, setSelectedUnits] = useState([]);
   // ---------------- FILTER ----------------
 
   const handleFilter = () => {
-  const filtered = members.filter((member) => {
-    const buildingMatch =
-      selectedUnits.length === 0 ||
-      selectedUnits.some(
-        (unit) => Number(member.building_id) === Number(unit.value)
-      );
+    const filtered = members.filter((member) => {
+      const buildingMatch =
+        !selectedUnit || Number(member.building_id) === Number(selectedUnit);
 
-    const ownershipMatch =
-      !selectedOwnership ||
-      member.userSites.some(
-        (site) =>
-          site.ownership?.toLowerCase() ===
-          selectedOwnership.toLowerCase()
-      );
+      const ownershipMatch =
+        !selectedOwnership ||
+        member.userSites.some(
+          (site) =>
+            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase(),
+        );
 
-    return buildingMatch && ownershipMatch;
-  });
+      return buildingMatch && ownershipMatch;
+    });
 
-  setFilteredMembers(filtered);
-  toast.success("Filter applied");
-};
+    setFilteredMembers(filtered);
+    toast.success("Filter applied");
+  };
 
   // ---------------- SELECT USERS ----------------
 
@@ -378,19 +371,20 @@ const [selectedUnits, setSelectedUnits] = useState([]);
                         {/* First Row: Unit Select, Ownership Select, and Filter Button */}
                         <div className="flex gap-2 items-end">
                           {/* Unit Select Dropdown */}
-                         <Select
-  options={units.map((unit) => ({
-    value: unit.id,
-    label: unit.name,
-  }))}
-  isMulti
-  placeholder="Select Towers"
-  className="flex-1"
-  value={selectedUnits}
-  onChange={(selectedOptions) =>
-    setSelectedUnits(selectedOptions || [])
-  }
-/>
+                          <select
+                            className="border p-3 border-gray-300 rounded-md flex-1"
+                            value={selectedUnit || ""}
+                            onChange={(e) =>
+                              setSelectedUnit(Number(e.target.value))
+                            }
+                          >
+                            <option value="">Select Tower</option>
+                            {units.map((unit) => (
+                              <option key={unit.id} value={unit.id}>
+                                {unit.name}
+                              </option>
+                            ))}
+                          </select>
 
                           {/* Ownership Select Dropdown */}
                           <select
@@ -494,16 +488,11 @@ const [selectedUnits, setSelectedUnits] = useState([]);
                   />
                 </div>
               </div>
-              <div className="flex justify-end mt-10 my-5 gap-3">
+              <div className="flex justify-center mt-10 my-5">
                 <button
-                  className="bg-gray-400 text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200"
-                  onClick={() => navigate("/communication/broadcast")}
-                >
-                  <MdClose className="text-xl" /> Cancel
-                </button>
-                <button
+                  style={{ background: themeColor }}
                   onClick={handleUpdateBroadcast}
-                  className="px-4 text-white p-2 rounded-md  flex items-center gap-2 bg-gray-950"
+                  className="px-4 text-white p-2 rounded-md  flex items-center gap-2"
                 >
                   <FaCheck /> Submit
                 </button>

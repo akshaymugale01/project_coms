@@ -764,9 +764,6 @@ import MyBookings from "./pages/OSR/ResidentialBookings.jsx";
 import ServiceBooking from "./pages/OSR/ServiceBooking.jsx";
 import EditPPMChecklist from "./pages/SubPages/EditPPMChecklist.jsx";
 import CreateInvoiceReceipt from "./pages/SubPages/details/CreateInvoiceReciept.jsx";
-// import EditSelfRegistration from "./pages/SubPages/EditSelfRegistration.jsx";
-import AddSelfRegistration from "./pages/SubPages/AddSelfRegistration.jsx";
-// import SelfRegistrationDetails from "./pages/SubPages/ServiceChecklist.jsx";
 //import ParkingConfiguration from "./pages/Setup/ParkingSetupPages/ParkingConfiguration.jsx";
 import ModernParkingConfig from "./pages/Setup/ParkingSetupPages/ModernParkingConfig.jsx";
 import EditHotelSetup from "./pages/SubPages/EditHotelSetup.jsx";
@@ -1840,9 +1837,9 @@ function App() {
           <Route
             path="/assets/add-asset"
             element={
-              <ProtectedAdminRoutes>
+              // <ProtectedAdminRoutes>
               <AddAsset />
-              </ProtectedAdminRoutes>
+              // </ProtectedAdminRoutes>
             }
           />
           <Route
@@ -3170,32 +3167,7 @@ function App() {
               </ProtectedAdminRoutes>
             }
           />
-  <Route
-            path="/admin/passes/add-self-registration"
-            element={
-              <ProtectedAdminRoutes>
-              <AddSelfRegistration/>
-              </ProtectedAdminRoutes>
-            }
-          />
 
-            {/* <Route
-            path="/admin/passes/visitors/visitor-details/:id"
-            element={
-              <ProtectedAdminRoutes>
-                <SelfRegistrationDetails />
-              </ProtectedAdminRoutes>
-            }
-          />
-
-            <Route
-            path="/admin/passes/visitors/edit-visitor/:id"
-            element={
-              <ProtectedAdminRoutes>
-                <EditSelfRegistration />
-              </ProtectedAdminRoutes>
-            }
-          /> */}
           {/* employee passes */}
           <Route
             path="/employee/passes"

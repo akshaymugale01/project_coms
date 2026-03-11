@@ -20,13 +20,12 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import { FaCheck } from "react-icons/fa";
 import ReactQuill from "react-quill";
-import { MdClose } from "react-icons/md";
 const CreateBroadcast = () => {
   const [share, setShare] = useState("all");
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("");
   const themeColor = useSelector((state) => state.theme.color);
-const [selectedUnits, setSelectedUnits] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState(null);
   const [groupMembers, setGroupMembers] = useState([]);
   const siteId = getItemInLocalStorage("SITEID");
   const currentUser = getItemInLocalStorage("UserId");
@@ -114,28 +113,44 @@ const [selectedUnits, setSelectedUnits] = useState([]);
     fetchData();
   }, []);
 
-const handleFilter = () => {
-  const filtered = members.filter((member) => {
-    const buildingMatch =
-      selectedUnits.length === 0 ||
-      selectedUnits.some(
-        (unit) => Number(member.building_id) === Number(unit.value)
+  const handleFilter = () => {
+    console.log(
+      "Selected Building ID:",
+      selectedUnit,
+      "Selected Ownership:",
+      selectedOwnership
+    );
+    console.log("Members Before Filtering:", members);
+
+    const filtered = members.filter((member) => {
+      // Check if the user belongs to the selected building
+      const buildingMatch =
+        !selectedUnit || Number(member.building_id) === Number(selectedUnit);
+
+      // Check if any of the user's sites match the selected ownership
+      const ownershipMatch =
+        !selectedOwnership ||
+        member.userSites.some(
+          (site) =>
+            site.ownership?.toLowerCase() === selectedOwnership.toLowerCase()
+        );
+
+      console.log(
+        "User:",
+        member.name,
+        "Building Match:",
+        buildingMatch,
+        "Ownership Match:",
+        ownershipMatch
       );
 
-    const ownershipMatch =
-      !selectedOwnership ||
-      member.userSites.some(
-        (site) =>
-          site.ownership?.toLowerCase() ===
-          selectedOwnership.toLowerCase()
-      );
+      return buildingMatch && ownershipMatch;
+    });
 
-    return buildingMatch && ownershipMatch;
-  });
-
-  setFilteredMembers(filtered);
-  toast.success("Filter applied");
-};
+    console.log("Filtered Members:", filtered);
+    setFilteredMembers(filtered);
+    toast.success("Filter applied");
+  };
 
   const fetchGroups = async () => {
     try {
@@ -157,6 +172,7 @@ const handleFilter = () => {
     // Set members directly from selected group object
     setGroupMembers(selectedGroupObj?.group_members || []);
   };
+
 
   const handleShareChange = (shareType) => {
     setShare(shareType); // Update the share state
@@ -192,58 +208,59 @@ const handleFilter = () => {
     }));
   };
 
-  const handleCreateBroadCast = async () => {
-    if (formData.notice_title === "" || formData.expiry_date === "") {
-      return toast.error("Please Enter Title & Expiry Date");
+ const handleCreateBroadCast = async () => {
+  if (formData.notice_title === "" || formData.expiry_date === "") {
+    return toast.error("Please Enter Title & Expiry Date");
+  }
+
+  try {
+    setSubmitting(true);
+    toast.loading("Creating Broadcast Please Wait!");
+
+    const formDataSend = new FormData();
+
+    formDataSend.append("notice[created_by_id]", currentUser);
+    formDataSend.append("notice[site_id]", formData.site_id);
+    formDataSend.append("notice[notice_title]", formData.notice_title);
+    formDataSend.append("notice[important]", formData.important);
+    formDataSend.append("notice[send_email]", formData.send_email);
+    formDataSend.append(
+      "notice[notice_discription]",
+      formData.notice_discription
+    );
+    formDataSend.append("notice[expiry_date]", formData.expiry_date);
+
+    if (share === "all") {
+      const allUserIds = users.map((user) => user.value).join(",");
+      formDataSend.append("notice[shared]", "all");
+      formDataSend.append("notice[user_ids]", allUserIds);
+    } else if (share === "individual") {
+      formDataSend.append("notice[shared]", "individual");
+      formDataSend.append("notice[user_ids]", formData.user_ids);
+    } else if (share === "groups") {
+      formDataSend.append("notice[shared]", "groups");
+      formDataSend.append("notice[group_id]", formData.group_id);
+      formDataSend.append("notice[group_name]", formData.group_name);
     }
 
-    try {
-      setSubmitting(true);
-      toast.loading("Creating Broadcast Please Wait!");
+    formData.notice_image.forEach((file) => {
+      formDataSend.append("attachfiles[]", file);
+    });
 
-      const formDataSend = new FormData();
+    await postBroadCast(formDataSend);
 
-      formDataSend.append("notice[created_by_id]", currentUser);
-      formDataSend.append("notice[site_id]", formData.site_id);
-      formDataSend.append("notice[notice_title]", formData.notice_title);
-      formDataSend.append("notice[important]", formData.important);
-      formDataSend.append("notice[send_email]", formData.send_email);
-      formDataSend.append(
-        "notice[notice_discription]",
-        formData.notice_discription,
-      );
-      formDataSend.append("notice[expiry_date]", formData.expiry_date);
+    toast.dismiss();
+    toast.success("Broadcast Created Successfully");
+    navigate("/communication/broadcast");
+  } catch (error) {
+    console.error("Error creating broadcast:", error);
+    toast.dismiss();
+    toast.error("Something went wrong");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
-      if (share === "all") {
-        const allUserIds = users.map((user) => user.value).join(",");
-        formDataSend.append("notice[shared]", "all");
-        formDataSend.append("notice[user_ids]", allUserIds);
-      } else if (share === "individual") {
-        formDataSend.append("notice[shared]", "individual");
-        formDataSend.append("notice[user_ids]", formData.user_ids);
-      } else if (share === "groups") {
-        formDataSend.append("notice[shared]", "groups");
-        formDataSend.append("notice[group_id]", formData.group_id);
-        formDataSend.append("notice[group_name]", formData.group_name);
-      }
-
-      formData.notice_image.forEach((file) => {
-        formDataSend.append("attachfiles[]", file);
-      });
-
-      await postBroadCast(formDataSend);
-
-      toast.dismiss();
-      toast.success("Broadcast Created Successfully");
-      navigate("/communication/broadcast");
-    } catch (error) {
-      console.error("Error creating broadcast:", error);
-      toast.dismiss();
-      toast.error("Something went wrong");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handlePreview = () => {
     // before preview you can add validations if needed
@@ -418,25 +435,22 @@ const handleFilter = () => {
                 <div className="flex flex-col items-center justify-center">
                   <div className="flex flex-row gap-2 w-full font-semibold p-2 ">
                     <h2
-                      className={`p-1 ${
-                        share === "all" && "bg-black text-white"
-                      } rounded-full px-6 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${share === "all" && "bg-black text-white"
+                        } rounded-full px-6 cursor-pointer border-2 border-black`}
                       onClick={() => setShare("all")}
                     >
                       All
                     </h2>
                     <h2
-                      className={`p-1 ${
-                        share === "individual" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${share === "individual" && "bg-black text-white"
+                        } rounded-full px-4 cursor-pointer border-2 border-black`}
                       onClick={() => setShare("individual")}
                     >
                       Individuals
                     </h2>
                     <h2
-                      className={`p-1 ${
-                        share === "groups" && "bg-black text-white"
-                      } rounded-full px-4 cursor-pointer border-2 border-black`}
+                      className={`p-1 ${share === "groups" && "bg-black text-white"
+                        } rounded-full px-4 cursor-pointer border-2 border-black`}
                       onClick={() => setShare("groups")}
                     >
                       Groups
@@ -447,19 +461,21 @@ const handleFilter = () => {
                       {/* First Row: Unit Select, Ownership Select, and Filter Button */}
                       <div className="flex gap-2 items-end">
                         {/* Unit Select Dropdown */}
-                        <Select
-  options={units.map((unit) => ({
-    value: unit.id,
-    label: unit.name,
-  }))}
-  isMulti
-  placeholder="Select Towers"
-  className="flex-1"
-  value={selectedUnits}
-  onChange={(selectedOptions) =>
-    setSelectedUnits(selectedOptions || [])
-  }
-/>
+                        <select
+                          className="border p-3 border-gray-300 rounded-md flex-1"
+                          value={selectedUnit || ""}
+                          onChange={(e) =>
+                            setSelectedUnit(Number(e.target.value))
+                          }
+                        >
+                          <option value="">Select Tower</option>
+                          {units.map((unit) => (
+                            <option key={unit.id} value={unit.id}>
+                              {unit.name}
+                            </option>
+                          ))}
+                        </select>
+
                         {/* Ownership Select Dropdown */}
                         <select
                           className="border p-3 border-gray-300 rounded-md flex-1"
@@ -567,24 +583,17 @@ const handleFilter = () => {
                   <FaCheck /> Submit
                 </button>
               </div> */}
-              <div className="flex justify-end mt-10 my-5 gap-3">
-                <button
-                  className="bg-gray-400 text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200"
-                  onClick={()=>navigate("/communication/broadcast")}
-                  disabled={submitting}
-                >
-                  <MdClose /> Cancel
+              <div className="flex justify-center mt-10 my-5">
+               <button
+  className={`${
+    submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
+  } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200`}
+  onClick={handleCreateBroadCast}
+  disabled={submitting}
+>
+  <FaCheck /> {submitting ? "Submitting..." : "Submit"}
+</button>
 
-                </button>
-                <button
-                  className={`${
-                    submitting ? "bg-gray-400" : "bg-gray-900 hover:bg-gray-700"
-                  } text-white p-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200`}
-                  onClick={handleCreateBroadCast}
-                  disabled={submitting}
-                >
-                  <FaCheck /> {submitting ? "Submitting..." : "Submit"}
-                </button>
               </div>
             </div>
           </div>

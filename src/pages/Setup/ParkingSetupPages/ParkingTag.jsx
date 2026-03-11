@@ -8,55 +8,92 @@ import { BiEdit } from "react-icons/bi";
 import ToggleSwitch from "../../../Buttons/ToggleSwitch";
 //import Modal from "../containers/modals/Modal";
 const ParkingTag = () => {
-  const themeColor = useSelector((state)=> state.theme.color)
+    const themeColor = useSelector((state)=> state.theme.color)
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [tableData, setTableData] = useState([
-    {
-      id: 1,
-      active: true,
-      tname: "Urgent",
-      tag_type: "others",
-      MOM: true,
-      Task: true,
-      color: "#ffffff",
-    },
-  ]);
-  const [createData, setCreateData] = useState({
-  tname: "",
-  tag_type: "",
-  color: "",
-  MOM: false,
-  Task: false,
-});
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [formData, setFormData] = useState({});
-
-    const openModal = (row) => {
-      setSelectedRow(row);
-      setFormData({ ...row });;
-      setIsModalOpen(true);
-    };
+    const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
-    const handleChange = (e) => {
-  const { id, value, type, checked } = e.target;
-
-  setFormData((prev) => ({
-    ...prev,
-    [id]: type === "checkbox" ? checked : value,
-  }));
-};
   const column = [
     {
       name: "Actions",
       cell: (row) => (
         <div className="flex items-center gap-4">
 
-          <button onClick={() => openModal(row)}>
+          <button onClick={openModal}>
             <BiEdit size={15} />
           </button>
-           
+           {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={closeModal}></div>
+          <div className="bg-white w-[400px] h-[400px] rounded-lg shadow-lg p-4 relative z-10">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+              onClick={closeModal}
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-semibold mb-4">Edit Tag</h2>
+            <form>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category-name">
+                Company Tag Name*
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="category-name"
+                  type="text"
+                  placeholder="Category Name"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="subcategory">
+                Tag Type*
+                </label>
+                <select
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="subcategory"
+                  type="text"
+                  placeholder="SubCategory"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                Tag Colour*
+                </label>
+                <select
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="description"
+                  type="text"
+                  placeholder="Description"
+                />
+              </div>
+              <div>
+                <input type="checkbox" className="ml-2"/>
+                <label htmlFor="" className="font-semibold ml-2"><b>MOM</b></label>
+                <input type="checkbox" className="ml-4"/>
+                <label htmlFor="" className="font-semibold ml-2"><b>Task</b></label>
+            </div>
+            <div><br /></div>
+              <div className="flex items-center justify-between">
+                <button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  type="button"
+                  onClick={closeModal}
+                >
+                  Update
+                </button>
+                <button
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  type="button"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
         </div>
       ),
 
@@ -71,7 +108,19 @@ const ParkingTag = () => {
     { name: "Tag Colour", selector: (row) => row.color, sortable: true },
 
   ];
-  
+  const data = [
+    {
+      id: 1,
+      active:<ToggleSwitch/>,
+      tname:"Urgent",
+      tag_type:"others",
+      MOM:"Yes",
+      Task:"Yes",
+      color:"#fff",
+    },
+
+
+  ];
 
   const customStyle = {
     headRow: {
@@ -84,14 +133,6 @@ const ParkingTag = () => {
     },
   };
   document.title = `Permit - My Citi Life`;
-  const handleUpdate = () => {
-  setTableData((prev) =>
-    prev.map((item) =>
-      item.id === selectedRow.id ? formData : item
-    )
-  );
-  closeModal();
-};
   return (
     <section className="flex ">
       {/* <Navbar /> */}
@@ -122,23 +163,11 @@ const ParkingTag = () => {
          </select>
          </div>
             <div>
-                <input
-  type="checkbox"
-  id="MOM"
-  checked={formData.MOM || false}
-  onChange={handleChange}
-  className="ml-2"
-/>
+                <input type="checkbox" className="ml-2"/>
                 <label htmlFor="" className="font-semibold ml-2">MOM</label>
             </div>
             <div>
-                <input
-  type="checkbox"
-  id="Task"
-  checked={formData.Task || false}
-  onChange={handleChange}
-  className="ml-4"
-/>
+                <input type="checkbox" className="ml-4"/>
                 <label htmlFor="" className="font-semibold ml-2">Task</label>
             </div>
            {/* <button
@@ -155,7 +184,7 @@ const ParkingTag = () => {
           </div>
           <Table
               columns={column}
-              data={tableData}
+              data={data}
               // customStyles={customStyle}
               responsive
 
@@ -164,92 +193,8 @@ const ParkingTag = () => {
               pagination
               selectableRowsHighlight
               highlightOnHover
-              
+              omitColumn={column}
             />
-            {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={closeModal}></div>
-          <div className="bg-white w-[400px] h-[400px] rounded-lg shadow-lg p-4 relative z-10">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
-              onClick={closeModal}
-            >
-              &times;
-</button>
-
-<h2 className="text-xl font-semibold mb-4">Edit Tag</h2>
-
-<form>
-  <div className="mb-4">
-    <label className="block text-gray-700 text-sm font-bold mb-2">
-      Company Tag Name*
-    </label>
-
-    <input
-  id="tname"
-  type="text"
-  value={formData.tname || ""}
-  onChange={handleChange}
-  className="shadow appearance-none border rounded w-full py-2 px-3"
-/>
-  </div>
-
-  <div className="mb-4">
-    <label className="block text-gray-700 text-sm font-bold mb-2">
-      Tag Type*
-    </label>
-                <select
-  id="tag_type"
-  value={formData.tag_type || ""}
-  onChange={handleChange}
-  className="shadow appearance-none border rounded w-full py-2 px-3"
->
-  <option value="others">Others</option>
-  <option value="important">Important</option>
-</select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-                Tag Colour*
-                </label>
-                <select
-  id="color"
-  value={formData.color || ""}
-  onChange={handleChange}
-  className="shadow appearance-none border rounded w-full py-2 px-3"
->
-  <option value="#ffffff">White</option>
-  <option value="#ff0000">Red</option>
-  <option value="#00ff00">Green</option>
-</select>
-              </div>
-              <div>
-                <input type="checkbox" className="ml-2"/>
-                <label htmlFor="" className="font-semibold ml-2"><b>MOM</b></label>
-                <input type="checkbox" className="ml-4"/>
-                <label htmlFor="" className="font-semibold ml-2"><b>Task</b></label>
-            </div>
-            <div><br /></div>
-              <div className="flex items-center justify-between">
-                <button
-  type="button"
-  onClick={handleUpdate}
-  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
->
-  Update
-</button>
-                <button
-                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  type="button"
-                  onClick={closeModal}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
       </div>
 
     </section>

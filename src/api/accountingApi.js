@@ -75,6 +75,7 @@ export const updateAccountingInvoice = (id, data) => {
 export const deleteAccountingInvoice = (id) => API.delete(`/accounting_invoices/${id}.json`);
 export const sendInvoice = (id) => API.post(`/accounting_invoices/${id}/send_invoice.json`);
 export const addPaymentToInvoice = (id, data) => API.post(`/accounting_invoices/${id}/add_payment.json`, data);
+export const downloadInvoicePdf = (id) => API.get(`/accounting_invoices/${id}/download_pdf.json`, { responseType: 'blob' });
 export const getOverdueInvoices = () => API.get("/accounting_invoices/overdue.json");
 export const getInvoicesByUnit = (unitId) => API.get(`/accounting_invoices/by_unit.json?unit_id=${unitId}`);
 export const findInvoiceByNumber = (invoiceNumber) =>
@@ -98,6 +99,10 @@ export const getLedgerStatement = (params) => API.get("/accounting_reports/ledge
 export const getUnitStatement = (params) => API.get("/accounting_reports/unit_statement.json", { params });
 export const getUnitStatementDetailed = (params) => API.get("/accounting_reports/unit_statement_detailed.json", { params });
 export const getReceivablesSummary = (params) => API.get("/accounting_reports/receivables_summary.json", { params });
+
+// PDF Exports
+export const exportCamStatementPdf = (params) => API.get("/cam_statement_pdf", { params, responseType: "blob" });
+
 export const getAccountingDashboard = (params = {}) => {
   const token = getItemInLocalStorage("TOKEN");
   return API.get("/accounting_reports/dashboard.json", {
@@ -250,3 +255,4 @@ export const getDailyIncomeReport = (params) => API.get("/api/cam/daily_income_r
 export const getDailyExpenseReport = (params) => API.get("/api/cam/daily_expense_report", { params });
 export const getUnitWiseIncomeSummary = (params) => API.get("/api/cam/unit_wise_income_summary", { params });
 export const getUnitWiseExpenseSummary = (params) => API.get("/api/cam/unit_wise_expense_summary", { params });
+export const getUnitCamStatement = (params) => API.get("/api/cam/unit_cam_statement", { params });

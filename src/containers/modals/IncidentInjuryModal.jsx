@@ -7,7 +7,7 @@ import { postInjurydata, getInjured } from "../../api";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
-const IncidentInjuryModal = ({ onclose, onsave }) => {
+const IncidentInjuryModal = ({ onclose ,onsave }) => {
   const { id } = useParams();
 
   const [incident, setIncident] = useState([{ name: "", mobile: "" }]);
@@ -37,75 +37,76 @@ const IncidentInjuryModal = ({ onclose, onsave }) => {
   };
 
   const handleSubmit = (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    // Validate Injury Type
-    if (!injuryType) {
-      toast.error("Please select injury type");
+  // Validate Injury Type
+  if (!injuryType) {
+    toast.error("Please select injury type");
+    return;
+  }
+
+  // Validate Who Got Injured
+  if (!whoGotInjured) {
+    toast.error("Please select who got injured");
+    return;
+  }
+
+  // Validate at least one incident
+  if (incident.length === 0) {
+    toast.error("Please add at least one injured person");
+    return;
+  }
+
+  // Validate each incident row
+  for (let i = 0; i < incident.length; i++) {
+    const item = incident[i];
+
+    if (!item.name?.trim()) {
+      toast.error(`Please enter name`);
       return;
     }
 
-    // Validate Who Got Injured
-    if (!whoGotInjured) {
-      toast.error("Please select who got injured");
+    if (!item.mobile?.trim()) {
+      toast.error(`Please enter mobile number`);
       return;
     }
 
-    // Validate at least one incident
-    if (incident.length === 0) {
-      toast.error("Please add at least one injured person");
+    // Mobile validation (10 digit example)
+    if (!/^[0-9]{10}$/.test(item.mobile)) {
+      toast.error(`Enter valid 10-digit mobile number`);
       return;
     }
 
-    // Validate each incident row
-    for (let i = 0; i < incident.length; i++) {
-      const item = incident[i];
-
-      if (!item.name?.trim()) {
-        toast.error(`Please enter name`);
-        return;
-      }
-
-      if (!item.mobile?.trim()) {
-        toast.error(`Please enter mobile number`);
-        return;
-      }
-
-      // Mobile validation (10 digit example)
-      if (!/^[0-9]{10}$/.test(item.mobile)) {
-        toast.error(`Enter valid 10-digit mobile number`);
-        return;
-      }
-
-      if (!item.companyName?.trim()) {
-        toast.error(`Please enter company name`);
-        return;
-      }
+    if (!item.companyName?.trim()) {
+      toast.error(`Please enter company name`);
+      return;
     }
+  }
 
-    const data = {
-      incident_id: id,
-      injuries: incident.map((item) => ({
-        injury_type: injuryType,
-        injury_number: "",
-        lost_time: "",
-        who_got_injured: whoGotInjured,
-        name: item.name,
-        company_name: item.companyName,
-        mobile: item.mobile,
-      })),
-    };
-
-    postInjurydata(data)
-      .then((response) => {
-        toast.success("Injury data submitted successfully!");
-        onclose();
-      })
-      .catch((error) => {
-        toast.error("Error submitting injury data");
-        console.error(error);
-      });
+  const data = {
+    incident_id: id,
+    injuries: incident.map((item) => ({
+      injury_type: injuryType,
+      injury_number: "",
+      lost_time: "",
+      who_got_injured: whoGotInjured,
+      name: item.name,
+      company_name: item.companyName,
+      mobile: item.mobile,
+    })),
   };
+
+  postInjurydata(data)
+    .then((response) => {
+      toast.success("Injury data submitted successfully!");
+      onclose();
+    })
+    .catch((error) => {
+      toast.error("Error submitting injury data");
+      console.error(error);
+    });
+};
+
 
   const fetchInjuredData = async () => {
     try {
@@ -205,19 +206,11 @@ const IncidentInjuryModal = ({ onclose, onsave }) => {
                     <input
                       type="text"
                       name="mobile"
+                      id="mobile"
                       placeholder="Mobile"
                       value={incident1.mobile}
-                      onChange={(event) => {
-                        const value = event.target.value.replace(/\D/g, ""); // allow only digits
-                        if (value.length <= 10) {
-                          handleInputChange(index, {
-                            target: { name: "mobile", value },
-                          });
-                        }
-                      }}
+                      onChange={(event) => handleInputChange(index, event)}
                       className="border rounded-md border-gray-400 p-2"
-                      inputMode="numeric"
-                      pattern="[0-9]{10}"
                     />
                   </div>
                   <div className="flex flex-col gap-1">

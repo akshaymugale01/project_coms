@@ -65,7 +65,7 @@ const SetupUserDetails = () => {
   return (
     <section className="flex flex-col items-center p-10 bg-gray-700">
       {/* Page Title */}
-      <div className="flex mx-1 bg-white rounded-sm flex-col gap-1 overflow-hidden my-1 w-full p-5 mb-3">
+      <div class="flex mx-1 bg-white rounded-sm flex-col gap-1 overflow-hidden my-1 w-full p-5 mb-3">
         <div className="bg-gray-800 text-white py-2 rounded-sm w-full flex items-center justify-between">
           <h2 className="text-xl font-bold text-center w-full">User Details</h2>
           <Link
@@ -101,15 +101,11 @@ const SetupUserDetails = () => {
               <span className="font-semibold">Mobile:</span>{" "}
               {formData.mobile || "N/A"}
             </p>
-              <p>
-              <span className="font-semibold">Lives Here:</span>{" "}
-              {formData.lives_here ? "Yes" : "No"}
-            </p>
           </div>
         </div>
         {/* Associated Units */}
         {formData.user_sites.length > 0 && (
-          <div className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+          <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
 
             {formData.user_sites.map((site, index) => {
               const unit = units.find((u) => u.id === site.unit_id);
@@ -182,10 +178,10 @@ const SetupUserDetails = () => {
           </div>
         )}
 
-        <div className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+        <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
 
           {formData.user_members && formData.user_members.length > 0 && (
-            <div className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+            <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
 
               <h3 className="text-lg font-semibold text-gray-800">
                 Family Members
@@ -225,7 +221,7 @@ const SetupUserDetails = () => {
               No members found
             </div>
           )}
-          <div className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+          <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
 
             <p>
               <span className="font-semibold">MGL Customer Number:</span>{" "}
@@ -247,7 +243,7 @@ const SetupUserDetails = () => {
             </p>
           </div>
           {formData.user_vendor && formData.user_vendor.length > 0 && (
-            <div className="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
+            <div class="bg-white shadow-lg rounded-lg p-6 mb-3 w-full mt-5 border border-gray-900">
 
               <h3 className="text-lg font-semibold text-gray-800">
                 Vendor Services

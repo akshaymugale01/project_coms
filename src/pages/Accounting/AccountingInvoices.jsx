@@ -9,6 +9,7 @@ import {
   sendInvoice,
   addPaymentToInvoice,
   getOverdueInvoices,
+  downloadInvoicePdf,
   // getInvoicesByUnit,
 } from "../../api/accountingApi";
 import InvoiceModal from "./InvoiceModal";
@@ -87,6 +88,26 @@ const msg =
         error?.response?.data?.message ||
         "Invoice cannot be deleted";
       toast.error(msg);
+      console.error(error);
+    }
+  };
+
+  const handleDownloadPdf = async (invoice) => {
+    try {
+      toast.loading("Generating PDF...", { id: "pdf-download" });
+      const response = await downloadInvoicePdf(invoice.id);
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${invoice.invoice_number || "tax_invoice"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("PDF downloaded", { id: "pdf-download" });
+    } catch (error) {
+      toast.error("Failed to download PDF", { id: "pdf-download" });
       console.error(error);
     }
   };
@@ -328,6 +349,13 @@ const msg =
               }`}
             >
               Edit
+            </button>
+
+            <button
+              onClick={() => handleDownloadPdf(invoice)}
+              className="text-indigo-600 hover:text-indigo-900 mr-3"
+            >
+              PDF
             </button>
 
             <button

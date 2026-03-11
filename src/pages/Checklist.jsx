@@ -1,15 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
-import {
-  API_URL,
-  ChecklistImport,
-  downloadSampleChecklist,
-  exportChecklist,
-  getChecklist,
-  getChecklistTemplate,
-  getVibeBackground,
-} from "../api";
+import { API_URL, ChecklistImport, downloadSampleChecklist, exportChecklist, getChecklist, getChecklistTemplate, getVibeBackground } from "../api";
 import Table from "../components/table/Table";
 import { BiEdit } from "react-icons/bi";
 import { MdDeleteForever } from "react-icons/md";
@@ -23,13 +15,13 @@ import FileInputBox from "../containers/Inputs/FileInputBox";
 import { FiDownload, FiUpload } from "react-icons/fi";
 import { FaCopy, FaDownload } from "react-icons/fa";
 import Switch from "../Buttons/Switch";
-import DatePicker from "react-datepicker";
+import DatePicker from 'react-datepicker';
 import { BsEye } from "react-icons/bs";
 
 const Checklist = () => {
   const [checklists, setChecklists] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [searchText, setSearchText] = useState("");
+  const [filteredData, setFilteredData] = useState([])
+  const [searchText, setSearchText] = useState("")
   const [setshowImport, setShowImportModal] = useState(false);
   const openModalImport = () => setShowImportModal(true);
   const closeModalImport = () => setShowImportModal(false);
@@ -40,7 +32,6 @@ const Checklist = () => {
   const [startDate, endDate] = dateRange;
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [importStatus, setImportStatus] = useState("");
-
   const handleFileChange = (files) => {
     setSelectedFiles(files);
   };
@@ -75,9 +66,7 @@ const Checklist = () => {
       const response = await downloadSampleChecklist();
 
       // Create a Blob and download URL for the file
-      const blob = new Blob([response.data], {
-        type: response.headers["content-type"],
-      });
+      const blob = new Blob([response.data], { type: response.headers["content-type"] });
       const downloadUrl = window.URL.createObjectURL(blob);
 
       // Create an anchor element for the download
@@ -93,21 +82,20 @@ const Checklist = () => {
       alert("Error exporting checklist. Please try again.");
     }
   };
-
-  const themeColor = "rgb(3 19 37)";
+  
+  
+const themeColor = "rgb(3 19 37)";
   useEffect(() => {
     const fetchChecklist = async () => {
-      try {
-        const checklist = await getChecklist();
-        const sortedChecklists = checklist.data.checklists.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at),
-        );
-        setChecklists(sortedChecklists);
-        console.log(checklist.data.checklists);
-        setFilteredData(sortedChecklists);
-      } catch (error) {
-        console.log(error);
-      }
+     try {
+       const checklist = await getChecklist();
+       const sortedChecklists = checklist.data.checklists.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+       setChecklists(sortedChecklists);
+       console.log(checklist.data.checklists)
+       setFilteredData(sortedChecklists)
+     } catch (error) {
+      console.log(error)
+     }
     };
     fetchChecklist();
     console.log(checklists);
@@ -128,17 +116,12 @@ const Checklist = () => {
       selector: (row) => row?.groups?.length,
       sortable: true,
     },
-
+   
     {
       name: "Associations",
       selector: (row) => (
         <div>
-          <Link
-            to={`/assets/associate-checklist/${row.id}`}
-            className=" px-4 bg-green-400 text-white rounded-full"
-          >
-            Associate
-          </Link>
+          <Link to={`/assets/associate-checklist/${row.id}`} className=" px-4 bg-green-400 text-white rounded-full">Associate</Link>
         </div>
       ),
       sortable: true,
@@ -161,9 +144,9 @@ const Checklist = () => {
             <MdDeleteForever size={25} />
           </button> */}
           {/* <button onClick={openModalDownload}><FaDownload size={15}/></button> */}
-
+          
           <Link to={`/admin/copy-checklist/${row.id}`}>
-            <FaCopy size={15} />
+          <FaCopy size={15}/>
           </Link>
         </div>
       ),
@@ -221,8 +204,10 @@ const Checklist = () => {
     if (searchValue.trim() === "") {
       setFilteredData(checklists);
     } else {
-      const filteredResults = checklists.filter((item) =>
-        item.name.toLowerCase().includes(searchValue.toLowerCase()),
+      const filteredResults = checklists.filter(
+        (item) =>
+          
+          item.name.toLowerCase().includes(searchValue.toLowerCase())
       );
       setFilteredData(filteredResults);
     }
@@ -233,49 +218,28 @@ const Checklist = () => {
     return date.toLocaleString();
   };
 
- const handleExport = async () => {
-  try {
-    if (!startDate || !endDate) {
-      alert("Please select start and end date");
-      return;
+  const handleExport = async () => {
+    try {
+      // Call the exportChecklist function
+      const response = await exportChecklist();
+
+      // Create a Blob and download URL for the file
+      const blob = new Blob([response.data], { type: response.headers["content-type"] });
+      const downloadUrl = window.URL.createObjectURL(blob);
+
+      // Create an anchor element for the download
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = "export_checklist.xlsx"; // Name of the downloaded file
+      link.click();
+
+      // Clean up the URL object
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Failed to export checklist:", error);
+      alert("Error exporting checklist. Please try again.");
     }
-
-    // 🔥 IMPORTANT: Send only YYYY-MM-DD (NO time, NO timezone)
-    const formattedStart = startDate.toLocaleDateString("en-CA");
-    const formattedEnd = endDate.toLocaleDateString("en-CA");
-
-    console.log("Exporting from:", formattedStart, "to:", formattedEnd);
-
-    const response = await exportChecklist(
-      formattedStart,
-      formattedEnd
-    );
-
-    const blob = new Blob([response.data], {
-      type:
-        response.headers["content-type"] ||
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    const downloadUrl = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = `checklist_${formattedStart}_to_${formattedEnd}.xlsx`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    window.URL.revokeObjectURL(downloadUrl);
-
-    closeModalDownload();
-    setDateRange([null, null]);
-  } catch (error) {
-    console.error("Export error:", error);
-    alert("Error exporting checklist");
-  }
-};
-
+  };
   return (
     <section
       className="flex"
@@ -286,70 +250,66 @@ const Checklist = () => {
       <Navbar />
       <div className="p-4 w-full my-2 flex md:mx-2 overflow-hidden flex-col">
         <AssetNav />
-        <div className="flex md:flex-row flex-col justify-between items-center my-2 gap-2  ">
-          <input
-            type="text"
-            placeholder="Search By name"
-            className="border-2 p-2 md:w-96 border-gray-300 rounded-lg placeholder:text-sm"
+      <div className="flex md:flex-row flex-col justify-between items-center my-2 gap-2  ">
+        <input
+          type="text"
+          placeholder="Search By name"
+          className="border-2 p-2 md:w-96 border-gray-300 rounded-lg placeholder:text-sm"
             value={searchText}
             onChange={handleSearch}
-          />
-          <div className="md:flex grid grid-cols-2 sm:flex-row  flex-col gap-2">
-            <Link
-              to={"/admin/add-checklist"}
-              className="bg-black  text-sm rounded-lg flex justify-center font-semibold items-center gap-2 text-white py-2 px-4 transition-all duration-300 "
-              style={{ background: themeColor }}
-            >
-              <IoAddCircleOutline size={20} />
-              Add
-            </Link>
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex justify-center items-center gap-2"
-              onClick={openModalImport}
-              style={{ background: themeColor }}
-            >
-              <FiDownload size={15} /> Import
-            </button>
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex justify-center items-center gap-2"
-              onClick={openModalDownload}
-              style={{ background: themeColor }}
-            >
-              <FiUpload size={15} /> Export
-            </button>
-          </div>
+        />
+        <div className="md:flex grid grid-cols-2 sm:flex-row  flex-col gap-2">
+          <Link
+            to={"/admin/add-checklist"}
+            className="bg-black  text-sm rounded-lg flex justify-center font-semibold items-center gap-2 text-white py-2 px-4 transition-all duration-300 "
+            style={{ background: themeColor }}
+        >
+            <IoAddCircleOutline size={20} />
+            Add
+          </Link>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex justify-center items-center gap-2"
+            onClick={openModalImport}
+            style={{ background: themeColor }}
+          >
+         <FiDownload size={15}/> Import
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex justify-center items-center gap-2"
+            onClick={handleExport}
+            style={{ background: themeColor }}
+          >
+           <FiUpload size={15} /> Export
+          </button>
+         
         </div>
-        {checklists.length !== 0 ? (
-          <Table columns={columns} data={filteredData} isPagination={true} />
-        ) : (
-          <div className="flex justify-center items-center h-full">
-            <DNA
-              visible={true}
-              height="120"
-              width="120"
-              ariaLabel="dna-loading"
-              wrapperStyle={{}}
-              wrapperClass="dna-wrapper"
-            />
-          </div>
-        )}
       </div>
-      {setshowImport && (
+      {checklists.length !== 0 ?<Table columns={columns} data={filteredData} isPagination={true} /> 
+     : (
+      <div className="flex justify-center items-center h-full">
+        <DNA
+          visible={true}
+          height="120"
+          width="120"
+          ariaLabel="dna-loading"
+          wrapperStyle={{}}
+          wrapperClass="dna-wrapper"
+        />
+      </div>
+    )}
+    </div>
+    {setshowImport && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex z-10 justify-center items-center">
           <div className="bg-white p-6 rounded shadow-lg w-1/2">
             <h2 className="text-xl font-bold text-center mb-4">Bulk Upload</h2>
             {/* Advanced Filter Fields */}
-            <FileInputBox
-              handleChange={handleFileChange}
-              fieldName="checklist"
-              isMulti={true}
-            />
-
+         <FileInputBox handleChange={handleFileChange} fieldName="checklist" isMulti={true}/>
+         
             <div className="mt-4 flex justify-end space-x-4">
               <button
-                onClick={handleDownload}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                style={{ background: themeColor }}
+              onClick={handleDownload}
+              className="bg-red-500 text-white px-4 py-2 rounded"
+              style={{ background: themeColor }}
               >
                 Download Sample Format
               </button>
@@ -361,6 +321,7 @@ const Checklist = () => {
                 Cancel
               </button>
               <button
+                
                 className="bg-green-500 text-white px-4 py-2 rounded"
                 style={{ background: themeColor }}
                 onClick={handleImportChecklist}
@@ -369,26 +330,26 @@ const Checklist = () => {
               </button>
             </div>
             {importStatus && <p className="mt-4 text-center">{importStatus}</p>}
-          </div>
+        </div>
         </div>
       )}
-      {setshowDownload && (
+       {setshowDownload && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex z-10 justify-center items-center">
           <div className="bg-white p-6 rounded shadow-lg w-96">
             <h2 className="text-xl mb-4">Report</h2>
             {/* Advanced Filter Fields */}
-
+         
             <DatePicker
-              selectsRange={true}
-              startDate={startDate}
-              endDate={endDate}
-              onChange={(update) => {
-                setDateRange(update);
-              }}
-              isClearable={true}
-              placeholderText="Enter Date"
-              className="border p-1 px-4 border-gray-500 w-64 rounded-md"
-            />
+            selectsRange={true}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(update) => {
+              setDateRange(update);
+            }}
+            isClearable={true}
+            placeholderText="Enter Date"
+            className="border p-1 px-4 border-gray-500 w-64 rounded-md" 
+          />
             <div className="mt-4 flex justify-end space-x-4">
               <button
                 onClick={closeModalDownload}
@@ -398,14 +359,15 @@ const Checklist = () => {
                 Cancel
               </button>
               <button
-                onClick={handleExport}
+                
                 className="bg-green-500 text-white px-4 py-2 rounded"
                 style={{ background: themeColor }}
               >
-                Export Date Range
+                Export
               </button>
             </div>
-          </div>
+         
+        </div>
         </div>
       )}
     </section>

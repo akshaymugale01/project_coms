@@ -235,42 +235,35 @@ function ReceiptInvoiceCam() {
     setSelectedRows(selectedId);
   };
 
- const handleDownload = async () => {
-  if (selectedRows.length === 0) {
-    return toast.error("Please select at least one record.");
-  }
+  const handleDownload = async () => {
+    if (selectedRows.length === 0) {
+      return toast.error("Please select at least one data.");
+    }
 
-  try {
-    toast.loading("Receipt Invoice downloading, please wait...");
+    console.log(selectedRows);
+    toast.loading("Receipt Invoice downloading, please wait!");
 
-    const response = await getReceiptInvoiceCamDownload(selectedRows);
-
-    const blob = new Blob([response.data], {
-      type:
-        response.headers["content-type"] ||
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    const url = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `receipt_invoice_${Date.now()}.xlsx`;
-    document.body.appendChild(link);
-    link.click();
-
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    toast.dismiss();
-    toast.success("Receipt Invoice downloaded successfully");
-  } catch (error) {
-    toast.dismiss();
-    console.error("Download error:", error);
-    toast.error("Failed to download file");
-  }
-};
-
+    try {
+      const response = await getReceiptInvoiceCamDownload(selectedRows);
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], {
+          type: response.headers["content-type"],
+        })
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "receipt_invoice_file.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Receipt Invoice downloaded successfully");
+      toast.dismiss();
+    } catch (error) {
+      toast.dismiss();
+      console.error("Error downloading :", error);
+      toast.error("Something went wrong, please try again");
+    }
+  };
   const handleSearch = (e) => {
     const searchValue = e.target.value;
     setSearchText(searchValue);
@@ -439,9 +432,7 @@ function ReceiptInvoiceCam() {
           columns={columns}
           data={filterSearchData}
           selectableRow={true}
-         onSelectedRows={(state) =>
-    handleSelectedRows(state.selectedRows)
-  }
+          onSelectedRows={handleSelectedRows}
         />
         {importModal && (
           <ReceiptInvoiceModal

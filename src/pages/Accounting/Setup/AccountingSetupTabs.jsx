@@ -31,18 +31,18 @@ const menuItems = [
     icon: <FaReceipt />,
     component: IncomeTracking
   },
-  { 
-    id: 'reconciliation', 
-    label: 'Reconciliation Report', 
-    icon: <FaChartLine />,
-    component: ReconciliationReport
-  },
-  { 
-    id: 'interest-config', 
-    label: 'Interest Configuration', 
-    icon: <FaPercent />,
-    component: InterestConfiguration
-  },
+  // { 
+  //   id: 'reconciliation', 
+  //   label: 'Reconciliation Report', 
+  //   icon: <FaChartLine />,
+  //   component: ReconciliationReport
+  // },
+  // { 
+  //   id: 'interest-config', 
+  //   label: 'Interest Configuration', 
+  //   icon: <FaPercent />,
+  //   component: InterestConfiguration
+  // },
   { 
     id: 'monthly', 
     label: 'Monthly Expense', 

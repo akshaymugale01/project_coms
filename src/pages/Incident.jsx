@@ -33,20 +33,10 @@ const Incidents = () => {
     { name: "ID", selector: (row) => row.id, sortable: true },
     { name: "Building", selector: (row) => row.building_name, sortable: true },
     {
-  name: "Incident Time",
-  selector: (row) =>
-    row.time_and_date
-      ? new Date(row.time_and_date).toLocaleString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      : "-",
-  sortable: true,
-},
+      name: "Incident Time",
+      selector: (row) => dateFormatSTD(row.time_and_date),
+      sortable: true,
+    },
     { name: "Level", selector: (row) => row.incident_level, sortable: true },
     {
       name: "Category",
@@ -75,9 +65,9 @@ const Incidents = () => {
   }, [search]);
 
   /* -------------------- Fetch API -------------------- */
-const fetchIncidents = async () => {
+  const fetchIncidents = async (pageNo = 1, searchValue = "") => {
     try {
-      const res = await getIncidents(page, debouncedSearch);
+      const res = await getIncidents(pageNo, searchValue);
 
       setIncidents(res.data?.incidents || []);
       setTotalRecords(res.data?.total_count || 0);
@@ -87,14 +77,14 @@ const fetchIncidents = async () => {
   };
 
   useEffect(() => {
-    fetchIncidents();
+    fetchIncidents(page, debouncedSearch);
   }, [page, debouncedSearch]);
 
-  /* -------------------- Search Handler -------------------- */
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
-    setPage(1); // Reset page when searching
+    setPage(1); 
   };
+
   return (
     <section className="flex">
       <Navbar />
@@ -102,7 +92,7 @@ const fetchIncidents = async () => {
       <div className="w-full flex mx-3 flex-col overflow-hidden">
         <h2 className="text-lg font-semibold my-5">INCIDENTS LIST</h2>
 
-        <div className="flex flex-col sm:flex-row md:justify-between gap-3 px-3">
+        <div className="flex flex-col sm:flex-row md:justify-between gap-3">
             <input
             type="text"
             placeholder="Search incidents by using  Building, Category, etc."
@@ -110,7 +100,7 @@ const fetchIncidents = async () => {
             onChange={handleSearchChange}
             className="border p-2 border-gray-300 rounded-lg 
                        focus:outline-none focus:ring-2 focus:ring-gray-300 
-                       w-full md:w-[900px] px-5"
+                       w-full md:w-[400px]"
           />
           <Link
             to="/admin/add-incidents"
