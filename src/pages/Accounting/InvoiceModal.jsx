@@ -436,6 +436,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0],
+    income_month: new Date().getMonth() + 1,
+    income_year: new Date().getFullYear(),
     invoice_number: "",
     source_type: "invoice",
     unit_no: "",
@@ -642,6 +644,8 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
       setFormData({
         invoice_date: invoice.invoice_date?.split("T")[0] || "",
         due_date: invoice.due_date?.split("T")[0] || "",
+        income_month: invoice.income_month || (invoice.invoice_date ? new Date(invoice.invoice_date).getMonth() + 1 : new Date().getMonth() + 1),
+        income_year: invoice.income_year || (invoice.invoice_date ? new Date(invoice.invoice_date).getFullYear() : new Date().getFullYear()),
         invoice_number: invoice.invoice_number || "",
         unit_no: invoice.unit_no || "",
         customer_name: invoice.customer_name || "",
@@ -1423,6 +1427,37 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Income Month *
+                  </label>
+                  <select
+                    name="income_month"
+                    value={formData.income_month}
+                    onChange={(e) => setFormData(prev => ({ ...prev, income_month: parseInt(e.target.value) }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                  >
+                    {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
+                      <option key={i+1} value={i+1}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Income Year *
+                  </label>
+                  <input
+                    type="number"
+                    name="income_year"
+                    value={formData.income_year}
+                    onChange={(e) => setFormData(prev => ({ ...prev, income_year: parseInt(e.target.value) }))}
+                    min="2020"
+                    max="2050"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                  />
+                </div>
+
                 {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Unit ID*
@@ -2010,19 +2045,19 @@ const InvoiceModal = ({ invoice, onClose, onSave }) => {
                     
                     {/* Add: CGST */}
                     <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-sm text-gray-600">Add: CGST</span>
+                      <span className="text-sm text-gray-600">Add: CGST %</span>
                       <span className="text-sm text-gray-700">₹{totals.cgst.toFixed(2)}</span>
                     </div>
                     
                     {/* Add: SGST */}
                     <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-sm text-gray-600">Add: SGST</span>
+                      <span className="text-sm text-gray-600">Add: SGST %</span>
                       <span className="text-sm text-gray-700">₹{totals.sgst.toFixed(2)}</span>
                     </div>
                     
                     {/* Add: IGST */}
                     <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-sm text-gray-600">Add: IGST</span>
+                      <span className="text-sm text-gray-600">Add: IGST %</span>
                       <span className="text-sm text-gray-700">₹{totals.igst.toFixed(2)}</span>
                     </div>
                     

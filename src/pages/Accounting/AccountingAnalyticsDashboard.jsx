@@ -3,12 +3,14 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import {
   getAccountingAnalytics,
+  getBillingConfigurations,
 } from "../../api/accountingApi";
 import { FaSpinner } from "react-icons/fa";
 
 const AccountingAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedChart, setSelectedChart] = useState("monthly_revenue");
+  const [societyMaintenancePercent, setSocietyMaintenancePercent] = useState(0);
   const [dashboardData, setDashboardData] = useState({
     invoices: [],
     payments: [],
@@ -34,7 +36,19 @@ const AccountingAnalyticsDashboard = () => {
 
   useEffect(() => {
     fetchAccountingAnalytics(dateRange);
+    fetchBillingConfig();
   }, []);
+
+  const fetchBillingConfig = async () => {
+    try {
+      const res = await getBillingConfigurations();
+      const config = res?.data?.data || res?.data;
+      const configObj = Array.isArray(config) ? config[0] : config;
+      setSocietyMaintenancePercent(Number(configObj?.society_maintenance_percent || 0));
+    } catch (e) {
+      console.error("Failed to fetch billing config:", e);
+    }
+  };
 
   const fetchAccountingAnalytics = async (range, retry = 0) => {
     try {
@@ -398,9 +412,11 @@ const AccountingAnalyticsDashboard = () => {
   const invoiceStatus = getInvoiceStatusBreakdown();
   const paymentMethods = getPaymentMethodBreakdown();
   const accountGroups = getAccountGroupDistribution();
-  const totalExpenses =
+  const baseExpenses =
     dashboardMeta.totals?.totalExpenses ||
     Object.values(monthlyExpenses).reduce((sum, value) => sum + value, 0);
+  const managementFees = (baseExpenses * societyMaintenancePercent) / 100;
+  const totalExpenses = baseExpenses + managementFees;
   const totalInvoices = dashboardMeta.totals?.totalInvoices || dashboardData.invoices.length;
   const totalPayments = dashboardMeta.totals?.totalPayments || dashboardData.payments.length;
   const totalJournalEntries =
@@ -851,8 +867,13 @@ const AccountingAnalyticsDashboard = () => {
           <p className="text-2xl font-bold text-white">{totalPayments}</p>
         </div>
         <div className="bg-gray-800 p-4 rounded-lg text-center">
-          <p className="text-gray-400 text-sm">Total Expenses</p>
+          <p className="text-gray-400 text-sm">Total Expenses {societyMaintenancePercent > 0 && <span className="text-xs text-gray-500">(+{societyMaintenancePercent}% Mgmt)</span>}</p>
           <p className="text-2xl font-bold text-red-400">₹{totalExpenses.toFixed(2)}</p>
+          {/* {societyMaintenancePercent > 0 && (
+            <p className="text-xs text-gray-500 mt-1">
+              Base: ₹{baseExpenses.toFixed(2)} + Mgmt: ₹{managementFees.toFixed(2)}
+            </p>
+          )} */}
         </div>
         <div className="bg-gray-800 p-4 rounded-lg text-center">
           <p className="text-gray-400 text-sm">Journal Entries</p>

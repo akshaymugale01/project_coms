@@ -41,7 +41,8 @@ const BillingConfiguration = () => {
     terms_and_conditions: '',
     enable_gst_split: false,
     enable_igst: false,
-    society_maintenance_percent: ''
+    society_maintenance_percent: '',
+    management_fees_label: 'Management Fees'
   });
 
   useEffect(() => {
@@ -494,14 +495,25 @@ const BillingConfiguration = () => {
 
         {/* Society Maintenance Charges */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Society Maintenance Charges</h3>
-          {/* <p className="text-sm text-gray-600 mb-4">
-            Set the society maintenance charge percentage. This percentage will be calculated from the total monthly expenses and applied to each unit's expense allocation in accounting bills.
-          </p> */}
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">{formData.management_fees_label || 'Management Fees'}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maintenance Charge Percentage (%)
+                Label / Name
+              </label>
+              <input
+                type="text"
+                name="management_fees_label"
+                value={formData.management_fees_label || ''}
+                onChange={handleChange}
+                placeholder="e.g. Management Fees"
+                disabled={!isEditing}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {formData.management_fees_label || 'Management Fees'} Percentage (%)
               </label>
               <div className="relative">
                 <input
@@ -527,11 +539,11 @@ const BillingConfiguration = () => {
                 Example: Enter 8 for 8% society maintenance charge on total expenses.
               </p> */}
             </div>
-            {formData.society_maintenance_percent > 0 && (
+            {/* {formData.society_maintenance_percent > 0 && (
               <div className="flex items-center">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Society Maintenance: {formData.society_maintenance_percent}%</span>
+                    <span className="font-semibold">Society Management Fees: {formData.society_maintenance_percent}%</span>
                     <br />
                     <span className="text-xs text-blue-600">
                       This will be calculated from total monthly expenses and shown in accounting bills &amp; unit statements.
@@ -539,7 +551,7 @@ const BillingConfiguration = () => {
                   </p>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

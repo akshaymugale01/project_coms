@@ -1212,11 +1212,11 @@ const AccountingReports = () => {
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <p className="text-xs text-gray-500 mb-1">Advance Maintenance Received</p>
-                <p className="font-semibold text-blue-700 text-xl">₹{parseFloat(reportData.income?.total_income ?? reportData.income?.advance_maintenance_received ?? 0).toFixed(2)}</p>
+                <p className="font-semibold text-blue-700 text-xl">₹{parseFloat(reportData.income?.advance_maintenance_received ?? 0).toFixed(2)}</p>
               </div>
               <div className="bg-teal-50 p-4 rounded-lg border border-teal-200">
-                <p className="text-xs text-gray-500 mb-1">Receipts Collected</p>
-                <p className="font-semibold text-teal-700 text-xl">₹{parseFloat(reportData.income?.receipts_total || 0).toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mb-1">Other Income (Bills + Invoices)</p>
+                <p className="font-semibold text-teal-700 text-xl">₹{parseFloat(reportData.income?.other_income || 0).toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -1226,8 +1226,8 @@ const AccountingReports = () => {
             <h4 className="font-semibold mb-4 text-lg text-orange-700">2. Apex Body Transfer (30%)</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                <p className="text-xs text-gray-500 mb-1">Amount Received</p>
-                <p className="font-semibold text-orange-700">₹{parseFloat(reportData.apex?.total_income ?? reportData.apex?.advance_maintenance_received ?? 0).toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mb-1">Advance Amount</p>
+                <p className="font-semibold text-orange-700">₹{parseFloat(reportData.apex?.advance_maintenance_received ?? 0).toFixed(2)}</p>
               </div>
               <div className="bg-orange-100 p-4 rounded-lg border border-orange-300">
                 <p className="text-xs text-gray-500 mb-1">Contribution %</p>
@@ -1320,7 +1320,7 @@ const AccountingReports = () => {
             {/* Society Maintenance Charges */}
             {parseFloat(reportData.expenses?.society_maintenance_percent || 0) > 0 && (
               <div className="mb-6">
-                <h5 className="font-semibold mb-3 text-blue-600">Society Maintenance Charges</h5>
+                <h5 className="font-semibold mb-3 text-blue-600">Society Management Fees</h5>
                 <div className="border rounded-lg overflow-hidden border-blue-200">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-blue-50">
@@ -1335,7 +1335,7 @@ const AccountingReports = () => {
                         <td className="px-4 py-3 text-right text-sm font-medium">₹{parseFloat(reportData.expenses?.subtotal || ((parseFloat(reportData.expenses?.cam_expenses || 0)) + (parseFloat(reportData.expenses?.ledger_expenses || 0)))).toFixed(2)}</td>
                       </tr>
                       <tr className="bg-blue-50/50">
-                        <td className="px-4 py-3 text-sm font-medium text-blue-800">Society Maintenance Charges @ {parseFloat(reportData.expenses?.society_maintenance_percent || 0)}%</td>
+                        <td className="px-4 py-3 text-sm font-medium text-blue-800">Society Management Fees @ {parseFloat(reportData.expenses?.society_maintenance_percent || 0)}%</td>
                         <td className="px-4 py-3 text-right font-bold text-blue-700">₹{parseFloat(reportData.expenses?.society_maintenance_amount || 0).toFixed(2)}</td>
                       </tr>
                     </tbody>
