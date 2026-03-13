@@ -38,6 +38,9 @@ const BillingConfiguration = () => {
     account_number: '',
     ifsc_code: '',
     branch_name: '',
+    favouring_name: '',
+    account_type: '',
+    swift_code: '',
     terms_and_conditions: '',
     enable_gst_split: false,
     enable_igst: false,
@@ -486,6 +489,53 @@ const BillingConfiguration = () => {
                 value={formData.ifsc_code}
                 onChange={handleChange}
                 placeholder="SBIN0000123"
+                disabled={!isEditing}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Favouring Name
+              </label>
+              <input
+                type="text"
+                name="favouring_name"
+                value={formData.favouring_name}
+                onChange={handleChange}
+                placeholder="Cheque / NEFT in favour of"
+                disabled={!isEditing}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Account Type
+              </label>
+              <select
+                name="account_type"
+                value={formData.account_type}
+                onChange={handleChange}
+                disabled={!isEditing}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Account Type</option>
+                <option value="Savings">Savings</option>
+                <option value="Current">Current</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                SWIFT Code
+              </label>
+              <input
+                type="text"
+                name="swift_code"
+                value={formData.swift_code}
+                onChange={handleChange}
+                placeholder="SBININBB"
                 disabled={!isEditing}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
