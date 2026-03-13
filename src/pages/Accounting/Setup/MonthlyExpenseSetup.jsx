@@ -516,7 +516,7 @@ const MonthlyExpenseSetup = () => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               Export Excel
             </button>
-            <button onClick={saveAll} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save All</button>
+            {/* <button onClick={saveAll} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save All</button> */}
           </div>
         </div>
       </div>
@@ -541,7 +541,7 @@ const MonthlyExpenseSetup = () => {
       </div> */}
 
       {/* CAM Monthly Expense Rows */}
-      <div className="bg-white rounded-lg shadow p-5 mb-4">
+      {/* <div className="bg-white rounded-lg shadow p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">CAM Expense Rows</h2>
           <div className="text-sm text-gray-600">
@@ -604,7 +604,7 @@ const MonthlyExpenseSetup = () => {
         <div className="mt-4">
           <button onClick={addRow} className="px-4 py-2 border rounded hover:bg-gray-50">+ Add Row</button>
         </div>
-      </div>
+      </div> */}
 
       {/* Ledger Expenses from Journal Entries */}
       {ledgerExpenses.length > 0 && (
@@ -615,7 +615,7 @@ const MonthlyExpenseSetup = () => {
               <span className="ml-2 text-sm font-normal text-gray-500">(from Journal Entries)</span>
             </h2>
             <div className="text-sm text-gray-600">
-              Subtotal: <span className="font-semibold text-purple-700">₹{ledgerTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              Subtotal: <span className="font-semibold text-purple-700">₹{(ledgerTotal + (societyMaintenancePercent > 0 ? ledgerTotal * societyMaintenancePercent / 100 : 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -659,6 +659,24 @@ const MonthlyExpenseSetup = () => {
                     </tr>
                   );
                 })}
+                {societyMaintenancePercent > 0 && (
+                  <tr className="bg-blue-50/50 border-t-2 border-blue-200">
+                    <td className="px-4 py-2">
+                      <span className="font-medium text-blue-800">Management Fees ({societyMaintenancePercent}%)</span>
+                    </td>
+                    <td className="px-4 py-2 text-right font-bold text-blue-700">
+                      ₹{(ledgerTotal * societyMaintenancePercent / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        Billing Config
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="text-xs text-gray-500">on ₹{ledgerTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -666,11 +684,11 @@ const MonthlyExpenseSetup = () => {
       )}
 
       {/* Society Charges Summary */}
-      {societyMaintenancePercent > 0 && grandTotal > 0 && (
+      {/* {societyMaintenancePercent > 0 && grandTotal > 0 && (
         <div className="bg-white rounded-lg shadow p-5 mb-4 border-l-4 border-blue-500">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold">
-              Society Maintenance Charges
+              Society Management Fees
               <span className="ml-2 text-sm font-normal text-gray-500">({societyMaintenancePercent}%)</span>
             </h2>
           </div>
@@ -691,7 +709,7 @@ const MonthlyExpenseSetup = () => {
                 </tr>
                 <tr className="bg-blue-50/50">
                   <td className="px-4 py-3 text-sm text-blue-800 font-medium">
-                    Society Maintenance Charges @ {societyMaintenancePercent}%
+                    Society Management Fees @ {societyMaintenancePercent}%
                   </td>
                   <td className="px-4 py-3 text-sm text-right font-bold text-blue-700">
                     ₹{(grandTotal * societyMaintenancePercent / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
@@ -707,7 +725,7 @@ const MonthlyExpenseSetup = () => {
             </table>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Journal Entry Detail Modal */}
       {showJeDetailModal && selectedJeList && (

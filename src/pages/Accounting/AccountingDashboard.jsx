@@ -7,6 +7,7 @@ import {
   getAccountingPayments,
   getJournalEntries,
   getOverdueInvoices,
+  getBillingConfigurations,
 } from "../../api/accountingApi";
 import AccountingAnalyticsDashboard from "./AccountingAnalyticsDashboard";
 import Navbar from "../../components/Navbar";
@@ -24,10 +25,23 @@ const AccountingDashboard = () => {
     recentJournalEntries: [],
   });
   const [loading, setLoading] = useState(true);
+  const [societyMaintenancePercent, setSocietyMaintenancePercent] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchBillingConfig();
   }, []);
+
+  const fetchBillingConfig = async () => {
+    try {
+      const res = await getBillingConfigurations();
+      const config = res?.data?.data || res?.data;
+      const configObj = Array.isArray(config) ? config[0] : config;
+      setSocietyMaintenancePercent(Number(configObj?.society_maintenance_percent || 0));
+    } catch (e) {
+      console.error("Failed to fetch billing config:", e);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -236,10 +250,15 @@ const AccountingDashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Expenses</p>
+              <p className="text-gray-500 text-sm">Total Expenses {societyMaintenancePercent > 0 && <span className="text-xs text-gray-400">(incl. {societyMaintenancePercent}% Mgmt Fees)</span>}</p>
               <p className="text-3xl font-bold text-red-600">
-                ₹{parseFloat(stats.totalExpenses).toFixed(2)}
+                ₹{(parseFloat(stats.totalExpenses) * (1 + societyMaintenancePercent / 100)).toFixed(2)}
               </p>
+              {/* {societyMaintenancePercent > 0 && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Base: ₹{parseFloat(stats.totalExpenses).toFixed(2)} + Mgmt: ₹{(parseFloat(stats.totalExpenses) * societyMaintenancePercent / 100).toFixed(2)}
+                </p>
+              )} */}
             </div>
             <div className="text-4xl">💸</div>
           </div>

@@ -27,8 +27,8 @@ const IncomeTracking = () => {
   const [backendTotal, setBackendTotal] = useState(0); // Backend-calculated total
   const [backendStats, setBackendStats] = useState(null); // Stats from backend
   const [filters, setFilters] = useState({
-    from_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    to_date: new Date().toISOString().split('T')[0],
+    income_month: new Date().getMonth() + 1,
+    income_year: new Date().getFullYear(),
     status: '',
     source_type: ''
   });
@@ -39,6 +39,8 @@ const IncomeTracking = () => {
     amount: '',
     invoice_number: '',
     received_date: new Date().toISOString().split('T')[0],
+    income_month: new Date().getMonth() + 1,
+    income_year: new Date().getFullYear(),
     payment_mode: 'online',
     reference_number: '',
     status: 'received',
@@ -140,6 +142,8 @@ const IncomeTracking = () => {
       amount: '',
       invoice_number: '',
       received_date: new Date().toISOString().split('T')[0],
+      income_month: new Date().getMonth() + 1,
+      income_year: new Date().getFullYear(),
       payment_mode: 'online',
       reference_number: '',
       status: 'received',
@@ -352,20 +356,30 @@ const IncomeTracking = () => {
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-            <input
-              type="date"
-              value={filters.from_date}
-              onChange={(e) => setFilters({ ...filters, from_date: e.target.value })}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+            <select
+              value={filters.income_month}
+              onChange={(e) => setFilters({ ...filters, income_month: parseInt(e.target.value) })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            />
+            >
+              {[
+                { value: 1, label: 'January' }, { value: 2, label: 'February' }, { value: 3, label: 'March' },
+                { value: 4, label: 'April' }, { value: 5, label: 'May' }, { value: 6, label: 'June' },
+                { value: 7, label: 'July' }, { value: 8, label: 'August' }, { value: 9, label: 'September' },
+                { value: 10, label: 'October' }, { value: 11, label: 'November' }, { value: 12, label: 'December' }
+              ].map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
             <input
-              type="date"
-              value={filters.to_date}
-              onChange={(e) => setFilters({ ...filters, to_date: e.target.value })}
+              type="number"
+              value={filters.income_year}
+              onChange={(e) => setFilters({ ...filters, income_year: parseInt(e.target.value) })}
+              min="2020"
+              max="2040"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
@@ -414,7 +428,7 @@ const IncomeTracking = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Income Period</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
@@ -439,7 +453,9 @@ const IncomeTracking = () => {
                 incomeEntries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(entry.received_date).toLocaleDateString('en-IN')}
+                      {entry.income_month && entry.income_year
+                        ? `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][entry.income_month - 1]} ${entry.income_year}`
+                        : new Date(entry.received_date).toLocaleDateString('en-IN')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {entry.invoice_number || '-'}
@@ -671,6 +687,36 @@ const IncomeTracking = () => {
                       type="date"
                       value={formData.received_date}
                       onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Income Month *</label>
+                    <select
+                      value={formData.income_month}
+                      onChange={(e) => setFormData({ ...formData, income_month: parseInt(e.target.value) })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      required
+                    >
+                      {[
+                        { value: 1, label: 'January' }, { value: 2, label: 'February' }, { value: 3, label: 'March' },
+                        { value: 4, label: 'April' }, { value: 5, label: 'May' }, { value: 6, label: 'June' },
+                        { value: 7, label: 'July' }, { value: 8, label: 'August' }, { value: 9, label: 'September' },
+                        { value: 10, label: 'October' }, { value: 11, label: 'November' }, { value: 12, label: 'December' }
+                      ].map(m => (
+                        <option key={m.value} value={m.value}>{m.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Income Year *</label>
+                    <input
+                      type="number"
+                      value={formData.income_year}
+                      onChange={(e) => setFormData({ ...formData, income_year: parseInt(e.target.value) })}
+                      min="2020"
+                      max="2040"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2"
                       required
                     />
@@ -917,11 +963,13 @@ const IncomeTracking = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-500">Date</p>
+                  <p className="text-gray-500">Income Period</p>
                   <p className="font-medium text-gray-900">
-                    {viewEntry.received_date
-                      ? new Date(viewEntry.received_date).toLocaleDateString('en-IN')
-                      : '-'}
+                    {viewEntry.income_month && viewEntry.income_year
+                      ? `${['January','February','March','April','May','June','July','August','September','October','November','December'][viewEntry.income_month - 1]} ${viewEntry.income_year}`
+                      : viewEntry.received_date
+                        ? new Date(viewEntry.received_date).toLocaleDateString('en-IN')
+                        : '-'}
                   </p>
                 </div>
                 <div>

@@ -1053,7 +1053,7 @@ const CAMBills = () => {
     });
     return total;
   }, [
-    selectedIncomeCategories,
+  selectedIncomeCategories,
     incomeCategories,
     incomeTotal,
     incomeBreakdown,
@@ -1061,9 +1061,18 @@ const CAMBills = () => {
   ]);
 
   // Single source: allocation total from backend (matches unit allocation table)
-  const selectedExpenseTotal = useMemo(() => {
+  // Includes society management fees percentage
+  const baseExpenseTotal = useMemo(() => {
     return Number(allocation?.totals?.expense ?? backendExpenseTotal ?? 0);
   }, [allocation?.totals?.expense, backendExpenseTotal]);
+
+  const managementFeesAmount = useMemo(() => {
+    return (baseExpenseTotal * societyMaintenancePercent) / 100;
+  }, [baseExpenseTotal, societyMaintenancePercent]);
+
+  const selectedExpenseTotal = useMemo(() => {
+    return baseExpenseTotal + managementFeesAmount;
+  }, [baseExpenseTotal, managementFeesAmount]);
 
   const doPreview = async () => {
     setLoading(true);
@@ -1258,14 +1267,24 @@ const CAMBills = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {period === "monthly" ? "Month" : "Starting Month"}
                 </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={12}
+                <select
                   value={month}
-                  onChange={(e) => setMonth(Number(e.target.value || 1))}
+                  onChange={(e) => setMonth(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                >
+                  <option value={1}>January</option>
+                  <option value={2}>February</option>
+                  <option value={3}>March</option>
+                  <option value={4}>April</option>
+                  <option value={5}>May</option>
+                  <option value={6}>June</option>
+                  <option value={7}>July</option>
+                  <option value={8}>August</option>
+                  <option value={9}>September</option>
+                  <option value={10}>October</option>
+                  <option value={11}>November</option>
+                  <option value={12}>December</option>
+                </select>
               </div>
             </>
           ) : (
@@ -1451,11 +1470,11 @@ const CAMBills = () => {
             <div className="flex items-center justify-between">
               <div>
                 {/* <p className="text-sm text-gray-600">Total Expenses {backendExpenseTotal > 0 && <span className="text-xs text-blue-500">(Backend)</span>}</p> */}
-                <p className="text-sm text-gray-600">Total Expenses</p>
+                <p className="text-sm text-gray-600">Total Expenses {societyMaintenancePercent > 0 && <span className="text-xs text-gray-400">(incl. {societyMaintenancePercent}% Mgmt Fees)</span>}</p>
                 <p className="text-2xl font-bold text-red-600">
                   ₹
                   {Number(
-                    selectedExpenseTotal || allocation?.totals?.expense || 0,
+                    selectedExpenseTotal || 0,
                   ).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
@@ -1578,7 +1597,7 @@ const CAMBills = () => {
                   <span className="font-bold">
                     ₹
                     {Number(
-                      selectedExpenseTotal || allocation?.totals?.expense || 0,
+                      selectedExpenseTotal || 0,
                     ).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -1668,13 +1687,8 @@ const CAMBills = () => {
                     {overviewMode === "expense" && (
                       <>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Expense (Days)
+                          Expense {societyMaintenancePercent > 0 && <span className="text-xs text-gray-500">(+{societyMaintenancePercent}% Mgmt)</span>}
                         </th>
-                        {societyMaintenancePercent > 0 && (
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider bg-blue-50">
-                            Society Charges ({societyMaintenancePercent}%)
-                          </th>
-                        )}
                       </>
                     )}
                     {overviewMode === "income" && (
@@ -1682,22 +1696,22 @@ const CAMBills = () => {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Income (Allocated)
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wider bg-green-50">
+                        {/* <th className="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wider bg-green-50">
                           Actual Received
-                        </th>
+                        </th> */}
                       </>
                     )}
                     {overviewMode === "income_vs_expense" && (
                       <>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Expense (Days)
+                          Expense {societyMaintenancePercent > 0 && <span className="text-xs text-gray-500">(+{societyMaintenancePercent}% Mgmt)</span>}
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                           Income (Allocated)
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wider bg-green-50">
+                        {/* <th className="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wider bg-green-50">
                           Actual Received
-                        </th>
+                        </th> */}
                         <th className="px-4 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider bg-red-50">
                           Outstanding
                         </th>
@@ -1731,21 +1745,10 @@ const CAMBills = () => {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                           ₹
-                          {Number(r.daysShare || 0).toLocaleString("en-IN", {
+                          {Number((r.daysShare || 0) * (1 + societyMaintenancePercent / 100)).toLocaleString("en-IN", {
                             maximumFractionDigits: 0,
                           })}
                         </td>
-                        {societyMaintenancePercent > 0 && (
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-700 bg-blue-50">
-                            ₹
-                            {Number(
-                              ((r.daysShare || 0) * societyMaintenancePercent) /
-                                100,
-                            ).toLocaleString("en-IN", {
-                              maximumFractionDigits: 0,
-                            })}
-                          </td>
-                        )}
                       </tr>
                     ))}
 
@@ -1777,14 +1780,14 @@ const CAMBills = () => {
                             maximumFractionDigits: 0,
                           })}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-700 bg-green-50">
+                        {/* <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-700 bg-green-50">
                           ₹
                           {Number(
                             unitWiseIncome[r.unit_id] || 0,
                           ).toLocaleString("en-IN", {
                             maximumFractionDigits: 0,
                           })}
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
 
@@ -1812,7 +1815,7 @@ const CAMBills = () => {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                           ₹
-                          {Number(r.daysShare || 0).toLocaleString("en-IN", {
+                          {Number((r.daysShare || 0) * (1 + societyMaintenancePercent / 100)).toLocaleString("en-IN", {
                             maximumFractionDigits: 0,
                           })}
                         </td>
@@ -1822,18 +1825,18 @@ const CAMBills = () => {
                             maximumFractionDigits: 0,
                           })}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-700 bg-green-50">
+                        {/* <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-700 bg-green-50">
                           ₹
                           {Number(
                             unitWiseIncome[r.unit_id] || 0,
                           ).toLocaleString("en-IN", {
                             maximumFractionDigits: 0,
                           })}
-                        </td>
+                        </td> */}
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-red-700 bg-red-50">
                           ₹
                           {Number(
-                            (r.daysShare || 0) -
+                            (r.daysShare || 0) * (1 + societyMaintenancePercent / 100) -
                               (unitWiseIncome[r.unit_id] || 0),
                           ).toLocaleString("en-IN", {
                             minimumFractionDigits: 2,
@@ -1871,29 +1874,12 @@ const CAMBills = () => {
                         <td className="px-4 py-3 text-sm font-bold text-gray-900">
                           ₹
                           {Number(
-                            selectedExpenseTotal ||
-                              allocation?.totals?.expense ||
-                              0,
+                            selectedExpenseTotal || 0,
                           ).toLocaleString("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
                         </td>
-                        {societyMaintenancePercent > 0 && (
-                          <td className="px-4 py-3 text-sm font-bold text-blue-700 bg-blue-100">
-                            ₹
-                            {Number(
-                              ((selectedExpenseTotal ||
-                                allocation?.totals?.expense ||
-                                0) *
-                                societyMaintenancePercent) /
-                                100,
-                            ).toLocaleString("en-IN", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </td>
-                        )}
                       </>
                     )}
                     {overviewMode === "income" && (
@@ -1907,7 +1893,7 @@ const CAMBills = () => {
                             maximumFractionDigits: 2,
                           })}
                         </td>
-                        <td className="px-4 py-3 text-sm font-bold text-green-700 bg-green-100">
+                        {/* <td className="px-4 py-3 text-sm font-bold text-green-700 bg-green-100">
                           ₹
                           {Object.values(unitWiseIncome)
                             .reduce((sum, val) => sum + Number(val || 0), 0)
@@ -1915,7 +1901,7 @@ const CAMBills = () => {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}
-                        </td>
+                        </td> */}
                       </>
                     )}
                     {overviewMode === "income_vs_expense" && (
@@ -1923,9 +1909,7 @@ const CAMBills = () => {
                         <td className="px-4 py-3 text-sm font-bold text-gray-900">
                           ₹
                           {Number(
-                            selectedExpenseTotal ||
-                              allocation?.totals?.expense ||
-                              0,
+                            selectedExpenseTotal || 0,
                           ).toLocaleString("en-IN", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -1940,7 +1924,7 @@ const CAMBills = () => {
                             maximumFractionDigits: 2,
                           })}
                         </td>
-                        <td className="px-4 py-3 text-sm font-bold text-green-700 bg-green-100">
+                        {/* <td className="px-4 py-3 text-sm font-bold text-green-700 bg-green-100">
                           ₹
                           {Object.values(unitWiseIncome)
                             .reduce((sum, val) => sum + Number(val || 0), 0)
@@ -1948,15 +1932,11 @@ const CAMBills = () => {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}
-                        </td>
+                        </td> */}
                         <td className="px-4 py-3 text-sm font-bold text-red-700 bg-red-100">
                           ₹
                           {(
-                            Number(
-                              selectedExpenseTotal ||
-                                allocation?.totals?.expense ||
-                                0,
-                            ) -
+                            Number(selectedExpenseTotal || 0) -
                             Object.values(unitWiseIncome).reduce(
                               (sum, val) => sum + Number(val || 0),
                               0,
